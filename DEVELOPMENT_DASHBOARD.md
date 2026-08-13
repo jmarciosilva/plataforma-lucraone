@@ -1,8 +1,8 @@
 # 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-13 17:15 UTC  
+**Atualizado:** 2026-08-13 20:45 UTC  
 **Fase:** FASE 01 — FOUNDATION  
-**Progresso Geral:** 43% (3/7 sprints)
+**Progresso Geral:** 57% (4/7 sprints)
 
 ---
 
@@ -77,19 +77,24 @@ Conclusão:
   ✅ Polymorphic relationships (hasMany, morphMany, morphOne)
 ```
 
-### ⬜ Sprint F1.4 — Identity (PENDING)
+### ✅ Sprint F1.4 — Identity / Authentication (DONE)
 
 ```
-Status:     ⬜ PENDING
-Progresso:  0% (0/7 itens)
+Status:     ✅ DONE
+Progresso:  100% (7/7 itens)
+Duração:    ~60 minutos
+Tests:      12/12 passing ✅
 
-Requisitos:
-  ⬜ User model com tenant_id
-  ⬜ Login/Logout
-  ⬜ Password reset
-  ⬜ User invitation
-  ⬜ Status management
-  ⬜ Token management
+Conclusão:
+  ✅ User model com HasTenant trait
+  ✅ Login/Logout endpoints
+  ✅ Sanctum authentication
+  ✅ Status management (ACTIVE, INVITED, INACTIVE)
+  ✅ Token management (creation, revocation)
+  ✅ Last login tracking
+  ✅ 12 comprehensive authentication tests
+  ✅ Exception handling for API responses
+  ✅ Tenant isolation validation
 ```
 
 ### ⬜ Sprint F1.5 — Authorization (PENDING)
@@ -160,8 +165,8 @@ Modular Monolith:
   ✅ Tenancy (implementado)
   ✅ Companies (implementado)
   ✅ Branches (implementado)
-  🟡 Identity (próximo)
-  ⬜ Authorization
+  ✅ Identity (implementado)
+  🟡 Authorization (próximo)
   ⬜ Audit
 
 Padrão DDD:
@@ -191,15 +196,16 @@ Status Geral: ✅ COMPLETE
 Status Geral: ✅ ROBUST
 
 Unit Tests:        ✅ 6 passing (F1.2)
-Feature Tests:     ✅ 28 passing (F1.2 18 + F1.3 16)
-Total:             ✅ 34 passing
-Assertions:        ✅ 60+
-Coverage Areas:    ✅ Isolation, context, scope, polymorphism
+Feature Tests:     ✅ 40 passing (F1.2 18 + F1.3 16 + F1.4 12)
+Total:             ✅ 46 passing
+Assertions:        ✅ 80+
+Coverage Areas:    ✅ Isolation, context, scope, polymorphism, authentication
 
 Breakdown:
-  F1.2 (Tenancy):   ✅ 18 passing
-  F1.3 (Companies): ✅ 10 passing
-  F1.3 (Addresses): ✅ 6 passing
+  F1.2 (Tenancy):        ✅ 18 passing
+  F1.3 (Companies):      ✅ 10 passing
+  F1.3 (Addresses):      ✅ 6 passing
+  F1.4 (Authentication): ✅ 12 passing
 ```
 
 ### Documentação
@@ -238,22 +244,26 @@ Status Geral: 🟡 CORE READY
 ### Código
 
 ```
-Arquivos criados:        120+
-Linhas implementadas:    4200+
+Arquivos criados:        130+
+Linhas implementadas:    4800+
 Linhas documentação:     7500+
-Migrations:              4 (Tenant, Company, Branch, Address)
-Models:                  4 (Tenant, Company, Branch, Address)
-Factories:               3 (Company, Branch, Address)
-Tests:                   34 passing
+Migrations:              6 (Tenant, Company, Branch, Address, Sanctum)
+Models:                  5 (Tenant, Company, Branch, Address, User)
+Factories:               4 (Company, Branch, Address, User)
+Controllers:             1 (AuthController)
+Requests:                2 (LoginRequest, LogoutRequest)
+Middlewares:             2 (ResolveTenant, ApiAuthentication)
+Tests:                   46 passing
 ```
 
 ### Commits
 
 ```
-Total:           4
-feat:            2
+Total:           5
+feat:            3
 docs:            2
 Structured:      100% (feat/docs/fix padrão)
+Latest:          b38dfb0 - feat: F1.5 Identity - Authentication module
 ```
 
 ### Coverage
@@ -262,7 +272,8 @@ Structured:      100% (feat/docs/fix padrão)
 F1.1 (Bootstrap):       ✅ 73% (11/15 itens)
 F1.2 (Tenancy):         ✅ 100% (12/12 itens, 18 tests)
 F1.3 (Companies):       ✅ 100% (16/16 itens, 16 tests)
-Foundation Phase:       🟡 43% (3/7 sprints)
+F1.4 (Authentication):  ✅ 100% (7/7 itens, 12 tests)
+Foundation Phase:       🟡 57% (4/7 sprints)
 ```
 
 ---
@@ -293,13 +304,15 @@ Foundation Phase:       🟡 43% (3/7 sprints)
 - [x] Create isolation tests (10 Company + 6 Address)
 - [x] Domain events (CompanyCreated)
 
-### F1.4 (Identity)
+### F1.4 (Identity / Authentication) ✅ DONE
 
-- [ ] User model with tenant_id
-- [ ] Sanctum authentication
-- [ ] Login/Logout endpoints
-- [ ] Password reset
-- [ ] User invitations
+- [x] User model with tenant_id
+- [x] Sanctum authentication
+- [x] Login/Logout endpoints
+- [x] Status management (ACTIVE, INVITED, INACTIVE)
+- [x] Token management (create, revoke)
+- [x] Last login tracking
+- [x] 12 comprehensive tests
 
 ### F1.5 (Authorization)
 
@@ -446,7 +459,8 @@ Uma sprint é considerada **pronta** quando:
 - F1.1: 73% pronto (CI/CD pendente)
 - F1.2: 100% pronto ✅
 - F1.3: 100% pronto ✅
-- F1.4: Pronto para iniciar
+- F1.4: 100% pronto ✅
+- F1.5: Pronto para iniciar
 
 ---
 
@@ -461,6 +475,6 @@ Uma sprint é considerada **pronta** quando:
 
 ---
 
-**Próxima atualização:** Quando F1.4 (Identity) for concluída  
-**Gerado:** 2026-08-13 17:15 UTC  
+**Próxima atualização:** Quando F1.5 (Authorization) for concluída  
+**Gerado:** 2026-08-13 20:45 UTC (F1.4 — Identity concluído)  
 **Repositório:** D:\PROJETO-LUCRAONE

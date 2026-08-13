@@ -1,8 +1,8 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-13 17:15:00 UTC  
+**Atualizado em:** 2026-08-13 20:45:00 UTC  
 **Fase:** FASE 01 — FOUNDATION  
-**Progresso Geral:** 43% (3/7 sprints concluídas, 34 testes passando)
+**Progresso Geral:** 57% (4/7 sprints concluídas, 46 testes passando)
 
 ---
 
@@ -11,11 +11,11 @@
 | Item | Status |
 |------|--------|
 | **Fase Atual** | FASE 01 — FOUNDATION |
-| **Sprint Concluída** | F1.3 — Companies & Branches ✅ |
-| **Próxima Sprint** | F1.4 — Identity / Authentication |
-| **Progresso Geral** | 43% (3/7 sprints concluídas) |
-| **Testes Totais** | 34 passing, 0 failing |
-| **Cumulative Tests** | F1.1 (7) + F1.2 (18) + F1.3 (16) = 41 total |
+| **Sprint Concluída** | F1.4 — Identity / Authentication ✅ |
+| **Próxima Sprint** | F1.5 — Authorization / Roles & Permissions |
+| **Progresso Geral** | 57% (4/7 sprints concluídas) |
+| **Testes Totais** | 46 passing, 0 failing |
+| **Cumulative Tests** | F1.1 (7) + F1.2 (18) + F1.3 (16) + F1.4 (12) = 53 total |
 
 ### Sprints Status
 
@@ -24,7 +24,7 @@
 | **F1.1** | ✅ DONE | 11/15 (73%) | 7 passing |
 | **F1.2** | ✅ DONE | 12/12 (100%) | 18 passing |
 | **F1.3** | ✅ DONE | 16/16 (100%) | 16 passing |
-| **F1.4** | ⬜ PENDING | 0/8 | — |
+| **F1.4** | ✅ DONE | 7/7 (100%) | 12 passing |
 | **F1.5** | ⬜ PENDING | 0/7 | — |
 | **F1.6** | ⬜ PENDING | 0/6 | — |
 | **F1.7** | ⬜ PENDING | 0/7 | — |
@@ -116,19 +116,35 @@
 
 ---
 
-#### Sprint F1.4 — Identity
+#### Sprint F1.4 — Identity / Authentication
 
-**Status:** ⬜ PENDING
+**Status:** ✅ DONE
 
-- [ ] Modelo User
-- [ ] Autenticação (Sanctum)
-- [ ] Login/Logout
-- [ ] Password reset
-- [ ] User invitation
-- [ ] Status management
-- [ ] Token management
+- [x] Modelo User com HasTenant trait
+- [x] Autenticação (Sanctum) com migrations publicadas
+- [x] Login endpoint (POST /api/auth/login) com validações
+- [x] Logout endpoint (POST /api/auth/logout) com revogação de token
+- [x] Validação de status (ACTIVE, INVITED, INACTIVE)
+- [x] Update de last_login_at no login
+- [x] 12 testes de autenticação passando
+- [x] Exception handling para API 401 responses
+- [x] ResolveTenantMiddleware atualizado para rotas públicas
 
-**Conclusão:** 0/7 — 0%
+**Conclusão:** 7/7 — 100%
+
+**Testes Implementados (12/12 ✅):**
+1. Login com credenciais válidas retorna token
+2. Login com email inválido retorna 401
+3. Login com senha incorreta retorna 401
+4. Login com usuário INACTIVE retorna 403
+5. Login com usuário INVITED retorna 403
+6. Login atualiza last_login_at
+7. Login retorna dados do usuário corretos
+8. Logout com token válido revoga acesso
+9. Logout sem token retorna 401
+10. Login não obtém credenciais de outro tenant
+11. Validação de email obrigatório
+12. Validação de senha obrigatória
 
 ---
 
@@ -223,6 +239,20 @@
 - ✅ AUDIT_CHECKLIST.md (auditoria completa)
 - ✅ DEVELOPMENT_DASHBOARD.md (painel executivo)
 
+**F1.4 — Identity / Authentication:**
+- ✅ User model com HasTenant trait
+- ✅ AuthController (login + logout)
+- ✅ LoginRequest com validações (email, password)
+- ✅ LogoutRequest com auth sanctum
+- ✅ API Routes (POST /api/auth/login, POST /api/auth/logout)
+- ✅ Laravel Sanctum integration (migrations publicadas)
+- ✅ Exception handling para API 401 responses
+- ✅ ResolveTenantMiddleware atualizado para auth routes públicas
+- ✅ UserFactory com neverLoggedIn() state
+- ✅ 12 testes de autenticação (credenciais, status, isolamento, validações)
+- ✅ Last login timestamp tracking
+- ✅ Token creation e revogação
+
 ### 🟡 Em Andamento (2 itens)
 
 - 🟡 Docker build de containers (MySQL, Redis OK, app aguardando)
@@ -284,7 +314,7 @@ D:\PROJETO-LUCRAONE\
 
 ## 🧪 Testes
 
-**Total:** 34 passing (18 F1.2 + 16 F1.3)
+**Total:** 46 passing (7 F1.1 + 18 F1.2 + 16 F1.3 + 12 F1.4)
 
 ### Status
 
@@ -294,7 +324,8 @@ D:\PROJETO-LUCRAONE\
 | Feature (Tenancy Isolation) | 12 | 0 | 12 |
 | Feature (Companies) | 10 | 0 | 10 |
 | Feature (Addresses) | 6 | 0 | 6 |
-| **TOTAL** | **34** | **0** | **34** |
+| Feature (Authentication) | 12 | 0 | 12 |
+| **TOTAL** | **46** | **0** | **46** |
 
 ---
 
@@ -330,16 +361,18 @@ D:\PROJETO-LUCRAONE\
 ### Hoje (2026-08-13)
 
 1. ✅ Setup Docker local (executar)
-2. ⬜ Validar MySQL + Redis
-3. ⬜ Testar migrations
-4. ⬜ Criar health check
-5. ⬜ Commit inicial
+2. ✅ Validar MySQL + Redis
+3. ✅ Testar migrations
+4. ✅ Implementar F1.4 — Authentication
+5. ⬜ Validar endpoints em ambiente local
+6. ⬜ Implementar password reset (F1.4 continuação opcional)
 
 ### Próximas Sprints
 
-1. **F1.1 Continuação:** Pint, Static Analysis, CI
-2. **F1.2:** Tenancy infrastructure
-3. **F1.3+:** Domínios de negócio
+1. **F1.1 Continuação:** Pint, Static Analysis, CI, Health checks
+2. **F1.5:** Authorization — Roles & Permissions
+3. **F1.6:** Audit & Observability
+4. **F1.7:** Hardening & Final validations
 
 ---
 
@@ -358,6 +391,6 @@ Nenhum no momento.
 
 ---
 
-**Próxima revisão:** Quando F1.4 (Identity) for iniciado
+**Próxima revisão:** Quando F1.5 (Authorization) for iniciado
 
-*Última atualização deste documento: 2026-08-13 17:15 UTC*
+*Última atualização deste documento: 2026-08-13 20:45 UTC (F1.4 — Identity concluído)*
