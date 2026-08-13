@@ -82,4 +82,13 @@ class UserFactory extends Factory
             ];
         });
     }
+
+    public function neverLoggedIn(): static
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'last_login_at' => null,
+            ];
+        });
+    }
 }

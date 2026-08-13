@@ -48,8 +48,15 @@ class ResolveTenantMiddleware
             return true;
         }
 
-        // Autenticação
-        if ($request->is('api/v1/auth/login', 'api/v1/auth/forgot-password', 'api/v1/auth/reset-password')) {
+        // Autenticação (ambos os padrões de versão)
+        if ($request->is(
+            'api/auth/login',
+            'api/auth/logout',
+            'api/v1/auth/login',
+            'api/v1/auth/logout',
+            'api/v1/auth/forgot-password',
+            'api/v1/auth/reset-password'
+        )) {
             return true;
         }
 
