@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Modules\Tenancy\Domain\Models\HasTenant;
+use App\Modules\Authorization\Application\Traits\HasRole;
 
 class User extends Model implements AuthenticatableContract
 {
-    use HasFactory, HasTenant, HasApiTokens, Authenticatable, Notifiable;
+    use HasFactory, HasTenant, HasApiTokens, Authenticatable, Notifiable, HasRole;
 
     protected $keyType = 'string';
     public $incrementing = false;
