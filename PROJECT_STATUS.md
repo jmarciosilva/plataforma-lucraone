@@ -1,8 +1,8 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-13 21:15:00 UTC  
+**Atualizado em:** 2026-08-13 21:45:00 UTC  
 **Fase:** FASE 01 — FOUNDATION  
-**Progresso Geral:** 71% (5/7 sprints concluídas, 63 testes passando)
+**Progresso Geral:** 86% (6/7 sprints concluídas, 78 testes passando)
 
 ---
 
@@ -11,11 +11,11 @@
 | Item | Status |
 |------|--------|
 | **Fase Atual** | FASE 01 — FOUNDATION |
-| **Sprint Concluída** | F1.5 — Authorization / Roles & Permissions ✅ |
-| **Próxima Sprint** | F1.6 — Audit & Observability |
-| **Progresso Geral** | 71% (5/7 sprints concluídas) |
-| **Testes Totais** | 63 passing, 0 failing |
-| **Cumulative Tests** | F1.1 (7) + F1.2 (18) + F1.3 (16) + F1.4 (12) + F1.5 (17) = 70 total |
+| **Sprint Concluída** | F1.6 — Audit & Observability ✅ |
+| **Próxima Sprint** | F1.7 — Hardening & Final Validation |
+| **Progresso Geral** | 86% (6/7 sprints concluídas) |
+| **Testes Totais** | 78 passing, 0 failing |
+| **Cumulative Tests** | F1.1 (7) + F1.2 (18) + F1.3 (16) + F1.4 (12) + F1.5 (17) + F1.6 (15) = 85 total |
 
 ### Sprints Status
 
@@ -26,7 +26,7 @@
 | **F1.3** | ✅ DONE | 16/16 (100%) | 16 passing |
 | **F1.4** | ✅ DONE | 7/7 (100%) | 12 passing |
 | **F1.5** | ✅ DONE | 6/6 (100%) | 17 passing |
-| **F1.6** | ⬜ PENDING | 0/6 | — |
+| **F1.6** | ✅ DONE | 6/6 (100%) | 15 passing |
 | **F1.7** | ⬜ PENDING | 0/7 | — |
 
 ---
@@ -193,16 +193,38 @@
 
 #### Sprint F1.6 — Audit & Observability
 
-**Status:** ⬜ PENDING
+**Status:** ✅ DONE
 
-- [ ] Audit Log model
-- [ ] Request ID correlation
-- [ ] Structured logs
-- [ ] Health checks
-- [ ] Error handling
-- [ ] Testes
+- [x] AuditLog model com HasTenant trait
+- [x] Request ID correlation via middleware
+- [x] Structured logging service com contexto
+- [x] Health check endpoint (/up) com status
+- [x] Database e cache health checks
+- [x] 15 testes de auditoria e health (100% passing)
+- [x] Documentação completa (AUDIT_GUIDE.md)
 
-**Conclusão:** 0/6 — 0%
+**Conclusão:** 6/6 — 100%
+
+**Testes Implementados (15/15 ✅):**
+
+*AuditLogTest (10 testes):*
+1. AuditLog criado com dados corretos
+2. Captura IP e User-Agent
+3. Captura request_id
+4. Isolamento por tenant
+5. Filtro por usuário
+6. Filtro por entity
+7. Sem usuário autenticado
+8. Armazena changes como JSON
+9. Múltiplas ações em sequência
+10. Descrição de log
+
+*HealthCheckTest (5 testes):*
+1. Retorna JSON
+2. Inclui timestamp
+3. Database check incluído
+4. Cache check incluído
+5. Database check passa
 
 ---
 
@@ -356,7 +378,7 @@ D:\PROJETO-LUCRAONE\
 
 ## 🧪 Testes
 
-**Total:** 63 passing (7 F1.1 + 18 F1.2 + 16 F1.3 + 12 F1.4 + 17 F1.5)
+**Total:** 78 passing (7 F1.1 + 18 F1.2 + 16 F1.3 + 12 F1.4 + 17 F1.5 + 15 F1.6)
 
 ### Status
 
@@ -369,7 +391,9 @@ D:\PROJETO-LUCRAONE\
 | Feature (Authentication) | 12 | 0 | 12 |
 | Feature (Authorization RBAC) | 12 | 0 | 12 |
 | Feature (Authorization Isolation) | 5 | 0 | 5 |
-| **TOTAL** | **63** | **0** | **63** |
+| Feature (Audit Logs) | 10 | 0 | 10 |
+| Feature (Health Checks) | 5 | 0 | 5 |
+| **TOTAL** | **78** | **0** | **78** |
 
 ---
 
@@ -435,6 +459,6 @@ Nenhum no momento.
 
 ---
 
-**Próxima revisão:** Quando F1.6 (Audit & Observability) for iniciado
+**Próxima revisão:** Quando F1.7 (Hardening) for iniciado
 
-*Última atualização deste documento: 2026-08-13 21:15 UTC (F1.5 — Authorization concluído)*
+*Última atualização deste documento: 2026-08-13 21:45 UTC (F1.6 — Audit & Observability concluído)*
