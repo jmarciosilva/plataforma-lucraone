@@ -1,6 +1,6 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-13 16:30:00 UTC
+**Atualizado em:** 2026-08-13 17:00:00 UTC
 
 ---
 
@@ -9,12 +9,13 @@
 | Item | Status |
 |------|--------|
 | **Fase Atual** | FASE 01 — FOUNDATION |
-| **Sprint Atual** | F1.2 — Tenancy (✅ DONE) |
-| **Próxima Sprint** | F1.3 — Companies & Branches |
-| **Progresso Geral** | 28% (2/7 sprints completas) |
-| **Testes** | 18 passing, 1 error (modelo não existe) |
+| **Sprint Atual** | F1.3 — Companies & Branches (✅ DONE) |
+| **Próxima Sprint** | F1.4 — Identity / Authentication |
+| **Progresso Geral** | 43% (3/7 sprints completas) |
+| **Testes** | 34 passing, 1 expected error (User model — F1.4) |
 | **Sprint F1.1** | ✅ DONE (73% — alguns itens de CI pendentes) |
 | **Sprint F1.2** | ✅ DONE (100%) |
+| **Sprint F1.3** | ✅ DONE (100%) |
 
 ---
 
