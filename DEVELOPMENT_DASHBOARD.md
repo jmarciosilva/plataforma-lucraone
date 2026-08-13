@@ -1,8 +1,8 @@
 # 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-13 20:45 UTC  
+**Atualizado:** 2026-08-13 21:15 UTC  
 **Fase:** FASE 01 — FOUNDATION  
-**Progresso Geral:** 57% (4/7 sprints)
+**Progresso Geral:** 71% (5/7 sprints)
 
 ---
 
@@ -97,18 +97,25 @@ Conclusão:
   ✅ Tenant isolation validation
 ```
 
-### ⬜ Sprint F1.5 — Authorization (PENDING)
+### ✅ Sprint F1.5 — Authorization / Roles & Permissions (DONE)
 
 ```
-Status:     ⬜ PENDING
-Progresso:  0% (0/7 itens)
+Status:     ✅ DONE
+Progresso:  100% (6/6 itens)
+Duração:    ~60 minutos
+Tests:      17/17 passing ✅
 
-Requisitos:
-  ⬜ Role model
-  ⬜ Permission model
-  ⬜ User ↔ Role relationship
-  ⬜ Policies
-  ⬜ Branch access control
+Conclusão:
+  ✅ Role model com HasTenant trait
+  ✅ Permission model com HasTenant trait
+  ✅ User ↔ Role many-to-many relationship
+  ✅ Role ↔ Permission many-to-many relationship
+  ✅ Authorization policies (Role, Permission, Branch)
+  ✅ 12 RBAC tests + 5 isolation tests
+  ✅ HasRole trait with role/permission checking
+  ✅ RoleFactory e PermissionFactory
+  ✅ AuthorizationSeeder for default roles
+  ✅ Comprehensive documentation (AUTHORIZATION_GUIDE.md)
 ```
 
 ### ⬜ Sprint F1.6 — Audit & Observability (PENDING)
@@ -196,16 +203,17 @@ Status Geral: ✅ COMPLETE
 Status Geral: ✅ ROBUST
 
 Unit Tests:        ✅ 6 passing (F1.2)
-Feature Tests:     ✅ 40 passing (F1.2 18 + F1.3 16 + F1.4 12)
-Total:             ✅ 46 passing
-Assertions:        ✅ 80+
-Coverage Areas:    ✅ Isolation, context, scope, polymorphism, authentication
+Feature Tests:     ✅ 57 passing (F1.2 18 + F1.3 16 + F1.4 12 + F1.5 17)
+Total:             ✅ 63 passing
+Assertions:        ✅ 100+
+Coverage Areas:    ✅ Isolation, context, scope, polymorphism, auth, RBAC
 
 Breakdown:
-  F1.2 (Tenancy):        ✅ 18 passing
-  F1.3 (Companies):      ✅ 10 passing
-  F1.3 (Addresses):      ✅ 6 passing
-  F1.4 (Authentication): ✅ 12 passing
+  F1.2 (Tenancy):         ✅ 18 passing
+  F1.3 (Companies):       ✅ 10 passing
+  F1.3 (Addresses):       ✅ 6 passing
+  F1.4 (Authentication):  ✅ 12 passing
+  F1.5 (Authorization):   ✅ 17 passing
 ```
 
 ### Documentação
@@ -273,7 +281,8 @@ F1.1 (Bootstrap):       ✅ 73% (11/15 itens)
 F1.2 (Tenancy):         ✅ 100% (12/12 itens, 18 tests)
 F1.3 (Companies):       ✅ 100% (16/16 itens, 16 tests)
 F1.4 (Authentication):  ✅ 100% (7/7 itens, 12 tests)
-Foundation Phase:       🟡 57% (4/7 sprints)
+F1.5 (Authorization):   ✅ 100% (6/6 itens, 17 tests)
+Foundation Phase:       🟡 71% (5/7 sprints)
 ```
 
 ---
@@ -460,7 +469,8 @@ Uma sprint é considerada **pronta** quando:
 - F1.2: 100% pronto ✅
 - F1.3: 100% pronto ✅
 - F1.4: 100% pronto ✅
-- F1.5: Pronto para iniciar
+- F1.5: 100% pronto ✅
+- F1.6: Pronto para iniciar
 
 ---
 
@@ -475,6 +485,6 @@ Uma sprint é considerada **pronta** quando:
 
 ---
 
-**Próxima atualização:** Quando F1.5 (Authorization) for concluída  
-**Gerado:** 2026-08-13 20:45 UTC (F1.4 — Identity concluído)  
+**Próxima atualização:** Quando F1.6 (Audit & Observability) for concluída  
+**Gerado:** 2026-08-13 21:15 UTC (F1.5 — Authorization concluído)  
 **Repositório:** D:\PROJETO-LUCRAONE

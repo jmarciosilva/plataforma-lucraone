@@ -1,8 +1,8 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-13 20:45:00 UTC  
+**Atualizado em:** 2026-08-13 21:15:00 UTC  
 **Fase:** FASE 01 — FOUNDATION  
-**Progresso Geral:** 57% (4/7 sprints concluídas, 46 testes passando)
+**Progresso Geral:** 71% (5/7 sprints concluídas, 63 testes passando)
 
 ---
 
@@ -11,11 +11,11 @@
 | Item | Status |
 |------|--------|
 | **Fase Atual** | FASE 01 — FOUNDATION |
-| **Sprint Concluída** | F1.4 — Identity / Authentication ✅ |
-| **Próxima Sprint** | F1.5 — Authorization / Roles & Permissions |
-| **Progresso Geral** | 57% (4/7 sprints concluídas) |
-| **Testes Totais** | 46 passing, 0 failing |
-| **Cumulative Tests** | F1.1 (7) + F1.2 (18) + F1.3 (16) + F1.4 (12) = 53 total |
+| **Sprint Concluída** | F1.5 — Authorization / Roles & Permissions ✅ |
+| **Próxima Sprint** | F1.6 — Audit & Observability |
+| **Progresso Geral** | 71% (5/7 sprints concluídas) |
+| **Testes Totais** | 63 passing, 0 failing |
+| **Cumulative Tests** | F1.1 (7) + F1.2 (18) + F1.3 (16) + F1.4 (12) + F1.5 (17) = 70 total |
 
 ### Sprints Status
 
@@ -25,7 +25,7 @@
 | **F1.2** | ✅ DONE | 12/12 (100%) | 18 passing |
 | **F1.3** | ✅ DONE | 16/16 (100%) | 16 passing |
 | **F1.4** | ✅ DONE | 7/7 (100%) | 12 passing |
-| **F1.5** | ⬜ PENDING | 0/7 | — |
+| **F1.5** | ✅ DONE | 6/6 (100%) | 17 passing |
 | **F1.6** | ⬜ PENDING | 0/6 | — |
 | **F1.7** | ⬜ PENDING | 0/7 | — |
 
@@ -148,19 +148,46 @@
 
 ---
 
-#### Sprint F1.5 — Authorization
+#### Sprint F1.5 — Authorization / Roles & Permissions
 
-**Status:** ⬜ PENDING
+**Status:** ✅ DONE
 
-- [ ] Modelo Role
-- [ ] Modelo Permission
-- [ ] User ↔ Role relacionamento
-- [ ] Role ↔ Permission relacionamento
-- [ ] Policies
-- [ ] Branch access control
-- [ ] Testes de permissão
+- [x] Modelo Role com HasTenant trait
+- [x] Modelo Permission com HasTenant trait
+- [x] User ↔ Role many-to-many relacionamento
+- [x] Role ↔ Permission many-to-many relacionamento
+- [x] RolePolicy, PermissionPolicy, BranchPolicy
+- [x] Branch access control com role-based checks
+- [x] 17 testes de autorização (RBAC + isolamento)
+- [x] HasRole trait com methods para role/permission checking
+- [x] RoleFactory e PermissionFactory com estados
+- [x] AuthorizationSeeder com roles/permissions padrão
+- [x] Documentação completa (AUTHORIZATION_GUIDE.md)
 
-**Conclusão:** 0/7 — 0%
+**Conclusão:** 6/6 — 100%
+
+**Testes Implementados (17/17 ✅):**
+
+*RBACTest (12 testes):*
+1. User pode ser atribuído a role
+2. Role pode ser removida de user
+3. User herda permissões da role
+4. User sem role não tem permissões
+5. Role pode conceder permissão
+6. Role pode revogar permissão
+7. Tenant A roles isoladas de tenant B
+8. Permissions isoladas por tenant
+9. User pode ter múltiplas roles
+10. hasAnyRole retorna true
+11. syncRoles substitui todas roles
+12. getPermissions retorna todas permissões
+
+*AuthorizationIsolationTest (5 testes):*
+1. Roles de tenant A não visíveis para B
+2. Permissions de tenant A não acessíveis para B
+3. User de tenant A não pode ter role de B
+4. Mesma role name pode existir em diferentes tenants
+5. Roles automaticamente scoped por tenant
 
 ---
 
@@ -253,6 +280,21 @@
 - ✅ Last login timestamp tracking
 - ✅ Token creation e revogação
 
+**F1.5 — Authorization / Roles & Permissions:**
+- ✅ Role model com HasTenant trait
+- ✅ Permission model com HasTenant trait
+- ✅ User ↔ Role many-to-many relationship
+- ✅ Role ↔ Permission many-to-many relationship
+- ✅ HasRole trait com métodos (hasRole, hasPermission, assignRole, etc)
+- ✅ RolePolicy, PermissionPolicy, BranchPolicy implementadas
+- ✅ RoleFactory e PermissionFactory com estados predefinidos
+- ✅ AuthorizationSeeder (roles padrão: Admin, Manager, User, Viewer)
+- ✅ 17 testes de RBAC e isolamento de tenant (100% passing)
+- ✅ Tenant isolation em todas as operações
+- ✅ Branch access control preparation
+- ✅ AUTHORIZATION_GUIDE.md documentation
+- ✅ SPRINT_F1.5_PLAN.md architecture documentation
+
 ### 🟡 Em Andamento (2 itens)
 
 - 🟡 Docker build de containers (MySQL, Redis OK, app aguardando)
@@ -314,7 +356,7 @@ D:\PROJETO-LUCRAONE\
 
 ## 🧪 Testes
 
-**Total:** 46 passing (7 F1.1 + 18 F1.2 + 16 F1.3 + 12 F1.4)
+**Total:** 63 passing (7 F1.1 + 18 F1.2 + 16 F1.3 + 12 F1.4 + 17 F1.5)
 
 ### Status
 
@@ -325,7 +367,9 @@ D:\PROJETO-LUCRAONE\
 | Feature (Companies) | 10 | 0 | 10 |
 | Feature (Addresses) | 6 | 0 | 6 |
 | Feature (Authentication) | 12 | 0 | 12 |
-| **TOTAL** | **46** | **0** | **46** |
+| Feature (Authorization RBAC) | 12 | 0 | 12 |
+| Feature (Authorization Isolation) | 5 | 0 | 5 |
+| **TOTAL** | **63** | **0** | **63** |
 
 ---
 
@@ -391,6 +435,6 @@ Nenhum no momento.
 
 ---
 
-**Próxima revisão:** Quando F1.5 (Authorization) for iniciado
+**Próxima revisão:** Quando F1.6 (Audit & Observability) for iniciado
 
-*Última atualização deste documento: 2026-08-13 20:45 UTC (F1.4 — Identity concluído)*
+*Última atualização deste documento: 2026-08-13 21:15 UTC (F1.5 — Authorization concluído)*
