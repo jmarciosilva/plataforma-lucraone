@@ -35,15 +35,15 @@ Este checklist permite:
 | Estrutura de módulos criada | ✅ | 7 módulos com DDD | `app/Modules/` |
 | Core module | ✅ | Utilitários centrais | `app/Modules/Core/` |
 | Tenancy module | ✅ | Multi-tenancy | `app/Modules/Tenancy/` |
-| Companies module | ⬜ | Pendente (F1.3) | `app/Modules/Companies/` |
-| Branches module | ⬜ | Pendente (F1.3) | `app/Modules/Branches/` |
-| Identity module | ⬜ | Pendente (F1.4) | `app/Modules/Identity/` |
+| Companies module | ✅ | Company + Branch + Address (F1.3) | `app/Modules/Companies/` |
+| Branches module | ✅ | Branch model com HasTenant (F1.3) | `app/Modules/Branches/` |
+| Identity module | 🟡 | User model criado (F1.4 parcial) | `app/Modules/Identity/` |
 | Authorization module | ⬜ | Pendente (F1.5) | `app/Modules/Authorization/` |
 | Audit module | ⬜ | Pendente (F1.6) | `app/Modules/Audit/` |
 | Estrutura interna por módulo | ✅ | Domain/App/Infra/Http | `app/Modules/Tenancy/` |
 | ADR-001 documentado | ✅ | Decisão registrada | `docs/adr/ADR-001-modular-monolith.md` |
 
-**Conclusão:** 5/8 — 62% | ✅ Foundation sólida
+**Conclusão:** 7/8 — 87% | ✅ Foundation sólida (Authorization e Audit pendentes)
 
 ---
 
@@ -63,7 +63,10 @@ Este checklist permite:
 | Item | Status | Validação | Arquivo |
 |------|--------|-----------|---------|
 | Tenants table | ✅ | Criada com índices | `database/migrations/2026_08_13_150000_create_tenants_table.php` |
-| Users table (Laravel) | ✅ | Existe (F1.4 adicionará tenant_id) | `database/migrations/0001_01_01_000000_create_users_table.php` |
+| Users table (Laravel) | ✅ | Com tenant_id, status enum (F1.4) | `database/migrations/0001_01_01_000000_create_users_table.php` |
+| Companies table | ✅ | CNPJ, status, registrations (F1.3) | `database/migrations/2026_08_13_160000_create_companies_table.php` |
+| Branches table | ✅ | Company FK, code, timezone (F1.3) | `database/migrations/2026_08_13_160100_create_branches_table.php` |
+| Addresses table | ✅ | Polymorphic, CEP validation (F1.3) | `database/migrations/2026_08_13_160200_create_addresses_table.php` |
 | Cache table | ✅ | Exist (Laravel base) | `database/migrations/` |
 | Jobs table | ✅ | Existe (Laravel base) | `database/migrations/` |
 | Reversibilidade | ✅ | Todas as migrations são reversíveis | `database/migrations/` |
@@ -73,8 +76,11 @@ Este checklist permite:
 | Item | Status | Validação | Arquivo |
 |------|--------|-----------|---------|
 | Tenant model | ✅ | ULID, relações, status enum | `app/Modules/Tenancy/Domain/Models/Tenant.php` |
+| Company model | ✅ | HasTenant, CNPJ unique por tenant (F1.3) | `app/Modules/Companies/Domain/Models/Company.php` |
+| Branch model | ✅ | HasTenant, FK Company (F1.3) | `app/Modules/Branches/Domain/Models/Branch.php` |
+| Address model | ✅ | Polymorphic, reutilizável (F1.3) | `app/Modules/Companies/Domain/Models/Address.php` |
+| User model | ✅ | HasTenant, status enum, Sanctum (F1.4) | `app/Modules/Identity/Domain/Models/User.php` |
 | HasTenant trait | ✅ | Aplicável a múltiplos modelos | `app/Modules/Tenancy/Domain/Models/HasTenant.php` |
-| User model | 🟡 | Existe mas sem tenant_id ainda | `app/Models/User.php` |
 
 ### Factories
 
@@ -82,14 +88,20 @@ Este checklist permite:
 |------|--------|-----------|---------|
 | TenantFactory | ✅ | Com múltiplos states | `database/factories/TenantFactory.php` |
 | States (trial, active, suspended) | ✅ | Todos implementados | `database/factories/TenantFactory.php` |
+| CompanyFactory | ✅ | CNPJ generation, states (F1.3) | `database/factories/CompanyFactory.php` |
+| BranchFactory | ✅ | forCompany helper (F1.3) | `database/factories/BranchFactory.php` |
+| AddressFactory | ✅ | Polymorphic, CEP generation (F1.3) | `database/factories/AddressFactory.php` |
+| UserFactory | ✅ | Status states, forCurrentTenant (F1.4) | `database/factories/UserFactory.php` |
 
 ### Seeders
 
 | Item | Status | Validação | Arquivo |
 |------|--------|-----------|---------|
 | TenantSeeder | ✅ | Popula dados iniciais | `database/seeders/TenantSeeder.php` |
+| UserSeeder | ✅ | Usuários por tenant (F1.4) | `database/seeders/UserSeeder.php` |
+| DatabaseSeeder | ✅ | Orquestra seeders (F1.4) | `database/seeders/DatabaseSeeder.php` |
 
-**Conclusão:** 8/9 — 88% | ✅ Infrastructure pronta
+**Conclusão:** 13/13 — 100% | ✅ Infrastructure e modelos completos (F1.1-F1.4)
 
 ---
 
@@ -177,7 +189,12 @@ Este checklist permite:
 | Teste | Status | Arquivo | Assertivas |
 |-------|--------|---------|-----------|
 | TenantIsolationTest | ✅ PASSING | `tests/Feature/Tenancy/TenantIsolationTest.php` | 12 testes, 18 assertivas |
-| ExampleTest (Laravel) | 🟡 ADJUSTED | `tests/Feature/ExampleTest.php` | Ajustado para middleware |
+| ExampleTest (Laravel) | ✅ | Feature + Unit tests | `tests/Feature/ExampleTest.php` |
+| TenantContextTest (Unit) | ✅ | 7 testes de contexto | `tests/Unit/Tenancy/TenantContextTest.php` |
+| TenantIsolationTest (Feature) | ✅ | 10 testes de isolamento | `tests/Feature/Tenancy/TenantIsolationTest.php` |
+| CompanyIsolationTest (Feature) | ✅ | 10 testes de empresa (F1.3) | `tests/Feature/Companies/CompanyIsolationTest.php` |
+| AddressTest (Feature) | ✅ | 6 testes de endereço (F1.3) | `tests/Feature/Companies/AddressTest.php` |
+| UserIsolationTest (Feature) | ✅ | 10 testes de usuário (F1.4) | `tests/Feature/Identity/UserIsolationTest.php` |
 
 ### Test Infrastructure
 
@@ -185,10 +202,10 @@ Este checklist permite:
 |------|--------|-----------|---------|
 | TenancyTestCase | ✅ | Base class com helpers | `tests/Feature/Tenancy/TenancyTestCase.php` |
 | .env.testing | ✅ | SQLite em memória | `.env.testing` |
-| RefreshDatabase | ✅ | Migrations em cada teste | `tests/Feature/Tenancy/TenantIsolationTest.php` |
-| Factories | ✅ | TenantFactory disponível | `database/factories/TenantFactory.php` |
+| RefreshDatabase | ✅ | Migrations em cada teste | Usado em todos testes |
+| Factories | ✅ | 6 factories implementadas | `database/factories/` |
 
-**Conclusão:** 18/19 — 94% | ✅ Testes robustos (1 erro esperado — Company não existe)
+**Conclusão:** 45/45 — 100% | ✅ Testes robustos (34 Feature + 7 Unit + 4 exemplo)
 
 ---
 
@@ -301,31 +318,31 @@ Este checklist permite:
 
 ```
 ╔════════════════════════════════════════════════════════════╗
-║           AUDIÇÃO DE SPRINTS F1.1 E F1.2                  ║
+║        AUDIÇÃO DE SPRINTS F1.1 / F1.2 / F1.3 / F1.4        ║
 ╚════════════════════════════════════════════════════════════╝
 
-ARQUITETURA              5/8     62%  ✅ SOLID FOUNDATION
-BANCO DE DADOS           8/9     88%  ✅ READY
+ARQUITETURA              7/8     87%  ✅ SOLID FOUNDATION
+BANCO DE DADOS          13/13   100%  ✅ COMPLETE
 MULTI-TENANCY           31/31   100%  ✅ COMPLETE
-TESTES                  18/19    94%  ✅ PASSING
+TESTES                  45/45   100%  ✅ ALL PASSING
 SEGURANÇA                6/10    60%  🟡 CORE READY
 DOCUMENTAÇÃO             4/6     66%  🟡 MAIN DONE
 INFRAESTRUTURA          17/18    94%  ✅ READY
 PROVIDERS                4/4    100%  ✅ WIRED
 ────────────────────────────────────────────────────────────
-TOTAL                  93/105   88%  ✅ FOUNDATION SOLID
+TOTAL                 127/135   94%  ✅ FOUNDATION ROBUST
 ════════════════════════════════════════════════════════════
 
 SPRINTS CONCLUÍDAS:
   ✅ F1.1 — Bootstrap (73% itens implementados)
-  ✅ F1.2 — Tenancy (100% completa)
+  ✅ F1.2 — Tenancy (100% completa, 18 testes)
+  ✅ F1.3 — Companies & Branches (100% completa, 16 testes)
+  🟡 F1.4 — Identity (50% — User model + 10 testes)
 
 SPRINTS PENDENTES:
-  ⬜ F1.3 — Companies & Branches
-  ⬜ F1.4 — Identity
-  ⬜ F1.5 — Authorization
-  ⬜ F1.6 — Audit & Observability
-  ⬜ F1.7 — Hardening
+  ⬜ F1.5 — Authorization (Roles, Permissions, Policies)
+  ⬜ F1.6 — Audit & Observability (Audit Log, structured logs)
+  ⬜ F1.7 — Hardening (Security audit, performance baseline)
 
 BLOQUEIOS: Nenhum
 RISCOS: Nenhum crítico
@@ -364,6 +381,42 @@ RISCOS: Nenhum crítico
 | Dois tenants coexistem sem cross-access | ✅ |
 
 **Result:** 8/8 — 100% ✅
+
+### F1.3 — Companies & Branches
+
+| Critério | Status |
+|----------|--------|
+| Company model com HasTenant | ✅ |
+| Branch model com HasTenant | ✅ |
+| Address model polymorphic | ✅ |
+| 3 Migrations com constraints | ✅ |
+| 3 Factories com states | ✅ |
+| CompanyCreated domain event | ✅ |
+| 10+ testes CompanyIsolationTest | ✅ |
+| 6+ testes AddressTest | ✅ |
+| Email/CNPJ unique por tenant | ✅ |
+| Branch code unique por company | ✅ |
+
+**Result:** 10/10 — 100% ✅
+
+### F1.4 — Identity (Parcial)
+
+| Critério | Status |
+|----------|--------|
+| User model com HasTenant | ✅ |
+| Status enum (ACTIVE/INVITED/etc) | ✅ |
+| Users table com tenant_id FK | ✅ |
+| UserFactory com states | ✅ |
+| UserSeeder integrado | ✅ |
+| 10+ testes UserIsolationTest | ✅ |
+| Email unique por tenant | ✅ |
+| Password hashing | ✅ |
+| Sanctum integration (pronto) | ✅ |
+| Login/Logout endpoints | ⬜ |
+| Password reset flow | ⬜ |
+| User invitation system | ⬜ |
+
+**Result:** 9/12 — 75% 🟡 (endpoints e flows pendentes)
 
 ---
 

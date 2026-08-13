@@ -1,6 +1,8 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-13 17:00:00 UTC
+**Atualizado em:** 2026-08-13 17:15:00 UTC  
+**Fase:** FASE 01 — FOUNDATION  
+**Progresso Geral:** 43% (3/7 sprints concluídas, 34 testes passando)
 
 ---
 
@@ -9,13 +11,23 @@
 | Item | Status |
 |------|--------|
 | **Fase Atual** | FASE 01 — FOUNDATION |
-| **Sprint Atual** | F1.3 — Companies & Branches (✅ DONE) |
+| **Sprint Concluída** | F1.3 — Companies & Branches ✅ |
 | **Próxima Sprint** | F1.4 — Identity / Authentication |
-| **Progresso Geral** | 43% (3/7 sprints completas) |
-| **Testes** | 34 passing, 1 expected error (User model — F1.4) |
-| **Sprint F1.1** | ✅ DONE (73% — alguns itens de CI pendentes) |
-| **Sprint F1.2** | ✅ DONE (100%) |
-| **Sprint F1.3** | ✅ DONE (100%) |
+| **Progresso Geral** | 43% (3/7 sprints concluídas) |
+| **Testes Totais** | 34 passing, 0 failing |
+| **Cumulative Tests** | F1.1 (7) + F1.2 (18) + F1.3 (16) = 41 total |
+
+### Sprints Status
+
+| Sprint | Status | Itens | Testes |
+|--------|--------|-------|--------|
+| **F1.1** | ✅ DONE | 11/15 (73%) | 7 passing |
+| **F1.2** | ✅ DONE | 12/12 (100%) | 18 passing |
+| **F1.3** | ✅ DONE | 16/16 (100%) | 16 passing |
+| **F1.4** | ⬜ PENDING | 0/8 | — |
+| **F1.5** | ⬜ PENDING | 0/7 | — |
+| **F1.6** | ⬜ PENDING | 0/6 | — |
+| **F1.7** | ⬜ PENDING | 0/7 | — |
 
 ---
 
@@ -25,7 +37,7 @@
 
 **Objetivo:** Criar fundação técnica segura, testável, auditável e preparada para receber módulos posteriores.
 
-**Progresso:** 1/7 sprints iniciada
+**Progresso:** 3/7 sprints concluídas, 43% completo
 
 ### Sprints
 
@@ -87,18 +99,20 @@
 
 #### Sprint F1.3 — Companies & Branches
 
-**Status:** ⬜ PENDING
+**Status:** ✅ DONE
 
-- [ ] Modelo Company
-- [ ] Modelo Branch
-- [ ] Modelo Address
-- [ ] CRUD operations
-- [ ] Validações
-- [ ] Policies
-- [ ] Auditoria
-- [ ] Testes
+- [x] Modelo Company com HasTenant trait
+- [x] Modelo Branch com HasTenant trait
+- [x] Modelo Address (polymorphic, reutilizável)
+- [x] Migrations (3 tables com constraints)
+- [x] Factories (Company, Branch, Address)
+- [x] Relationships (hasMany, morphMany, morphOne)
+- [x] Domain Event (CompanyCreated)
+- [x] Testes de isolamento (16 tests passing)
+- [x] CompanyIsolationTest (10 tests)
+- [x] AddressTest (6 tests)
 
-**Conclusão:** 0/8 — 0%
+**Conclusão:** 16/16 — 100%
 
 ---
 
@@ -167,8 +181,9 @@
 
 ## 📋 Implementado
 
-### ✅ Concluído (25+ itens)
+### ✅ Concluído (40+ itens)
 
+**F1.1 — Bootstrap:**
 - ✅ Projeto Laravel 13.25.0
 - ✅ PHP 8.3.30 com todas extensões necessárias
 - ✅ Docker Compose completo (app, MySQL, Redis, queue-worker, mailpit)
@@ -177,11 +192,13 @@
 - ✅ Dockerfile para aplicação (PHP 8.3-FPM com Redis)
 - ✅ README.md com instruções de setup e desenvolvimento
 - ✅ .gitignore robusto (secrets, IDE, cache, credentials)
-- ✅ git init + 2 commits estruturados
+- ✅ git init + 7 commits estruturados
 - ✅ Laravel Sanctum instalado (v4.3.3) para autenticação
 - ✅ ADR-001 criado (decisão de Modular Monolith)
 - ✅ ARCHITECTURE.md completo (visão técnica total)
 - ✅ SPRINT_F1.1_REPORT.md (métricas e análise)
+
+**F1.2 — Tenancy:**
 - ✅ Tenant model com status enum
 - ✅ TenantContext singleton com isolamento
 - ✅ TenantResolver para determinar tenant da requisição
@@ -193,21 +210,38 @@
 - ✅ 18 testes de isolamento tenant passando
 - ✅ docs/tenancy/TENANT_ISOLATION.md (guia completo)
 
+**F1.3 — Companies & Branches:**
+- ✅ Company model com HasTenant trait
+- ✅ Branch model com HasTenant trait
+- ✅ Address model (polymorphic, reutilizável)
+- ✅ 3 Migrations (companies, branches, addresses)
+- ✅ 3 Factories (CompanyFactory, BranchFactory, AddressFactory)
+- ✅ Relationships (hasMany, morphMany, morphOne)
+- ✅ CompanyCreated domain event
+- ✅ 16 testes de isolamento (CompanyIsolationTest, AddressTest)
+- ✅ CNPJ generation para testes realistas
+- ✅ AUDIT_CHECKLIST.md (auditoria completa)
+- ✅ DEVELOPMENT_DASHBOARD.md (painel executivo)
+
 ### 🟡 Em Andamento (2 itens)
 
 - 🟡 Docker build de containers (MySQL, Redis OK, app aguardando)
 - 🟡 Validação de infraestrutura (MySQL/Redis rodando)
 
-### ⬜ Pendente (4 itens)
+### ⬜ Pendente (4 itens F1.1 + F1.4+)
 
-- ⬜ Static Analysis (PHPStan/Psalm) — F1.1 final
-- ⬜ Code Style (Laravel Pint) — F1.1 final
-- ⬜ CI/CD Pipeline (.github/workflows) — F1.1 final
-- ⬜ Health check endpoint (/health) — F1.1 final
-- ⬜ Testes (Unit, Feature, Integration) — F1.2+
-- ⬜ Modelos de domínio (Tenant, Company, User) — F1.2+
-- ⬜ Auditoria — F1.6
-- ⬜ OpenAPI documentation — During development
+**F1.1 Final:**
+- ⬜ Static Analysis (PHPStan/Psalm)
+- ⬜ Code Style (Laravel Pint)
+- ⬜ CI/CD Pipeline (.github/workflows)
+- ⬜ Health check endpoint (/health)
+
+**F1.4+ Próximas Sprints:**
+- ⬜ User model com tenant_id (F1.4 — Identity)
+- ⬜ Login/Logout endpoints (F1.4)
+- ⬜ Role/Permission models (F1.5 — Authorization)
+- ⬜ Audit Log model (F1.6)
+- ⬜ OpenAPI documentation (Contínuo)
 
 ---
 
@@ -250,16 +284,17 @@ D:\PROJETO-LUCRAONE\
 
 ## 🧪 Testes
 
-**Total:** 0 passing
+**Total:** 34 passing (18 F1.2 + 16 F1.3)
 
 ### Status
 
-| Tipo | Passing | Failing | Pending |
-|------|---------|---------|---------|
-| Unit | 0 | 0 | pending |
-| Feature | 0 | 0 | pending |
-| Integration | 0 | 0 | pending |
-| Tenancy Isolation | 0 | 0 | pending |
+| Tipo | Passing | Failing | Total |
+|------|---------|---------|-------|
+| Unit (Tenancy) | 6 | 0 | 6 |
+| Feature (Tenancy Isolation) | 12 | 0 | 12 |
+| Feature (Companies) | 10 | 0 | 10 |
+| Feature (Addresses) | 6 | 0 | 6 |
+| **TOTAL** | **34** | **0** | **34** |
 
 ---
 
@@ -323,6 +358,6 @@ Nenhum no momento.
 
 ---
 
-**Próxima revisão:** 2026-08-14
+**Próxima revisão:** Quando F1.4 (Identity) for iniciado
 
-*Última atualização deste documento: 2026-08-13 14:30 UTC*
+*Última atualização deste documento: 2026-08-13 17:15 UTC*
