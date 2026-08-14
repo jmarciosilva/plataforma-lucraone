@@ -43,8 +43,8 @@ class ResolveTenantMiddleware
      */
     private function isPublicRoute(Request $request): bool
     {
-        // Health checks
-        if ($request->is('health*')) {
+        // Health checks (Laravel 11)
+        if ($request->is('up')) {
             return true;
         }
 

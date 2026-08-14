@@ -31,6 +31,11 @@ class Permission extends Model
             ->withTimestamps();
     }
 
+    public static function forTenant($tenantId)
+    {
+        return self::where('tenant_id', $tenantId);
+    }
+
     protected static function newFactory()
     {
         return \Database\Factories\PermissionFactory::new();

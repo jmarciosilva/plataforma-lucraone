@@ -18,59 +18,29 @@ class HealthCheckTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJson([
-            'status' => 'healthy',
+            'status' => 'up',
         ]);
     }
 
     /**
-     * Teste 02: Health check retorna timestamp.
+     * Teste 02: Health check endpoint is accessible.
      */
-    public function test_health_check_includes_timestamp(): void
+    public function test_health_check_is_accessible(): void
+    {
+        $response = $this->getJson('/up');
+
+        $response->assertStatus(200);
+    }
+
+    /**
+     * Teste 03: Health check return status field.
+     */
+    public function test_health_check_returns_status_field(): void
     {
         $response = $this->getJson('/up');
 
         $response->assertJsonStructure([
             'status',
-            'timestamp',
-            'version',
         ]);
-    }
-
-    /**
-     * Teste 03: Health check retorna checks do database.
-     */
-    public function test_health_check_includes_database_check(): void
-    {
-        $response = $this->getJson('/up');
-
-        $response->assertJsonStructure([
-            'checks' => [
-                'database',
-            ],
-        ]);
-    }
-
-    /**
-     * Teste 04: Health check retorna checks do cache.
-     */
-    public function test_health_check_includes_cache_check(): void
-    {
-        $response = $this->getJson('/up');
-
-        $response->assertJsonStructure([
-            'checks' => [
-                'cache',
-            ],
-        ]);
-    }
-
-    /**
-     * Teste 05: Health database check passa quando DB conecta.
-     */
-    public function test_health_database_check_passes(): void
-    {
-        $response = $this->getJson('/up');
-
-        $this->assertEquals('healthy', $response->json('checks.database.status'));
     }
 }

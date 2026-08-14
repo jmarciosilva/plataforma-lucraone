@@ -90,9 +90,11 @@ class AuditLogTest extends TenancyTestCase
             ->create();
 
         $this->actingAs($userA);
+        $this->tenantContext->set($this->tenantA->id);
         $logA = AuditLog::logAction('create', 'User', 'user-a');
 
         $this->actingAs($userB);
+        $this->tenantContext->set($this->tenantB->id);
         $logB = AuditLog::logAction('create', 'User', 'user-b');
 
         $this->assertEquals($this->tenantA->id, $logA->tenant_id);
@@ -142,14 +144,17 @@ class AuditLogTest extends TenancyTestCase
     }
 
     /**
-     * Teste 07: AuditLog sem user autenticado.
+     * Teste 07: AuditLog sem user autenticado precisa de tenant.
      */
     public function test_audit_log_works_without_authenticated_user(): void
     {
+        $this->tenantContext->set($this->tenantA->id);
+
         $log = AuditLog::logAction('login', 'User', 'user-123');
 
         $this->assertNull($log->user_id);
         $this->assertNotNull($log->id);
+        $this->assertEquals($this->tenantA->id, $log->tenant_id);
     }
 
     /**

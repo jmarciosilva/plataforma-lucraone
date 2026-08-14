@@ -34,8 +34,8 @@ class AuthorizationIsolationTest extends TenancyTestCase
     public function test_tenant_a_permissions_not_accessible_to_tenant_b(): void
     {
         $permissionA = Permission::factory()
-            ->create()
-            ->forTenant($this->tenantA->id);
+            ->forTenant($this->tenantA->id)
+            ->create();
 
         $roleB = Role::factory()
             ->forTenant($this->tenantB->id)

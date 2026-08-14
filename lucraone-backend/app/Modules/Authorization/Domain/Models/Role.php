@@ -45,7 +45,7 @@ class Role extends Model
 
     public function grantPermission(Permission $permission): void
     {
-        if (!$this->hasPermission($permission)) {
+        if ($permission->tenant_id === $this->tenant_id && !$this->hasPermission($permission)) {
             $this->permissions()->attach($permission->id, [
                 'tenant_id' => $this->tenant_id,
             ]);
@@ -60,7 +60,7 @@ class Role extends Model
     public function hasPermission(Permission $permission): bool
     {
         return $this->permissions()
-            ->where('permission_id', $permission->id)
+            ->where('permissions.id', $permission->id)
             ->exists();
     }
 

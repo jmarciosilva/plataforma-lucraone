@@ -70,8 +70,9 @@ class RBACTest extends TenancyTestCase
             ->create();
 
         $permission = Permission::factory()
-            ->create()
-            ->forTenant($this->tenantA->id);
+            ->forTenant($this->tenantA->id)
+            ->forAction('create', 'role')
+            ->create();
 
         $role->grantPermission($permission);
         $user->assignRole($role);
@@ -159,8 +160,8 @@ class RBACTest extends TenancyTestCase
     public function test_permissions_isolated_by_tenant(): void
     {
         $permissionA = Permission::factory()
-            ->create()
-            ->forTenant($this->tenantA->id);
+            ->forTenant($this->tenantA->id)
+            ->create();
 
         $userB = User::factory()
             ->active()
@@ -271,8 +272,12 @@ class RBACTest extends TenancyTestCase
             ->forTenant($this->tenantA->id)
             ->create();
 
-        $perm1 = Permission::factory()->create()->forTenant($this->tenantA->id);
-        $perm2 = Permission::factory()->create()->forTenant($this->tenantA->id);
+        $perm1 = Permission::factory()
+            ->forTenant($this->tenantA->id)
+            ->create();
+        $perm2 = Permission::factory()
+            ->forTenant($this->tenantA->id)
+            ->create();
 
         $role->grantPermission($perm1);
         $role->grantPermission($perm2);

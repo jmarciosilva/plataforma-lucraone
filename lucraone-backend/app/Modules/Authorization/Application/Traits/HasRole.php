@@ -21,10 +21,10 @@ trait HasRole
     public function hasRole($role): bool
     {
         if (is_string($role)) {
-            return $this->roles()->where('name', $role)->exists();
+            return $this->roles()->where('roles.name', $role)->exists();
         }
 
-        return $this->roles()->where('id', $role->id)->exists();
+        return $this->roles()->where('roles.id', $role->id)->exists();
     }
 
     public function hasAnyRole($roles): bool
@@ -51,15 +51,17 @@ trait HasRole
     {
         if (is_string($permission)) {
             return $this->roles()
-                ->whereHas('permissions', function ($query) use ($permission) {
-                    $query->where('name', $permission);
-                })->exists();
+                ->with('permissions')
+                ->get()
+                ->flatMap(fn ($role) => $role->permissions)
+                ->firstWhere('name', $permission) !== null;
         }
 
         return $this->roles()
-            ->whereHas('permissions', function ($query) use ($permission) {
-                $query->where('id', $permission->id);
-            })->exists();
+            ->with('permissions')
+            ->get()
+            ->flatMap(fn ($role) => $role->permissions)
+            ->firstWhere('id', $permission->id) !== null;
     }
 
     public function hasAnyPermission($permissions): bool
@@ -90,7 +92,7 @@ trait HasRole
                 ->first();
         }
 
-        if ($role && !$this->hasRole($role)) {
+        if ($role && $role->tenant_id === $this->tenant_id && !$this->hasRole($role)) {
             $this->roles()->attach($role->id, [
                 'tenant_id' => $this->tenant_id,
             ]);

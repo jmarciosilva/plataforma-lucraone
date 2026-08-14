@@ -52,9 +52,18 @@ class AuditLog extends Model
         $user = auth()->user();
         $request = request();
 
+        $tenantId = $user?->tenant_id;
+        if (!$tenantId && app()->has(\App\Modules\Tenancy\Application\TenantContext::class)) {
+            try {
+                $tenantId = app(\App\Modules\Tenancy\Application\TenantContext::class)->id();
+            } catch (\Exception $e) {
+                // Se não conseguir resolver, deixa NULL
+            }
+        }
+
         return self::create([
             'id' => \Illuminate\Support\Str::ulid(),
-            'tenant_id' => $user?->tenant_id ?? (app('TenantContext')->getTenantId()),
+            'tenant_id' => $tenantId,
             'user_id' => $user?->id,
             'action' => $action,
             'entity_type' => $entityType,
