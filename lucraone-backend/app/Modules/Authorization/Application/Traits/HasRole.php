@@ -14,17 +14,22 @@ trait HasRole
             'user_role',
             'user_id',
             'role_id'
-        )->where('user_role.tenant_id', $this->tenant_id)
-            ->withTimestamps();
+        )->withTimestamps();
+    }
+
+    public function rolesForTenant()
+    {
+        return $this->roles()
+            ->wherePivot('tenant_id', $this->tenant_id);
     }
 
     public function hasRole($role): bool
     {
         if (is_string($role)) {
-            return $this->roles()->where('roles.name', $role)->exists();
+            return $this->rolesForTenant()->where('roles.name', $role)->exists();
         }
 
-        return $this->roles()->where('roles.id', $role->id)->exists();
+        return $this->rolesForTenant()->where('roles.id', $role->id)->exists();
     }
 
     public function hasAnyRole($roles): bool
@@ -50,14 +55,14 @@ trait HasRole
     public function hasPermission($permission): bool
     {
         if (is_string($permission)) {
-            return $this->roles()
+            return $this->rolesForTenant()
                 ->with('permissions')
                 ->get()
                 ->flatMap(fn ($role) => $role->permissions)
                 ->firstWhere('name', $permission) !== null;
         }
 
-        return $this->roles()
+        return $this->rolesForTenant()
             ->with('permissions')
             ->get()
             ->flatMap(fn ($role) => $role->permissions)
@@ -133,7 +138,7 @@ trait HasRole
 
     public function getPermissions()
     {
-        return $this->roles()
+        return $this->rolesForTenant()
             ->with('permissions')
             ->get()
             ->flatMap(fn ($role) => $role->permissions)

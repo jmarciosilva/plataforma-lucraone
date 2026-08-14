@@ -27,8 +27,13 @@ class Permission extends Model
             'role_permission',
             'permission_id',
             'role_id'
-        )->where('role_permission.tenant_id', $this->tenant_id)
-            ->withTimestamps();
+        )->withTimestamps();
+    }
+
+    public function rolesForTenant()
+    {
+        return $this->roles()
+            ->wherePivot('tenant_id', $this->tenant_id);
     }
 
     public static function forTenant($tenantId)

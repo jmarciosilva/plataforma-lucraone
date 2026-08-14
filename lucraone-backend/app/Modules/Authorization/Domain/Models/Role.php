@@ -28,8 +28,13 @@ class Role extends Model
             'role_permission',
             'role_id',
             'permission_id'
-        )->where('role_permission.tenant_id', $this->tenant_id)
-            ->withTimestamps();
+        )->withTimestamps();
+    }
+
+    public function permissionsForTenant()
+    {
+        return $this->permissions()
+            ->wherePivot('tenant_id', $this->tenant_id);
     }
 
     public function users()
@@ -39,8 +44,13 @@ class Role extends Model
             'user_role',
             'role_id',
             'user_id'
-        )->where('user_role.tenant_id', $this->tenant_id)
-            ->withTimestamps();
+        )->withTimestamps();
+    }
+
+    public function usersForTenant()
+    {
+        return $this->users()
+            ->wherePivot('tenant_id', $this->tenant_id);
     }
 
     public function grantPermission(Permission $permission): void
@@ -59,7 +69,7 @@ class Role extends Model
 
     public function hasPermission(Permission $permission): bool
     {
-        return $this->permissions()
+        return $this->permissionsForTenant()
             ->where('permissions.id', $permission->id)
             ->exists();
     }
