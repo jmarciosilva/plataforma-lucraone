@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\CategoryWebController;
 use App\Http\Controllers\Web\CompanyController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\EstabelecimentoController;
+use App\Http\Controllers\Web\InventoryWebController;
 use App\Http\Controllers\Web\PermissionController;
 use App\Http\Controllers\Web\ProductWebController;
 use App\Http\Controllers\Web\RoleController;
@@ -86,4 +87,13 @@ Route::middleware('auth.web')->group(function () {
         ->name('catalog.categories.restore');
     Route::resource('categories', CategoryWebController::class)
         ->names('catalog.categories');
+
+    Route::post('/inventory/adjust', [InventoryWebController::class, 'adjust'])
+        ->name('inventory.adjust');
+    Route::post('/inventory/stock-levels', [InventoryWebController::class, 'storeStockLevel'])
+        ->name('inventory.stock-levels.store');
+    Route::get('/inventory', [InventoryWebController::class, 'index'])
+        ->name('inventory.index');
+    Route::get('/inventory/{inventory}', [InventoryWebController::class, 'show'])
+        ->name('inventory.show');
 });

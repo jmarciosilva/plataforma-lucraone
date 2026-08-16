@@ -10,6 +10,10 @@ use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Companies\Http\Policies\CompanyPolicy;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Identity\Http\Policies\UserPolicy;
+use App\Modules\Inventory\Domain\Models\Inventory;
+use App\Modules\Inventory\Domain\Models\StockLevel;
+use App\Modules\Inventory\Http\Policies\InventoryPolicy;
+use App\Modules\Inventory\Http\Policies\StockLevelPolicy;
 use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Products\Http\Policies\CategoryPolicy;
@@ -43,5 +47,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Permission::class, PermissionPolicy::class);
         Gate::policy(Product::class, ProductPolicy::class);
         Gate::policy(Category::class, CategoryPolicy::class);
+        Gate::policy(Inventory::class, InventoryPolicy::class);
+        Gate::policy(StockLevel::class, StockLevelPolicy::class);
     }
 }

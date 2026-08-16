@@ -1,11 +1,11 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (F2.1b concluído — products web ui)
-**Fase Atual:** FASE 02 — FEATURES (F2.2 é o próximo)
-**Próxima Sprint:** F2.2 — Inventory Management
+**Atualizado em:** 2026-08-16 (F2.2 concluído — inventory management)
+**Fase Atual:** FASE 02 — FEATURES (F2.3 é o próximo)
+**Próxima Sprint:** F2.3 — Sales & Orders
 **Fase Concluída:** FASE 03 — ADMIN FRONTEND (6/6 sprints)
 **Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 2 entregas concluídas | FASE 03 ✅ 100% (6/6)
-**Testes:** 312 passing, 0 failing
+**Testes:** 323 passing, 0 failing
 
 > 🔓 **O sistema já é operável por um humano.** Desde o F3.2 existe login web
 > em `/login`. Uma pessoa com vínculo em vários estabelecimentos escolhe onde
@@ -31,11 +31,11 @@
 
 | Item | Status |
 |------|--------|
-| **Fase Atual** | FASE 02 — FEATURES (F2.2 é o próximo) |
-| **Próxima Sprint** | F2.2 — Inventory Management |
+| **Fase Atual** | FASE 02 — FEATURES (F2.3 é o próximo) |
+| **Próxima Sprint** | F2.3 — Sales & Orders |
 | **Fases Concluídas** | FASE 01 — FOUNDATION (8/8) · FASE 03 — ADMIN FRONTEND (6/6) |
-| **Testes Totais** | 312 passing, 0 failing |
-| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 25+ · FASE 03: 60 |
+| **Testes Totais** | 323 passing, 0 failing |
+| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 36+ · FASE 03: 60 |
 
 ### Ordem de Execução Atualizada
 
@@ -44,7 +44,7 @@ FASE 01 — FOUNDATION      ✅ COMPLETO   (8 sprints, 227 testes)
         ↓
 FASE 03 — ADMIN FRONTEND  ✅ COMPLETO   (F3.1-F3.6, 60 testes)
         ↓
-FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.1b ✅ | F2.2 é o próximo)
+FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.1b ✅ | F2.2 ✅ | F2.3 é o próximo)
 ```
 
 ### FASE 01 Sprints Status
@@ -66,8 +66,8 @@ FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.1b ✅ | F2.2 é o pr
 |--------|------|--------|-------|--------|
 | **F2.1** | Products Management | ✅ DONE | 20/20 (100%) | 42 API/domain |
 | **F2.1b** | Products Web UI | ✅ DONE | 20/20 (100%) | 8 web |
-| **F2.2** | Inventory Management | 📋 PRÓXIMO | 0/20 | - |
-| **F2.3** | Orders / Vendas | ⏸️ AGUARDA F3 | 0/20 | - |
+| **F2.2** | Inventory Management | ✅ DONE | 20/20 (100%) | 11 API/web |
+| **F2.3** | Orders / Vendas | 📋 PRÓXIMO | 0/20 | - |
 | **F2.4** | Payments | ⏸️ AGUARDA F3 | 0/20 | - |
 | **F2.5** | Reports | ⏸️ AGUARDA F3 | 0/20 | - |
 | **F2.6** | Integrations | ⏸️ AGUARDA F3 | 0/20 | - |
@@ -300,11 +300,11 @@ preservando histórico conforme a política de entidades principais da fundaçã
 
 ## 🎯 FASE 02 — FEATURES
 
-**Status:** 🟡 ATIVO — F2.2 é o próximo após F2.1b
+**Status:** 🟡 ATIVO — F2.3 é o próximo após F2.2
 
 **Objetivo:** Implementar módulos de negócio para gerenciar produtos, inventário, pedidos, pagamentos, relatórios e integrações.
 
-**Progresso:** F2.1 API + F2.1b Web UI concluídas; 50 testes de produtos/API/web
+**Progresso:** F2.1 API + F2.1b Web UI + F2.2 Inventory concluídas
 
 ### Sprints
 
@@ -364,6 +364,27 @@ preservando histórico conforme a política de entidades principais da fundaçã
 
 **Como validar:** acessar `/products` com usuário admin, criar categoria,
 cadastrar produto, adicionar preço e conferir detalhe/histórico.
+
+#### Sprint F2.2 — Inventory Management
+
+**Status:** ✅ DONE
+**Objetivo:** Controlar estoque, níveis de reposição e histórico pelo painel e API
+
+**Checklist:**
+
+- [x] Módulo `Inventory` com models Inventory, InventoryMovement e StockLevel
+- [x] Migrations de saldos, movimentos e níveis de estoque
+- [x] API `/api/v1/inventory`, ajuste, histórico, baixo estoque e excesso
+- [x] API `/api/v1/stock-levels/{product_id}`
+- [x] Tela `/inventory` com KPIs, filtros, posição e formulário de movimento
+- [x] Tela de detalhe com histórico de movimentações
+- [x] Modal de ajuda contextual de estoque
+- [x] Seeder de saldos e níveis iniciais
+- [x] RBAC com `manage-inventory` e `view-inventory`
+- [x] 11 testes feature API/web passando
+
+**Como validar:** acessar `/inventory`, registrar entrada/saída/ajuste e abrir
+o detalhe para conferir o histórico.
 
 ---
 

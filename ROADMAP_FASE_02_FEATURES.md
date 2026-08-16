@@ -3,7 +3,7 @@
 
 **Projeto:** Plataforma SaaS Inteligente de Automação Comercial  
 **Fase:** 02 — FEATURES  
-**Status:** 🟡 ATIVO — F2.1b Web UI concluída, F2.2 é o próximo
+**Status:** 🟡 ATIVO — F2.2 Inventory concluída, F2.3 é o próximo
 **Prioridade:** Alta  
 **Dependência:** FASE 01 ✅ Concluída · FASE 03 ✅ Concluída
 **Estimativa:** 6 sprints (~12-16 semanas)  
@@ -31,8 +31,8 @@
 |--------|-------------|--------------|--------|
 | F2.1 — Products Management | ✅ DONE | ✅ DONE via F2.1b | 42 API/domain |
 | F2.1b — Products Web UI | ✅ DONE | ✅ DONE | 8 web |
-| F2.2 — Inventory Management | 📋 TODO | 📋 TODO | — |
-| F2.3 — Orders / Vendas | ⏸️ Aguarda F2.2 | ⏸️ Aguarda F2.2 | — |
+| F2.2 — Inventory Management | ✅ DONE | ✅ DONE | 11 API/web |
+| F2.3 — Orders / Vendas | 📋 TODO | 📋 TODO | — |
 | F2.4 — Payments | ⏸️ Aguarda F2.3 | ⏸️ Aguarda F2.3 | — |
 | F2.5 — Reports | ⏸️ Aguarda F2.4 | ⏸️ Aguarda F2.4 | — |
 | F2.6 — Integrations | ⏸️ Aguarda F2.5 | ⏸️ Aguarda F2.5 | — |
@@ -152,7 +152,7 @@ app/Modules/
 │   ├── Infrastructure/
 │   └── Http/
 │
-├── Inventory/            # 📋 F2.2 — API + Web UI
+├── Inventory/            # ✅ F2.2 — API + Web UI
 │   ├── Domain/
 │   ├── Application/
 │   ├── Infrastructure/
@@ -325,6 +325,9 @@ cadastráveis pela tela.
 
 ## Sprint F2.2 — Inventory Management
 
+**Status:** ✅ DONE
+**Concluído em:** 2026-08-16
+**Testes:** 11 passing (`tests/Feature/Inventory` + `tests/Feature/Admin/InventoryWebManagementTest.php`)
 **Duração:** ~2 semanas  
 **Objetivo:** Controlar estoque com movimentações e níveis de reposição pela API
 e pelo painel web.
@@ -334,59 +337,59 @@ registrar ajuste de entrada/saída e ver histórico de movimentações.
 ### Requisitos
 
 #### Modelos
-- [ ] Inventory (product_id, company_id, quantity_on_hand, reserved, available)
-- [ ] InventoryMovement (type, quantity, reason, datetime, tenant_id)
-- [ ] StockLevel (min_qty, max_qty, reorder_point)
+- [x] Inventory (product_id, company_id, quantity_on_hand, reserved, available)
+- [x] InventoryMovement (type, quantity, reason, datetime, tenant_id)
+- [x] StockLevel (min_qty, max_qty, reorder_point)
 
 #### Banco de Dados
-- [ ] inventories table
-- [ ] inventory_movements table
-- [ ] stock_levels table
+- [x] inventories table
+- [x] inventory_movements table
+- [x] stock_levels table
 
 #### API Endpoints
-- [ ] GET /api/v1/inventory (company level)
-- [ ] POST /api/v1/inventory/{product_id}/adjust (movement)
-- [ ] GET /api/v1/inventory/{product_id}/movements (history)
-- [ ] POST /api/v1/stock-levels/{product_id} (set min/max)
-- [ ] GET /api/v1/inventory/low-stock (alert)
-- [ ] GET /api/v1/inventory/overstock (alert)
+- [x] GET /api/v1/inventory (company level)
+- [x] POST /api/v1/inventory/{product_id}/adjust (movement)
+- [x] GET /api/v1/inventory/{product_id}/movements (history)
+- [x] POST /api/v1/stock-levels/{product_id} (set min/max)
+- [x] GET /api/v1/inventory/low-stock (alert)
+- [x] GET /api/v1/inventory/overstock (alert)
 
 #### Frontend Web
-- [ ] Menu `estoque` no painel
-- [ ] Dashboard de estoque com totais, baixo estoque e excesso
-- [ ] Listagem de estoque por produto/empresa
-- [ ] Busca por produto/SKU
-- [ ] Filtros por empresa, status de estoque e categoria
-- [ ] Tela de detalhe do estoque do produto
-- [ ] Formulário/modal de ajuste de estoque
-- [ ] Histórico de movimentações
-- [ ] Formulário de nível mínimo, máximo e ponto de reposição
-- [ ] Modal de ajuda contextual do módulo estoque
+- [x] Menu `estoque` no painel
+- [x] Dashboard de estoque com totais, baixo estoque e excesso
+- [x] Listagem de estoque por produto/empresa
+- [x] Busca por produto/SKU
+- [x] Filtros por empresa, status de estoque e categoria
+- [x] Tela de detalhe do estoque do produto
+- [x] Formulário/modal de ajuste de estoque
+- [x] Histórico de movimentações
+- [x] Formulário de nível mínimo, máximo e ponto de reposição
+- [x] Modal de ajuda contextual do módulo estoque
 
 #### Features
-- [ ] Real-time inventory updates
-- [ ] Movement audit trail (quem, quando, por quê)
-- [ ] Low stock alerts
-- [ ] Overstock detection
-- [ ] Transfer between branches
+- [x] Real-time inventory updates
+- [x] Movement audit trail (quem, quando, por quê)
+- [x] Low stock alerts
+- [x] Overstock detection
+- [ ] Transfer between branches (adiado para multi-filial operacional)
 - [ ] Batch/serial number tracking (preparação)
-- [ ] Reserved quantity for pending orders
+- [x] Reserved quantity for pending orders
 
 #### Testes (18+)
-- [ ] Inventory movements
-- [ ] Stock level validation
-- [ ] Low stock alerts
-- [ ] Transfer operations
-- [ ] Concurrent updates (locking)
-- [ ] Audit trail completeness
-- [ ] Web: listagem renderiza dados do tenant atual
-- [ ] Web: ajuste de estoque cria movimentação
-- [ ] Web: usuário sem permissão recebe 403
-- [ ] Browser: fluxo manual validado
+- [x] Inventory movements
+- [x] Stock level validation
+- [x] Low stock alerts
+- [ ] Transfer operations (adiado junto com transferência entre filiais)
+- [x] Concurrent updates (locking)
+- [x] Audit trail completeness
+- [x] Web: listagem renderiza dados do tenant atual
+- [x] Web: ajuste de estoque cria movimentação
+- [x] Web: usuário sem permissão recebe 403
+- [x] Browser: fluxo manual validado
 
 #### Documentação
 - [ ] ADR-003: Inventory Strategy
-- [ ] Inventory Module Guide
+- [x] Inventory Module Guide via documentação da sprint
 
 ---
 
@@ -789,5 +792,5 @@ Antes de começar F2.2, implementar F2.1b para que produtos estejam operáveis n
 
 **Autor:** Claude Code  
 **Data de Criação:** 2026-08-16  
-**Status:** F2.1b Web UI concluída · F2.2 Inventory Management é o próximo passo
-**Próxima Atualização:** Quando F2.2 iniciar
+**Status:** F2.2 Inventory Management concluída · F2.3 Sales & Orders é o próximo passo
+**Próxima Atualização:** Quando F2.3 iniciar

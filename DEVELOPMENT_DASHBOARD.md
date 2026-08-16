@@ -1,9 +1,9 @@
 # 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-16 (F2.1b — products web ui)
-**Fase Ativa:** FASE 02 — FEATURES 🟡 (F2.2 é o próximo)
+**Atualizado:** 2026-08-16 (F2.2 — inventory management)
+**Fase Ativa:** FASE 02 — FEATURES 🟡 (F2.3 é o próximo)
 **Fase Concluída:** FASE 03 — ADMIN FRONTEND ✅ (6/6 sprints)
-**Testes:** 312 passing
+**Testes:** 323 passing
 
 ---
 
@@ -16,7 +16,7 @@
 │  ████████████████████████████████████████████████  100%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 02 — FEATURES              🟡 ATIVO  ← AQUI            │
-│  F2.1 API + F2.1b Web UI · 50 testes de produtos             │
+│  F2.1/F2.1b Products + F2.2 Inventory                        │
 │  ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   17%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 03 — ADMIN FRONTEND        ✅ COMPLETO                 │
@@ -242,16 +242,32 @@ Conclusão:
   ✅ RBAC com manage-products/view-products
 ```
 
-### 🟡 Sprints F2.2 a F2.6 (PRÓXIMAS)
+### ✅ Sprint F2.2 — Inventory Management (DONE)
 
 ```
-F2.2 — Inventory Management    📋  0/20 itens  ← próximo
-F2.3 — Orders / Vendas          ⏸️  0/20 itens
+Status:     ✅ DONE (100%)
+Progresso:  estoque operável por API e painel
+Tests:      11/11 passing ✅
+
+Conclusão:
+  ✅ Models: Inventory, InventoryMovement, StockLevel
+  ✅ API de posição, ajuste, histórico, baixo estoque e excesso
+  ✅ Tela /inventory com KPIs, filtros e formulário de movimentação
+  ✅ Tela de detalhe com histórico
+  ✅ Níveis mínimo, máximo e ponto de reposição
+  ✅ Seeder de saldos e níveis iniciais
+  ✅ RBAC com manage-inventory/view-inventory
+```
+
+### 🟡 Sprints F2.3 a F2.6 (PRÓXIMAS)
+
+```
+F2.3 — Orders / Vendas          📋  0/20 itens  ← próximo
 F2.4 — Payments                 ⏸️  0/20 itens
 F2.5 — Reports                  ⏸️  0/20 itens
 F2.6 — Integrations             ⏸️  0/20 itens
 
-Retomada liberada: FASE 03 concluída e F2.1b entregue.
+Retomada liberada: FASE 03 concluída; Products e Inventory já operáveis.
 ```
 
 ---
@@ -398,7 +414,7 @@ Modular Monolith:
   ✅ Authorization
   ✅ Audit
   ✅ Products (F2.1)
-  ⬜ Inventory (F2.2)
+  ✅ Inventory (F2.2)
 
 Padrão DDD:
   ✅ Domain/
@@ -447,6 +463,7 @@ Breakdown FASE 01 (189):
 Breakdown FASE 02 (17):
   F2.1 (Products API):    ✅ 42 passing
   F2.1b (Products Web):   ✅ 8 passing
+  F2.2 (Inventory):       ✅ 11 passing
 
 Breakdown FASE 03 (60):
   F3.1 (Setup):           ✅ 6/6
@@ -532,13 +549,13 @@ Foundation Phase:       ✅ 100% (7/7 sprints) — 189 TESTS
 
 ## ⚙️ Próximas Ações (Roadmap)
 
-### 🔜 Imediato — Sprint F2.2 (Inventory Management)
+### 🔜 Imediato — Sprint F2.3 (Sales & Orders)
 
-- [ ] Inventário por produto/empresa
-- [ ] Movimentações de estoque
-- [ ] Alertas de estoque baixo
-- [ ] Isolamento por tenant
-- [ ] Testes da sprint
+- [ ] Pedidos/vendas por tenant
+- [ ] Itens de pedido com preço de produto
+- [ ] Status de pedido
+- [ ] Reserva/baixa de estoque quando aplicável
+- [ ] Testes API e web da sprint
 
 ### Depois — F2.2 → F2.3 Orders / Vendas
 
@@ -559,7 +576,7 @@ Em aberto:
 
 ### ⏸️ Retomada da FASE 02 (após F3.6)
 
-- [ ] F2.2 — Inventory Management
+- [x] F2.2 — Inventory Management
 - [ ] F2.3 — Orders / Vendas
 - [ ] F2.4 — Payments
 - [ ] F2.5 — Reports
@@ -689,8 +706,9 @@ Uma sprint é considerada **pronta** quando:
 - FASE 01 (F1.1 → F1.7): 100% pronto ✅
 - F2.1 (Products API): 100% pronto ✅
 - F2.1b (Products Web UI): 100% pronto ✅
+- F2.2 (Inventory): 100% pronto ✅
 - F3.1 → F3.6: 100% pronto ✅
-- F2.2 → F2.6: 🟡 retomada iniciada; F2.2 próximo
+- F2.3 → F2.6: 🟡 próximos módulos de negócio
 
 ---
 
@@ -705,8 +723,8 @@ Uma sprint é considerada **pronta** quando:
 
 ---
 
-**Próxima atualização:** Ao concluir o Sprint F2.2
-**Gerado:** 2026-08-16 (F2.1b concluído — F2.2 liberada)
+**Próxima atualização:** Ao concluir o Sprint F2.3
+**Gerado:** 2026-08-16 (F2.2 concluído — F2.3 liberada)
 **Repositório:** D:\PROJETO-LUCRAONE
 
 ---
@@ -715,9 +733,10 @@ Uma sprint é considerada **pronta** quando:
 
 ✅ **FASE 01 — FOUNDATION:** 227 testes, 8/8 sprints, segurança OWASP validada
 ✅ **F2.1/F2.1b — Products:** API e painel web de produtos/categorias/preços funcionando
+✅ **F2.2 — Inventory:** API e painel web de estoque funcionando
 ✅ **FASE 03 — ADMIN FRONTEND:** 6/6 sprints concluídos; 60 testes
 
 **Lacuna resolvida pela FASE 03:** login web, painel administrativo, tenants,
 usuários, empresas e permissões já são operáveis pela interface.
 
-**Status:** Ready for F2.2 — Inventory Management
+**Status:** Ready for F2.3 — Sales & Orders

@@ -14,3 +14,6 @@ Route::prefix('auth')->group(function () {
 
 // Products Module Routes
 require __DIR__ . '/../app/Modules/Products/Routes/api.php';
+
+// Inventory Module Routes
+require __DIR__ . '/../app/Modules/Inventory/Routes/api.php';

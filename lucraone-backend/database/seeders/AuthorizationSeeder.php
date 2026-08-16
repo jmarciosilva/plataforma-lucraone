@@ -38,6 +38,8 @@ class AuthorizationSeeder extends Seeder
             'view-companies',
             'manage-products',
             'view-products',
+            'manage-inventory',
+            'view-inventory',
             'manage-users',
             'view-users',
             'manage-branches',
@@ -85,6 +87,7 @@ class AuthorizationSeeder extends Seeder
             'create-permission', 'update-permission', 'delete-permission', 'view-permissions',
             'manage-companies', 'view-companies',
             'manage-products', 'view-products',
+            'manage-inventory', 'view-inventory',
             'manage-users', 'view-users',
             'manage-branches', 'view-branches', 'view-all-branches',
         ];
@@ -98,6 +101,7 @@ class AuthorizationSeeder extends Seeder
         $managerPermissions = [
             'manage-companies', 'view-companies',
             'manage-products', 'view-products',
+            'manage-inventory', 'view-inventory',
             'manage-users', 'view-users',
             'manage-assigned-branches', 'view-branches',
         ];
@@ -111,6 +115,7 @@ class AuthorizationSeeder extends Seeder
         $userPermissions = [
             'view-companies',
             'view-products',
+            'view-inventory',
             'view-users',
             'view-assigned-branches',
         ];
@@ -124,6 +129,7 @@ class AuthorizationSeeder extends Seeder
         $viewerPermissions = [
             'view-companies',
             'view-products',
+            'view-inventory',
             'view-branches',
         ];
 

@@ -234,6 +234,7 @@ class TenantController extends Controller
             'create-permission', 'update-permission', 'delete-permission', 'view-permissions',
             'manage-companies', 'view-companies',
             'manage-products', 'view-products',
+            'manage-inventory', 'view-inventory',
             'manage-users', 'view-users',
             'manage-branches', 'view-branches', 'view-all-branches',
         ])->mapWithKeys(function (string $name) use ($tenant) {
