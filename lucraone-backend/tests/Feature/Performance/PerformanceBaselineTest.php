@@ -404,57 +404,79 @@ class PerformanceBaselineTest extends TestCase
 
     /**
      * Test 13: Performance with Growing Data
-     * Query performance should scale reasonably with more data
+     *
+     * Verifica que o tempo da consulta NÃO cresce mais rápido que o volume de
+     * dados. É o que separa escala saudável de um N+1 ou de um índice ausente,
+     * onde o tempo dispara enquanto os dados apenas dobram.
+     *
+     * Duas armadilhas que este teste já teve, corrigidas em 2026-08-16:
+     *
+     *  1. O laço ACUMULA usuários (10, depois +50, depois +100), então o
+     *     rótulo "100" na verdade lia 160 linhas — 16x o rótulo "10", não 10x.
+     *     O limite fixo de 10x, herdado dessa leitura errada, exigia escala
+     *     sublinear: impossível para uma consulta que instancia N models.
+     *     Agora o limite é o próprio aumento de dados, medido em tempo de
+     *     execução.
+     *
+     *  2. Com poucas linhas a consulta leva frações de milissegundo, e uma
+     *     amostra única é dominada pelo jitter da máquina. Um denominador
+     *     ruidoso fazia a razão oscilar entre 4x e 15x na mesma máquina, sem
+     *     que nada no código mudasse. A mediana de várias execuções mede a
+     *     consulta, não o ruído.
      */
     public function test_performance_with_growing_data(): void
     {
-        $times = [];
+        $tempos = [];
+        $linhas = [];
 
-        // Test with 10, 50, 100 users
-        $sizes = [10, 50, 100];
-
-        foreach ($sizes as $size) {
-            // Create users
+        foreach ([10, 50, 100] as $lote) {
             User::factory()
-                ->count($size)
+                ->count($lote)
                 ->forCurrentTenant($this->tenant->id)
                 ->create();
 
-            // Com 10 usuários a consulta leva frações de milissegundo, então
-            // uma amostra única é dominada por ruído — e a razão entre duas
-            // amostras ruidosas oscila muito. A mediana de várias execuções
-            // mede a consulta, não o jitter da máquina.
+            $consulta = fn () => $this->tenant->users()->get();
+
+            $consulta(); // aquece: descarta o custo de primeira execução
+
             $amostras = [];
 
-            for ($i = 0; $i < 7; $i++) {
+            for ($i = 0; $i < 9; $i++) {
                 $inicio = microtime(true);
-                $this->tenant->users()->get();
+                $resultado = $consulta();
                 $amostras[] = (microtime(true) - $inicio) * 1000;
             }
 
             sort($amostras);
-            $duration = $amostras[intdiv(count($amostras), 2)];
 
-            $times[$size] = $duration;
-            echo "✅ Query {$size} users: {$duration}ms (mediana de 7)\n";
+            $tempos[$lote] = $amostras[intdiv(count($amostras), 2)];
+            $linhas[$lote] = $resultado->count();
+
+            echo "✅ {$linhas[$lote]} linhas: {$tempos[$lote]}ms (mediana de 9)\n";
         }
 
-        $ratio = $times[100] / $times[10];
+        $crescimentoDosDados = $linhas[100] / $linhas[10];
+        $crescimentoDoTempo = $tempos[100] / $tempos[10];
 
-        echo "✅ Scalability ratio (100/10): {$ratio}x\n";
+        printf(
+            "✅ Dados cresceram %.1fx; tempo cresceu %.2fx\n",
+            $crescimentoDosDados,
+            $crescimentoDoTempo
+        );
 
-        // 10x mais linhas custa ~10x mais tempo: instanciar 100 models é
-        // inerentemente dez vezes o trabalho de instanciar 10. Exigir menos
-        // de 10x seria exigir escala sublinear, o que nenhuma consulta que
-        // materializa o resultado consegue entregar.
-        //
-        // O que este teste protege é contra escala SUPERLINEAR — um N+1 ou um
-        // índice ausente fariam a razão saltar para a casa das centenas.
-        // A margem de 15x acomoda a linearidade mais a variação da máquina.
         $this->assertLessThan(
-            15,
-            $ratio,
-            "Consulta deveria escalar de forma ~linear; razão observada: {$ratio}x"
+            $crescimentoDosDados,
+            $crescimentoDoTempo,
+            sprintf(
+                'O tempo deveria crescer no máximo junto com os dados. '.
+                'Dados: %.1fx (%d para %d linhas). Tempo: %.2fx. '.
+                'Tempo crescendo mais rápido que os dados indica escala '.
+                'superlinear — típico de N+1 ou índice ausente.',
+                $crescimentoDosDados,
+                $linhas[10],
+                $linhas[100],
+                $crescimentoDoTempo
+            )
         );
     }
 

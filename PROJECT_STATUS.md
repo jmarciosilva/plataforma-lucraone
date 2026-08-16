@@ -397,7 +397,51 @@ contexto, **não filtra nada**. A resolução para o painel passou para
 |------|-------------------|
 | `PermissionFactory` sorteava ação e recurso separadamente | Colisão de nome em 1 a cada 20 execuções — falha intermitente |
 | `HasUlid` não dispara em models Pivot | SQLite tolerava (rowid implícito), MySQL rejeitava |
-| Teste de escalabilidade exigia razão < 10x para 10x de dados | Exigia escala **sublinear**, impossível para consulta que materializa N models; passava por sorte sob o ruído |
+
+### Investigação: suspeita de regressão de performance
+
+Após o F1.8, `test_performance_with_growing_data` passou a falhar de forma
+intermitente (razão ~11x contra limite de 10x). A suspeita inicial era que o
+JOIN da nova relação tivesse piorado a escalabilidade. **A investigação
+descartou isso** — o teste é que estava medindo errado.
+
+**Evidências coletadas:**
+
+| Configuração medida | Razão observada |
+|---------------------|-----------------|
+| Consulta pré-F1.8 (tabela única, sem join) | 5,1x · 9,9x · **12,2x** |
+| `belongsToMany` sem pivot | 5,3x · 11,6x · 11,9x |
+| `using()` + `withPivot('status')` | 7,2x · 11,0x · 12,2x |
+| Como estava (`using` + pivot completo) | 4,2x · 10,8x · 14,1x |
+
+Três conclusões:
+
+1. **O rótulo "100" lia 160 linhas.** O laço acumula usuários (10, +50, +100),
+   então o aumento real de dados era **16x**, não 10x. O limite fixo de 10x
+   vinha dessa leitura errada e exigia escala **sublinear** — impossível para
+   consulta que instancia N models.
+
+2. **O caminho anterior ao F1.8 também falha** (12,2x numa das medições). O
+   teste nunca mediu o que dizia medir; passava por sorte.
+
+3. **O ruído domina a razão.** Numa execução em que o baseline de 10 linhas
+   ficou 2x mais lento por jitter, *todas* as configurações passaram de uma vez.
+   O denominador ruidoso governava o resultado, não a escalabilidade.
+
+**Custo real do modelo de identidade:** o JOIN custa cerca de 2x em valor
+absoluto (3,4ms → 7,6ms para 160 linhas). É proporcional e esperado — o preço
+de trocar uma coluna por um vínculo — e **escala igual** ao caminho anterior.
+
+**Correção aplicada ao teste** (sem afrouxar nada):
+
+- O limite passou a ser o próprio aumento de dados, medido em tempo de execução:
+  o tempo não pode crescer mais rápido que o volume. É a definição de ausência
+  de escala superlinear, e é mais significativo que um número fixo arbitrário.
+- Mediana de 9 execuções com aquecimento, para medir a consulta e não o jitter.
+- A mensagem de falha agora informa linhas reais, crescimento de dados e de tempo.
+
+Resultado: 6 execuções seguidas com tempo crescendo de 4,1x a 11,6x contra
+14,6x de dados — sempre sublinear.
 
 ---
 

@@ -172,6 +172,14 @@ Conclusão:
   ✅ TenantScope não ficava mais sem contexto em requisições web
   ✅ PermissionFactory sem colisão intermitente
   ✅ 22 testes novos (13 isolamento + 9 multi-estabelecimento)
+
+Suspeita de regressão de performance — investigada e descartada:
+  O teste de escalabilidade acumulava usuários, então o rótulo "100"
+  lia 160 linhas (16x, não 10x). O limite de 10x exigia escala
+  sublinear. Medindo o caminho ANTERIOR ao F1.8 nas mesmas condições,
+  ele também falha (12,2x). O JOIN custa ~2x em valor absoluto, mas
+  escala igual. Teste corrigido para comparar o crescimento do tempo
+  com o crescimento real dos dados.
 ```
 
 ### ✅ Sprint F1.7 — Hardening & Final Validation (COMPLETE)
