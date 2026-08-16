@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             TenantSeeder::class,
             AuthorizationSeeder::class,
             UserSeeder::class,
+            CategorySeeder::class,
+            ProductSeeder::class,
         ]);
     }
 }
