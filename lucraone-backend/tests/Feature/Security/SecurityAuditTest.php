@@ -92,23 +92,19 @@ class SecurityAuditTest extends TestCase
      */
     public function test_tenant_isolation_user_cannot_see_other_tenant_data(): void
     {
-        // Get all users from both tenants (without tenant filter)
+        // A tabela users é global: a identidade não é escopada por tenant
         $allUsers = DB::table('users')->get();
         $this->assertGreaterThan(0, $allUsers->count(), 'Database has users');
 
-        // But when using the model with global scope, should only see current tenant
-        $tenantAUsers = User::whereRaw('true')->get(); // Force evaluation of scope
+        // O isolamento vem do vínculo — cada estabelecimento lista só os seus
+        $usuariosA = $this->tenantA->users()->get();
+        $usuariosB = $this->tenantB->users()->get();
 
-        // All users returned should be from tenant A when in context A
-        // (this is what TenantScope does)
-        foreach ($tenantAUsers as $user) {
-            $this->assertTrue(
-                $user->tenant_id === $this->tenantA->id || $user->tenant_id === $this->tenantB->id,
-                'Users have valid tenant_id'
-            );
-        }
+        $this->assertTrue($usuariosA->contains('id', $this->userA->id));
+        $this->assertFalse($usuariosA->contains('id', $this->userB->id));
 
-        $this->assertTrue(true, 'Tenant isolation working');
+        $this->assertTrue($usuariosB->contains('id', $this->userB->id));
+        $this->assertFalse($usuariosB->contains('id', $this->userA->id));
     }
 
     /**
@@ -213,13 +209,17 @@ class SecurityAuditTest extends TestCase
     {
         $this->actingAs($this->userA);
 
-        // Try to access userB's data (different tenant)
+        // userB pertence a outro estabelecimento — não deve aparecer entre os
+        // vinculados ao tenantA
         $userBData = DB::table('users')
-            ->where('id', $this->userB->id)
-            ->where('tenant_id', $this->tenantA->id)
+            ->join('tenant_user', 'users.id', '=', 'tenant_user.user_id')
+            ->where('users.id', $this->userB->id)
+            ->where('tenant_user.tenant_id', $this->tenantA->id)
+            ->select('users.*')
             ->first();
 
         $this->assertNull($userBData, 'User should not see other tenant users');
+        $this->assertFalse($this->userB->canAccessTenant($this->tenantA->id));
     }
 
     /**

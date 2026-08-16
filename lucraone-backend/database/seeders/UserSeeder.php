@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Modules\Identity\Domain\Models\TenantUser;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Database\Seeder;
@@ -14,38 +15,68 @@ class UserSeeder extends Seeder
         $tenants = Tenant::all();
 
         foreach ($tenants as $tenant) {
-            $adminEmail = "admin@{$tenant->slug}.local";
-
-            // Create or find admin user
-            User::firstOrCreate(
-                [
-                    'tenant_id' => $tenant->id,
-                    'email' => $adminEmail,
-                ],
+            $admin = User::firstOrCreate(
+                ['email' => "admin@{$tenant->slug}.local"],
                 [
                     'id' => (string) Str::ulid(),
                     'name' => "Admin - {$tenant->name}",
-                    'status' => 'ACTIVE',
+                    'status' => User::STATUS_ACTIVE,
                     'password' => bcrypt('password'),
                     'email_verified_at' => now(),
                 ]
             );
 
-            // Create regular active users (only if less than 4 total per tenant)
-            if (User::where('tenant_id', $tenant->id)->count() < 4) {
-                User::factory(3)
-                    ->forCurrentTenant($tenant->id)
-                    ->active()
+            $admin->joinTenant($tenant->id, TenantUser::STATUS_ACTIVE);
+
+            // Completa até 3 pessoas com vínculo ativo neste estabelecimento
+            $ativos = $tenant->memberships()
+                ->where('status', TenantUser::STATUS_ACTIVE)
+                ->count();
+
+            if ($ativos < 3) {
+                User::factory(3 - $ativos)
+                    ->forTenant($tenant)
                     ->create();
             }
 
-            // Create invited users (only if less than 6 total per tenant)
-            if (User::where('tenant_id', $tenant->id)->count() < 6) {
-                User::factory(2)
-                    ->forCurrentTenant($tenant->id)
-                    ->invited()
+            // E 2 convidados que ainda não aceitaram
+            $convidados = $tenant->memberships()
+                ->where('status', TenantUser::STATUS_INVITED)
+                ->count();
+
+            if ($convidados < 2) {
+                User::factory(2 - $convidados)
+                    ->forTenant($tenant, TenantUser::STATUS_INVITED)
                     ->create();
             }
+        }
+
+        $this->seedContadorMultiEstabelecimento($tenants);
+    }
+
+    /**
+     * Uma pessoa associada a mais de um estabelecimento — o caso que motivou
+     * o modelo de identidade. Uma conta, uma senha, dois vínculos.
+     */
+    private function seedContadorMultiEstabelecimento($tenants): void
+    {
+        if ($tenants->count() < 2) {
+            return;
+        }
+
+        $contador = User::firstOrCreate(
+            ['email' => 'contador@escritorio.local'],
+            [
+                'id' => (string) Str::ulid(),
+                'name' => 'Contador Externo',
+                'status' => User::STATUS_ACTIVE,
+                'password' => bcrypt('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        foreach ($tenants->take(2) as $tenant) {
+            $contador->joinTenant($tenant->id, TenantUser::STATUS_ACTIVE);
         }
     }
 }

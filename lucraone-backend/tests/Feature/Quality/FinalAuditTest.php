@@ -73,8 +73,12 @@ class FinalAuditTest extends TestCase
         $roleA = Role::factory()->forTenant($tenantA->id)->create();
         $roleB = Role::factory()->forTenant($tenantB->id)->create();
 
-        // Verify isolation
-        $this->assertNotEquals($userA->tenant_id, $userB->tenant_id);
+        // Cada pessoa só alcança o estabelecimento onde tem vínculo
+        $this->assertTrue($userA->canAccessTenant($tenantA->id));
+        $this->assertFalse($userA->canAccessTenant($tenantB->id));
+        $this->assertTrue($userB->canAccessTenant($tenantB->id));
+        $this->assertFalse($userB->canAccessTenant($tenantA->id));
+
         $this->assertNotEquals($roleA->tenant_id, $roleB->tenant_id);
 
         // Verify cross-tenant operations fail
@@ -143,8 +147,8 @@ class FinalAuditTest extends TestCase
         $allUsers = DB::table('users')->get();
         $this->assertGreaterThan(0, $allUsers->count());
 
-        // But when filtered by tenant, should only see own tenant
-        $tenantAUsers = User::where('tenant_id', $this->tenant->id)->get();
+        // Mas o estabelecimento só enxerga quem tem vínculo com ele
+        $tenantAUsers = $this->tenant->users()->get();
         $this->assertFalse($tenantAUsers->contains('id', $userB->id));
 
         echo "✅ Data isolation validated\n";

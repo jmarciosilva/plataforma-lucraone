@@ -1,8 +1,12 @@
 @props(['class' => ''])
 
 @php
-    $tenantNome = auth()->check() && auth()->user()->tenant
-        ? auth()->user()->tenant->name
+    // O estabelecimento em uso vem do contexto da requisição — uma pessoa pode
+    // estar associada a vários e alternar entre eles.
+    $contexto = app(\App\Modules\Tenancy\Application\TenantContext::class);
+
+    $tenantNome = $contexto->resolved()
+        ? $contexto->tenant()->name
         : config('app.name');
 
     $ambiente = strtoupper(app()->environment());

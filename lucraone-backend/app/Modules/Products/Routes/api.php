@@ -5,7 +5,9 @@ use App\Modules\Products\Http\Controllers\PriceController;
 use App\Modules\Products\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
+// A ordem importa: o tenant só pode ser resolvido depois de sabermos quem é
+// o usuário, para validar que ele tem vínculo com o estabelecimento pedido.
+Route::middleware(['auth:sanctum', 'tenant'])->prefix('v1')->group(function () {
     // Products
     Route::get('products/search/{query}', [ProductController::class, 'search']);
     Route::get('products/status/{status}', [ProductController::class, 'byStatus']);

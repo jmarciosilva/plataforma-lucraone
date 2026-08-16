@@ -3,81 +3,39 @@
 namespace App\Modules\Tenancy\Http\Middleware;
 
 use App\Modules\Tenancy\Application\TenantResolver;
-use App\Modules\Tenancy\Domain\Exceptions\TenantNotResolvedException;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Fixa o estabelecimento da requisição.
+ *
+ * Aplicado explicitamente nas rotas que precisam dele, sempre DEPOIS da
+ * autenticação — o vínculo do usuário é o que autoriza o acesso ao
+ * estabelecimento pedido.
+ *
+ * Registrado como alias 'tenant'. Uso: ['auth:sanctum', 'tenant'].
+ *
+ * Nunca registrar como middleware global: rodando antes da autenticação, não
+ * há usuário para validar, e um X-Tenant-ID apontando para outro
+ * estabelecimento seria aceito sem checagem.
+ */
 class ResolveTenantMiddleware
 {
     public function __construct(
         private TenantResolver $resolver
     ) {}
 
-    /**
-     * Handle an incoming request.
-     *
-     * Resolve qual tenant está sendo usado antes de processar a requisição.
-     * Se não conseguir resolver e a rota exigir autenticação, retorna erro.
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        // Rotas públicas (login, health check, etc) não precisam de tenant
-        if ($this->isPublicRoute($request)) {
+        if ($this->resolver->resolve($request)) {
             return $next($request);
         }
 
-        // Se não há token, deixar que auth:sanctum cuide (vai retornar 401)
-        // O middleware de tenant deve vir DEPOIS de auth:sanctum
-        if (!$this->hasAuthToken($request)) {
-            return $next($request);
-        }
-
-        // Rotas autenticadas precisam de tenant resolvido
-        if (! $this->resolver->resolve($request)) {
-            throw new TenantNotResolvedException(
-                'Não foi possível resolver o tenant para esta requisição'
-            );
-        }
-
-        return $next($request);
-    }
-
-    /**
-     * Verifica se a rota é pública (não requer tenant).
-     */
-    private function isPublicRoute(Request $request): bool
-    {
-        // Health checks (Laravel 11 + custom)
-        if ($request->is('up', 'health', 'api/health', 'api/v1/health')) {
-            return true;
-        }
-
-        // Autenticação (ambos os padrões de versão)
-        if ($request->is(
-            'api/auth/login',
-            'api/auth/logout',
-            'api/v1/auth/login',
-            'api/v1/auth/logout',
-            'api/v1/auth/forgot-password',
-            'api/v1/auth/reset-password'
-        )) {
-            return true;
-        }
-
-        // Rotas de teste (Laravel Dusk / teste local)
-        if ($request->is('tests/*') || $request->getMethod() === 'GET' && $request->path() === '/') {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Verifica se há token no header de autenticação.
-     */
-    private function hasAuthToken(Request $request): bool
-    {
-        return $request->bearerToken() !== null;
+        // Não resolveu: ou o usuário não tem vínculo ativo com o
+        // estabelecimento pedido, ou tem vários e não indicou qual.
+        return response()->json([
+            'message' => 'Estabelecimento não identificado ou sem vínculo ativo',
+        ], 403);
     }
 }

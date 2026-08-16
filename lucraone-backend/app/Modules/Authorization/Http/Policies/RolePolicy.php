@@ -14,7 +14,7 @@ class RolePolicy
 
     public function view(User $user, Role $role): bool
     {
-        return $user->tenant_id === $role->tenant_id;
+        return $user->canAccessTenant($role->tenant_id);
     }
 
     public function create(User $user): bool
@@ -24,13 +24,13 @@ class RolePolicy
 
     public function update(User $user, Role $role): bool
     {
-        return $user->tenant_id === $role->tenant_id
+        return $user->canAccessTenant($role->tenant_id)
             && $user->hasPermission('update-role');
     }
 
     public function delete(User $user, Role $role): bool
     {
-        return $user->tenant_id === $role->tenant_id
+        return $user->canAccessTenant($role->tenant_id)
             && $user->hasPermission('delete-role')
             && ! $this->isBuiltInRole($role);
     }

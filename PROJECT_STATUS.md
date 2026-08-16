@@ -1,11 +1,19 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (F3.1 concluído)  
+**Atualizado em:** 2026-08-16 (F1.8 concluído — modelo de identidade)  
 **Fase Atual:** FASE 03 — ADMIN FRONTEND (1/6 sprints)  
 **Próxima Sprint:** F3.2 — Authentication (Login/Logout)  
 **Fase Pausada:** FASE 02 — FEATURES (F2.1 concluído, F2.2 aguardando frontend)  
-**Progresso Geral:** FASE 01 ✅ 100% | FASE 02 🟡 17% (1/6) | FASE 03 🟡 17% (1/6)  
-**Testes:** 237 passing, 0 failing
+**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 17% (1/6) | FASE 03 🟡 17% (1/6)  
+**Testes:** 250 passing, 0 failing
+
+> 🔄 **F1.8 — Identity Refactor (2026-08-16).** A FASE 01 ganhou um oitavo
+> sprint. Ao desenhar o login do F3.2, descobrimos que `users.tenant_id`
+> prendia cada pessoa a um único estabelecimento — mas o negócio exige o
+> contrário: um dono com duas lojas, um contador atendendo vários clientes.
+> A tabela `user_role` já assumia múltiplos estabelecimentos desde o F1.5,
+> então as duas metades do sistema discordavam entre si. Corrigido antes de
+> seguir, com o painel ainda sem dados reais.
 
 > ⚠️ **Decisão de sequenciamento (2026-08-16):** a FASE 02 foi pausada após F2.1
 > porque o sistema não possui interface de acesso — não há tela de login nem painel
@@ -23,8 +31,8 @@
 | **Próxima Sprint** | F3.1 — Frontend Setup & Layout |
 | **Fase Concluída** | FASE 01 — FOUNDATION (7/7) |
 | **Fase Pausada** | FASE 02 — FEATURES (1/6, retoma após F3.6) |
-| **Testes Totais** | 206 passing, 0 failing |
-| **Cumulative Tests** | FASE 01: 189 · FASE 02: 17 · FASE 03: 0 (meta ~53) |
+| **Testes Totais** | 250 passing, 0 failing |
+| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 17 · FASE 03: 6 |
 
 ### Ordem de Execução Atualizada
 
@@ -49,6 +57,7 @@ FASE 02 (retomada)        📋 F2.2 — Inventory Management
 | **F1.5** | ✅ DONE | 6/6 (100%) | 17 passing |
 | **F1.6** | ✅ DONE | 6/6 (100%) | 15 passing |
 | **F1.7** | ✅ DONE | 7/7 (100%) | 87 passing |
+| **F1.8** | ✅ DONE | 8/8 (100%) | 22 passing |
 
 ### FASE 02 Sprints Status (PAUSADO)
 
@@ -325,6 +334,70 @@ menu renderiza, links funcionam, breadcrumbs corretos, responsivo
 - ✅ Response serialization com 'data' wrapper
 - ✅ Tenant isolation validado
 - ✅ Hierarquia de categorias funcionando
+
+---
+
+## 🔄 Sprint F1.8 — Identity Refactor
+
+**Status:** ✅ DONE · **Testes:** 22 (13 isolamento + 9 multi-estabelecimento)
+
+**Problema:** `users.tenant_id` prendia cada pessoa a um único estabelecimento.
+Uma pessoa que atende dois seria duas contas separadas, com duas senhas para
+lembrar e trocar em dois lugares. Enquanto isso, `user_role` já tinha
+`unique(user_id, role_id, tenant_id)` desde o F1.5 — o RBAC sempre esperou
+múltiplos estabelecimentos. Identidade e permissões discordavam entre si.
+
+**Solução:** identidade global + vínculos.
+
+```
+ANTES                             DEPOIS
+users                             users (identidade)
+├─ id                             ├─ id
+├─ tenant_id  ← prende a 1        ├─ email (único global)
+├─ email      (único por tenant)  ├─ password
+└─ password                       └─ status: ACTIVE | INACTIVE
+
+Maria em 2 lojas =                tenant_user (vínculo)
+2 contas, 2 senhas                ├─ tenant_id
+                                  ├─ user_id
+                                  └─ status: ACTIVE | INVITED
+                                            | INACTIVE | SUSPENDED
+
+                                  Maria = 1 conta + 2 vínculos
+```
+
+**Checklist (8/8):**
+
+- [x] Schema: `users` sem `tenant_id`, e-mail único global, tabela `tenant_user`
+- [x] Models: `User` sem `HasTenant`, com `tenants()`/`memberships()`;
+      `Tenant::users()` vira many-to-many; pivot `TenantUser`
+- [x] `HasRole` usa o estabelecimento ativo do contexto, não o do usuário
+- [x] `UserFactory` com `forTenant()`; seeders criam identidade + vínculo
+- [x] API de auth devolve a lista de estabelecimentos; policies usam `canAccessTenant()`
+- [x] Testes existentes adaptados (94 chamadas traduzidas na factory)
+- [x] 22 testes novos do modelo de identidade
+- [x] Documentação (roadmap F1, PROJECT_STATUS, dashboard, roadmap F3)
+
+**Brecha de segurança encontrada e corrigida:**
+
+`ResolveTenantMiddleware` estava registrado como middleware **global**, ou seja,
+rodava **antes** da autenticação. Sem usuário conhecido, não havia como validar
+o vínculo — qualquer pessoa autenticada podia enviar um `X-Tenant-ID` de outro
+estabelecimento e ler os dados dele. Agora é o alias `tenant`, aplicado
+explicitamente **depois** de `auth:sanctum`.
+
+Isso também expôs que, em requisições web, o middleware desistia silenciosamente
+(não havia bearer token), deixando o `TenantScope` sem contexto — e o scope, sem
+contexto, **não filtra nada**. A resolução para o painel passou para
+`AutenticarWeb`, que roda com a sessão já iniciada.
+
+**Outras correções:**
+
+| Item | Situação anterior |
+|------|-------------------|
+| `PermissionFactory` sorteava ação e recurso separadamente | Colisão de nome em 1 a cada 20 execuções — falha intermitente |
+| `HasUlid` não dispara em models Pivot | SQLite tolerava (rowid implícito), MySQL rejeitava |
+| Teste de escalabilidade exigia razão < 10x para 10x de dados | Exigia escala **sublinear**, impossível para consulta que materializa N models; passava por sorte sob o ruído |
 
 ---
 

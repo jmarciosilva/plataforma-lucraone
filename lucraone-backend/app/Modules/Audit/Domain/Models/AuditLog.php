@@ -56,12 +56,26 @@ class AuditLog extends Model
         $user = auth()->user();
         $request = request();
 
-        $tenantId = $user?->tenant_id;
-        if (! $tenantId && app()->has(TenantContext::class)) {
+        // O estabelecimento vem do contexto da requisição. Desde o F1.8 o
+        // usuário pode estar associado a vários, então não há um tenant_id
+        // nele para consultar.
+        $tenantId = null;
+
+        if (app()->has(TenantContext::class)) {
             try {
                 $tenantId = app(TenantContext::class)->id();
             } catch (\Exception $e) {
-                // Se não conseguir resolver, deixa NULL
+                // Contexto não resolvido — cai no vínculo único abaixo
+            }
+        }
+
+        // Fora de uma requisição (jobs, comandos): se a pessoa tem um único
+        // vínculo ativo, não há ambiguidade sobre onde registrar.
+        if (! $tenantId && $user) {
+            $vinculos = $user->memberships()->where('status', 'ACTIVE')->pluck('tenant_id');
+
+            if ($vinculos->count() === 1) {
+                $tenantId = $vinculos->first();
             }
         }
 

@@ -6,10 +6,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * Resolve qual tenant está sendo usado na requisição atual.
+ * Determina em qual estabelecimento a requisição está operando.
  *
- * Estratégia inicial: obtém o tenant do usuário autenticado.
- * Futuras estratégias podem incluir subdomain, header, etc.
+ * Desde o F1.8 o usuário pode estar associado a vários estabelecimentos, então
+ * não basta ler um campo do usuário: é preciso saber qual ele escolheu, e
+ * confirmar que o vínculo permite o acesso.
  */
 class TenantResolver
 {
@@ -18,29 +19,47 @@ class TenantResolver
     ) {}
 
     /**
-     * Resolve o tenant para a requisição.
-     *
-     * Retorna true se conseguiu resolver, false caso contrário.
+     * Retorna true se conseguiu resolver o estabelecimento.
      */
     public function resolve(Request $request): bool
     {
-        // Estratégia 1: Obter do header X-Tenant-ID (útil para testes)
-        if ($request->header('X-Tenant-ID')) {
-            $this->context->set($request->header('X-Tenant-ID'));
+        $usuario = Auth::user();
+
+        // Estratégia 1: header explícito (API e testes)
+        if ($tenantId = $request->header('X-Tenant-ID')) {
+            // Havendo usuário autenticado, o vínculo precisa autorizar
+            if ($usuario && ! $usuario->canAccessTenant($tenantId)) {
+                return false;
+            }
+
+            $this->context->set($tenantId);
 
             return true;
         }
 
-        // Estratégia 2: Obter do usuário autenticado
-        if (Auth::check() && Auth::user()?->tenant_id) {
-            $this->context->set(Auth::user()->tenant_id);
+        // Estratégia 2: escolha guardada na sessão (painel web)
+        if ($usuario && $request->hasSession()) {
+            $tenantId = $request->session()->get('tenant_ativo');
 
-            return true;
+            if ($tenantId && $usuario->canAccessTenant($tenantId)) {
+                $this->context->set($tenantId);
+
+                return true;
+            }
         }
 
-        // Futuras estratégias:
-        // - Subdomain
-        // - Domain
+        // Estratégia 3: vínculo único — não há o que escolher
+        if ($usuario) {
+            $estabelecimentos = $usuario->estabelecimentosDisponiveis();
+
+            if ($estabelecimentos->count() === 1) {
+                $this->context->set($estabelecimentos->first()->id);
+
+                return true;
+            }
+        }
+
+        // Futuras estratégias: subdomínio, domínio próprio
 
         return false;
     }

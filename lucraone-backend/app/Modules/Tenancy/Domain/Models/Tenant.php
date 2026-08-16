@@ -3,6 +3,7 @@
 namespace App\Modules\Tenancy\Domain\Models;
 
 use App\Modules\Companies\Domain\Models\Company;
+use App\Modules\Identity\Domain\Models\TenantUser;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Tenancy\Domain\Events\TenantCreated;
 use Database\Factories\TenantFactory;
@@ -49,11 +50,33 @@ class Tenant extends Model
     }
 
     /**
-     * Um tenant possui muitos usuários.
+     * Pessoas associadas a este estabelecimento.
+     *
+     * É many-to-many: a mesma pessoa pode estar associada a vários
+     * estabelecimentos, com status independente em cada um.
      */
     public function users()
     {
-        return $this->hasMany(User::class, 'tenant_id', 'id');
+        return $this->belongsToMany(User::class, 'tenant_user')
+            ->using(TenantUser::class)
+            ->withPivot(['id', 'status', 'joined_at'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Apenas quem tem vínculo ativo aqui.
+     */
+    public function activeUsers()
+    {
+        return $this->users()->wherePivot('status', TenantUser::STATUS_ACTIVE);
+    }
+
+    /**
+     * Vínculos como registros próprios.
+     */
+    public function memberships()
+    {
+        return $this->hasMany(TenantUser::class, 'tenant_id');
     }
 
     /**

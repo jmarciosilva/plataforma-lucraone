@@ -14,7 +14,7 @@ class BranchPolicy
 
     public function view(User $user, Branch $branch): bool
     {
-        return $user->tenant_id === $branch->tenant_id
+        return $user->canAccessTenant($branch->tenant_id)
             && $this->canAccessBranch($user, $branch);
     }
 
@@ -25,13 +25,13 @@ class BranchPolicy
 
     public function update(User $user, Branch $branch): bool
     {
-        return $user->tenant_id === $branch->tenant_id
+        return $user->canAccessTenant($branch->tenant_id)
             && $this->canManageBranch($user, $branch);
     }
 
     public function delete(User $user, Branch $branch): bool
     {
-        return $user->tenant_id === $branch->tenant_id
+        return $user->canAccessTenant($branch->tenant_id)
             && $this->canManageBranch($user, $branch);
     }
 

@@ -30,7 +30,15 @@ class AuthController
 
         if (! $user->isActive()) {
             return response()->json([
-                'message' => 'Usuário não está ativo',
+                'message' => 'Conta inativa',
+            ], 403);
+        }
+
+        $estabelecimentos = $user->estabelecimentosDisponiveis();
+
+        if ($estabelecimentos->isEmpty()) {
+            return response()->json([
+                'message' => 'Usuário sem vínculo ativo com nenhum estabelecimento',
             ], 403);
         }
 
@@ -46,8 +54,13 @@ class AuthController
                 'name' => $user->name,
                 'email' => $user->email,
                 'status' => $user->status,
-                'tenant_id' => $user->tenant_id,
             ],
+            // O cliente escolhe um destes e o envia em X-Tenant-ID
+            'tenants' => $estabelecimentos->map(fn ($tenant) => [
+                'id' => $tenant->id,
+                'name' => $tenant->name,
+                'slug' => $tenant->slug,
+            ])->values(),
         ], 200);
     }
 

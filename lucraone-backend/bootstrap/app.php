@@ -29,11 +29,16 @@ return Application::configure(basePath: dirname(__DIR__))
             ApiAuthenticationMiddleware::class,
         ]);
 
-        $middleware->append(ResolveTenantMiddleware::class);
-
         $middleware->alias([
             'auth.web' => AutenticarWeb::class,
             'convidado' => RedirecionarSeAutenticado::class,
+
+            // Resolve o estabelecimento da requisição. NÃO registrar como
+            // middleware global: precisa rodar DEPOIS da autenticação, senão
+            // não há usuário para validar o vínculo e um X-Tenant-ID de outro
+            // estabelecimento passaria sem checagem.
+            // Uso correto: ['auth:sanctum', 'tenant'] — nessa ordem.
+            'tenant' => ResolveTenantMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

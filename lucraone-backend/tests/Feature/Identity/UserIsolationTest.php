@@ -2,146 +2,169 @@
 
 namespace Tests\Feature\Identity;
 
+use App\Modules\Identity\Domain\Models\TenantUser;
 use App\Modules\Identity\Domain\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Feature\Tenancy\TenancyTestCase;
 
+/**
+ * Isolamento de usuários sob o modelo de identidade (F1.8).
+ *
+ * A identidade é global — uma pessoa, uma conta, uma senha. O isolamento não
+ * vem mais de um tenant_id na linha do usuário, e sim do vínculo em
+ * tenant_user: quem não tem vínculo ativo com o estabelecimento não opera nele.
+ */
 class UserIsolationTest extends TenancyTestCase
 {
     use RefreshDatabase;
 
-    /**
-     * Teste 01: Usuários de diferentes tenants coexistem.
-     */
-    public function test_users_from_different_tenants_coexist(): void
+    public function test_vinculos_de_estabelecimentos_diferentes_coexistem(): void
     {
-        $userA = User::factory()->forCurrentTenant($this->tenantA->id)->create();
-        $userB = User::factory()->forCurrentTenant($this->tenantB->id)->create();
+        $userA = User::factory()->forTenant($this->tenantA)->create();
+        $userB = User::factory()->forTenant($this->tenantB)->create();
 
-        $this->assertDatabaseHas('users', ['id' => $userA->id, 'tenant_id' => $this->tenantA->id]);
-        $this->assertDatabaseHas('users', ['id' => $userB->id, 'tenant_id' => $this->tenantB->id]);
+        $this->assertDatabaseHas('tenant_user', [
+            'user_id' => $userA->id,
+            'tenant_id' => $this->tenantA->id,
+            'status' => TenantUser::STATUS_ACTIVE,
+        ]);
+
+        $this->assertDatabaseHas('tenant_user', [
+            'user_id' => $userB->id,
+            'tenant_id' => $this->tenantB->id,
+            'status' => TenantUser::STATUS_ACTIVE,
+        ]);
     }
 
-    /**
-     * Teste 02: Global scope filtra por tenant.
-     */
-    public function test_global_scope_filters_by_tenant(): void
+    public function test_estabelecimento_lista_apenas_seus_vinculados(): void
     {
-        User::factory()->forCurrentTenant($this->tenantA->id)->create();
-        User::factory()->forCurrentTenant($this->tenantB->id)->create();
+        $userA1 = User::factory()->forTenant($this->tenantA)->create();
+        $userA2 = User::factory()->forTenant($this->tenantA)->create();
+        User::factory()->forTenant($this->tenantB)->create();
 
-        $this->tenantContext->set($this->tenantA->id);
-        $users = User::all();
+        $usuarios = $this->tenantA->users()->get();
 
-        $this->assertCount(1, $users);
-        $this->assertEquals($this->tenantA->id, $users->first()->tenant_id);
+        $this->assertCount(2, $usuarios);
+        $this->assertTrue($usuarios->contains('id', $userA1->id));
+        $this->assertTrue($usuarios->contains('id', $userA2->id));
     }
 
-    /**
-     * Teste 03: Tenant A não consegue acessar usuários de Tenant B (IDOR).
-     */
-    public function test_tenant_a_cannot_access_tenant_b_users(): void
+    public function test_pessoa_sem_vinculo_nao_acessa_o_estabelecimento(): void
     {
-        $userB = User::factory()->forCurrentTenant($this->tenantB->id)->create();
+        $userB = User::factory()->forTenant($this->tenantB)->create();
 
-        $this->tenantContext->set($this->tenantA->id);
-        $foundUser = User::find($userB->id);
-
-        $this->assertNull($foundUser);
+        $this->assertFalse($userB->canAccessTenant($this->tenantA->id));
+        $this->assertTrue($userB->canAccessTenant($this->tenantB->id));
     }
 
-    /**
-     * Teste 04: Tenant A consegue acessar apenas seus usuários.
-     */
-    public function test_tenant_a_can_only_access_own_users(): void
+    public function test_mesma_pessoa_atende_dois_estabelecimentos(): void
     {
-        $userA1 = User::factory()->forCurrentTenant($this->tenantA->id)->create();
-        $userA2 = User::factory()->forCurrentTenant($this->tenantA->id)->create();
-        User::factory()->forCurrentTenant($this->tenantB->id)->create();
+        $contador = User::factory()->create();
+        $contador->joinTenant($this->tenantA->id);
+        $contador->joinTenant($this->tenantB->id);
 
-        $this->tenantContext->set($this->tenantA->id);
-        $users = User::all();
+        $this->assertTrue($contador->canAccessTenant($this->tenantA->id));
+        $this->assertTrue($contador->canAccessTenant($this->tenantB->id));
+        $this->assertCount(2, $contador->estabelecimentosDisponiveis());
 
-        $this->assertCount(2, $users);
-        $this->assertTrue($users->contains('id', $userA1->id));
-        $this->assertTrue($users->contains('id', $userA2->id));
+        // Uma conta só, uma senha só
+        $this->assertDatabaseCount('users', 1);
     }
 
-    /**
-     * Teste 05: Trocar contexto de tenant funciona corretamente.
-     */
-    public function test_switching_tenant_context_works(): void
+    public function test_desativar_vinculo_nao_afeta_o_outro_estabelecimento(): void
     {
-        $userA = User::factory()->forCurrentTenant($this->tenantA->id)->create();
-        $userB = User::factory()->forCurrentTenant($this->tenantB->id)->create();
+        $contador = User::factory()->create();
+        $contador->joinTenant($this->tenantA->id);
+        $contador->joinTenant($this->tenantB->id);
 
-        $this->tenantContext->set($this->tenantA->id);
-        $this->assertCount(1, User::all());
+        // A Casa A revoga o acesso
+        $contador->joinTenant($this->tenantA->id, TenantUser::STATUS_INACTIVE);
 
-        $this->tenantContext->set($this->tenantB->id);
-        $this->assertCount(1, User::all());
+        $this->assertFalse($contador->canAccessTenant($this->tenantA->id));
+        $this->assertTrue($contador->canAccessTenant($this->tenantB->id));
+
+        // A conta em si continua ativa
+        $this->assertTrue($contador->fresh()->isActive());
     }
 
-    /**
-     * Teste 06: Email é único por tenant (não globalmente).
-     */
-    public function test_email_is_unique_per_tenant(): void
+    public function test_conta_inativa_perde_acesso_a_todos_os_estabelecimentos(): void
     {
-        $email = 'user@example.com';
+        $usuario = User::factory()->create();
+        $usuario->joinTenant($this->tenantA->id);
+        $usuario->joinTenant($this->tenantB->id);
 
-        User::factory()
-            ->forCurrentTenant($this->tenantA->id)
-            ->create(['email' => $email]);
+        $usuario->update(['status' => User::STATUS_INACTIVE]);
 
-        User::factory()
-            ->forCurrentTenant($this->tenantB->id)
-            ->create(['email' => $email]);
-
-        $this->assertDatabaseCount('users', 2);
+        $this->assertFalse($usuario->canAccessTenant($this->tenantA->id));
+        $this->assertFalse($usuario->canAccessTenant($this->tenantB->id));
     }
 
-    /**
-     * Teste 07: Status ACTIVE/INVITED/INACTIVE funciona.
-     */
-    public function test_user_status_states_work(): void
+    public function test_vinculo_convidado_ainda_nao_da_acesso(): void
     {
-        $active = User::factory()->active()->create();
-        $invited = User::factory()->invited()->create();
-        $inactive = User::factory()->inactive()->create();
+        $convidado = User::factory()->create();
+        $convidado->joinTenant($this->tenantA->id, TenantUser::STATUS_INVITED);
 
-        $this->assertTrue($active->isActive());
-        $this->assertTrue($invited->isInvited());
-        $this->assertFalse($inactive->isActive());
+        $this->assertFalse($convidado->canAccessTenant($this->tenantA->id));
+        $this->assertCount(0, $convidado->estabelecimentosDisponiveis());
     }
 
-    /**
-     * Teste 08: Usuário ativo tem email verificado.
-     */
-    public function test_active_user_has_verified_email(): void
+    public function test_vinculo_suspenso_bloqueia_o_acesso(): void
     {
-        $active = User::factory()->active()->create();
+        $usuario = User::factory()->create();
+        $usuario->joinTenant($this->tenantA->id, TenantUser::STATUS_SUSPENDED);
 
-        $this->assertNotNull($active->email_verified_at);
+        $this->assertFalse($usuario->canAccessTenant($this->tenantA->id));
     }
 
-    /**
-     * Teste 09: Usuário convidado não tem email verificado.
-     */
-    public function test_invited_user_has_unverified_email(): void
+    public function test_email_e_unico_globalmente(): void
     {
-        $invited = User::factory()->invited()->create();
+        User::factory()->create(['email' => 'pessoa@example.com']);
 
-        $this->assertNull($invited->email_verified_at);
+        // O mesmo e-mail em outro estabelecimento seria outra conta para a
+        // mesma pessoa — exatamente o que o modelo de identidade evita.
+        $this->expectException(\Illuminate\Database\QueryException::class);
+
+        User::factory()->create(['email' => 'pessoa@example.com']);
     }
 
-    /**
-     * Teste 10: Password é sempre hashed (nunca em plain text).
-     */
-    public function test_password_is_always_hashed(): void
+    public function test_uma_pessoa_tem_no_maximo_um_vinculo_por_estabelecimento(): void
     {
-        $user = User::factory()->create();
+        $usuario = User::factory()->create();
 
-        $this->assertNotEquals('password', $user->password);
-        $this->assertTrue(password_verify('password', $user->password));
+        $usuario->joinTenant($this->tenantA->id);
+        $usuario->joinTenant($this->tenantA->id, TenantUser::STATUS_SUSPENDED);
+
+        $this->assertDatabaseCount('tenant_user', 1);
+        $this->assertSame(
+            TenantUser::STATUS_SUSPENDED,
+            $usuario->membershipFor($this->tenantA->id)->status
+        );
+    }
+
+    public function test_estados_de_conta_funcionam(): void
+    {
+        $ativo = User::factory()->active()->create();
+        $inativo = User::factory()->inactive()->create();
+
+        $this->assertTrue($ativo->isActive());
+        $this->assertFalse($inativo->isActive());
+    }
+
+    public function test_usuario_ativo_tem_email_verificado(): void
+    {
+        $this->assertNotNull(User::factory()->active()->create()->email_verified_at);
+    }
+
+    public function test_convidado_nao_tem_email_verificado(): void
+    {
+        $this->assertNull(User::factory()->invited()->create()->email_verified_at);
+    }
+
+    public function test_senha_e_sempre_hasheada(): void
+    {
+        $usuario = User::factory()->create();
+
+        $this->assertNotEquals('password', $usuario->password);
+        $this->assertTrue(password_verify('password', $usuario->password));
     }
 }

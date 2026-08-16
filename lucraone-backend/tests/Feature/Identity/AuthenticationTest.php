@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Identity;
 
+use App\Modules\Identity\Domain\Models\TenantUser;
 use App\Modules\Identity\Domain\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Feature\Tenancy\TenancyTestCase;
@@ -64,13 +65,13 @@ class AuthenticationTest extends TenancyTestCase
     }
 
     /**
-     * Teste 04: Login com usuário INACTIVE retorna 403.
+     * Teste 04: Conta desativada globalmente não entra.
      */
     public function test_login_with_inactive_user_returns_403(): void
     {
         User::factory()
             ->inactive()
-            ->forCurrentTenant($this->tenantA->id)
+            ->forTenant($this->tenantA)
             ->create(['email' => 'inactive@example.com', 'password' => 'password']);
 
         $response = $this->post('/api/auth/login', [
@@ -79,17 +80,19 @@ class AuthenticationTest extends TenancyTestCase
         ]);
 
         $response->assertStatus(403);
-        $response->assertJson(['message' => 'Usuário não está ativo']);
+        $response->assertJson(['message' => 'Conta inativa']);
     }
 
     /**
-     * Teste 05: Login com usuário INVITED retorna 403.
+     * Teste 05: Vínculo apenas convidado ainda não dá acesso.
+     *
+     * A conta existe e a senha confere, mas o convite não foi aceito em
+     * nenhum estabelecimento — não há onde entrar.
      */
     public function test_login_with_invited_user_returns_403(): void
     {
         User::factory()
-            ->invited()
-            ->forCurrentTenant($this->tenantA->id)
+            ->forTenant($this->tenantA, TenantUser::STATUS_INVITED)
             ->create(['email' => 'invited@example.com', 'password' => 'password']);
 
         $response = $this->post('/api/auth/login', [
@@ -98,7 +101,9 @@ class AuthenticationTest extends TenancyTestCase
         ]);
 
         $response->assertStatus(403);
-        $response->assertJson(['message' => 'Usuário não está ativo']);
+        $response->assertJson([
+            'message' => 'Usuário sem vínculo ativo com nenhum estabelecimento',
+        ]);
     }
 
     /**
@@ -142,7 +147,11 @@ class AuthenticationTest extends TenancyTestCase
                 'id' => $user->id,
                 'email' => 'test@example.com',
                 'status' => 'ACTIVE',
-                'tenant_id' => $this->tenantA->id,
+            ],
+            // O estabelecimento não vem mais no usuário: vem na lista de
+            // vínculos, de onde o cliente escolhe qual usar.
+            'tenants' => [
+                ['id' => $this->tenantA->id],
             ],
         ]);
     }
@@ -186,15 +195,14 @@ class AuthenticationTest extends TenancyTestCase
      */
     public function test_login_user_from_tenant_b_cannot_access_tenant_a_credentials(): void
     {
-        $userA = User::factory()
+        // Uma pessoa, vínculo ativo no A e suspenso no B. O login devolve
+        // apenas os estabelecimentos onde ela pode realmente operar.
+        $usuario = User::factory()
             ->active()
-            ->forCurrentTenant($this->tenantA->id)
             ->create(['email' => 'admin@example.com', 'password' => 'password']);
 
-        User::factory()
-            ->active()
-            ->forCurrentTenant($this->tenantB->id)
-            ->create(['email' => 'admin@example.com', 'password' => 'different']);
+        $usuario->joinTenant($this->tenantA->id, TenantUser::STATUS_ACTIVE);
+        $usuario->joinTenant($this->tenantB->id, TenantUser::STATUS_SUSPENDED);
 
         $response = $this->post('/api/auth/login', [
             'email' => 'admin@example.com',
@@ -202,8 +210,11 @@ class AuthenticationTest extends TenancyTestCase
         ]);
 
         $response->assertStatus(200);
+        $response->assertJsonCount(1, 'tenants');
         $response->assertJson([
-            'user' => ['tenant_id' => $this->tenantA->id],
+            'tenants' => [
+                ['id' => $this->tenantA->id],
+            ],
         ]);
     }
 

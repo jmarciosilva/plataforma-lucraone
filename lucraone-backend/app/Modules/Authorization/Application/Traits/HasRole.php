@@ -3,7 +3,18 @@
 namespace App\Modules\Authorization\Application\Traits;
 
 use App\Modules\Authorization\Domain\Models\Role;
+use App\Modules\Tenancy\Application\TenantContext;
 
+/**
+ * Papéis e permissões são sempre relativos a um estabelecimento.
+ *
+ * A mesma pessoa pode ser Admin numa loja e Viewer em outra, então o
+ * estabelecimento de referência vem do TenantContext da requisição — não do
+ * usuário, que não pertence mais a um único tenant.
+ *
+ * Os métodos aceitam $tenantId explícito para uso fora de uma requisição
+ * (jobs, comandos, testes).
+ */
 trait HasRole
 {
     public function roles()
@@ -16,25 +27,53 @@ trait HasRole
         )->withTimestamps();
     }
 
-    public function rolesForTenant()
+    /**
+     * Estabelecimento de referência, em ordem de precedência:
+     *
+     *   1. o informado explicitamente
+     *   2. o ativo na requisição
+     *   3. o único vínculo ativo da pessoa — sem ambiguidade a resolver
+     *
+     * O passo 3 cobre jobs, comandos e testes, onde não há requisição.
+     */
+    protected function tenantDeReferencia(?string $tenantId = null): ?string
+    {
+        if ($tenantId !== null) {
+            return $tenantId;
+        }
+
+        $contexto = app(TenantContext::class);
+
+        if ($contexto->resolved()) {
+            return $contexto->id();
+        }
+
+        $vinculos = $this->memberships()
+            ->where('status', 'ACTIVE')
+            ->pluck('tenant_id');
+
+        return $vinculos->count() === 1 ? $vinculos->first() : null;
+    }
+
+    public function rolesForTenant(?string $tenantId = null)
     {
         return $this->roles()
-            ->wherePivot('tenant_id', $this->tenant_id);
+            ->wherePivot('tenant_id', $this->tenantDeReferencia($tenantId));
     }
 
-    public function hasRole($role): bool
+    public function hasRole($role, ?string $tenantId = null): bool
     {
         if (is_string($role)) {
-            return $this->rolesForTenant()->where('roles.name', $role)->exists();
+            return $this->rolesForTenant($tenantId)->where('roles.name', $role)->exists();
         }
 
-        return $this->rolesForTenant()->where('roles.id', $role->id)->exists();
+        return $this->rolesForTenant($tenantId)->where('roles.id', $role->id)->exists();
     }
 
-    public function hasAnyRole($roles): bool
+    public function hasAnyRole($roles, ?string $tenantId = null): bool
     {
         foreach ($roles as $role) {
-            if ($this->hasRole($role)) {
+            if ($this->hasRole($role, $tenantId)) {
                 return true;
             }
         }
@@ -42,10 +81,10 @@ trait HasRole
         return false;
     }
 
-    public function hasAllRoles($roles): bool
+    public function hasAllRoles($roles, ?string $tenantId = null): bool
     {
         foreach ($roles as $role) {
-            if (! $this->hasRole($role)) {
+            if (! $this->hasRole($role, $tenantId)) {
                 return false;
             }
         }
@@ -53,27 +92,21 @@ trait HasRole
         return true;
     }
 
-    public function hasPermission($permission): bool
+    public function hasPermission($permission, ?string $tenantId = null): bool
     {
+        $permissoes = $this->getPermissions($tenantId);
+
         if (is_string($permission)) {
-            return $this->rolesForTenant()
-                ->with('permissions')
-                ->get()
-                ->flatMap(fn ($role) => $role->permissions)
-                ->firstWhere('name', $permission) !== null;
+            return $permissoes->firstWhere('name', $permission) !== null;
         }
 
-        return $this->rolesForTenant()
-            ->with('permissions')
-            ->get()
-            ->flatMap(fn ($role) => $role->permissions)
-            ->firstWhere('id', $permission->id) !== null;
+        return $permissoes->firstWhere('id', $permission->id) !== null;
     }
 
-    public function hasAnyPermission($permissions): bool
+    public function hasAnyPermission($permissions, ?string $tenantId = null): bool
     {
         foreach ($permissions as $permission) {
-            if ($this->hasPermission($permission)) {
+            if ($this->hasPermission($permission, $tenantId)) {
                 return true;
             }
         }
@@ -81,10 +114,10 @@ trait HasRole
         return false;
     }
 
-    public function hasAllPermissions($permissions): bool
+    public function hasAllPermissions($permissions, ?string $tenantId = null): bool
     {
         foreach ($permissions as $permission) {
-            if (! $this->hasPermission($permission)) {
+            if (! $this->hasPermission($permission, $tenantId)) {
                 return false;
             }
         }
@@ -92,60 +125,88 @@ trait HasRole
         return true;
     }
 
-    public function assignRole($role): void
+    public function assignRole($role, ?string $tenantId = null): void
     {
+        $tenant = $this->tenantDeReferencia($tenantId);
+
+        if ($tenant === null) {
+            return;
+        }
+
         if (is_string($role)) {
-            $role = Role::where('tenant_id', $this->tenant_id)
+            $role = Role::withoutGlobalScopes()
+                ->where('tenant_id', $tenant)
                 ->where('name', $role)
                 ->first();
         }
 
-        if ($role && $role->tenant_id === $this->tenant_id && ! $this->hasRole($role)) {
-            $this->roles()->attach($role->id, [
-                'tenant_id' => $this->tenant_id,
-            ]);
+        // O papel precisa pertencer ao mesmo estabelecimento do vínculo
+        if ($role && $role->tenant_id === $tenant && ! $this->hasRole($role, $tenant)) {
+            $this->roles()->attach($role->id, ['tenant_id' => $tenant]);
         }
     }
 
-    public function removeRole($role): void
+    public function removeRole($role, ?string $tenantId = null): void
     {
+        $tenant = $this->tenantDeReferencia($tenantId);
+
+        if ($tenant === null) {
+            return;
+        }
+
         if (is_string($role)) {
-            $role = Role::where('tenant_id', $this->tenant_id)
+            $role = Role::withoutGlobalScopes()
+                ->where('tenant_id', $tenant)
                 ->where('name', $role)
                 ->first();
         }
 
         if ($role) {
-            $this->roles()->detach($role->id);
+            $this->roles()
+                ->wherePivot('tenant_id', $tenant)
+                ->detach($role->id);
         }
     }
 
-    public function syncRoles($roles): void
+    /**
+     * Substitui os papéis da pessoa NESTE estabelecimento, preservando os
+     * papéis que ela tenha em outros.
+     */
+    public function syncRoles($roles, ?string $tenantId = null): void
     {
-        $roleIds = collect($roles)->map(function ($role) {
+        $tenant = $this->tenantDeReferencia($tenantId);
+
+        if ($tenant === null) {
+            return;
+        }
+
+        $roleIds = collect($roles)->map(function ($role) use ($tenant) {
             if (is_string($role)) {
-                return Role::where('tenant_id', $this->tenant_id)
+                return Role::withoutGlobalScopes()
+                    ->where('tenant_id', $tenant)
                     ->where('name', $role)
                     ->first()
                     ?->id;
             }
 
             return $role->id;
-        })->filter()->toArray();
+        })->filter()->values();
 
-        $pivotData = collect($roleIds)->mapWithKeys(function ($roleId) {
-            return [$roleId => ['tenant_id' => $this->tenant_id]];
-        });
+        // Remove só os vínculos deste estabelecimento
+        $this->roles()->wherePivot('tenant_id', $tenant)->detach();
 
-        $this->roles()->sync($pivotData);
+        foreach ($roleIds as $roleId) {
+            $this->roles()->attach($roleId, ['tenant_id' => $tenant]);
+        }
     }
 
-    public function getPermissions()
+    public function getPermissions(?string $tenantId = null)
     {
-        return $this->rolesForTenant()
+        return $this->rolesForTenant($tenantId)
             ->with('permissions')
             ->get()
             ->flatMap(fn ($role) => $role->permissions)
-            ->unique('id');
+            ->unique('id')
+            ->values();
     }
 }

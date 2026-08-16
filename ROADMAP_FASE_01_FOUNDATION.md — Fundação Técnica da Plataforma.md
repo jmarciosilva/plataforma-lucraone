@@ -594,6 +594,13 @@ country
 
 # 19. Usuários
 
+> ⚠️ **Revisado no Sprint F1.8 (2026-08-16).** O desenho original prendia cada
+> usuário a um único tenant via `users.tenant_id`. Isso impedia o caso real de
+> uma mesma pessoa atender mais de um estabelecimento — um dono com duas lojas,
+> um contador com vários clientes. Ver seção 19.1.
+
+Usuário é uma **identidade global**: uma pessoa, uma conta, uma senha.
+
 Tabela:
 
 ```text
@@ -604,24 +611,76 @@ Campos:
 
 ```text
 id
-tenant_id
 name
-email
+email          (único GLOBALMENTE)
 password
 status
+email_verified_at
 last_login_at
+remember_token
 created_at
 updated_at
 ```
 
-Estados:
+Estados da conta:
 
 ```text
-ACTIVE
-INACTIVE
-BLOCKED
-INVITED
+ACTIVE      — a pessoa pode entrar no sistema
+INACTIVE    — conta desativada; não entra em estabelecimento nenhum
 ```
+
+---
+
+# 19.1. Vínculo Usuário × Estabelecimento
+
+O que liga uma pessoa a um estabelecimento é um vínculo próprio, com status
+independente. Desativar alguém numa loja não afeta o acesso dela nas outras.
+
+Tabela:
+
+```text
+tenant_user
+```
+
+Campos:
+
+```text
+id
+tenant_id
+user_id
+status
+joined_at
+created_at
+updated_at
+```
+
+Restrição:
+
+```text
+unique(tenant_id, user_id)   -- no máximo um vínculo por estabelecimento
+```
+
+Estados do vínculo:
+
+```text
+ACTIVE      — opera normalmente neste estabelecimento
+INVITED     — convidado, ainda não aceitou; sem acesso
+INACTIVE    — acesso revogado por este estabelecimento
+SUSPENDED   — acesso suspenso temporariamente
+```
+
+**Regra de acesso:** operar num estabelecimento exige conta `ACTIVE`
+**e** vínculo `ACTIVE`. As duas condições, sempre.
+
+```php
+$usuario->canAccessTenant($tenantId);   // conta ativa + vínculo ativo
+$usuario->estabelecimentosDisponiveis(); // para o seletor de login
+$usuario->joinTenant($tenantId, $status);
+```
+
+**Papéis são por estabelecimento.** A tabela `user_role` já tinha
+`unique(user_id, role_id, tenant_id)` desde o F1.5 — o RBAC sempre assumiu
+este modelo. A mesma pessoa pode ser `admin` numa loja e `viewer` em outra.
 
 ---
 

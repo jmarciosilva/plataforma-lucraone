@@ -14,7 +14,7 @@ class PermissionPolicy
 
     public function view(User $user, Permission $permission): bool
     {
-        return $user->tenant_id === $permission->tenant_id;
+        return $user->canAccessTenant($permission->tenant_id);
     }
 
     public function create(User $user): bool
@@ -24,13 +24,13 @@ class PermissionPolicy
 
     public function update(User $user, Permission $permission): bool
     {
-        return $user->tenant_id === $permission->tenant_id
+        return $user->canAccessTenant($permission->tenant_id)
             && $user->hasPermission('update-permission');
     }
 
     public function delete(User $user, Permission $permission): bool
     {
-        return $user->tenant_id === $permission->tenant_id
+        return $user->canAccessTenant($permission->tenant_id)
             && $user->hasPermission('delete-permission');
     }
 }

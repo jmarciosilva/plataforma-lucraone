@@ -1,9 +1,9 @@
 ﻿# 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-16 (FASE 03 planejada — Admin Frontend)  
-**Fase Ativa:** FASE 03 — ADMIN FRONTEND 📋 (0/6 sprints)  
+**Atualizado:** 2026-08-16 (F1.8 — modelo de identidade)  
+**Fase Ativa:** FASE 03 — ADMIN FRONTEND 🟡 (1/6 sprints)  
 **Fase Pausada:** FASE 02 — FEATURES ⏸️ (1/6 sprints)  
-**Testes:** 206 passing
+**Testes:** 250 passing
 
 ---
 
@@ -12,7 +12,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  FASE 01 — FOUNDATION            ✅ COMPLETO                 │
-│  7/7 sprints · 189 testes                                    │
+│  8/8 sprints · 227 testes  (F1.8 acrescentado)               │
 │  ████████████████████████████████████████████████  100%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 02 — FEATURES              ⏸️  PAUSADO                 │
@@ -149,6 +149,29 @@ Conclusão:
   ✅ Health check endpoint (/up)
   ✅ Database & cache health checks
   ✅ 10 audit log tests + 5 health tests
+```
+
+### ✅ Sprint F1.8 — Identity Refactor (COMPLETE)
+
+```
+Status:     ✅ DONE (100%)
+Progresso:  8/8 itens
+Tests:      22/22 passing ✅
+
+Motivo:
+  users.tenant_id prendia cada pessoa a um único estabelecimento, mas o
+  negócio exige o contrário — um dono com duas lojas, um contador com
+  vários clientes. E user_role já assumia múltiplos tenants desde o F1.5.
+
+Conclusão:
+  ✅ Identidade global: uma pessoa, uma conta, uma senha
+  ✅ Tabela tenant_user com status próprio por vínculo
+  ✅ Papéis independentes por estabelecimento
+  ✅ API de login devolve os estabelecimentos disponíveis
+  ✅ Brecha corrigida: middleware de tenant rodava antes da autenticação
+  ✅ TenantScope não ficava mais sem contexto em requisições web
+  ✅ PermissionFactory sem colisão intermitente
+  ✅ 22 testes novos (13 isolamento + 9 multi-estabelecimento)
 ```
 
 ### ✅ Sprint F1.7 — Hardening & Final Validation (COMPLETE)

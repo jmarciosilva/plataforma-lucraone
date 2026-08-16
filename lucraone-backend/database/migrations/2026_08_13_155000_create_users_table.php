@@ -11,25 +11,29 @@ return new class extends Migration
      */
     public function up(): void
     {
+        /*
+        | Usuário é uma IDENTIDADE global, não um registro por estabelecimento.
+        |
+        | A mesma pessoa (um dono com duas lojas, um contador que atende vários
+        | clientes) tem uma única conta e uma única senha. O vínculo com cada
+        | estabelecimento vive em tenant_user, com status próprio — desativar
+        | alguém numa loja não afeta o acesso dela nas outras.
+        |
+        | O status aqui é da conta em si: se INACTIVE, a pessoa não entra em
+        | lugar nenhum. O status por estabelecimento fica no vínculo.
+        */
         Schema::create('users', function (Blueprint $table) {
             $table->char('id', 26)->primary();
-            $table->char('tenant_id', 26)->index();
             $table->string('name');
-            $table->string('email');
+            $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('status', ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'INVITED'])->default('INVITED');
+            $table->enum('status', ['ACTIVE', 'INACTIVE'])->default('ACTIVE');
             $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
 
-            $table->foreign('tenant_id')
-                ->references('id')
-                ->on('tenants')
-                ->cascadeOnDelete();
-
-            $table->unique(['tenant_id', 'email']);
-            $table->index(['tenant_id', 'status']);
+            $table->index('status');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

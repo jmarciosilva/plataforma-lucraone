@@ -13,8 +13,18 @@ class PermissionFactory extends Factory
 
     public function definition(): array
     {
-        $action = $this->faker->randomElement(['create', 'read', 'update', 'delete']);
-        $resource = $this->faker->randomElement(['role', 'permission', 'user', 'branch', 'company']);
+        // O nome é único por tenant. Sorteando ação e recurso de forma
+        // independente, duas permissões do mesmo tenant colidiam em 1 de cada
+        // 20 execuções — sortear a combinação com unique() elimina a variação.
+        $combinacoes = [];
+
+        foreach (['create', 'read', 'update', 'delete'] as $acao) {
+            foreach (['role', 'permission', 'user', 'branch', 'company'] as $recurso) {
+                $combinacoes[] = [$acao, $recurso];
+            }
+        }
+
+        [$action, $resource] = $this->faker->unique()->randomElement($combinacoes);
 
         return [
             'id' => (string) Str::ulid(),

@@ -72,11 +72,12 @@ class CrossTenantValidationTest extends TenancyTestCase
             ->forCurrentTenant($this->tenantB->id)
             ->create();
 
-        // Verify users belong to correct tenants
-        $this->assertEquals($this->tenantA->id, $user2A->tenant_id);
-        $this->assertEquals($this->tenantB->id, $user2B->tenant_id);
+        // Cada um alcança só o estabelecimento onde tem vínculo
+        $this->assertTrue($user2A->canAccessTenant($this->tenantA->id));
+        $this->assertFalse($user2A->canAccessTenant($this->tenantB->id));
 
-        $this->assertTrue(true, 'Multi-user isolation validated');
+        $this->assertTrue($user2B->canAccessTenant($this->tenantB->id));
+        $this->assertFalse($user2B->canAccessTenant($this->tenantA->id));
     }
 
     /**

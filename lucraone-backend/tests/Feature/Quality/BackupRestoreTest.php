@@ -67,8 +67,10 @@ class BackupRestoreTest extends TestCase
 
         // Simulate backup by querying
         $backup = DB::table('users')
-            ->where('id', $user->id)
-            ->where('tenant_id', $this->tenant->id)
+            ->join('tenant_user', 'users.id', '=', 'tenant_user.user_id')
+            ->where('users.id', $user->id)
+            ->where('tenant_user.tenant_id', $this->tenant->id)
+            ->select('users.*')
             ->first();
 
         $this->assertNotNull($backup, 'User should be backed up');
@@ -216,12 +218,16 @@ class BackupRestoreTest extends TestCase
 
         // Backup tenantA users
         $tenantABackup = DB::table('users')
-            ->where('tenant_id', $this->tenant->id)
+            ->join('tenant_user', 'users.id', '=', 'tenant_user.user_id')
+            ->where('tenant_user.tenant_id', $this->tenant->id)
+            ->select('users.*', 'tenant_user.tenant_id')
             ->get();
 
         // Backup tenantB users
         $tenantBBackup = DB::table('users')
-            ->where('tenant_id', $tenantB->id)
+            ->join('tenant_user', 'users.id', '=', 'tenant_user.user_id')
+            ->where('tenant_user.tenant_id', $tenantB->id)
+            ->select('users.*', 'tenant_user.tenant_id')
             ->get();
 
         // Verify no cross-tenant data in backups
@@ -253,7 +259,7 @@ class BackupRestoreTest extends TestCase
         $role->grantPermission($permission);
 
         // Create backup snapshots
-        $userCount = DB::table('users')->where('tenant_id', $this->tenant->id)->count();
+        $userCount = DB::table('tenant_user')->where('tenant_id', $this->tenant->id)->count();
         $roleCount = DB::table('roles')->where('tenant_id', $this->tenant->id)->count();
         $permCount = DB::table('permissions')->where('tenant_id', $this->tenant->id)->count();
         $relationshipCount = DB::table('user_role')
@@ -279,15 +285,17 @@ class BackupRestoreTest extends TestCase
 
         // Read backup
         $backupData = DB::table('users')
-            ->where('id', $originalUser->id)
-            ->where('tenant_id', $this->tenant->id)
+            ->join('tenant_user', 'users.id', '=', 'tenant_user.user_id')
+            ->where('users.id', $originalUser->id)
+            ->where('tenant_user.tenant_id', $this->tenant->id)
+            ->select('users.*', 'tenant_user.tenant_id')
             ->first();
 
         // Verify backup is restorable
         $this->assertNotNull($backupData);
         $this->assertEquals($originalUser->id, $backupData->id);
         $this->assertEquals($originalUser->email, $backupData->email);
-        $this->assertEquals($originalUser->tenant_id, $backupData->tenant_id);
+        $this->assertEquals($this->tenant->id, $backupData->tenant_id);
 
         echo "✅ Restore consistency verified\n";
     }
@@ -326,7 +334,9 @@ class BackupRestoreTest extends TestCase
             ->create();
 
         $backup = DB::table('users')
-            ->where('id', $user->id)
+            ->join('tenant_user', 'users.id', '=', 'tenant_user.user_id')
+            ->where('users.id', $user->id)
+            ->select('users.*', 'tenant_user.tenant_id')
             ->first();
 
         // Verify NULL fields are preserved
@@ -356,7 +366,7 @@ class BackupRestoreTest extends TestCase
 
         // Backup entire tenant
         $tenantSnapshot = [
-            'users' => DB::table('users')->where('tenant_id', $this->tenant->id)->count(),
+            'users' => DB::table('tenant_user')->where('tenant_id', $this->tenant->id)->count(),
             'roles' => DB::table('roles')->where('tenant_id', $this->tenant->id)->count(),
             'permissions' => DB::table('permissions')->where('tenant_id', $this->tenant->id)->count(),
             'audit_logs' => DB::table('audit_logs')->where('tenant_id', $this->tenant->id)->count(),
@@ -375,7 +385,7 @@ class BackupRestoreTest extends TestCase
     public function test_incremental_backup_capability(): void
     {
         // Initial snapshot
-        $initialCount = DB::table('users')
+        $initialCount = DB::table('tenant_user')
             ->where('tenant_id', $this->tenant->id)
             ->count();
 
@@ -386,7 +396,7 @@ class BackupRestoreTest extends TestCase
             ->create();
 
         // Incremental snapshot
-        $finalCount = DB::table('users')
+        $finalCount = DB::table('tenant_user')
             ->where('tenant_id', $this->tenant->id)
             ->count();
 
