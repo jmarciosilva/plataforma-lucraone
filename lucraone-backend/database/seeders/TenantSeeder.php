@@ -13,22 +13,38 @@ class TenantSeeder extends Seeder
     public function run(): void
     {
         // Tenant de desenvolvimento para testes
-        Tenant::factory()->active()->create([
-            'name' => 'LUCRAONE Development',
-            'slug' => 'lucraone-dev',
-            'plan' => 'enterprise',
-        ]);
+        Tenant::firstOrCreate(
+            ['slug' => 'lucraone-dev'],
+            [
+                'name' => 'LUCRAONE Development',
+                'plan' => 'enterprise',
+                'status' => 'ACTIVE',
+                'timezone' => 'America/Sao_Paulo',
+                'locale' => 'pt-BR',
+                'currency' => 'BRL',
+                'active' => true,
+            ]
+        );
 
         // Tenant de teste
-        Tenant::factory()->trial()->create([
-            'name' => 'Test Store',
-            'slug' => 'test-store',
-            'plan' => 'free',
-        ]);
+        Tenant::firstOrCreate(
+            ['slug' => 'test-store'],
+            [
+                'name' => 'Test Store',
+                'plan' => 'free',
+                'status' => 'ACTIVE',
+                'timezone' => 'America/Sao_Paulo',
+                'locale' => 'pt-BR',
+                'currency' => 'BRL',
+                'active' => true,
+            ]
+        );
 
-        // Exemplos adicionais
-        for ($i = 1; $i <= 3; $i++) {
-            Tenant::factory()->active()->create();
+        // Exemplos adicionais (só cria se houver menos de 5 tenants)
+        if (Tenant::count() < 5) {
+            for ($i = 1; $i <= 3; $i++) {
+                Tenant::factory()->active()->create();
+            }
         }
     }
 }

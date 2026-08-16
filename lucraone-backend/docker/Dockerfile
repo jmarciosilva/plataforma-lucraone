@@ -10,7 +10,10 @@ RUN apk add --no-cache \
     libzip-dev \
     zip \
     nginx \
-    supervisor
+    supervisor \
+    autoconf \
+    g++ \
+    make
 
 RUN docker-php-ext-install \
     pdo \
@@ -18,13 +21,11 @@ RUN docker-php-ext-install \
     zip \
     bcmath \
     ctype \
-    fileinfo \
-    json \
-    mbstring \
-    openssl \
-    tokenizer
+    fileinfo
 
 RUN pecl install redis && docker-php-ext-enable redis
+
+RUN apk del --no-cache autoconf g++ make
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
