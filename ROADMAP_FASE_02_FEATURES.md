@@ -3,14 +3,17 @@
 
 **Projeto:** Plataforma SaaS Inteligente de Automação Comercial  
 **Fase:** 02 — FEATURES  
-**Status:** 🟡 ATIVO — F2.1 concluído, F2.2 é o próximo
+**Status:** 🟡 ATIVO — F2.1 API concluída, F2.1b Web UI é o próximo
 **Prioridade:** Alta  
 **Dependência:** FASE 01 ✅ Concluída · FASE 03 ✅ Concluída
 **Estimativa:** 6 sprints (~12-16 semanas)  
+**Entrega obrigatória por sprint:** API/backend + frontend web no painel administrativo
 
 > ✅ **Retomada liberada em 2026-08-16.**
 > A FASE 03 foi concluída, então a FASE 02 pode seguir para F2.2 —
-> Inventory Management.
+> Inventory Management. A partir deste ponto, cada sprint precisa entregar
+> também a interface web correspondente, para validação manual por José e pelos
+> sócios no painel administrativo.
 >
 > ⏸️ **Pausa anterior em 2026-08-16 — após F2.1.**
 > A FASE 02 entrega APIs de negócio, mas o sistema ainda não possui interface de
@@ -24,14 +27,15 @@
 
 ### Progresso Atual
 
-| Sprint | Status | Testes |
-|--------|--------|--------|
-| F2.1 — Products Management | ✅ DONE | 42 passing |
-| F2.2 — Inventory Management | 📋 TODO | — |
-| F2.3 — Orders / Vendas | ⏸️ Aguarda F2.2 | — |
-| F2.4 — Payments | ⏸️ Aguarda F2.3 | — |
-| F2.5 — Reports | ⏸️ Aguarda F2.4 | — |
-| F2.6 — Integrations | ⏸️ Aguarda F2.5 | — |
+| Sprint | Backend/API | Frontend Web | Testes |
+|--------|-------------|--------------|--------|
+| F2.1 — Products Management | ✅ DONE | 📋 PENDENTE | 42 API/domain |
+| F2.1b — Products Web UI | 📋 TODO | 📋 TODO | a definir |
+| F2.2 — Inventory Management | 📋 TODO | 📋 TODO | — |
+| F2.3 — Orders / Vendas | ⏸️ Aguarda F2.2 | ⏸️ Aguarda F2.2 | — |
+| F2.4 — Payments | ⏸️ Aguarda F2.3 | ⏸️ Aguarda F2.3 | — |
+| F2.5 — Reports | ⏸️ Aguarda F2.4 | ⏸️ Aguarda F2.4 | — |
+| F2.6 — Integrations | ⏸️ Aguarda F2.5 | ⏸️ Aguarda F2.5 | — |
 
 ---
 
@@ -46,7 +50,10 @@ Produtos → Estoque → Vendas → Pagamentos → Fiscal → Reporting
 ```
 
 Cada módulo será desenvolvido em uma sprint dedicada com:
-- Testes automatizados (unit + integration)
+- API/backend do domínio
+- Interface web no painel administrativo
+- Testes automatizados (unit + feature/API + feature/web)
+- Validação manual no navegador
 - Documentação arquitetural
 - Validação de isolamento multi-tenant
 - Auditoria de operações críticas
@@ -73,7 +80,8 @@ Gerar Documentos Fiscais
 Gerar Relatórios e Analytics
 ```
 
-Todos com suporte a **múltiplos tenants**, **auditoria completa** e **testes automatizados**.
+Todos com suporte a **múltiplos tenants**, **auditoria completa**, **testes automatizados**
+e **telas web operáveis** para validação por usuários não técnicos.
 
 ---
 
@@ -86,6 +94,43 @@ Todos com suporte a **múltiplos tenants**, **auditoria completa** e **testes au
 5. **Performance** — Manter baselines de FASE 01
 6. **Documentação** — ADRs para decisões arquiteturais importantes
 7. **Segurança Contínua** — Validar OWASP Top 10 a cada sprint
+8. **Frontend Operável** — Nenhuma sprint da FASE 02 pós-F3.6 será considerada
+   pronta apenas com API; precisa haver telas no painel para fluxo humano real.
+
+---
+
+# 3.1. Regra de Entrega Full-Stack da FASE 02
+
+A FASE 03 entregou a base administrativa: login, layout, menus, tenants, usuários,
+empresas e permissões. Portanto, a partir da F2.2, cada módulo de negócio deve
+ser entregue de ponta a ponta:
+
+```text
+Banco + Models + Regras
+    ↓
+API protegida por tenant/RBAC
+    ↓
+Telas Blade + Tailwind no painel
+    ↓
+Testes API + testes web
+    ↓
+Validação manual no navegador
+```
+
+Critérios adicionais obrigatórios por sprint:
+
+- Menu/atalho no painel quando o módulo for de uso recorrente.
+- Listagem com busca, filtros úteis e paginação.
+- Formulários de criação/edição com validação server-side e mensagens claras.
+- Tela de detalhe quando houver histórico, auditoria ou dados relacionados.
+- Modal de ajuda contextual para orientar usuários leigos e sócios.
+- Permissões RBAC aplicadas nas rotas web e API.
+- Teste automatizado cobrindo isolamento multi-tenant na API e na tela.
+- Validação manual no navegador usando `http://localhost:8000`.
+
+Para F2.1, que foi implementada antes da FASE 03, o backend/API está DONE. A
+interface web de produtos/categorias/preços deve ser incluída antes ou junto da
+F2.2, porque estoque depende de produtos e precisa ser testável pela tela.
 
 ---
 
@@ -101,13 +146,13 @@ app/Modules/
 ├── Authorization/        # ✅ Já existe
 ├── Audit/                # ✅ Já existe
 │
-├── Products/             # ✅ F2.1 — Implementado
+├── Products/             # ✅ F2.1 API — 📋 F2.1b Web UI pendente
 │   ├── Domain/
 │   ├── Application/
 │   ├── Infrastructure/
 │   └── Http/
 │
-├── Inventory/            # 📋 F2.2 — Próximo
+├── Inventory/            # 📋 F2.2 — API + Web UI
 │   ├── Domain/
 │   ├── Application/
 │   ├── Infrastructure/
@@ -229,10 +274,60 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 
 ---
 
+## Sprint F2.1b — Products Web UI
+
+**Status:** 📋 TODO
+**Objetivo:** Criar interface web para produtos, categorias e preços, permitindo
+que José e os sócios testem o módulo sem Postman.
+**Como testar:** acessar o menu `produtos`, cadastrar produto, categoria e preços
+pelo painel, depois validar listagem, filtros e detalhe.
+
+### Requisitos Frontend
+
+#### Produtos
+- [ ] Menu `produtos` apontando para rota real
+- [ ] Listagem de produtos (`/products`) filtrada pelo tenant atual
+- [ ] Busca por SKU/nome
+- [ ] Filtro por status
+- [ ] Formulário de criação de produto
+- [ ] Formulário de edição de produto
+- [ ] Página de detalhe do produto
+- [ ] Soft delete/restaurar produto, se aplicável
+- [ ] Associação de categorias no formulário
+
+#### Categorias
+- [ ] Listagem de categorias (`/categories`) com hierarquia
+- [ ] Criar categoria raiz
+- [ ] Criar subcategoria
+- [ ] Editar categoria
+- [ ] Arquivar categoria com tratamento de filhos
+
+#### Preços
+- [ ] Listar preços do produto
+- [ ] Criar/atualizar preço por tipo (`cost`, `sale`, `suggested_retail`)
+- [ ] Exibir margem calculada
+- [ ] Exibir histórico de preços
+
+#### Experiência e segurança
+- [ ] Modal de ajuda contextual para produtos/categorias/preços
+- [ ] Policies/RBAC nas rotas web
+- [ ] Mensagens de sucesso/erro no design system
+- [ ] Testes feature web de listagem, criação, edição e isolamento
+- [ ] Validação manual no navegador
+
+**Nota:** F2.1b não altera o escopo de domínio já entregue na API; ela torna o
+módulo operável por humanos e prepara o terreno para F2.2, que depende de produtos
+cadastráveis pela tela.
+
+---
+
 ## Sprint F2.2 — Inventory Management
 
 **Duração:** ~2 semanas  
-**Objetivo:** Controlar estoque com movimentações e níveis de reposição  
+**Objetivo:** Controlar estoque com movimentações e níveis de reposição pela API
+e pelo painel web.
+**Como testar:** acessar o menu `estoque`, consultar posição por produto/empresa,
+registrar ajuste de entrada/saída e ver histórico de movimentações.
 
 ### Requisitos
 
@@ -254,6 +349,18 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 - [ ] GET /api/v1/inventory/low-stock (alert)
 - [ ] GET /api/v1/inventory/overstock (alert)
 
+#### Frontend Web
+- [ ] Menu `estoque` no painel
+- [ ] Dashboard de estoque com totais, baixo estoque e excesso
+- [ ] Listagem de estoque por produto/empresa
+- [ ] Busca por produto/SKU
+- [ ] Filtros por empresa, status de estoque e categoria
+- [ ] Tela de detalhe do estoque do produto
+- [ ] Formulário/modal de ajuste de estoque
+- [ ] Histórico de movimentações
+- [ ] Formulário de nível mínimo, máximo e ponto de reposição
+- [ ] Modal de ajuda contextual do módulo estoque
+
 #### Features
 - [ ] Real-time inventory updates
 - [ ] Movement audit trail (quem, quando, por quê)
@@ -270,6 +377,10 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 - [ ] Transfer operations
 - [ ] Concurrent updates (locking)
 - [ ] Audit trail completeness
+- [ ] Web: listagem renderiza dados do tenant atual
+- [ ] Web: ajuste de estoque cria movimentação
+- [ ] Web: usuário sem permissão recebe 403
+- [ ] Browser: fluxo manual validado
 
 #### Documentação
 - [ ] ADR-003: Inventory Strategy
@@ -280,7 +391,9 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 ## Sprint F2.3 — Sales & Orders
 
 **Duração:** ~2 semanas  
-**Objetivo:** Implementar sistema de pedidos e vendas  
+**Objetivo:** Implementar sistema de pedidos e vendas pela API e pelo painel web.
+**Como testar:** criar pedido/venda no painel, alterar status e validar reserva
+ou baixa de estoque quando aplicável.
 
 ### Requisitos
 
@@ -303,6 +416,16 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 - [ ] POST /api/v1/customers (create)
 - [ ] GET /api/v1/customers (list)
 
+#### Frontend Web
+- [ ] Menu `vendas` no painel
+- [ ] Listagem de pedidos/vendas com busca e filtros
+- [ ] Criar pedido/venda pela tela
+- [ ] Adicionar/remover itens do pedido
+- [ ] Selecionar cliente ou criar cliente inline
+- [ ] Atualizar status do pedido
+- [ ] Tela de detalhe com itens, totais e histórico
+- [ ] Modal de ajuda contextual de vendas
+
 #### Features
 - [ ] Order status workflow (draft → pending → confirmed → shipped → completed)
 - [ ] Inventory reservation on order creation
@@ -318,6 +441,9 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 - [ ] Concurrent orders (no overselling)
 - [ ] Cancellation scenarios
 - [ ] Pricing accuracy
+- [ ] Web: criar pedido pela tela
+- [ ] Web: atualizar status pela tela
+- [ ] Web: isolamento por tenant
 
 #### Documentação
 - [ ] ADR-004: Order Workflow
@@ -328,7 +454,9 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 ## Sprint F2.4 — Reporting & Analytics
 
 **Duração:** ~2 semanas  
-**Objetivo:** Gerar relatórios executivos e dashboards  
+**Objetivo:** Gerar relatórios executivos e dashboards pela API e pelo painel web.
+**Como testar:** acessar relatórios no painel, filtrar período e conferir KPIs
+com dados reais do tenant.
 
 ### Requisitos
 
@@ -342,6 +470,17 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 - [ ] GET /api/v1/reports/customers (top customers)
 - [ ] GET /api/v1/dashboard/summary (KPIs)
 - [ ] GET /api/v1/analytics/trends (sales trends)
+
+#### Frontend Web
+- [ ] Menu `relatórios` no painel
+- [ ] Dashboard de KPIs comerciais
+- [ ] Filtros por período, empresa e filial
+- [ ] Relatório de vendas
+- [ ] Relatório de estoque
+- [ ] Relatório de clientes
+- [ ] Gráficos/tabelas responsivos
+- [ ] Exportação simples quando aplicável
+- [ ] Modal de ajuda contextual de relatórios
 
 #### Features
 - [ ] Real-time KPI dashboard
@@ -357,6 +496,8 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 - [ ] Aggregation performance
 - [ ] Date filtering
 - [ ] Tenant isolation in reports
+- [ ] Web: relatórios renderizam KPIs reais
+- [ ] Web: filtros alteram resultado
 
 #### Documentação
 - [ ] Reporting Architecture
@@ -367,13 +508,33 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 ## Sprint F2.5 — Advanced Automation
 
 **Duração:** ~2 semanas  
-**Objetivo:** Automações de negócio baseadas em regras  
+**Objetivo:** Automações de negócio baseadas em regras, com API e painel web
+para operadores configurarem regras sem tinker.
+**Como testar:** criar uma regra no painel, simular gatilho e consultar histórico
+de execução.
 
 ### Requisitos
 
 #### Modelos
 - [ ] AutomationRule (trigger, condition, action, tenant_id)
 - [ ] AutomationLog (execution history)
+
+#### API Endpoints
+- [ ] GET /api/v1/automation-rules
+- [ ] POST /api/v1/automation-rules
+- [ ] GET /api/v1/automation-rules/{id}
+- [ ] PUT /api/v1/automation-rules/{id}
+- [ ] DELETE /api/v1/automation-rules/{id}
+- [ ] GET /api/v1/automation-logs
+
+#### Frontend Web
+- [ ] Menu `automações` no painel
+- [ ] Listagem de regras
+- [ ] Criar/editar regra
+- [ ] Ativar/desativar regra
+- [ ] Listar execuções e erros
+- [ ] Tela de detalhe da regra
+- [ ] Modal de ajuda contextual de automações
 
 #### Features
 - [ ] Rules engine: when X then do Y
@@ -386,6 +547,8 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 - [ ] Rule evaluation
 - [ ] Action execution
 - [ ] Error handling
+- [ ] Web: criar regra pela tela
+- [ ] Web: consultar histórico de execução
 
 #### Documentação
 - [ ] Automation Rules Guide
@@ -395,13 +558,34 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 ## Sprint F2.6 — Integration APIs
 
 **Duração:** ~2 semanas  
-**Objetivo:** Integração com sistemas externos  
+**Objetivo:** Integração com sistemas externos, com APIs e painel web para
+configurar, acompanhar e auditar integrações.
+**Como testar:** cadastrar uma integração no painel, disparar webhook/teste e
+consultar logs de envio.
 
 ### Requisitos
 
 #### Modelos
 - [ ] Integration (type, endpoint, credentials_encrypted)
 - [ ] IntegrationLog (request/response)
+
+#### API Endpoints
+- [ ] GET /api/v1/integrations
+- [ ] POST /api/v1/integrations
+- [ ] GET /api/v1/integrations/{id}
+- [ ] PUT /api/v1/integrations/{id}
+- [ ] DELETE /api/v1/integrations/{id}
+- [ ] POST /api/v1/integrations/{id}/test
+- [ ] GET /api/v1/integration-logs
+
+#### Frontend Web
+- [ ] Menu `integrações` no painel
+- [ ] Listagem de integrações
+- [ ] Criar/editar integração
+- [ ] Testar integração
+- [ ] Exibir status e últimos erros
+- [ ] Listar logs de requisição/resposta
+- [ ] Modal de ajuda contextual de integrações
 
 #### Suportes Iniciais
 - [ ] Webhook delivery
@@ -413,6 +597,8 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 - [ ] Webhook handling
 - [ ] Retry logic
 - [ ] Error recovery
+- [ ] Web: cadastrar integração pela tela
+- [ ] Web: consultar logs
 
 #### Documentação
 - [ ] Integration Guide
@@ -426,6 +612,8 @@ Uma sprint é considerada **DONE** quando:
 
 ✅ Todos os requisitos implementados  
 ✅ Testes escrevendo e passando (≥90% coverage)  
+✅ Interface web do módulo entregue no painel administrativo
+✅ Fluxo validado manualmente no navegador por um operador humano
 ✅ Zero security vulnerabilities  
 ✅ Documentação atualizada (ADR, API, guides)  
 ✅ Isolamento multi-tenant validado  
@@ -445,6 +633,18 @@ app/Modules/{Module}/Http/Requests/
 
 // Domain Validation para regra de negócio
 app/Modules/{Module}/Domain/Rules/
+```
+
+### Frontend Web
+```text
+// Views Blade seguem o design system da FASE 03
+resources/views/{module}/
+
+// Controllers web finos, usando TenantContext e policies
+app/Http/Controllers/Web/{Module}Controller.php
+
+// Componentes existentes devem ser reutilizados
+components: button, input, select, form-group, card, kpi, badge, alert, modal, table, section-label
 ```
 
 ### Autenticação & Autorização
@@ -467,6 +667,19 @@ app/Modules/{Module}/Domain/Rules/
 // Sempre testar isolamento tenant
 // Sempre testar error cases
 // Usar factories para dados
+// Cobrir API e web quando houver tela
+```
+
+### Validação Manual
+```text
+// Toda sprint deve terminar com teste real no navegador:
+1. Login com usuário admin
+2. Acesso ao menu do módulo
+3. Criar registro principal
+4. Editar registro principal
+5. Conferir listagem/filtros/detalhe
+6. Conferir modal de ajuda
+7. Conferir que usuário sem permissão recebe 403
 ```
 
 ---
@@ -477,7 +690,9 @@ app/Modules/{Module}/Domain/Rules/
 ```
 F2.1 — Products ✓
   ↓
-F2.2 — Inventory (depende de produtos)
+F2.1b — Products Web UI (torna produtos testáveis pelo painel)
+  ↓
+F2.2 — Inventory (depende de produtos cadastráveis pela tela)
   ↓
 F2.3 — Sales (depende de produtos + inventory)
   ↓
@@ -515,11 +730,12 @@ F2.6 — Integration (independente)
 FASE 02 Timeline:
 
 Semana 1-2:    F2.1 — Products ✓
-Semana 3-4:    F2.2 — Inventory ✓
-Semana 5-6:    F2.3 — Sales ✓
-Semana 7-8:    F2.4 — Reporting ✓
-Semana 9-10:   F2.5 — Automation ✓
-Semana 11-12:  F2.6 — Integration ✓
+Semana 3:      F2.1b — Products Web UI ✓
+Semana 4-5:    F2.2 — Inventory ✓
+Semana 6-7:    F2.3 — Sales ✓
+Semana 8-9:    F2.4 — Reporting ✓
+Semana 10-11:  F2.5 — Automation ✓
+Semana 12-13:  F2.6 — Integration ✓
 Semana 13:     UAT & Bug Fixes
 Semana 14:     Release Ready
 
@@ -547,15 +763,20 @@ Target: Início: 2026-08-19 | Fim: 2026-11-30
 
 ---
 
-# 12. Checklist de Inicialização F2.2
+# 12. Checklist de Inicialização F2.1b
 
-Antes de começar F2.2:
+Antes de começar F2.2, implementar F2.1b para que produtos estejam operáveis no painel:
 
 - [x] Revisar ROADMAP_FASE_02_FEATURES.md
 - [x] Confirmar F2.1 como concluído no checklist detalhado
+- [x] Definir que FASE 02 entrega API/backend + frontend web por sprint
 - [ ] Criar branches para cada sprint
-- [ ] Atualizar PROJECT_STATUS.md com início de F2.2
-- [ ] Configurar environment para F2.2, se necessário
+- [ ] Atualizar PROJECT_STATUS.md com início de F2.1b
+- [ ] Configurar environment para F2.1b, se necessário
+- [ ] Implementar telas web de produtos/categorias/preços
+- [ ] Validar produtos no navegador com usuário admin
+- [ ] Fazer commit com `feat(F2.1b): gerenciar produtos pelo painel`
+- [ ] Depois iniciar F2.2 — Inventory Management
 - [ ] Criar ADR-003 (Inventory Strategy), se a modelagem exigir decisão arquitetural
 - [ ] Implementar Inventory model
 - [ ] Escrever testes para movimentos de estoque
@@ -566,5 +787,5 @@ Antes de começar F2.2:
 
 **Autor:** Claude Code  
 **Data de Criação:** 2026-08-16  
-**Status:** F2.1 concluído · F2.2 pronto para iniciar
-**Próxima Atualização:** Quando F2.2 iniciar
+**Status:** F2.1 API concluída · F2.1b Web UI é o próximo passo
+**Próxima Atualização:** Quando F2.1b iniciar
