@@ -3,10 +3,31 @@
 
 **Projeto:** Plataforma SaaS Inteligente de Automação Comercial  
 **Fase:** 02 — FEATURES  
-**Status:** Planejado (FASE 01 ✅ COMPLETE)  
+**Status:** ⏸️ PAUSADO após F2.1 (retoma em F2.2 após a FASE 03)  
 **Prioridade:** Alta  
-**Dependência:** FASE 01 — FOUNDATION (✅ Concluída)  
+**Dependência:** FASE 01 ✅ Concluída · FASE 03 — ADMIN FRONTEND (pré-requisito para F2.2+)  
 **Estimativa:** 6 sprints (~12-16 semanas)  
+
+> ⏸️ **Pausa em 2026-08-16 — após F2.1.**
+> A FASE 02 entrega APIs de negócio, mas o sistema ainda não possui interface de
+> acesso: não há tela de login nem painel administrativo para cadastrar tenants,
+> usuários e empresas. Continuar acumulando endpoints sem UI tornaria o produto
+> não testável por um operador humano.
+>
+> **Decisão:** inserir a [FASE 03 — ADMIN FRONTEND](ROADMAP_FASE_03_ADMIN_FRONTEND.md)
+> (Blade + Tailwind) antes de F2.2. A FASE 02 retoma no Sprint F2.2 — Inventory
+> Management assim que o F3.6 for concluído.
+
+### Progresso Atual
+
+| Sprint | Status | Testes |
+|--------|--------|--------|
+| F2.1 — Products Management | ✅ DONE | 17 passing |
+| F2.2 — Inventory Management | ⏸️ Aguarda FASE 03 | — |
+| F2.3 — Orders / Vendas | ⏸️ Aguarda FASE 03 | — |
+| F2.4 — Payments | ⏸️ Aguarda FASE 03 | — |
+| F2.5 — Reports | ⏸️ Aguarda FASE 03 | — |
+| F2.6 — Integrations | ⏸️ Aguarda FASE 03 | — |
 
 ---
 

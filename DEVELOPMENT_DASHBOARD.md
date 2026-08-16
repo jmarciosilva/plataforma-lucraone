@@ -1,8 +1,9 @@
 ﻿# 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-16 (FASE 01 COMPLETE)  
-**Fase:** FASE 01 — FOUNDATION ✅ COMPLETE  
-**Progresso Geral:** 100% (7/7 sprints)
+**Atualizado:** 2026-08-16 (FASE 03 planejada — Admin Frontend)  
+**Fase Ativa:** FASE 03 — ADMIN FRONTEND 📋 (0/6 sprints)  
+**Fase Pausada:** FASE 02 — FEATURES ⏸️ (1/6 sprints)  
+**Testes:** 206 passing
 
 ---
 
@@ -10,13 +11,26 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    FOUNDATION PHASE ✅                       │
-│                    7/7 SPRINTS COMPLETE                      │
-│                    189 TESTS PASSING                         │
-│                                                               │
-│  ██████████████████████████████████████████████  100%         │
+│  FASE 01 — FOUNDATION            ✅ COMPLETO                 │
+│  7/7 sprints · 189 testes                                    │
+│  ████████████████████████████████████████████████  100%      │
+├─────────────────────────────────────────────────────────────┤
+│  FASE 02 — FEATURES              ⏸️  PAUSADO                 │
+│  1/6 sprints · 17 testes                                     │
+│  ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   17%      │
+├─────────────────────────────────────────────────────────────┤
+│  FASE 03 — ADMIN FRONTEND        📋 ATIVO  ← AQUI            │
+│  0/6 sprints · 0/~53 testes                                  │
+│  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    0%      │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### Por que a FASE 03 entrou na frente da F2.2
+
+O backend está sólido, mas **não existe interface de acesso**: nenhuma tela de
+login, nenhum painel para cadastrar tenant, usuário ou empresa. Hoje só é possível
+operar o sistema via `php artisan tinker` + Postman. A FASE 03 entrega a camada
+web administrativa (Blade + Tailwind) antes de seguir com novos módulos de negócio.
 
 ---
 
@@ -157,6 +171,146 @@ Conclusão:
 
 ---
 
+## 📦 FASE 02 — FEATURES (PAUSADO)
+
+### ✅ Sprint F2.1 — Products Management (DONE)
+
+```
+Status:     ✅ DONE (100%)
+Progresso:  20/20 itens
+Tests:      17/17 passing ✅
+
+Conclusão:
+  ✅ Product model (SKU único por tenant, soft delete)
+  ✅ Category model (hierarquia parent-child)
+  ✅ Price model (multi-moeda: cost, sale, suggested_retail)
+  ✅ PriceHistory model (auditoria de alterações)
+  ✅ 5 migrations + 3 factories
+  ✅ 3 Controllers (Product, Category, Price) — 14 endpoints
+  ✅ 3 FormRequests + 3 Resources
+  ✅ HasUlid trait (auto-geração de ULID)
+  ✅ 8 ProductApiTest + 9 CategoryApiTest
+```
+
+### ⏸️ Sprints F2.2 a F2.6 (AGUARDANDO FASE 03)
+
+```
+F2.2 — Inventory Management    ⏸️  0/20 itens
+F2.3 — Orders / Vendas          ⏸️  0/20 itens
+F2.4 — Payments                 ⏸️  0/20 itens
+F2.5 — Reports                  ⏸️  0/20 itens
+F2.6 — Integrations             ⏸️  0/20 itens
+
+Retomada prevista: após conclusão do F3.6
+```
+
+---
+
+## 🖥️ FASE 03 — ADMIN FRONTEND (ATIVO)
+
+**Stack:** Laravel Blade + Tailwind CSS + Alpine.js  
+**Roadmap:** [ROADMAP_FASE_03_ADMIN_FRONTEND.md](ROADMAP_FASE_03_ADMIN_FRONTEND.md)
+
+### 📋 Sprint F3.1 — Frontend Setup & Layout
+
+```
+Status:     📋 TODO
+Progresso:  0/15 itens
+Tests:      0/5
+
+Escopo:
+  ⬜ Tailwind CSS + Alpine.js + Vite
+  ⬜ Layout principal (header, sidebar, footer)
+  ⬜ Layout de autenticação
+  ⬜ Componentes: Button, Input, Select, Modal, Alert, Table, FormGroup
+  ⬜ Middleware de auth para rotas web
+
+Como validar:  http://localhost:8000 renderiza com Tailwind aplicado
+```
+
+### 📋 Sprint F3.2 — Authentication (Login/Logout)
+
+```
+Status:     📋 TODO
+Progresso:  0/20 itens
+Tests:      0/8
+
+Escopo:
+  ⬜ Tela de login (/login)
+  ⬜ Autenticação por sessão web (guard web)
+  ⬜ Resolução de tenant a partir do usuário logado
+  ⬜ Logout + limpeza de sessão
+  ⬜ Bloqueio de usuário INACTIVE/SUSPENDED
+  ⬜ Telas de erro 403 e 404
+  ⬜ Proteção CSRF
+
+Como validar:  login com admin@lucraone-dev.local chega no dashboard
+```
+
+### 📋 Sprint F3.3 — Admin Dashboard
+
+```
+Status:     📋 TODO
+Progresso:  0/15 itens
+Tests:      0/6
+
+Escopo:
+  ⬜ Sidebar de navegação + header com logout
+  ⬜ Breadcrumbs e menu responsivo
+  ⬜ Widgets: tenants, usuários, empresas, último acesso
+
+Como validar:  painel carrega com contagens reais do banco
+```
+
+### 📋 Sprint F3.4 — Tenant Management
+
+```
+Status:     📋 TODO
+Progresso:  0/25 itens
+Tests:      0/12
+
+Escopo:
+  ⬜ CRUD completo de tenants (estabelecimentos)
+  ⬜ Busca, filtro por status, ordenação, paginação
+  ⬜ Campos: nome, slug, status, plano, timezone, locale, moeda
+  ⬜ Soft delete com confirmação + restaurar
+
+Como validar:  criar novo estabelecimento pela interface (sem tinker)
+```
+
+### 📋 Sprint F3.5 — User Management
+
+```
+Status:     📋 TODO
+Progresso:  0/25 itens
+Tests:      0/12
+
+Escopo:
+  ⬜ CRUD de usuários por tenant
+  ⬜ Atribuição de roles (multi-select)
+  ⬜ Alterar/resetar senha
+  ⬜ Ativar/desativar usuário
+
+Como validar:  criar usuário operador e fazer login com ele
+```
+
+### 📋 Sprint F3.6 — Company & Roles Management
+
+```
+Status:     📋 TODO
+Progresso:  0/20 itens
+Tests:      0/10
+
+Escopo:
+  ⬜ CRUD de empresas + endereços
+  ⬜ Listagem de roles e permissions
+  ⬜ Atribuição de permissions a roles
+
+Como validar:  cadastrar empresa e ajustar permissões de um papel
+```
+
+---
+
 ## 🏗️ Componentes Críticos
 
 ### Infrastructure
@@ -179,19 +333,26 @@ Status Geral: ✅ READY
 Status Geral: ✅ SOLID
 
 Modular Monolith:
-  ✅ Core
-  ✅ Tenancy (implementado)
-  ✅ Companies (implementado)
-  ✅ Branches (implementado)
-  ✅ Identity (implementado)
-  🟡 Authorization (próximo)
-  ⬜ Audit
+  ✅ Core (traits compartilhados: HasUlid)
+  ✅ Tenancy
+  ✅ Companies
+  ✅ Branches
+  ✅ Identity
+  ✅ Authorization
+  ✅ Audit
+  ✅ Products (F2.1)
+  ⬜ Inventory (F2.2)
 
 Padrão DDD:
   ✅ Domain/
   ✅ Application/
   ✅ Infrastructure/
   ✅ Http/
+
+Camada Web (FASE 03):
+  ⬜ resources/views/layouts/
+  ⬜ resources/views/components/
+  ⬜ app/Http/Controllers/Web/
 ```
 
 ### Multi-Tenancy
@@ -213,18 +374,29 @@ Status Geral: ✅ COMPLETE
 ```
 Status Geral: ✅ ROBUST
 
-Unit Tests:        ✅ 6 passing (F1.2)
-Feature Tests:     ✅ 57 passing (F1.2 18 + F1.3 16 + F1.4 12 + F1.5 17)
-Total:             ✅ 63 passing
-Assertions:        ✅ 100+
-Coverage Areas:    ✅ Isolation, context, scope, polymorphism, auth, RBAC
+Total:             ✅ 206 passing
+Coverage Areas:    ✅ Isolation, context, scope, polymorphism, auth, RBAC,
+                      audit, security (OWASP), performance, products API
 
-Breakdown:
+Breakdown FASE 01 (189):
+  F1.1 (Bootstrap):       ✅ 7 passing
   F1.2 (Tenancy):         ✅ 18 passing
-  F1.3 (Companies):       ✅ 10 passing
-  F1.3 (Addresses):       ✅ 6 passing
+  F1.3 (Companies):       ✅ 16 passing
   F1.4 (Authentication):  ✅ 12 passing
   F1.5 (Authorization):   ✅ 17 passing
+  F1.6 (Audit):           ✅ 15 passing
+  F1.7 (Hardening):       ✅ 87 passing
+
+Breakdown FASE 02 (17):
+  F2.1 (Products API):    ✅ 17 passing
+
+Breakdown FASE 03 (0 / meta ~53):
+  F3.1 (Setup):           ⬜ 0/5
+  F3.2 (Auth UI):         ⬜ 0/8
+  F3.3 (Dashboard):       ⬜ 0/6
+  F3.4 (Tenants):         ⬜ 0/12
+  F3.5 (Users):           ⬜ 0/12
+  F3.6 (Companies/Roles): ⬜ 0/10
 ```
 
 ### Documentação
@@ -302,60 +474,35 @@ Foundation Phase:       ✅ 100% (7/7 sprints) — 189 TESTS
 
 ## ⚙️ Próximas Ações (Roadmap)
 
-### Immediate (Today/Tomorrow)
+### 🔜 Imediato — Sprint F3.1 (Frontend Setup & Layout)
 
-- [ ] Validar Docker localmente
-- [ ] Confirmar MySQL/Redis rodando
-- [ ] Testar migrations
-- [ ] Revisar testes
+- [ ] `npm install -D tailwindcss postcss autoprefixer`
+- [ ] `npm install alpinejs`
+- [ ] Configurar `tailwind.config.js` e `vite.config.js`
+- [ ] Criar `resources/views/layouts/app.blade.php`
+- [ ] Criar `resources/views/layouts/auth.blade.php`
+- [ ] Criar componentes Blade (Button, Input, Select, Modal, Alert, Table, FormGroup)
+- [ ] Criar middleware de auth para rotas web
+- [ ] 5 testes de renderização
 
-### F1.1 Final (Code Quality)
+### Depois — F3.2 (Login) → F3.3 (Dashboard) → F3.4 (Tenants) → F3.5 (Users) → F3.6 (Companies/Roles)
 
-- [ ] Laravel Pint setup
-- [ ] PHPStan/Psalm configuration
-- [ ] GitHub Actions pipeline
-- [ ] Health check endpoints
-- [ ] .env.example creation
+### 🔧 Dívida técnica conhecida (a resolver durante FASE 03)
 
-### F1.3 (Companies & Branches) ✅ DONE
+- [ ] `personal_access_tokens.tokenable_id` migrado para ULID (migration criada,
+      aplicar com `php artisan migrate --force`)
+- [ ] 5 testes com falha de constraint no SQLite in-memory
+      (CategoryTest, ProductTest, RBACTest) — passar suíte para MySQL de teste
+- [ ] Rota de health documentada como `/health`, real é `/api/health`
+- [ ] Docker: container `app` não possui `bash` (usar `sh`)
 
-- [x] Create Company model
-- [x] Create Branch model
-- [x] Add Address model
-- [x] Implement relationships (hasMany, morphMany, morphOne)
-- [x] Create isolation tests (10 Company + 6 Address)
-- [x] Domain events (CompanyCreated)
+### ⏸️ Retomada da FASE 02 (após F3.6)
 
-### F1.4 (Identity / Authentication) ✅ DONE
-
-- [x] User model with tenant_id
-- [x] Sanctum authentication
-- [x] Login/Logout endpoints
-- [x] Status management (ACTIVE, INVITED, INACTIVE)
-- [x] Token management (create, revoke)
-- [x] Last login tracking
-- [x] 12 comprehensive tests
-
-### F1.5 (Authorization)
-
-- [ ] Role model
-- [ ] Permission model
-- [ ] RBAC policies
-- [ ] Branch-level access
-
-### F1.6 (Audit)
-
-- [ ] Audit Log model
-- [ ] Structured logging
-- [ ] Request correlation
-- [ ] Health checks
-
-### F1.7 (Hardening)
-
-- [ ] Security audit
-- [ ] Final test suite
-- [ ] Performance baseline
-- [ ] Documentation review
+- [ ] F2.2 — Inventory Management
+- [ ] F2.3 — Orders / Vendas
+- [ ] F2.4 — Payments
+- [ ] F2.5 — Reports
+- [ ] F2.6 — Integrations
 
 ---
 
@@ -478,12 +625,10 @@ Uma sprint é considerada **pronta** quando:
 ```
 
 **Current Status:**
-- F1.1: 73% pronto (CI/CD pendente)
-- F1.2: 100% pronto ✅
-- F1.3: 100% pronto ✅
-- F1.4: 100% pronto ✅
-- F1.5: 100% pronto ✅
-- F1.6: Pronto para iniciar
+- FASE 01 (F1.1 → F1.7): 100% pronto ✅
+- F2.1 (Products): 100% pronto ✅
+- F2.2 → F2.6: ⏸️ aguardando FASE 03
+- F3.1 → F3.6: 📋 a iniciar
 
 ---
 
@@ -498,19 +643,19 @@ Uma sprint é considerada **pronta** quando:
 
 ---
 
-**Próxima atualização:** Quando F2.1 (Core Features) for iniciado  
-**Gerado:** 2026-08-16 (FASE 01 — Foundation completa)  
+**Próxima atualização:** Ao concluir o Sprint F3.1  
+**Gerado:** 2026-08-16 (FASE 03 — Admin Frontend planejada)  
 **Repositório:** D:\PROJETO-LUCRAONE  
 
 ---
 
-## 🎉 FASE 01 CONCLUÍDA COM SUCESSO
+## 📍 Onde Estamos
 
-✅ 189 testes passando  
-✅ 7/7 sprints concluídas  
-✅ Arquitetura sólida e testada  
-✅ Segurança validada (OWASP Top 10)  
-✅ Performance baseline estabelecido  
-✅ Documentação completa  
+✅ **FASE 01 — FOUNDATION:** 189 testes, 7/7 sprints, segurança OWASP validada  
+✅ **F2.1 — Products:** 17 testes, API de produtos/categorias/preços funcionando  
+📋 **FASE 03 — ADMIN FRONTEND:** próxima a iniciar, começando por F3.1  
 
-**Status:** Ready for FASE 02 — FEATURES
+**Lacuna que a FASE 03 resolve:** o sistema não tem tela de login nem painel
+administrativo. Toda operação hoje depende de `tinker` + Postman.
+
+**Status:** Ready for F3.1 — Frontend Setup & Layout

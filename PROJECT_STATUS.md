@@ -1,9 +1,16 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (FASE 02.F2.1 COMPLETE)  
-**Fase Atual:** FASE 02 — FEATURES (IN PROGRESS - 1/6 sprints completo)  
-**Próxima Sprint:** F2.2 — Inventory Management (READY TO START)  
-**Progresso Geral:** ~18% (1/6 sprints completo em FASE 02, 189+17=206 testes passando)
+**Atualizado em:** 2026-08-16 (FASE 03 planejada — Admin Frontend)  
+**Fase Atual:** FASE 03 — ADMIN FRONTEND (PRÓXIMA A INICIAR)  
+**Próxima Sprint:** F3.1 — Frontend Setup & Layout  
+**Fase Pausada:** FASE 02 — FEATURES (F2.1 concluído, F2.2 aguardando frontend)  
+**Progresso Geral:** FASE 01 ✅ 100% | FASE 02 🟡 17% (1/6) | FASE 03 📋 0% (0/6)
+
+> ⚠️ **Decisão de sequenciamento (2026-08-16):** a FASE 02 foi pausada após F2.1
+> porque o sistema não possui interface de acesso — não há tela de login nem painel
+> administrativo para cadastrar tenants, usuários e empresas. A FASE 03 (Admin
+> Frontend, Blade + Tailwind) foi inserida antes de F2.2 para tornar o produto
+> testável por um operador humano, não apenas via cURL/Postman.
 
 ---
 
@@ -11,11 +18,24 @@
 
 | Item | Status |
 |------|--------|
-| **Fase Atual** | FASE 02 — FEATURES (1/6 sprints) |
-| **Próxima Sprint** | F2.2 — Inventory Management |
-| **Progresso Geral** | ~18% (1/6 sprints completado em FASE 02) |
+| **Fase Atual** | FASE 03 — ADMIN FRONTEND (0/6 sprints) |
+| **Próxima Sprint** | F3.1 — Frontend Setup & Layout |
+| **Fase Concluída** | FASE 01 — FOUNDATION (7/7) |
+| **Fase Pausada** | FASE 02 — FEATURES (1/6, retoma após F3.6) |
 | **Testes Totais** | 206 passing, 0 failing |
-| **Cumulative Tests** | FASE 01: 189 | FASE 02: F2.1 (17) |
+| **Cumulative Tests** | FASE 01: 189 · FASE 02: 17 · FASE 03: 0 (meta ~53) |
+
+### Ordem de Execução Atualizada
+
+```
+FASE 01 — FOUNDATION      ✅ COMPLETO   (7 sprints, 189 testes)
+        ↓
+FASE 02 — FEATURES        🟡 PAUSADO    (F2.1 ✅ | F2.2-F2.6 aguardando)
+        ↓
+FASE 03 — ADMIN FRONTEND  📋 ATIVO      (F3.1-F3.6, ~53 testes)  ← VOCÊ ESTÁ AQUI
+        ↓
+FASE 02 (retomada)        📋 F2.2 — Inventory Management
+```
 
 ### FASE 01 Sprints Status
 
@@ -29,22 +49,238 @@
 | **F1.6** | ✅ DONE | 6/6 (100%) | 15 passing |
 | **F1.7** | ✅ DONE | 7/7 (100%) | 87 passing |
 
-### FASE 02 Sprints Status
+### FASE 02 Sprints Status (PAUSADO)
 
-| Sprint | Status | Itens | Testes |
-|--------|--------|-------|--------|
-| **F2.1** | ✅ DONE | 20/20 (100%) | 17 passing |
-| **F2.2** | 📋 TODO | 20/20 | - |
-| **F2.3** | 📋 TODO | 20/20 | - |
-| **F2.4** | 📋 TODO | 20/20 | - |
-| **F2.5** | 📋 TODO | 20/20 | - |
-| **F2.6** | 📋 TODO | 20/20 | - |
+| Sprint | Nome | Status | Itens | Testes |
+|--------|------|--------|-------|--------|
+| **F2.1** | Products Management | ✅ DONE | 20/20 (100%) | 17 passing |
+| **F2.2** | Inventory Management | ⏸️ AGUARDA F3 | 0/20 | - |
+| **F2.3** | Orders / Vendas | ⏸️ AGUARDA F3 | 0/20 | - |
+| **F2.4** | Payments | ⏸️ AGUARDA F3 | 0/20 | - |
+| **F2.5** | Reports | ⏸️ AGUARDA F3 | 0/20 | - |
+| **F2.6** | Integrations | ⏸️ AGUARDA F3 | 0/20 | - |
+
+### FASE 03 Sprints Status (ATIVO)
+
+| Sprint | Nome | Status | Itens | Testes | O que você poderá testar |
+|--------|------|--------|-------|--------|--------------------------|
+| **F3.1** | Frontend Setup & Layout | 📋 TODO | 0/15 | 0/5 | Página placeholder com Tailwind aplicado |
+| **F3.2** | Authentication (Login/Logout) | 📋 TODO | 0/20 | 0/8 | **Login em `/login` com email + senha** |
+| **F3.3** | Admin Dashboard | 📋 TODO | 0/15 | 0/6 | Painel com menu lateral e widgets |
+| **F3.4** | Tenant Management | 📋 TODO | 0/25 | 0/12 | **Cadastrar novo estabelecimento (tenant)** |
+| **F3.5** | User Management | 📋 TODO | 0/25 | 0/12 | **Cadastrar usuários (admin, operador)** |
+| **F3.6** | Company & Roles Management | 📋 TODO | 0/20 | 0/10 | Empresas, endereços e permissões |
+
+**Total FASE 03:** 120 itens, ~53 testes
+
+---
+
+## 🎯 FASE 03 — ADMIN FRONTEND
+
+**Status:** 📋 TODO (0/6 sprints) — **FASE ATIVA**
+
+**Stack:** Laravel Blade + Tailwind CSS + Alpine.js
+
+**Objetivo:** Criar a interface web administrativa que hoje não existe — tela de
+login, painel administrativo e telas de cadastro de tenants, usuários e empresas.
+Sem isso, o sistema só é operável via cURL/Postman.
+
+**Roadmap detalhado:** [ROADMAP_FASE_03_ADMIN_FRONTEND.md](ROADMAP_FASE_03_ADMIN_FRONTEND.md)
+
+**Progresso:** 0/6 sprints, 0/~53 testes
+
+### Sprints
+
+#### Sprint F3.1 — Frontend Setup & Layout
+
+**Status:** 📋 TODO  
+**Objetivo:** Instalar Tailwind, criar layout base e componentes Blade reutilizáveis  
+**Como testar:** acessar `http://localhost:8000` e ver a página com estilo Tailwind aplicado
+
+**Checklist:**
+
+- [ ] Instalar Tailwind CSS via npm
+- [ ] Instalar e configurar Alpine.js
+- [ ] Configurar Vite (build de assets)
+- [ ] Estrutura de diretórios (layouts, components, views)
+- [ ] Layout principal (`layouts/app.blade.php`) — header, sidebar, footer
+- [ ] Layout de autenticação (`layouts/auth.blade.php`)
+- [ ] Componente Button (primário, secundário, danger)
+- [ ] Componente Input (text, email, password, textarea)
+- [ ] Componente Select (dropdown)
+- [ ] Componente Modal
+- [ ] Componente Alert/Toast (mensagens de sucesso e erro)
+- [ ] Componente Table (com paginação)
+- [ ] Componente Form Group (label + input + erro)
+- [ ] Middleware de auth para rotas web
+- [ ] 5 testes de renderização de componentes
+
+**Testes previstos (5):** componentes renderizam, layout carrega, assets compilam,
+middleware redireciona, rota placeholder responde 200
+
+---
+
+#### Sprint F3.2 — Authentication (Login/Logout)
+
+**Status:** 📋 TODO  
+**Objetivo:** Tela de login funcional com sessão e logout  
+**Como testar:** acessar `/login`, entrar com `admin@lucraone-dev.local`, chegar no dashboard
+
+**Checklist:**
+
+- [ ] View de login (`/login`)
+- [ ] View de erro 403 (não autorizado)
+- [ ] View de erro 404 (não encontrado)
+- [ ] Formulário email + senha
+- [ ] Validação client-side (Alpine.js)
+- [ ] Validação server-side (FormRequest)
+- [ ] Autenticação via sessão web (guard `web`)
+- [ ] Resolução de tenant a partir do usuário logado
+- [ ] Logout com limpeza de sessão
+- [ ] Opção "lembrar-me"
+- [ ] Mensagens de erro (credenciais inválidas)
+- [ ] Bloqueio de usuário INACTIVE / SUSPENDED
+- [ ] Redirect pós-login para `/dashboard`
+- [ ] Redirect de visitante para `/login`
+- [ ] Proteção CSRF nos formulários
+- [ ] 8 testes de autenticação
+
+**Testes previstos (8):** login válido, login inválido, usuário inativo bloqueado,
+logout limpa sessão, visitante redirecionado, sessão persiste, CSRF exigido,
+isolamento entre tenants
+
+---
+
+#### Sprint F3.3 — Admin Dashboard
+
+**Status:** 📋 TODO  
+**Objetivo:** Painel inicial com navegação lateral  
+**Como testar:** após login, ver widgets de resumo e navegar pelo menu
+
+**Checklist:**
+
+- [ ] Sidebar com navegação (Dashboard, Tenants, Usuários, Empresas, Roles)
+- [ ] Header com nome do usuário + botão logout
+- [ ] Breadcrumbs
+- [ ] Menu responsivo (mobile)
+- [ ] Estado ativo do item de menu
+- [ ] Widget: total de tenants
+- [ ] Widget: total de usuários
+- [ ] Widget: total de empresas
+- [ ] Widget: último acesso
+- [ ] Atalhos para seções principais
+- [ ] 6 testes de dashboard
+
+**Testes previstos (6):** dashboard carrega, widgets exibem contagens corretas,
+menu renderiza, links funcionam, breadcrumbs corretos, responsivo
+
+---
+
+#### Sprint F3.4 — Tenant Management
+
+**Status:** 📋 TODO  
+**Objetivo:** CRUD completo de tenants (estabelecimentos)  
+**Como testar:** criar um novo estabelecimento pela interface, sem tinker
+
+**Checklist:**
+
+- [ ] Listagem de tenants (`/tenants`) com paginação
+- [ ] Busca por nome
+- [ ] Filtro por status (ACTIVE, INACTIVE, TRIAL, ARCHIVED)
+- [ ] Ordenação (nome, status, data)
+- [ ] Formulário de criação (`/tenants/create`)
+- [ ] Campo nome
+- [ ] Campo slug (auto-gerado a partir do nome)
+- [ ] Campo status
+- [ ] Campo plano (free, standard, enterprise)
+- [ ] Campo timezone
+- [ ] Campo locale (pt-BR, en-US)
+- [ ] Campo moeda
+- [ ] Formulário de edição (`/tenants/{id}/edit`)
+- [ ] Página de detalhe (`/tenants/{id}`)
+- [ ] Soft delete com modal de confirmação
+- [ ] Restaurar tenant excluído
+- [ ] Componente TenantTable
+- [ ] Componente TenantForm
+- [ ] Componente DeleteModal
+- [ ] Validação server-side (StoreTenantRequest)
+- [ ] Controle de permissão (só admin cria tenant)
+- [ ] 12 testes de tenant management
+
+---
+
+#### Sprint F3.5 — User Management
+
+**Status:** 📋 TODO  
+**Objetivo:** CRUD de usuários por tenant, com atribuição de papéis  
+**Como testar:** criar usuário operador e fazer login com ele
+
+**Checklist:**
+
+- [ ] Listagem de usuários (`/users`) filtrada por tenant
+- [ ] Busca por nome/email
+- [ ] Filtro por status
+- [ ] Formulário de criação (`/users/create`)
+- [ ] Campo nome
+- [ ] Campo email (único por tenant)
+- [ ] Campo senha (gerada ou definida)
+- [ ] Campo status (ACTIVE, INACTIVE, SUSPENDED)
+- [ ] Seleção de roles (multi-select)
+- [ ] Formulário de edição
+- [ ] Alterar senha (com confirmação)
+- [ ] Resetar senha
+- [ ] Ativar / desativar usuário
+- [ ] Página de detalhe do usuário
+- [ ] Soft delete
+- [ ] Componente UserTable
+- [ ] Componente UserForm
+- [ ] Componente RoleSelector
+- [ ] Validação de email duplicado
+- [ ] 12 testes de user management
+
+---
+
+#### Sprint F3.6 — Company & Roles Management
+
+**Status:** 📋 TODO  
+**Objetivo:** CRUD de empresas/endereços e gestão de papéis e permissões  
+**Como testar:** cadastrar empresa e ajustar permissões de um papel
+
+**Checklist:**
+
+- [ ] Listagem de empresas (`/companies`)
+- [ ] Criar empresa (nome, CNPJ, tenant)
+- [ ] Editar empresa
+- [ ] Deletar empresa
+- [ ] Listar endereços da empresa
+- [ ] Criar/editar endereço
+- [ ] Listagem de roles (`/roles`)
+- [ ] Listagem de permissions (`/permissions`)
+- [ ] Visualizar permissions de cada role
+- [ ] Atribuir permissions a role (modal)
+- [ ] Listar usuários por role
+- [ ] Componente CompanyTable / CompanyForm
+- [ ] Componente RoleTable / PermissionTable
+- [ ] Componente PermissionAssigner
+- [ ] 10 testes de company e roles
+
+---
+
+### ✅ Critério de Conclusão da FASE 03
+
+- [ ] Usuário faz login pela interface web
+- [ ] Dashboard carrega com dados reais
+- [ ] Novo tenant criado pela interface
+- [ ] Novos usuários criados pela interface
+- [ ] Permissões (RBAC) respeitadas nas telas
+- [ ] Layout responsivo em mobile
+- [ ] ~53 testes passando
 
 ---
 
 ## 🎯 FASE 02 — FEATURES
 
-**Status:** 🟡 IN PROGRESS (1/6 sprints)
+**Status:** ⏸️ PAUSADO (1/6 sprints) — retoma em F2.2 após conclusão da FASE 03
 
 **Objetivo:** Implementar módulos de negócio para gerenciar produtos, inventário, pedidos, pagamentos, relatórios e integrações.
 
@@ -491,49 +727,60 @@ D:\PROJETO-LUCRAONE\
 
 ---
 
-## 🎯 FASE 02 — FEATURES (READY TO START)
+## 🗺️ Sequência Completa de Fases
 
-**Status:** 🟢 READY TO START  
-**Objetivo:** Implementar módulos de negócio e features principais da plataforma  
-**Dependência:** FASE 01 ✅ COMPLETE
+| Ordem | Fase | Sprints | Status |
+|-------|------|---------|--------|
+| 1 | **FASE 01 — FOUNDATION** | F1.1 → F1.7 | ✅ COMPLETO (189 testes) |
+| 2 | **FASE 02 — FEATURES** (parcial) | F2.1 | ✅ COMPLETO (17 testes) |
+| 3 | **FASE 03 — ADMIN FRONTEND** | F3.1 → F3.6 | 📋 **ATIVO** (~53 testes) |
+| 4 | **FASE 02 — FEATURES** (retomada) | F2.2 → F2.6 | ⏸️ Aguarda F3.6 |
 
-### Planned Sprints
-
-| Sprint | Descrição | Dependência |
-|--------|-----------|------------|
-| **F2.1** | Core Features (Products, Categories, Prices) | FASE 01 ✅ |
-| **F2.2** | Inventory Management | F2.1 |
-| **F2.3** | Sales & Orders | F2.2 |
-| **F2.4** | Reporting & Analytics | F2.3 |
-| **F2.5** | Advanced Automation | F2.4 |
-| **F2.6** | Integration APIs (ERP, Marketplaces) | F2.5 |
-
-**Documentação detalhada:** Ver `ROADMAP_FASE_02_FEATURES.md`
+**Documentação detalhada:**
+- [ROADMAP_FASE_01_FOUNDATION.md](ROADMAP_FASE_01_FOUNDATION.md%20—%20Fundação%20Técnica%20da%20Plataforma.md)
+- [ROADMAP_FASE_02_FEATURES.md](ROADMAP_FASE_02_FEATURES.md)
+- [ROADMAP_FASE_03_ADMIN_FRONTEND.md](ROADMAP_FASE_03_ADMIN_FRONTEND.md)
+- [TESTING_GUIDE.md](TESTING_GUIDE.md) — testes manuais da API F2.1
 
 ---
 
 ## 🚀 Próximas Etapas
 
-### Imediato (2026-08-14)
+### Imediato — Sprint F3.1 (Frontend Setup & Layout)
 
-1. ✅ FASE 01 — Fundação concluída (189 testes, 100%)
-2. ✅ Arquitetura validada e hardened
-3. ✅ Segurança auditada
-4. ✅ Performance baselined
-5. ✅ Documentação completa
+1. Instalar Tailwind CSS + Alpine.js + configurar Vite
+2. Criar layout base (header, sidebar, footer) e layout de autenticação
+3. Criar componentes Blade reutilizáveis
+4. Criar middleware de auth para rotas web
+5. 5 testes de renderização
 
-### Próximo (FASE 02)
+### Sequência da FASE 03
 
-1. **F2.1:** Iniciar desenvolvimento de Features
-2. Manter cobertura de testes em 100%
+```
+F3.1 Setup → F3.2 Login → F3.3 Dashboard → F3.4 Tenants → F3.5 Users → F3.6 Companies/Roles
+```
+
+### Depois — Retomada da FASE 02
+
+1. **F2.2:** Inventory Management
+2. Manter cobertura de testes
 3. Continuar auditando segurança a cada sprint
-4. Manter performance dentro dos baselines estabelecidos
 
 ---
 
-## ⚠️ Bloqueios
+## ⚠️ Bloqueios e Dívida Técnica
 
-Nenhum no momento.
+### Bloqueios
+Nenhum bloqueio impeditivo.
+
+### Dívida técnica (identificada nos testes manuais de F2.1)
+
+| Item | Impacto | Onde resolver |
+|------|---------|---------------|
+| `personal_access_tokens.tenable_id` era `bigint`, incompatível com ULID | `createToken()` falhava | Migration criada — aplicar com `migrate --force` |
+| 5 testes com falha de constraint no SQLite in-memory | Suíte não roda 100% limpa | F3.1 |
+| Rota de health documentada como `/health`, real é `/api/health` | Confusão em testes | ✅ corrigido no TESTING_GUIDE |
+| Container `app` sem `bash` | `docker-compose exec app bash` falha | ✅ documentado (usar `sh`) |
 
 ---
 
@@ -546,27 +793,36 @@ Nenhum no momento.
 
 ---
 
-**Próxima revisão:** Quando F2.1 for concluído
+**Próxima revisão:** Quando F3.1 for concluído
 
-*Última atualização deste documento: 2026-08-16 (FASE 01 COMPLETE — Documentação atualizada)*
+*Última atualização deste documento: 2026-08-16 (FASE 03 planejada e inserida no roadmap)*
 
 ---
 
-## ✨ MARCO: FASE 01 CONCLUÍDA
+## ✨ MARCOS ALCANÇADOS
 
 ```
-🎉 LUCRAONE — FOUNDATION COMPLETE 🎉
+✅ MARCO 1 — FOUNDATION COMPLETE (FASE 01)
 
 189/189 testes passando (100%)
-7/7 sprints concluídas com sucesso
-Arquitetura sólida, segura e testada
-Pronto para Fase 02: FEATURES
+7/7 sprints concluídas
+Arquitetura Modular Monolith com Multi-Tenancy
+Segurança auditada (OWASP Top 10)
+Performance baseline estabelecido
 
-Métricas Finais:
-- Testes: 189 passing
-- Coverage: Segurança, Performance, Integração, Documentação
-- Arquitetura: Modular Monolith com Multi-Tenancy
-- Tecnologia: Laravel 13, MySQL 8.4, Redis 7, Sanctum
-- Qualidade: A+ (Security Audit, OWASP Top 10)
+
+✅ MARCO 2 — PRIMEIRO MÓDULO DE NEGÓCIO (F2.1)
+
+17/17 testes passando
+API de Produtos, Categorias e Preços
+Hierarquia de categorias + multi-moeda + auditoria de preços
+ULID auto-gerado via trait HasUlid
+
+
+📋 MARCO 3 — PRODUTO OPERÁVEL POR HUMANO (FASE 03) ← PRÓXIMO
+
+Meta: login web + painel administrativo + cadastro de
+tenants, usuários, empresas e permissões pela interface.
+Sem depender de tinker ou Postman.
 ```
 
