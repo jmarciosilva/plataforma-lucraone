@@ -10,6 +10,10 @@ use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Companies\Http\Policies\CompanyPolicy;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Identity\Http\Policies\UserPolicy;
+use App\Modules\Products\Domain\Models\Category;
+use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Http\Policies\CategoryPolicy;
+use App\Modules\Products\Http\Policies\ProductPolicy;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Tenancy\Http\Policies\TenantPolicy;
 use App\Modules\Tenancy\TenancyServiceProvider;
@@ -37,5 +41,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Company::class, CompanyPolicy::class);
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Permission::class, PermissionPolicy::class);
+        Gate::policy(Product::class, ProductPolicy::class);
+        Gate::policy(Category::class, CategoryPolicy::class);
     }
 }

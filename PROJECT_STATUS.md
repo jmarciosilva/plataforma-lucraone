@@ -1,11 +1,11 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (F3.6 concluído — company & roles management)
-**Fase Atual:** FASE 02 — FEATURES (retomada em F2.2)
+**Atualizado em:** 2026-08-16 (F2.1b concluído — products web ui)
+**Fase Atual:** FASE 02 — FEATURES (F2.2 é o próximo)
 **Próxima Sprint:** F2.2 — Inventory Management
 **Fase Concluída:** FASE 03 — ADMIN FRONTEND (6/6 sprints)
-**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 17% (1/6) | FASE 03 ✅ 100% (6/6)
-**Testes:** 304 passing, 0 failing
+**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 2 entregas concluídas | FASE 03 ✅ 100% (6/6)
+**Testes:** 312 passing, 0 failing
 
 > 🔓 **O sistema já é operável por um humano.** Desde o F3.2 existe login web
 > em `/login`. Uma pessoa com vínculo em vários estabelecimentos escolhe onde
@@ -31,11 +31,11 @@
 
 | Item | Status |
 |------|--------|
-| **Fase Atual** | FASE 02 — FEATURES (retomada em F2.2) |
+| **Fase Atual** | FASE 02 — FEATURES (F2.2 é o próximo) |
 | **Próxima Sprint** | F2.2 — Inventory Management |
 | **Fases Concluídas** | FASE 01 — FOUNDATION (8/8) · FASE 03 — ADMIN FRONTEND (6/6) |
-| **Testes Totais** | 304 passing, 0 failing |
-| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 17 · FASE 03: 60 |
+| **Testes Totais** | 312 passing, 0 failing |
+| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 25+ · FASE 03: 60 |
 
 ### Ordem de Execução Atualizada
 
@@ -44,7 +44,7 @@ FASE 01 — FOUNDATION      ✅ COMPLETO   (8 sprints, 227 testes)
         ↓
 FASE 03 — ADMIN FRONTEND  ✅ COMPLETO   (F3.1-F3.6, 60 testes)
         ↓
-FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.2 é o próximo)
+FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.1b ✅ | F2.2 é o próximo)
 ```
 
 ### FASE 01 Sprints Status
@@ -60,12 +60,13 @@ FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.2 é o próximo)
 | **F1.7** | ✅ DONE | 7/7 (100%) | 87 passing |
 | **F1.8** | ✅ DONE | 8/8 (100%) | 22 passing |
 
-### FASE 02 Sprints Status (PAUSADO)
+### FASE 02 Sprints Status (ATIVO)
 
 | Sprint | Nome | Status | Itens | Testes |
 |--------|------|--------|-------|--------|
-| **F2.1** | Products Management | ✅ DONE | 20/20 (100%) | 17 passing |
-| **F2.2** | Inventory Management | ⏸️ AGUARDA F3 | 0/20 | - |
+| **F2.1** | Products Management | ✅ DONE | 20/20 (100%) | 42 API/domain |
+| **F2.1b** | Products Web UI | ✅ DONE | 20/20 (100%) | 8 web |
+| **F2.2** | Inventory Management | 📋 PRÓXIMO | 0/20 | - |
 | **F2.3** | Orders / Vendas | ⏸️ AGUARDA F3 | 0/20 | - |
 | **F2.4** | Payments | ⏸️ AGUARDA F3 | 0/20 | - |
 | **F2.5** | Reports | ⏸️ AGUARDA F3 | 0/20 | - |
@@ -299,11 +300,11 @@ preservando histórico conforme a política de entidades principais da fundaçã
 
 ## 🎯 FASE 02 — FEATURES
 
-**Status:** 🟡 ATIVO (1/6 sprints) — retomada em F2.2 após conclusão da FASE 03
+**Status:** 🟡 ATIVO — F2.2 é o próximo após F2.1b
 
 **Objetivo:** Implementar módulos de negócio para gerenciar produtos, inventário, pedidos, pagamentos, relatórios e integrações.
 
-**Progresso:** 1/6 sprints concluídas (F2.1), 17 testes passando
+**Progresso:** F2.1 API + F2.1b Web UI concluídas; 50 testes de produtos/API/web
 
 ### Sprints
 
@@ -343,6 +344,26 @@ preservando histórico conforme a política de entidades principais da fundaçã
 - ✅ Response serialization com 'data' wrapper
 - ✅ Tenant isolation validado
 - ✅ Hierarquia de categorias funcionando
+
+#### Sprint F2.1b — Products Web UI
+
+**Status:** ✅ DONE
+**Objetivo:** Operar produtos, categorias e preços pelo painel administrativo
+
+**Checklist:**
+
+- [x] Menu `produtos` ativo no painel
+- [x] CRUD web de produtos com busca, filtros, paginação e detalhe
+- [x] CRUD web de categorias com hierarquia, arquivamento e restauração
+- [x] Associação produto-categoria pelo formulário
+- [x] Cadastro/atualização de preços por tipo e moeda
+- [x] Histórico de alterações de preço no detalhe do produto
+- [x] Modal de ajuda contextual para usuários leigos e sócios
+- [x] Policies/RBAC web com permissões `manage-products` e `view-products`
+- [x] 8 testes feature web passando
+
+**Como validar:** acessar `/products` com usuário admin, criar categoria,
+cadastrar produto, adicionar preço e conferir detalhe/histórico.
 
 ---
 

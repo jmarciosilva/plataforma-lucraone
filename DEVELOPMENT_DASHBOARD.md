@@ -1,9 +1,9 @@
 # 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-16 (F3.6 — company & roles management)
-**Fase Ativa:** FASE 02 — FEATURES 🟡 (retomada em F2.2)
+**Atualizado:** 2026-08-16 (F2.1b — products web ui)
+**Fase Ativa:** FASE 02 — FEATURES 🟡 (F2.2 é o próximo)
 **Fase Concluída:** FASE 03 — ADMIN FRONTEND ✅ (6/6 sprints)
-**Testes:** 304 passing
+**Testes:** 312 passing
 
 ---
 
@@ -16,7 +16,7 @@
 │  ████████████████████████████████████████████████  100%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 02 — FEATURES              🟡 ATIVO  ← AQUI            │
-│  1/6 sprints · 17 testes                                     │
+│  F2.1 API + F2.1b Web UI · 50 testes de produtos             │
 │  ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   17%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 03 — ADMIN FRONTEND        ✅ COMPLETO                 │
@@ -202,7 +202,7 @@ Conclusão:
 
 ---
 
-## 📦 FASE 02 — FEATURES (PAUSADO)
+## 📦 FASE 02 — FEATURES (ATIVO)
 
 ### ✅ Sprint F2.1 — Products Management (DONE)
 
@@ -223,7 +223,26 @@ Conclusão:
   ✅ 8 ProductApiTest + 9 CategoryApiTest
 ```
 
-### 🟡 Sprints F2.2 a F2.6 (RETOMADA APÓS FASE 03)
+### ✅ Sprint F2.1b — Products Web UI (DONE)
+
+```
+Status:     ✅ DONE (100%)
+Progresso:  produtos, categorias e preços operáveis pelo painel
+Tests:      8/8 passing ✅
+
+Conclusão:
+  ✅ Menu produtos aponta para rota real
+  ✅ Listagem com busca, filtros, paginação e isolamento por tenant
+  ✅ Formulários de criação/edição de produtos
+  ✅ CRUD de categorias com hierarquia
+  ✅ Arquivar/restaurar produtos e categorias
+  ✅ Cadastro/atualização de preços por tipo e moeda
+  ✅ Histórico de preço no detalhe do produto
+  ✅ Modal de ajuda contextual
+  ✅ RBAC com manage-products/view-products
+```
+
+### 🟡 Sprints F2.2 a F2.6 (PRÓXIMAS)
 
 ```
 F2.2 — Inventory Management    📋  0/20 itens  ← próximo
@@ -232,7 +251,7 @@ F2.4 — Payments                 ⏸️  0/20 itens
 F2.5 — Reports                  ⏸️  0/20 itens
 F2.6 — Integrations             ⏸️  0/20 itens
 
-Retomada liberada: FASE 03 concluída.
+Retomada liberada: FASE 03 concluída e F2.1b entregue.
 ```
 
 ---
@@ -426,7 +445,8 @@ Breakdown FASE 01 (189):
   F1.7 (Hardening):       ✅ 87 passing
 
 Breakdown FASE 02 (17):
-  F2.1 (Products API):    ✅ 17 passing
+  F2.1 (Products API):    ✅ 42 passing
+  F2.1b (Products Web):   ✅ 8 passing
 
 Breakdown FASE 03 (60):
   F3.1 (Setup):           ✅ 6/6
@@ -667,7 +687,8 @@ Uma sprint é considerada **pronta** quando:
 
 **Current Status:**
 - FASE 01 (F1.1 → F1.7): 100% pronto ✅
-- F2.1 (Products): 100% pronto ✅
+- F2.1 (Products API): 100% pronto ✅
+- F2.1b (Products Web UI): 100% pronto ✅
 - F3.1 → F3.6: 100% pronto ✅
 - F2.2 → F2.6: 🟡 retomada iniciada; F2.2 próximo
 
@@ -685,7 +706,7 @@ Uma sprint é considerada **pronta** quando:
 ---
 
 **Próxima atualização:** Ao concluir o Sprint F2.2
-**Gerado:** 2026-08-16 (F3.6 concluído — retomada F2.2 liberada)
+**Gerado:** 2026-08-16 (F2.1b concluído — F2.2 liberada)
 **Repositório:** D:\PROJETO-LUCRAONE
 
 ---
@@ -693,7 +714,7 @@ Uma sprint é considerada **pronta** quando:
 ## 📍 Onde Estamos
 
 ✅ **FASE 01 — FOUNDATION:** 227 testes, 8/8 sprints, segurança OWASP validada
-✅ **F2.1 — Products:** 17 testes, API de produtos/categorias/preços funcionando
+✅ **F2.1/F2.1b — Products:** API e painel web de produtos/categorias/preços funcionando
 ✅ **FASE 03 — ADMIN FRONTEND:** 6/6 sprints concluídos; 60 testes
 
 **Lacuna resolvida pela FASE 03:** login web, painel administrativo, tenants,

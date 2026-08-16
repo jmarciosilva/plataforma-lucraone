@@ -3,7 +3,7 @@
 
 **Projeto:** Plataforma SaaS Inteligente de Automação Comercial  
 **Fase:** 02 — FEATURES  
-**Status:** 🟡 ATIVO — F2.1 API concluída, F2.1b Web UI é o próximo
+**Status:** 🟡 ATIVO — F2.1b Web UI concluída, F2.2 é o próximo
 **Prioridade:** Alta  
 **Dependência:** FASE 01 ✅ Concluída · FASE 03 ✅ Concluída
 **Estimativa:** 6 sprints (~12-16 semanas)  
@@ -29,8 +29,8 @@
 
 | Sprint | Backend/API | Frontend Web | Testes |
 |--------|-------------|--------------|--------|
-| F2.1 — Products Management | ✅ DONE | 📋 PENDENTE | 42 API/domain |
-| F2.1b — Products Web UI | 📋 TODO | 📋 TODO | a definir |
+| F2.1 — Products Management | ✅ DONE | ✅ DONE via F2.1b | 42 API/domain |
+| F2.1b — Products Web UI | ✅ DONE | ✅ DONE | 8 web |
 | F2.2 — Inventory Management | 📋 TODO | 📋 TODO | — |
 | F2.3 — Orders / Vendas | ⏸️ Aguarda F2.2 | ⏸️ Aguarda F2.2 | — |
 | F2.4 — Payments | ⏸️ Aguarda F2.3 | ⏸️ Aguarda F2.3 | — |
@@ -146,7 +146,7 @@ app/Modules/
 ├── Authorization/        # ✅ Já existe
 ├── Audit/                # ✅ Já existe
 │
-├── Products/             # ✅ F2.1 API — 📋 F2.1b Web UI pendente
+├── Products/             # ✅ F2.1 API — ✅ F2.1b Web UI
 │   ├── Domain/
 │   ├── Application/
 │   ├── Infrastructure/
@@ -276,7 +276,9 @@ de preços ficam para sprints futuras, pois não bloqueiam o Inventory Managemen
 
 ## Sprint F2.1b — Products Web UI
 
-**Status:** 📋 TODO
+**Status:** ✅ DONE
+**Concluído em:** 2026-08-16
+**Testes:** 8 passing (`tests/Feature/Admin/ProductWebManagementTest.php`)
 **Objetivo:** Criar interface web para produtos, categorias e preços, permitindo
 que José e os sócios testem o módulo sem Postman.
 **Como testar:** acessar o menu `produtos`, cadastrar produto, categoria e preços
@@ -285,35 +287,35 @@ pelo painel, depois validar listagem, filtros e detalhe.
 ### Requisitos Frontend
 
 #### Produtos
-- [ ] Menu `produtos` apontando para rota real
-- [ ] Listagem de produtos (`/products`) filtrada pelo tenant atual
-- [ ] Busca por SKU/nome
-- [ ] Filtro por status
-- [ ] Formulário de criação de produto
-- [ ] Formulário de edição de produto
-- [ ] Página de detalhe do produto
-- [ ] Soft delete/restaurar produto, se aplicável
-- [ ] Associação de categorias no formulário
+- [x] Menu `produtos` apontando para rota real
+- [x] Listagem de produtos (`/products`) filtrada pelo tenant atual
+- [x] Busca por SKU/nome
+- [x] Filtro por status
+- [x] Formulário de criação de produto
+- [x] Formulário de edição de produto
+- [x] Página de detalhe do produto
+- [x] Soft delete/restaurar produto, se aplicável
+- [x] Associação de categorias no formulário
 
 #### Categorias
-- [ ] Listagem de categorias (`/categories`) com hierarquia
-- [ ] Criar categoria raiz
-- [ ] Criar subcategoria
-- [ ] Editar categoria
-- [ ] Arquivar categoria com tratamento de filhos
+- [x] Listagem de categorias (`/categories`) com hierarquia
+- [x] Criar categoria raiz
+- [x] Criar subcategoria
+- [x] Editar categoria
+- [x] Arquivar categoria com tratamento de filhos
 
 #### Preços
-- [ ] Listar preços do produto
-- [ ] Criar/atualizar preço por tipo (`cost`, `sale`, `suggested_retail`)
-- [ ] Exibir margem calculada
-- [ ] Exibir histórico de preços
+- [x] Listar preços do produto
+- [x] Criar/atualizar preço por tipo (`cost`, `sale`, `suggested_retail`)
+- [x] Exibir margem calculada
+- [x] Exibir histórico de preços
 
 #### Experiência e segurança
-- [ ] Modal de ajuda contextual para produtos/categorias/preços
-- [ ] Policies/RBAC nas rotas web
-- [ ] Mensagens de sucesso/erro no design system
-- [ ] Testes feature web de listagem, criação, edição e isolamento
-- [ ] Validação manual no navegador
+- [x] Modal de ajuda contextual para produtos/categorias/preços
+- [x] Policies/RBAC nas rotas web
+- [x] Mensagens de sucesso/erro no design system
+- [x] Testes feature web de listagem, criação, edição e isolamento
+- [x] Validação manual no navegador
 
 **Nota:** F2.1b não altera o escopo de domínio já entregue na API; ela torna o
 módulo operável por humanos e prepara o terreno para F2.2, que depende de produtos
@@ -771,12 +773,12 @@ Antes de começar F2.2, implementar F2.1b para que produtos estejam operáveis n
 - [x] Confirmar F2.1 como concluído no checklist detalhado
 - [x] Definir que FASE 02 entrega API/backend + frontend web por sprint
 - [ ] Criar branches para cada sprint
-- [ ] Atualizar PROJECT_STATUS.md com início de F2.1b
-- [ ] Configurar environment para F2.1b, se necessário
-- [ ] Implementar telas web de produtos/categorias/preços
-- [ ] Validar produtos no navegador com usuário admin
+- [x] Atualizar PROJECT_STATUS.md com início/conclusão de F2.1b
+- [x] Configurar environment para F2.1b, se necessário
+- [x] Implementar telas web de produtos/categorias/preços
+- [x] Validar produtos no navegador com usuário admin
 - [ ] Fazer commit com `feat(F2.1b): gerenciar produtos pelo painel`
-- [ ] Depois iniciar F2.2 — Inventory Management
+- [x] Depois iniciar F2.2 — Inventory Management
 - [ ] Criar ADR-003 (Inventory Strategy), se a modelagem exigir decisão arquitetural
 - [ ] Implementar Inventory model
 - [ ] Escrever testes para movimentos de estoque
@@ -787,5 +789,5 @@ Antes de começar F2.2, implementar F2.1b para que produtos estejam operáveis n
 
 **Autor:** Claude Code  
 **Data de Criação:** 2026-08-16  
-**Status:** F2.1 API concluída · F2.1b Web UI é o próximo passo
-**Próxima Atualização:** Quando F2.1b iniciar
+**Status:** F2.1b Web UI concluída · F2.2 Inventory Management é o próximo passo
+**Próxima Atualização:** Quando F2.2 iniciar

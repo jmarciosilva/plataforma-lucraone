@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\Web\Auth\LoginController;
+use App\Http\Controllers\Web\CategoryWebController;
 use App\Http\Controllers\Web\CompanyController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\EstabelecimentoController;
 use App\Http\Controllers\Web\PermissionController;
+use App\Http\Controllers\Web\ProductWebController;
 use App\Http\Controllers\Web\RoleController;
 use App\Http\Controllers\Web\TenantController;
 use App\Http\Controllers\Web\UserController;
@@ -70,4 +72,18 @@ Route::middleware('auth.web')->group(function () {
     Route::resource('roles', RoleController::class)->only(['index', 'show']);
 
     Route::get('/permissions', PermissionController::class)->name('permissions.index');
+
+    Route::post('/products/{product}/restore', [ProductWebController::class, 'restore'])
+        ->name('catalog.products.restore');
+    Route::post('/products/{product}/prices', [ProductWebController::class, 'storePrice'])
+        ->name('catalog.products.prices.store');
+    Route::delete('/products/{product}/prices/{price}', [ProductWebController::class, 'destroyPrice'])
+        ->name('catalog.products.prices.destroy');
+    Route::resource('products', ProductWebController::class)
+        ->names('catalog.products');
+
+    Route::post('/categories/{category}/restore', [CategoryWebController::class, 'restore'])
+        ->name('catalog.categories.restore');
+    Route::resource('categories', CategoryWebController::class)
+        ->names('catalog.categories');
 });

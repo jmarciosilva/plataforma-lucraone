@@ -82,7 +82,7 @@
             </svg>
         </x-nav-item>
 
-        <x-nav-item rota="produtos" rotulo="produtos">
+        <x-nav-item rota="catalog.products.index" rotulo="produtos">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
                 <path d="M21 8l-9-5-9 5 9 5 9-5z" />
                 <path d="M3 8v8l9 5 9-5V8" />
