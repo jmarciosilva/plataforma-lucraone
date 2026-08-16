@@ -254,7 +254,7 @@ Connection: `redis`
 Status: 🟢 COMPLETE (189 testes, 100%)
 
 **Sprints Concluídas:**
-- ✅ F1.1 — Bootstrap (73% — Docker, estrutura modular, documentação)
+- ✅ F1.1 — Bootstrap (100% — Docker, estrutura modular, code quality, CI/CD, health checks)
 - ✅ F1.2 — Tenancy (100% — Multi-tenant com isolamento)
 - ✅ F1.3 — Companies & Branches (100% — Estrutura organizacional)
 - ✅ F1.4 — Identity (100% — Autenticação com Sanctum)
