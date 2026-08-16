@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 
@@ -22,6 +23,7 @@ class UserSeeder extends Seeder
                     'email' => $adminEmail,
                 ],
                 [
+                    'id' => (string) Str::ulid(),
                     'name' => "Admin - {$tenant->name}",
                     'status' => 'ACTIVE',
                     'password' => bcrypt('password'),

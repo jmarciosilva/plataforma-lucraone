@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 
 class TenantSeeder extends Seeder
@@ -16,6 +17,7 @@ class TenantSeeder extends Seeder
         Tenant::firstOrCreate(
             ['slug' => 'lucraone-dev'],
             [
+                'id' => (string) Str::ulid(),
                 'name' => 'LUCRAONE Development',
                 'plan' => 'enterprise',
                 'status' => 'ACTIVE',
@@ -30,6 +32,7 @@ class TenantSeeder extends Seeder
         Tenant::firstOrCreate(
             ['slug' => 'test-store'],
             [
+                'id' => (string) Str::ulid(),
                 'name' => 'Test Store',
                 'plan' => 'free',
                 'status' => 'ACTIVE',
