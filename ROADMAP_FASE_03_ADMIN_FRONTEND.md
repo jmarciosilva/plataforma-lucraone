@@ -2,7 +2,7 @@
 
 **Objetivo:** Criar interface web administrativa com Blade + Tailwind para gerenciar tenants, usuários, empresas e permissões.
 
-**Status:** 🟡 EM ANDAMENTO (4/6 sprints — F3.1 ✅ F3.2 ✅ F3.3 ✅ F3.4 ✅)
+**Status:** 🟡 EM ANDAMENTO (5/6 sprints — F3.1 ✅ F3.2 ✅ F3.3 ✅ F3.4 ✅ F3.5 ✅)
 **Duração Estimada:** ~6-8 semanas
 **Stack:** Laravel Blade + Tailwind CSS + Alpine.js
 **Dependência:** FASE 01 ✅ (inclui F1.8 — modelo de identidade) · F2.1 ✅
@@ -43,14 +43,14 @@ A FASE 03 fecha essa lacuna antes de acumular mais módulos de negócio.
 | **F3.2** | Authentication | ✅ DONE | 22/22 | 14/14 | **Login em `/login` funciona** |
 | **F3.3** | Admin Dashboard | ✅ DONE | 15/15 | 6/6 | Painel com menu e widgets |
 | **F3.4** | Tenant Management | ✅ DONE | 25/25 | 12/12 | **Criar estabelecimento pela tela** |
-| **F3.5** | User Management | 📋 TODO | 0/25 | 0/12 | **Criar usuário e logar com ele** |
+| **F3.5** | User Management | ✅ DONE | 25/25 | 12/12 | **Criar usuário e logar com ele** |
 | **F3.6** | Company & Roles | 📋 TODO | 0/20 | 0/10 | Empresas + permissões pela tela |
 
-**Total:** 122 itens · ~59 testes · **Progresso: 77/122 itens, 38/59 testes**
+**Total:** 122 itens · ~59 testes · **Progresso: 102/122 itens, 50/59 testes**
 
 **Legenda:** 📋 TODO · 🟡 EM ANDAMENTO · ✅ DONE · ⏸️ PAUSADO
 
-**Suíte completa do projeto:** 282 testes passando, 0 falhando
+**Suíte completa do projeto:** 294 testes passando, 0 falhando
 
 ---
 
@@ -285,52 +285,59 @@ mantendo os status reais do schema (`TRIAL`, `ACTIVE`, `SUSPENDED`, `CANCELLED`)
 
 ---
 
-## 🎯 Sprint F3.5 — User Management
+## ✅ Sprint F3.5 — User Management
+
+**Concluído em:** 2026-08-16 · **Testes:** 12/12
 
 ### Checklist (25 itens)
 
 **Views:**
-- [ ] Lista de usuários (`/users`)
-- [ ] Detalhe de usuário (`/users/{id}`)
-- [ ] Criar usuário (`/users/create`)
-- [ ] Editar usuário (`/users/{id}/edit`)
-- [ ] Alterar password
-- [ ] Deletar usuário
+- [x] Lista de usuários (`/users`)
+- [x] Detalhe de usuário (`/users/{id}`)
+- [x] Criar usuário (`/users/create`)
+- [x] Editar usuário (`/users/{id}/edit`)
+- [x] Alterar password
+- [x] Deletar usuário
 
 **Funcionalidades:**
-- [ ] Listagem com filtro por tenant
-- [ ] Busca por nome/email
-- [ ] Filtro por status
-- [ ] Ordenação
-- [ ] Criar usuário:
-  - [ ] Nome
-  - [ ] Email (único por tenant)
-  - [ ] Password (gerado ou definido)
-  - [ ] Status (ACTIVE, INACTIVE, SUSPENDED)
-  - [ ] Roles (multi-select)
-  - [ ] Validação de email
-- [ ] Editar usuário (nome, status, roles)
-- [ ] Alterar password (com validação)
-- [ ] Resetar password (enviar link)
-- [ ] Visualizar últimas ações do usuário
-- [ ] Ativar/Desativar usuário
-- [ ] Assign roles dinamicamente
+- [x] Listagem com filtro por tenant
+- [x] Busca por nome/email
+- [x] Filtro por status
+- [x] Ordenação
+- [x] Criar usuário:
+  - [x] Nome
+  - [x] Email (único por vínculo no tenant; identidade global mantém e-mail único)
+  - [x] Password (gerado ou definido)
+  - [x] Status (ACTIVE, INVITED, INACTIVE, SUSPENDED)
+  - [x] Roles (multi-select)
+  - [x] Validação de email
+- [x] Editar usuário (nome, status, roles)
+- [x] Alterar password (com validação)
+- [x] Resetar password (senha temporária exibida; envio de link fica para fluxo de convites/reset)
+- [x] Visualizar últimas ações do usuário
+- [x] Ativar/Desativar usuário
+- [x] Assign roles dinamicamente
 
 **Componentes:**
-- [ ] UserTable (listar com ações)
-- [ ] UserForm (create + edit)
-- [ ] RoleSelector (multi-checkbox)
-- [ ] PasswordForm (reset)
+- [x] UserTable (listar com ações)
+- [x] UserForm (create + edit)
+- [x] RoleSelector (multi-checkbox)
+- [x] PasswordForm (reset)
 
 **Testes:**
-- [ ] Listar usuários do tenant correto
-- [ ] Criar usuário válido
-- [ ] Email duplicado → erro
-- [ ] Editar usuário funciona
-- [ ] Alterar password funciona
-- [ ] Soft delete de usuário
-- [ ] Assign role a usuário
-- [ ] Filtros funcionam
+- [x] Listar usuários do tenant correto
+- [x] Criar usuário válido
+- [x] Email duplicado → erro
+- [x] Editar usuário funciona
+- [x] Alterar password funciona
+- [x] Soft delete de usuário
+- [x] Assign role a usuário
+- [x] Filtros funcionam
+
+**Nota de implementação:** `users` continua sendo identidade global. A tela
+gerencia o acesso no estabelecimento atual por `tenant_user.status` e papéis
+por `user_role.tenant_id`. Ao arquivar pessoa com múltiplos tenants, apenas o
+vínculo atual é desativado para não derrubar acessos legítimos em outros tenants.
 
 ---
 
@@ -400,7 +407,7 @@ lucraone-backend/
 │       ├── errors/{403,404,419}.blade.php ............ ⬜ F3.2
 │       ├── dashboard/index.blade.php ................. ✅ dados reais no F3.3
 │       ├── tenants/ .................................. ✅ F3.4
-│       ├── users/ .................................... ⬜ F3.5
+│       ├── users/ .................................... ✅ F3.5
 │       ├── companies/ ................................ ⬜ F3.6
 │       └── roles/ .................................... ⬜ F3.6
 ├── app/Http/
@@ -411,13 +418,14 @@ lucraone-backend/
 │   │   ├── Auth/LoginController.php .................. ⬜ F3.2
 │   │   ├── DashboardController.php ................... ✅ F3.3
 │   │   ├── TenantController.php ...................... ✅ F3.4
-│   │   ├── UserController.php ........................ ⬜ F3.5
+│   │   ├── UserController.php ........................ ✅ F3.5
 │   │   ├── CompanyController.php ..................... ⬜ F3.6
 │   │   └── RoleController.php ........................ ⬜ F3.6
 │   └── Requests/
 │       ├── Auth/LoginRequest.php ..................... ⬜ F3.2
 │       ├── StoreTenantRequest.php .................... ✅ F3.4
-│       ├── StoreUserRequest.php ...................... ⬜ F3.5
+│       ├── StoreUserRequest.php ...................... ✅ F3.5
+│       ├── UpdateUserRequest.php ..................... ✅ F3.5
 │       └── StoreCompanyRequest.php ................... ⬜ F3.6
 ├── routes/web.php .................................... ✅
 ├── vite.config.js .................................... ✅ fontes via bunny()
@@ -537,4 +545,4 @@ validações exige Postman ou tinker.
 
 ---
 
-**Sprint atual: F3.5 — User Management** 🚀
+**Sprint atual: F3.6 — Company & Roles Management** 🚀

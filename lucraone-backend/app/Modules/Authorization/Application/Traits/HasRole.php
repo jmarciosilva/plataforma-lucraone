@@ -186,7 +186,9 @@ trait HasRole
             if (is_string($role)) {
                 return Role::withoutGlobalScopes()
                     ->where('tenant_id', $tenant)
-                    ->where('name', $role)
+                    ->where(fn ($query) => $query
+                        ->where('id', $role)
+                        ->orWhere('name', $role))
                     ->first()
                     ?->id;
             }

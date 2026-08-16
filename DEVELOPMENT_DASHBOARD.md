@@ -1,9 +1,9 @@
 # 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-16 (F3.4 — tenant management)
-**Fase Ativa:** FASE 03 — ADMIN FRONTEND 🟡 (4/6 sprints)
+**Atualizado:** 2026-08-16 (F3.5 — user management)
+**Fase Ativa:** FASE 03 — ADMIN FRONTEND 🟡 (5/6 sprints)
 **Fase Pausada:** FASE 02 — FEATURES ⏸️ (1/6 sprints)
-**Testes:** 282 passing
+**Testes:** 294 passing
 
 ---
 
@@ -20,8 +20,8 @@
 │  ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   17%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 03 — ADMIN FRONTEND        🟡 ATIVO  ← AQUI            │
-│  4/6 sprints · 38/~59 testes                                 │
-│  ████████████████████████████████░░░░░░░░░░░░░░░░   67%      │
+│  5/6 sprints · 50/~59 testes                                 │
+│  ████████████████████████████████████████░░░░░░░░   83%      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -315,18 +315,18 @@ Escopo:
 Como validar:  criar novo estabelecimento pela interface (sem tinker)
 ```
 
-### 📋 Sprint F3.5 — User Management
+### ✅ Sprint F3.5 — User Management
 
 ```
-Status:     📋 TODO
-Progresso:  0/25 itens
-Tests:      0/12
+Status:     ✅ DONE (100%)
+Progresso:  25/25 itens
+Tests:      12/12 passing ✅
 
 Escopo:
-  ⬜ CRUD de usuários por tenant
-  ⬜ Atribuição de roles (multi-select)
-  ⬜ Alterar/resetar senha
-  ⬜ Ativar/desativar usuário
+  ✅ CRUD de usuários por tenant
+  ✅ Atribuição de roles (multi-select)
+  ✅ Alterar/resetar senha
+  ✅ Ativar/desativar usuário
 
 Como validar:  criar usuário operador e fazer login com ele
 ```
@@ -432,7 +432,7 @@ Breakdown FASE 03 (0 / meta ~53):
   F3.2 (Auth UI):         ⬜ 0/8
   F3.3 (Dashboard):       ✅ 6/6
   F3.4 (Tenants):         ✅ 12/12
-  F3.5 (Users):           ⬜ 0/12
+  F3.5 (Users):           ✅ 12/12
   F3.6 (Companies/Roles): ⬜ 0/10
 ```
 
@@ -511,15 +511,15 @@ Foundation Phase:       ✅ 100% (7/7 sprints) — 189 TESTS
 
 ## ⚙️ Próximas Ações (Roadmap)
 
-### 🔜 Imediato — Sprint F3.5 (User Management)
+### 🔜 Imediato — Sprint F3.6 (Company & Roles Management)
 
-- [ ] Listagem de usuários por tenant
-- [ ] Formulário de criação e edição de usuário
-- [ ] Atribuição de roles por estabelecimento
-- [ ] Ativar/desativar usuário
-- [ ] 12 testes
+- [ ] CRUD de empresas e endereços por tenant
+- [ ] Listagem de roles e permissions
+- [ ] Atribuição de permissions a roles
+- [ ] Validar RBAC nas telas
+- [ ] 10 testes
 
-### Depois — F3.5 (Users) → F3.6 (Companies/Roles)
+### Depois — F3.6 (Companies/Roles) → retomada F2.2
 
 ### 🔧 Dívida técnica
 
@@ -668,7 +668,7 @@ Uma sprint é considerada **pronta** quando:
 - FASE 01 (F1.1 → F1.7): 100% pronto ✅
 - F2.1 (Products): 100% pronto ✅
 - F2.2 → F2.6: ⏸️ aguardando FASE 03
-- F3.1 → F3.6: 📋 a iniciar
+- F3.1 → F3.5: 100% pronto ✅ · F3.6 próximo
 
 ---
 
@@ -683,7 +683,7 @@ Uma sprint é considerada **pronta** quando:
 
 ---
 
-**Próxima atualização:** Ao concluir o Sprint F3.5
+**Próxima atualização:** Ao concluir o Sprint F3.6
 **Gerado:** 2026-08-16 (FASE 03 — Admin Frontend planejada)
 **Repositório:** D:\PROJETO-LUCRAONE
 
@@ -693,7 +693,7 @@ Uma sprint é considerada **pronta** quando:
 
 ✅ **FASE 01 — FOUNDATION:** 189 testes, 7/7 sprints, segurança OWASP validada
 ✅ **F2.1 — Products:** 17 testes, API de produtos/categorias/preços funcionando
-🟡 **FASE 03 — ADMIN FRONTEND:** 4/6 sprints concluídos; próximo F3.5
+🟡 **FASE 03 — ADMIN FRONTEND:** 5/6 sprints concluídos; próximo F3.6
 
 **Lacuna que a FASE 03 resolve:** o sistema não tem tela de login nem painel
 administrativo. Toda operação hoje depende de `tinker` + Postman.

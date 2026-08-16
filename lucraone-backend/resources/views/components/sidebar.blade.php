@@ -60,7 +60,7 @@
             </svg>
         </x-nav-item>
 
-        <x-nav-item rota="usuarios" rotulo="usuários">
+        <x-nav-item rota="users.index" rotulo="usuários">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                 <circle cx="9" cy="7" r="4" />

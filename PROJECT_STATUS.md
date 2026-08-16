@@ -1,11 +1,11 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (F3.4 concluído — tenant management)
-**Fase Atual:** FASE 03 — ADMIN FRONTEND (4/6 sprints)
-**Próxima Sprint:** F3.5 — User Management
+**Atualizado em:** 2026-08-16 (F3.5 concluído — user management)
+**Fase Atual:** FASE 03 — ADMIN FRONTEND (5/6 sprints)
+**Próxima Sprint:** F3.6 — Company & Roles Management
 **Fase Pausada:** FASE 02 — FEATURES (F2.1 concluído, F2.2 aguardando frontend)
-**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 17% (1/6) | FASE 03 🟡 67% (4/6)
-**Testes:** 282 passing, 0 failing
+**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 17% (1/6) | FASE 03 🟡 83% (5/6)
+**Testes:** 294 passing, 0 failing
 
 > 🔓 **O sistema já é operável por um humano.** Desde o F3.2 existe login web
 > em `/login`. Uma pessoa com vínculo em vários estabelecimentos escolhe onde
@@ -31,12 +31,12 @@
 
 | Item | Status |
 |------|--------|
-| **Fase Atual** | FASE 03 — ADMIN FRONTEND (4/6 sprints) |
-| **Próxima Sprint** | F3.5 — User Management |
+| **Fase Atual** | FASE 03 — ADMIN FRONTEND (5/6 sprints) |
+| **Próxima Sprint** | F3.6 — Company & Roles Management |
 | **Fase Concluída** | FASE 01 — FOUNDATION (7/7) |
 | **Fase Pausada** | FASE 02 — FEATURES (1/6, retoma após F3.6) |
-| **Testes Totais** | 282 passing, 0 failing |
-| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 17 · FASE 03: 38 |
+| **Testes Totais** | 294 passing, 0 failing |
+| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 17 · FASE 03: 50 |
 
 ### Ordem de Execução Atualizada
 
@@ -82,7 +82,7 @@ FASE 02 (retomada)        📋 F2.2 — Inventory Management
 | **F3.2** | Authentication (Login/Logout) | ✅ DONE | 22/22 | 14/14 | **Login em `/login` com email + senha** |
 | **F3.3** | Admin Dashboard | ✅ DONE | 15/15 | 6/6 | Painel com menu lateral e widgets reais |
 | **F3.4** | Tenant Management | ✅ DONE | 25/25 | 12/12 | **Cadastrar novo estabelecimento (tenant)** |
-| **F3.5** | User Management | 📋 TODO | 0/25 | 0/12 | **Cadastrar usuários (admin, operador)** |
+| **F3.5** | User Management | ✅ DONE | 25/25 | 12/12 | **Cadastrar usuários (admin, operador)** |
 | **F3.6** | Company & Roles Management | 📋 TODO | 0/20 | 0/10 | Empresas, endereços e permissões |
 
 **Total FASE 03:** 120 itens, ~59 testes
@@ -91,7 +91,7 @@ FASE 02 (retomada)        📋 F2.2 — Inventory Management
 
 ## 🎯 FASE 03 — ADMIN FRONTEND
 
-**Status:** 🟡 EM ANDAMENTO (4/6 sprints) — **FASE ATIVA**
+**Status:** 🟡 EM ANDAMENTO (5/6 sprints) — **FASE ATIVA**
 
 **Stack:** Laravel Blade + Tailwind CSS + Alpine.js
 
@@ -101,7 +101,7 @@ Sem isso, o sistema só é operável via cURL/Postman.
 
 **Roadmap detalhado:** [ROADMAP_FASE_03_ADMIN_FRONTEND.md](ROADMAP_FASE_03_ADMIN_FRONTEND.md)
 
-**Progresso:** 4/6 sprints, 38/~59 testes
+**Progresso:** 5/6 sprints, 50/~59 testes
 
 ### Sprints
 
@@ -227,32 +227,35 @@ menu renderiza, links funcionam, breadcrumbs corretos, responsivo
 
 #### Sprint F3.5 — User Management
 
-**Status:** 📋 TODO
+**Status:** ✅ DONE
 **Objetivo:** CRUD de usuários por tenant, com atribuição de papéis
 **Como testar:** criar usuário operador e fazer login com ele
 
 **Checklist:**
 
-- [ ] Listagem de usuários (`/users`) filtrada por tenant
-- [ ] Busca por nome/email
-- [ ] Filtro por status
-- [ ] Formulário de criação (`/users/create`)
-- [ ] Campo nome
-- [ ] Campo email (único por tenant)
-- [ ] Campo senha (gerada ou definida)
-- [ ] Campo status (ACTIVE, INACTIVE, SUSPENDED)
-- [ ] Seleção de roles (multi-select)
-- [ ] Formulário de edição
-- [ ] Alterar senha (com confirmação)
-- [ ] Resetar senha
-- [ ] Ativar / desativar usuário
-- [ ] Página de detalhe do usuário
-- [ ] Soft delete
-- [ ] Componente UserTable
-- [ ] Componente UserForm
-- [ ] Componente RoleSelector
-- [ ] Validação de email duplicado
-- [ ] 12 testes de user management
+- [x] Listagem de usuários (`/users`) filtrada por tenant
+- [x] Busca por nome/email
+- [x] Filtro por status
+- [x] Formulário de criação (`/users/create`)
+- [x] Campo nome
+- [x] Campo email (único por vínculo no tenant; identidade segue e-mail global)
+- [x] Campo senha (gerada ou definida)
+- [x] Campo status (ACTIVE, INVITED, INACTIVE, SUSPENDED)
+- [x] Seleção de roles (multi-select)
+- [x] Formulário de edição
+- [x] Alterar senha (com confirmação)
+- [x] Resetar senha
+- [x] Ativar / desativar usuário
+- [x] Página de detalhe do usuário
+- [x] Soft delete
+- [x] Componente UserTable
+- [x] Componente UserForm
+- [x] Componente RoleSelector
+- [x] Validação de email duplicado
+- [x] 12 testes de user management
+
+**Nota:** usuários continuam sendo identidades globais. A tela gerencia o vínculo
+no tenant atual (`tenant_user.status`) e os papéis em `user_role.tenant_id`.
 
 ---
 

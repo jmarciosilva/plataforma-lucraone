@@ -9,8 +9,10 @@ use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -22,7 +24,7 @@ use Laravel\Sanctum\HasApiTokens;
  */
 class User extends Model implements AuthenticatableContract
 {
-    use Authenticatable, HasApiTokens, HasFactory, HasRole, Notifiable;
+    use Authenticatable, HasApiTokens, HasFactory, HasRole, Notifiable, SoftDeletes;
 
     protected $keyType = 'string';
 
@@ -120,7 +122,7 @@ class User extends Model implements AuthenticatableContract
         // O ULID é atribuído aqui de propósito: em models Pivot o hook de
         // criação do HasUlid não dispara, e o MySQL rejeita a linha sem id.
         if (! $vinculo->exists) {
-            $vinculo->id = (string) \Illuminate\Support\Str::ulid();
+            $vinculo->id = (string) Str::ulid();
             $vinculo->joined_at = now();
         }
 

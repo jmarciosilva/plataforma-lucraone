@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Modules\Identity\Domain\Models\User;
+use App\Modules\Identity\Http\Policies\UserPolicy;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Tenancy\Http\Policies\TenantPolicy;
 use App\Modules\Tenancy\TenancyServiceProvider;
@@ -25,5 +27,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Tenant::class, TenantPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
     }
 }

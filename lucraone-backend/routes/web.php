@@ -4,6 +4,7 @@ use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\EstabelecimentoController;
 use App\Http\Controllers\Web\TenantController;
+use App\Http\Controllers\Web\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,4 +47,10 @@ Route::middleware('auth.web')->group(function () {
     Route::post('/tenants/{tenant}/restore', [TenantController::class, 'restore'])
         ->name('tenants.restore');
     Route::resource('tenants', TenantController::class);
+
+    Route::post('/users/{user}/restore', [UserController::class, 'restore'])
+        ->name('users.restore');
+    Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])
+        ->name('users.reset-password');
+    Route::resource('users', UserController::class);
 });
