@@ -1,5 +1,8 @@
 @php
-    $tenantNome = auth()->user()?->tenant?->name;
+    // O estabelecimento em uso vem do contexto, não do usuário: desde o F1.8
+    // uma pessoa pode estar associada a vários.
+    $contexto = app(\App\Modules\Tenancy\Application\TenantContext::class);
+    $tenantNome = $contexto->resolved() ? $contexto->tenant()->name : null;
 @endphp
 
 <x-layouts.app title="dashboard" :tenantNome="$tenantNome">

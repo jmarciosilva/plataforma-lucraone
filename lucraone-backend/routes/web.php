@@ -1,50 +1,43 @@
 <?php
 
+use App\Http\Controllers\Web\Auth\LoginController;
+use App\Http\Controllers\Web\EstabelecimentoController;
 use Illuminate\Support\Facades\Route;
 
 /*
-| Rotas web do painel administrativo (FASE 03).
+| Rotas do painel administrativo.
 |
-| F3.1 entrega apenas o esqueleto: rota raiz, placeholder do dashboard
-| e o stub de /login. A autenticação real chega no F3.2.
+| Três níveis de acesso:
+|   - visitante          → login
+|   - autenticado        → escolha de estabelecimento
+|   - com estabelecimento → o painel em si
 */
 
-Route::get('/', function () {
-    return redirect()->route('dashboard');
+Route::get('/', fn () => redirect()->route('dashboard'));
+
+// Visitante
+Route::middleware('convidado')->group(function () {
+    Route::get('/login', [LoginController::class, 'create'])->name('login');
+    Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:20,1');
 });
 
-// Stub — substituído pelo LoginController no F3.2
-Route::get('/login', function () {
-    return view('auth.login');
-})->middleware('convidado')->name('login');
+Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
-Route::post('/logout', function () {
-    auth()->guard('web')->logout();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
+/*
+| Autenticado, ainda sem estabelecimento definido.
+|
+| Estas rotas não podem exigir estabelecimento resolvido: são justamente elas
+| que o definem. Daí o parâmetro "sem-tenant".
+*/
+Route::middleware('auth.web:sem-tenant')->group(function () {
+    Route::get('/estabelecimentos', [EstabelecimentoController::class, 'escolher'])
+        ->name('estabelecimentos.escolher');
 
-    return redirect()->route('login');
-})->name('logout');
+    Route::post('/estabelecimentos', [EstabelecimentoController::class, 'definir'])
+        ->name('estabelecimentos.definir');
+});
 
+// Painel: exige estabelecimento em uso
 Route::middleware('auth.web')->group(function () {
     Route::view('/dashboard', 'dashboard.index')->name('dashboard');
 });
-
-/*
-| ⚠️ ROTA TEMPORÁRIA — BYPASS DE AUTENTICAÇÃO ⚠️
-|
-| Existe só para permitir ver o painel enquanto o login real não está pronto.
-| Autentica o primeiro usuário do banco sem pedir senha.
-|
-| Restrita ao ambiente local. DEVE SER APAGADA no sprint F3.2, junto com
-| a entrada correspondente no checklist do roadmap.
-*/
-if (app()->environment('local')) {
-    Route::get('/preview-login', function () {
-        auth()->guard('web')->login(
-            \App\Modules\Identity\Domain\Models\User::withoutGlobalScopes()->first()
-        );
-
-        return redirect()->route('dashboard');
-    })->name('preview-login');
-}

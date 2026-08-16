@@ -2,7 +2,7 @@
 
 **Objetivo:** Criar interface web administrativa com Blade + Tailwind para gerenciar tenants, usuários, empresas e permissões.
 
-**Status:** 🟡 EM ANDAMENTO (1/6 sprints — F3.1 ✅)  
+**Status:** 🟡 EM ANDAMENTO (2/6 sprints — F3.1 ✅ F3.2 ✅)  
 **Duração Estimada:** ~6-8 semanas  
 **Stack:** Laravel Blade + Tailwind CSS + Alpine.js  
 **Dependência:** FASE 01 ✅ (inclui F1.8 — modelo de identidade) · F2.1 ✅  
@@ -40,17 +40,17 @@ A FASE 03 fecha essa lacuna antes de acumular mais módulos de negócio.
 | Sprint | Nome | Status | Itens | Testes | Como você valida |
 |--------|------|--------|-------|--------|------------------|
 | **F3.1** | Frontend Setup & Layout | ✅ DONE | 15/15 | 6/6 | Página abre com Tailwind aplicado |
-| **F3.2** | Authentication | 🟡 EM ANDAMENTO | 0/22 | 0/10 | **Login em `/login` funciona** |
+| **F3.2** | Authentication | ✅ DONE | 22/22 | 14/14 | **Login em `/login` funciona** |
 | **F3.3** | Admin Dashboard | 📋 TODO | 0/15 | 0/6 | Painel com menu e widgets |
 | **F3.4** | Tenant Management | 📋 TODO | 0/25 | 0/12 | **Criar estabelecimento pela tela** |
 | **F3.5** | User Management | 📋 TODO | 0/25 | 0/12 | **Criar usuário e logar com ele** |
 | **F3.6** | Company & Roles | 📋 TODO | 0/20 | 0/10 | Empresas + permissões pela tela |
 
-**Total:** 120 itens · ~53 testes · **Progresso: 15/120 itens, 6/53 testes**
+**Total:** 122 itens · ~57 testes · **Progresso: 37/122 itens, 20/57 testes**
 
 **Legenda:** 📋 TODO · 🟡 EM ANDAMENTO · ✅ DONE · ⏸️ PAUSADO
 
-**Suíte completa do projeto:** 237 testes passando, 0 falhando
+**Suíte completa do projeto:** 264 testes passando, 0 falhando
 
 ---
 
@@ -113,13 +113,14 @@ A suíte completa revelou defeitos reais no F2.1 e no scaffolding:
 
 ---
 
-## 🟡 Sprint F3.2 — Authentication (Login/Logout) — EM ANDAMENTO
+## ✅ Sprint F3.2 — Authentication (Login/Logout) — CONCLUÍDO
 
-### Checklist (20 itens)
+**Concluído em:** 2026-08-16 · **Testes:** 14/14
 
-> 🔴 **Primeira tarefa do sprint:** apagar a rota `/preview-login` de
-> `routes/web.php`. É um bypass de autenticação criado no F3.1 para permitir
-> ver o painel antes do login existir.
+### Checklist (22/22)
+
+> ✅ **Bypass removido.** A rota `/preview-login`, criada no F3.1 para permitir
+> ver o painel antes do login existir, foi apagada.
 
 > ℹ️ **Nota de arquitetura:** o painel web usa o **guard `web` (sessão)**, não
 > Sanctum. Sanctum continua servindo a API (`/api/*`) com tokens. São dois
@@ -132,42 +133,65 @@ A suíte completa revelou defeitos reais no F2.1 e no scaffolding:
 > sessão (`tenant_ativo`) e é lido pelo `TenantResolver`.
 
 **Views:**
-- [ ] **Remover a rota temporária `/preview-login`**
-- [ ] Tela de login (`/login`) — substituir o stub por formulário funcional
-- [ ] **Seletor de estabelecimento** — quando houver mais de um vínculo ativo
-- [ ] Tela de erro 403 (não autorizado)
-- [ ] Tela de erro 404 (não encontrado)
-- [ ] Tela de erro 419 (sessão expirada / CSRF)
+- [x] **Remover a rota temporária `/preview-login`**
+- [x] Tela de login (`/login`) — substituir o stub por formulário funcional
+- [x] **Seletor de estabelecimento** — quando houver mais de um vínculo ativo
+- [x] Tela de erro 403 (não autorizado)
+- [x] Tela de erro 404 (não encontrado)
+- [x] Tela de erro 419 (sessão expirada / CSRF)
 
 **Funcionalidades:**
-- [ ] Formulário de login (email + senha)
-- [ ] Validação client-side (Alpine.js) — campos obrigatórios, botão desabilitado
-- [ ] Validação server-side (`LoginRequest`)
-- [ ] Autenticação por sessão via guard `web`
-- [ ] `session()->regenerate()` no login (previne session fixation)
-- [ ] Vínculo único: entra direto, sem passar pelo seletor
-- [ ] Vários vínculos: seletor de estabelecimento após a senha
-- [ ] Estabelecimento escolhido gravado em `session('tenant_ativo')`
-- [ ] Troca de estabelecimento pelo menu, sem deslogar
-- [ ] Logout com invalidação de sessão e novo token CSRF
-- [ ] Opção "lembrar-me"
-- [ ] Mensagem de erro em credenciais inválidas (sem revelar se o e-mail existe)
-- [ ] Bloqueio de usuário com status ≠ `ACTIVE`
-- [ ] Rate limiting por e-mail + IP (freio a força bruta)
-- [ ] Registro de `last_login_at`
-- [ ] Redirect pós-login para `/dashboard` (ou destino pretendido)
+- [x] Formulário de login (email + senha)
+- [x] Validação client-side (Alpine.js) — campos obrigatórios, botão desabilitado
+- [x] Validação server-side (`LoginRequest`)
+- [x] Autenticação por sessão via guard `web`
+- [x] `session()->regenerate()` no login (previne session fixation)
+- [x] Vínculo único: entra direto, sem passar pelo seletor
+- [x] Vários vínculos: seletor de estabelecimento após a senha
+- [x] Estabelecimento escolhido gravado em `session('tenant_ativo')`
+- [x] Troca de estabelecimento pelo menu, sem deslogar
+- [x] Logout com invalidação de sessão e novo token CSRF
+- [x] Opção "lembrar-me"
+- [x] Mensagem de erro em credenciais inválidas (sem revelar se o e-mail existe)
+- [x] Bloqueio de usuário com status ≠ `ACTIVE`
+- [x] Rate limiting por e-mail + IP (freio a força bruta)
+- [x] Registro de `last_login_at`
+- [x] Redirect pós-login para `/dashboard` (ou destino pretendido)
 
-**Testes (10):**
-- [ ] Login com credenciais válidas → dashboard
-- [ ] Login com credenciais inválidas → erro, permanece deslogado
-- [ ] Conta `INACTIVE` não consegue entrar
-- [ ] Vínculo `INVITED`/`SUSPENDED` não dá acesso ao estabelecimento
-- [ ] Vínculo único entra direto no dashboard
-- [ ] Vários vínculos caem no seletor de estabelecimento
-- [ ] Logout invalida a sessão e redireciona para login
-- [ ] Visitante em rota protegida → login
-- [ ] Sessão persiste entre requisições
-- [ ] Rate limiting bloqueia após tentativas repetidas
+**Testes (14 — 4 a mais que o previsto):**
+- [x] Login com credenciais válidas → dashboard
+- [x] Login com credenciais inválidas → erro, permanece deslogado
+- [x] **Mensagem idêntica para e-mail inexistente e senha errada**
+- [x] Conta `INACTIVE` não consegue entrar
+- [x] Vínculo `SUSPENDED` não dá acesso ao estabelecimento
+- [x] Vínculo único entra direto no dashboard
+- [x] Vários vínculos caem no seletor de estabelecimento
+- [x] **Escolher estabelecimento libera o painel**
+- [x] **Não é possível escolher estabelecimento sem vínculo**
+- [x] Logout invalida a sessão e redireciona para login
+- [x] Visitante em rota protegida → login
+- [x] Sessão persiste entre requisições
+- [x] **Login registra `last_login_at`**
+- [x] Rate limiting bloqueia após tentativas repetidas
+- [x] **Usuário autenticado não vê a tela de login**
+
+### Notas de implementação
+
+**Chave de sessão centralizada.** `TenantResolver::SESSAO_TENANT` guarda o nome
+da chave. Ela vive no resolver, não no controller, porque é ele quem a lê a cada
+requisição — quem escreve apenas segue o contrato.
+
+**Middleware com dois modos.** As telas que *definem* o estabelecimento não podem
+exigir estabelecimento definido, senão viraria um ciclo. Daí
+`auth.web:sem-tenant`, que só exige a sessão.
+
+**Correções encontradas durante a validação no navegador:**
+
+| Item | Problema |
+|------|----------|
+| `dashboard/index.blade.php` | Ainda usava `auth()->user()->tenant`, relação removida no F1.8 — o título perdia o nome do estabelecimento |
+| Páginas de erro | Em rota inexistente a sessão nem inicia, então `@auth` daria sempre "visitante"; o botão passou a apontar para a raiz, que redireciona conforme o estado real |
+| `test_logout_encerra_a_sessao` | Forjava a sessão com `withSession()` + `actingAs()` e quebrava na suíte completa; passou a fazer login pelo fluxo real |
 
 ---
 

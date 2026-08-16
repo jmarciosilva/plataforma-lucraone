@@ -1,11 +1,15 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (F1.8 concluído — modelo de identidade)  
-**Fase Atual:** FASE 03 — ADMIN FRONTEND (1/6 sprints)  
-**Próxima Sprint:** F3.2 — Authentication (Login/Logout)  
+**Atualizado em:** 2026-08-16 (F3.2 concluído — login funcional)  
+**Fase Atual:** FASE 03 — ADMIN FRONTEND (2/6 sprints)  
+**Próxima Sprint:** F3.3 — Admin Dashboard  
 **Fase Pausada:** FASE 02 — FEATURES (F2.1 concluído, F2.2 aguardando frontend)  
-**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 17% (1/6) | FASE 03 🟡 17% (1/6)  
-**Testes:** 250 passing, 0 failing
+**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 17% (1/6) | FASE 03 🟡 33% (2/6)  
+**Testes:** 264 passing, 0 failing
+
+> 🔓 **O sistema já é operável por um humano.** Desde o F3.2 existe login web
+> em `/login`. Uma pessoa com vínculo em vários estabelecimentos escolhe onde
+> quer trabalhar e troca pelo menu, sem deslogar.
 
 > 🔄 **F1.8 — Identity Refactor (2026-08-16).** A FASE 01 ganhou um oitavo
 > sprint. Ao desenhar o login do F3.2, descobrimos que `users.tenant_id`
@@ -31,8 +35,8 @@
 | **Próxima Sprint** | F3.1 — Frontend Setup & Layout |
 | **Fase Concluída** | FASE 01 — FOUNDATION (7/7) |
 | **Fase Pausada** | FASE 02 — FEATURES (1/6, retoma após F3.6) |
-| **Testes Totais** | 250 passing, 0 failing |
-| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 17 · FASE 03: 6 |
+| **Testes Totais** | 264 passing, 0 failing |
+| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 17 · FASE 03: 20 |
 
 ### Ordem de Execução Atualizada
 
@@ -75,7 +79,7 @@ FASE 02 (retomada)        📋 F2.2 — Inventory Management
 | Sprint | Nome | Status | Itens | Testes | O que você poderá testar |
 |--------|------|--------|-------|--------|--------------------------|
 | **F3.1** | Frontend Setup & Layout | ✅ DONE | 15/15 | 6/6 | Página placeholder com Tailwind aplicado |
-| **F3.2** | Authentication (Login/Logout) | 📋 TODO | 0/20 | 0/8 | **Login em `/login` com email + senha** |
+| **F3.2** | Authentication (Login/Logout) | ✅ DONE | 22/22 | 14/14 | **Login em `/login` com email + senha** |
 | **F3.3** | Admin Dashboard | 📋 TODO | 0/15 | 0/6 | Painel com menu lateral e widgets |
 | **F3.4** | Tenant Management | 📋 TODO | 0/25 | 0/12 | **Cadastrar novo estabelecimento (tenant)** |
 | **F3.5** | User Management | 📋 TODO | 0/25 | 0/12 | **Cadastrar usuários (admin, operador)** |
@@ -903,7 +907,7 @@ Nenhum bloqueio impeditivo.
 | `config/auth.php` apontava para `App\Models\User` (scaffolding) em vez do módulo Identity | Login por sessão não funcionaria | ✅ resolvido no F3.1 |
 | Rota de health documentada como `/health`, real é `/api/health` | Confusão em testes | ✅ documentado |
 | Container `app` sem `bash` | `docker-compose exec app bash` falha | ✅ documentado (usar `sh`) |
-| Rota `/preview-login` faz bypass de autenticação (só em `local`) | Risco se vazar para outro ambiente | 🔴 **apagar no F3.2** |
+| Rota `/preview-login` fazia bypass de autenticação | Risco se vazasse para outro ambiente | ✅ apagada no F3.2 |
 
 ---
 

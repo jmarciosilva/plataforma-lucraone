@@ -1,9 +1,9 @@
 ﻿# 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-16 (F1.8 — modelo de identidade)  
-**Fase Ativa:** FASE 03 — ADMIN FRONTEND 🟡 (1/6 sprints)  
+**Atualizado:** 2026-08-16 (F3.2 — login funcional)  
+**Fase Ativa:** FASE 03 — ADMIN FRONTEND 🟡 (2/6 sprints)  
 **Fase Pausada:** FASE 02 — FEATURES ⏸️ (1/6 sprints)  
-**Testes:** 250 passing
+**Testes:** 264 passing
 
 ---
 
@@ -19,9 +19,9 @@
 │  1/6 sprints · 17 testes                                     │
 │  ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   17%      │
 ├─────────────────────────────────────────────────────────────┤
-│  FASE 03 — ADMIN FRONTEND        📋 ATIVO  ← AQUI            │
-│  0/6 sprints · 0/~53 testes                                  │
-│  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    0%      │
+│  FASE 03 — ADMIN FRONTEND        🟡 ATIVO  ← AQUI            │
+│  2/6 sprints · 20/~57 testes                                 │
+│  ████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   33%      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -259,23 +259,28 @@ Escopo:
 Como validar:  http://localhost:8000 renderiza com Tailwind aplicado
 ```
 
-### 📋 Sprint F3.2 — Authentication (Login/Logout)
+### ✅ Sprint F3.2 — Authentication (Login/Logout) — CONCLUÍDO
 
 ```
-Status:     📋 TODO
-Progresso:  0/20 itens
-Tests:      0/8
+Status:     ✅ DONE (100%)
+Progresso:  22/22 itens
+Tests:      14/14 passing ✅
 
-Escopo:
-  ⬜ Tela de login (/login)
-  ⬜ Autenticação por sessão web (guard web)
-  ⬜ Resolução de tenant a partir do usuário logado
-  ⬜ Logout + limpeza de sessão
-  ⬜ Bloqueio de usuário INACTIVE/SUSPENDED
-  ⬜ Telas de erro 403 e 404
-  ⬜ Proteção CSRF
+Conclusão:
+  ✅ Bypass /preview-login apagado
+  ✅ Login por sessão (guard web) com regenerate anti session-fixation
+  ✅ Seletor de estabelecimento para quem tem mais de um vínculo
+  ✅ Troca de estabelecimento pelo menu, sem deslogar
+  ✅ Rate limiting por e-mail+IP (5 tentativas, 60s)
+  ✅ Mensagem idêntica para e-mail inexistente e senha errada
+  ✅ Conta inativa e vínculo suspenso bloqueados
+  ✅ Telas de erro 403, 404 e 419 no design system
+  ✅ last_login_at e redirect para destino pretendido
 
-Como validar:  login com admin@lucraone-dev.local chega no dashboard
+Validado no navegador:
+  admin@lucraone-dev.local  (1 vínculo)  → dashboard direto
+  contador@escritorio.local (2 vínculos) → seletor → dashboard
+  senha: password
 ```
 
 ### 📋 Sprint F3.3 — Admin Dashboard
@@ -505,27 +510,30 @@ Foundation Phase:       ✅ 100% (7/7 sprints) — 189 TESTS
 
 ## ⚙️ Próximas Ações (Roadmap)
 
-### 🔜 Imediato — Sprint F3.1 (Frontend Setup & Layout)
+### 🔜 Imediato — Sprint F3.3 (Admin Dashboard)
 
-- [ ] `npm install -D tailwindcss postcss autoprefixer`
-- [ ] `npm install alpinejs`
-- [ ] Configurar `tailwind.config.js` e `vite.config.js`
-- [ ] Criar `resources/views/layouts/app.blade.php`
-- [ ] Criar `resources/views/layouts/auth.blade.php`
-- [ ] Criar componentes Blade (Button, Input, Select, Modal, Alert, Table, FormGroup)
-- [ ] Criar middleware de auth para rotas web
-- [ ] 5 testes de renderização
+- [ ] Widgets com contagens reais (tenants, usuários, empresas, produtos)
+- [ ] Breadcrumbs e rodapé
+- [ ] Teste automatizado de responsividade mobile
+- [ ] Remover `welcome.blade.php`, órfão desde que `/` passou a redirecionar
+- [ ] 6 testes
 
-### Depois — F3.2 (Login) → F3.3 (Dashboard) → F3.4 (Tenants) → F3.5 (Users) → F3.6 (Companies/Roles)
+### Depois — F3.4 (Tenants) → F3.5 (Users) → F3.6 (Companies/Roles)
 
-### 🔧 Dívida técnica conhecida (a resolver durante FASE 03)
+### 🔧 Dívida técnica
 
-- [ ] `personal_access_tokens.tokenable_id` migrado para ULID (migration criada,
-      aplicar com `php artisan migrate --force`)
-- [ ] 5 testes com falha de constraint no SQLite in-memory
-      (CategoryTest, ProductTest, RBACTest) — passar suíte para MySQL de teste
-- [ ] Rota de health documentada como `/health`, real é `/api/health`
-- [ ] Docker: container `app` não possui `bash` (usar `sh`)
+Resolvida no F3.1/F1.8/F3.2:
+
+- [x] `personal_access_tokens.tokenable_id` migrado para ULID
+- [x] 5 testes com falha de constraint — eram bugs reais de migration
+- [x] Rota de health é `/api/health`, não `/health`
+- [x] Docker: container `app` não possui `bash` (usar `sh`)
+- [x] Rota `/preview-login` (bypass de autenticação) apagada
+
+Em aberto:
+
+- [ ] `welcome.blade.php` órfão
+- [ ] Responsividade mobile só verificada por código, sem teste
 
 ### ⏸️ Retomada da FASE 02 (após F3.6)
 

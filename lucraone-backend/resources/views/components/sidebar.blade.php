@@ -10,6 +10,10 @@
         : config('app.name');
 
     $ambiente = strtoupper(app()->environment());
+
+    // Só faz sentido oferecer a troca para quem tem mais de um vínculo
+    $podeTrocar = auth()->check()
+        && auth()->user()->estabelecimentosDisponiveis()->count() > 1;
 @endphp
 
 <aside {{ $attributes->merge(['class' => 'w-60 shrink-0 flex-col border-r border-linha bg-white flex ' . $class]) }}>
@@ -22,6 +26,21 @@
         <p class="mt-2 font-comanda text-[0.6rem] uppercase tracking-[0.18em] text-aco">
             {{ \Illuminate\Support\Str::limit($tenantNome, 18) }} · {{ $ambiente }}
         </p>
+
+        @if ($podeTrocar)
+            <a
+                href="{{ route('estabelecimentos.escolher') }}"
+                class="mt-2 inline-flex items-center gap-1 text-xs font-semibold lowercase text-sol transition-opacity hover:opacity-70"
+            >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" aria-hidden="true">
+                    <path d="M7 16H3v-4" />
+                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                    <path d="M17 8h4v4" />
+                    <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                </svg>
+                trocar estabelecimento
+            </a>
+        @endif
     </div>
 
     {{-- Navegação --}}

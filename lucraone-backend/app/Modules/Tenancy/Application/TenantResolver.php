@@ -14,6 +14,14 @@ use Illuminate\Support\Facades\Auth;
  */
 class TenantResolver
 {
+    /**
+     * Chave de sessão do estabelecimento em uso.
+     *
+     * Vive aqui, e não no controller, porque é este resolver quem a lê a cada
+     * requisição — quem escreve apenas segue o contrato.
+     */
+    public const SESSAO_TENANT = 'tenant_ativo';
+
     public function __construct(
         private TenantContext $context
     ) {}
@@ -39,7 +47,7 @@ class TenantResolver
 
         // Estratégia 2: escolha guardada na sessão (painel web)
         if ($usuario && $request->hasSession()) {
-            $tenantId = $request->session()->get('tenant_ativo');
+            $tenantId = $request->session()->get(self::SESSAO_TENANT);
 
             if ($tenantId && $usuario->canAccessTenant($tenantId)) {
                 $this->context->set($tenantId);
