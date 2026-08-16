@@ -36,6 +36,7 @@ class CategoryApiTest extends TestCase
             ->create(['tenant_id' => $this->tenant->id]);
 
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->getJson('/api/v1/categories');
 
         $response->assertStatus(200)
@@ -52,6 +53,7 @@ class CategoryApiTest extends TestCase
     public function test_create_category(): void
     {
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->postJson('/api/v1/categories', [
                 'name' => 'Electronics',
                 'slug' => 'electronics',
@@ -75,6 +77,7 @@ class CategoryApiTest extends TestCase
         $category = Category::factory()->create(['tenant_id' => $this->tenant->id]);
 
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->getJson("/api/v1/categories/{$category->id}");
 
         $response->assertStatus(200)
@@ -89,6 +92,7 @@ class CategoryApiTest extends TestCase
         $category = Category::factory()->create(['tenant_id' => $this->tenant->id]);
 
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->putJson("/api/v1/categories/{$category->id}", [
                 'name' => 'Updated Category',
             ]);
@@ -105,6 +109,7 @@ class CategoryApiTest extends TestCase
         $category = Category::factory()->create(['tenant_id' => $this->tenant->id]);
 
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->deleteJson("/api/v1/categories/{$category->id}");
 
         $response->assertStatus(200);
@@ -125,6 +130,7 @@ class CategoryApiTest extends TestCase
         ]);
 
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->getJson('/api/v1/categories/roots');
 
         $response->assertStatus(200);
@@ -150,6 +156,7 @@ class CategoryApiTest extends TestCase
         ]);
 
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->getJson("/api/v1/categories/{$parent->id}/children");
 
         $response->assertStatus(200);
@@ -166,6 +173,7 @@ class CategoryApiTest extends TestCase
         $parent = Category::factory()->create(['tenant_id' => $this->tenant->id]);
 
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->postJson('/api/v1/categories', [
                 'name' => 'Subcategory',
                 'slug' => 'subcategory',

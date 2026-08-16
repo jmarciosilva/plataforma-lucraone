@@ -24,7 +24,14 @@ class TenantResolver
      */
     public function resolve(Request $request): bool
     {
-        // Estratégia 1: Obter do usuário autenticado
+        // Estratégia 1: Obter do header X-Tenant-ID (útil para testes)
+        if ($request->header('X-Tenant-ID')) {
+            $this->context->set($request->header('X-Tenant-ID'));
+
+            return true;
+        }
+
+        // Estratégia 2: Obter do usuário autenticado
         if (Auth::check() && Auth::user()?->tenant_id) {
             $this->context->set(Auth::user()->tenant_id);
 
@@ -33,7 +40,6 @@ class TenantResolver
 
         // Futuras estratégias:
         // - Subdomain
-        // - Header (X-Tenant-ID)
         // - Domain
 
         return false;

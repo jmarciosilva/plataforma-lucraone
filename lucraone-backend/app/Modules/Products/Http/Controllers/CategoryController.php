@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
@@ -36,6 +37,7 @@ class CategoryController extends Controller
     public function store(StoreCategoryRequest $request): JsonResponse
     {
         $category = Category::create([
+            'id' => Str::ulid(),
             'tenant_id' => $this->tenantContext->id(),
             'name' => $request->validated('name'),
             'slug' => $request->validated('slug'),

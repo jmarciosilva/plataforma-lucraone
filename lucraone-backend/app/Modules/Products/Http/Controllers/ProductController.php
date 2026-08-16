@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -36,6 +37,7 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request): JsonResponse
     {
         $product = Product::create([
+            'id' => Str::ulid(),
             'tenant_id' => $this->tenantContext->id(),
             'company_id' => $request->validated('company_id'),
             'sku' => $request->validated('sku'),

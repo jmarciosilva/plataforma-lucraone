@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Str;
 
 class PriceController extends Controller
 {
@@ -43,6 +44,7 @@ class PriceController extends Controller
                 'type' => $request->validated('type'),
             ],
             [
+                'id' => Str::ulid(),
                 'amount' => $request->validated('amount'),
             ]
         );

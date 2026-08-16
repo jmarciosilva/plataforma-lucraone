@@ -14,13 +14,13 @@ class StoreProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => ['required', 'string', 'uuid'],
+            'company_id' => ['required', 'string'],
             'sku' => ['required', 'string', 'max:100'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'status' => ['required', 'in:active,inactive,discontinued'],
             'category_ids' => ['nullable', 'array'],
-            'category_ids.*' => ['string', 'uuid'],
+            'category_ids.*' => ['string'],
         ];
     }
 

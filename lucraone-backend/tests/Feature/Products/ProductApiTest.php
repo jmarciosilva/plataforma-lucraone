@@ -39,6 +39,7 @@ class ProductApiTest extends TestCase
             ->create(['tenant_id' => $this->tenant->id]);
 
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->getJson('/api/v1/products');
 
         $response->assertStatus(200)
@@ -55,6 +56,7 @@ class ProductApiTest extends TestCase
     public function test_create_product(): void
     {
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->postJson('/api/v1/products', [
                 'company_id' => $this->company->id,
                 'sku' => 'TEST-001',
@@ -81,6 +83,7 @@ class ProductApiTest extends TestCase
         $product = Product::factory()->create(['tenant_id' => $this->tenant->id]);
 
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->getJson("/api/v1/products/{$product->id}");
 
         $response->assertStatus(200)
@@ -96,6 +99,7 @@ class ProductApiTest extends TestCase
         $product = Product::factory()->create(['tenant_id' => $this->tenant->id]);
 
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->putJson("/api/v1/products/{$product->id}", [
                 'name' => 'Updated Product',
                 'status' => 'inactive',
@@ -114,6 +118,7 @@ class ProductApiTest extends TestCase
         $product = Product::factory()->create(['tenant_id' => $this->tenant->id]);
 
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->deleteJson("/api/v1/products/{$product->id}");
 
         $response->assertStatus(200);
@@ -139,6 +144,7 @@ class ProductApiTest extends TestCase
         ]);
 
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->getJson('/api/v1/products/search/ABC');
 
         $response->assertStatus(200)
@@ -169,6 +175,7 @@ class ProductApiTest extends TestCase
 
         // User 1 can only see their products
         $response = $this->withToken($this->token)
+            ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->getJson('/api/v1/products');
 
         $response->assertStatus(200);
