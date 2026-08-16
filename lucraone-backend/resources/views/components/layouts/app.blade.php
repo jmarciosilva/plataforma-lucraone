@@ -1,3 +1,9 @@
+@props([
+    'title' => 'painel',
+    'tenantNome' => null,
+    'breadcrumbs' => [],
+])
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -66,6 +72,26 @@
                     <header class="mb-8">
                         <div class="flex flex-wrap items-start justify-between gap-4">
                             <div>
+                                @if ($breadcrumbs)
+                                    <nav class="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold lowercase text-aco" aria-label="breadcrumb">
+                                        @foreach ($breadcrumbs as $breadcrumb)
+                                            @if (! $loop->first)
+                                                <span aria-hidden="true">/</span>
+                                            @endif
+
+                                            @if (! empty($breadcrumb['url']) && ! $loop->last)
+                                                <a href="{{ $breadcrumb['url'] }}" class="transition-colors hover:text-grafite">
+                                                    {{ $breadcrumb['label'] }}
+                                                </a>
+                                            @else
+                                                <span @if ($loop->last) aria-current="page" @endif>
+                                                    {{ $breadcrumb['label'] }}
+                                                </span>
+                                            @endif
+                                        @endforeach
+                                    </nav>
+                                @endif
+
                                 <h1 class="text-3xl font-bold lowercase text-grafite lg:text-4xl">
                                     {{ $title ?? '' }}
                                     @if (isset($tenantNome))
@@ -80,11 +106,23 @@
                                 @endisset
                             </div>
 
-                            @isset($acoes)
-                                <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap items-center justify-end gap-2">
+                                @auth
+                                    <div class="hidden text-right sm:block">
+                                        <p class="text-sm font-semibold lowercase text-grafite">{{ auth()->user()->name }}</p>
+                                        <p class="text-xs text-aco">{{ auth()->user()->email }}</p>
+                                    </div>
+
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <x-button variante="fantasma" tipo="submit">sair</x-button>
+                                    </form>
+                                @endauth
+
+                                @isset($acoes)
                                     {{ $acoes }}
-                                </div>
-                            @endisset
+                                @endisset
+                            </div>
                         </div>
                     </header>
                 @endif
@@ -100,6 +138,13 @@
 
                 {{ $slot }}
             </main>
+
+            <footer class="border-t border-linha px-4 py-4 text-xs text-aco lg:px-8">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span>LUCRAONE admin</span>
+                    <span>{{ now()->format('Y') }} · ambiente {{ app()->environment() }}</span>
+                </div>
+            </footer>
         </div>
     </div>
 </body>

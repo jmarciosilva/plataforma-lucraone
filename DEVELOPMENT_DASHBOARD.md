@@ -1,9 +1,9 @@
-﻿# 📊 Dashboard de Desenvolvimento — LUCRAONE
+# 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-16 (F3.2 — login funcional)  
-**Fase Ativa:** FASE 03 — ADMIN FRONTEND 🟡 (2/6 sprints)  
-**Fase Pausada:** FASE 02 — FEATURES ⏸️ (1/6 sprints)  
-**Testes:** 264 passing
+**Atualizado:** 2026-08-16 (F3.3 — dashboard com dados reais)
+**Fase Ativa:** FASE 03 — ADMIN FRONTEND 🟡 (3/6 sprints)
+**Fase Pausada:** FASE 02 — FEATURES ⏸️ (1/6 sprints)
+**Testes:** 270 passing
 
 ---
 
@@ -20,8 +20,8 @@
 │  ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   17%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 03 — ADMIN FRONTEND        🟡 ATIVO  ← AQUI            │
-│  2/6 sprints · 20/~57 testes                                 │
-│  ████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   33%      │
+│  3/6 sprints · 26/~59 testes                                 │
+│  ████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░   50%      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -239,7 +239,7 @@ Retomada prevista: após conclusão do F3.6
 
 ## 🖥️ FASE 03 — ADMIN FRONTEND (ATIVO)
 
-**Stack:** Laravel Blade + Tailwind CSS + Alpine.js  
+**Stack:** Laravel Blade + Tailwind CSS + Alpine.js
 **Roadmap:** [ROADMAP_FASE_03_ADMIN_FRONTEND.md](ROADMAP_FASE_03_ADMIN_FRONTEND.md)
 
 ### 📋 Sprint F3.1 — Frontend Setup & Layout
@@ -283,17 +283,18 @@ Validado no navegador:
   senha: password
 ```
 
-### 📋 Sprint F3.3 — Admin Dashboard
+### ✅ Sprint F3.3 — Admin Dashboard
 
 ```
-Status:     📋 TODO
-Progresso:  0/15 itens
-Tests:      0/6
+Status:     ✅ DONE (100%)
+Progresso:  15/15 itens
+Tests:      6/6 passing ✅
 
 Escopo:
-  ⬜ Sidebar de navegação + header com logout
-  ⬜ Breadcrumbs e menu responsivo
-  ⬜ Widgets: tenants, usuários, empresas, último acesso
+  ✅ Sidebar de navegação + header com logout
+  ✅ Breadcrumbs, rodapé e menu responsivo
+  ✅ Widgets: tenants, usuários, empresas, produtos, último acesso
+  ✅ Atalhos para seções principais
 
 Como validar:  painel carrega com contagens reais do banco
 ```
@@ -429,7 +430,7 @@ Breakdown FASE 02 (17):
 Breakdown FASE 03 (0 / meta ~53):
   F3.1 (Setup):           ⬜ 0/5
   F3.2 (Auth UI):         ⬜ 0/8
-  F3.3 (Dashboard):       ⬜ 0/6
+  F3.3 (Dashboard):       ✅ 6/6
   F3.4 (Tenants):         ⬜ 0/12
   F3.5 (Users):           ⬜ 0/12
   F3.6 (Companies/Roles): ⬜ 0/10
@@ -510,13 +511,13 @@ Foundation Phase:       ✅ 100% (7/7 sprints) — 189 TESTS
 
 ## ⚙️ Próximas Ações (Roadmap)
 
-### 🔜 Imediato — Sprint F3.3 (Admin Dashboard)
+### 🔜 Imediato — Sprint F3.4 (Tenant Management)
 
-- [ ] Widgets com contagens reais (tenants, usuários, empresas, produtos)
-- [ ] Breadcrumbs e rodapé
-- [ ] Teste automatizado de responsividade mobile
-- [ ] Remover `welcome.blade.php`, órfão desde que `/` passou a redirecionar
-- [ ] 6 testes
+- [ ] Listagem de tenants (`/tenants`) com busca, filtros e paginação
+- [ ] Formulário de criação e edição de estabelecimento
+- [ ] Soft delete com confirmação e restauração
+- [ ] Controle de permissão para gerenciamento
+- [ ] 12 testes
 
 ### Depois — F3.4 (Tenants) → F3.5 (Users) → F3.6 (Companies/Roles)
 
@@ -532,8 +533,8 @@ Resolvida no F3.1/F1.8/F3.2:
 
 Em aberto:
 
-- [ ] `welcome.blade.php` órfão
-- [ ] Responsividade mobile só verificada por código, sem teste
+- [x] `welcome.blade.php` órfão
+- [x] Responsividade mobile só verificada por código, sem teste
 
 ### ⏸️ Retomada da FASE 02 (após F3.6)
 
@@ -682,17 +683,17 @@ Uma sprint é considerada **pronta** quando:
 
 ---
 
-**Próxima atualização:** Ao concluir o Sprint F3.1  
-**Gerado:** 2026-08-16 (FASE 03 — Admin Frontend planejada)  
-**Repositório:** D:\PROJETO-LUCRAONE  
+**Próxima atualização:** Ao concluir o Sprint F3.4
+**Gerado:** 2026-08-16 (FASE 03 — Admin Frontend planejada)
+**Repositório:** D:\PROJETO-LUCRAONE
 
 ---
 
 ## 📍 Onde Estamos
 
-✅ **FASE 01 — FOUNDATION:** 189 testes, 7/7 sprints, segurança OWASP validada  
-✅ **F2.1 — Products:** 17 testes, API de produtos/categorias/preços funcionando  
-📋 **FASE 03 — ADMIN FRONTEND:** próxima a iniciar, começando por F3.1  
+✅ **FASE 01 — FOUNDATION:** 189 testes, 7/7 sprints, segurança OWASP validada
+✅ **F2.1 — Products:** 17 testes, API de produtos/categorias/preços funcionando
+🟡 **FASE 03 — ADMIN FRONTEND:** 3/6 sprints concluídos; próximo F3.4
 
 **Lacuna que a FASE 03 resolve:** o sistema não tem tela de login nem painel
 administrativo. Toda operação hoje depende de `tinker` + Postman.

@@ -1,11 +1,11 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (F3.2 concluído — login funcional)  
-**Fase Atual:** FASE 03 — ADMIN FRONTEND (2/6 sprints)  
-**Próxima Sprint:** F3.3 — Admin Dashboard  
-**Fase Pausada:** FASE 02 — FEATURES (F2.1 concluído, F2.2 aguardando frontend)  
-**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 17% (1/6) | FASE 03 🟡 33% (2/6)  
-**Testes:** 264 passing, 0 failing
+**Atualizado em:** 2026-08-16 (F3.3 concluído — dashboard com dados reais)
+**Fase Atual:** FASE 03 — ADMIN FRONTEND (3/6 sprints)
+**Próxima Sprint:** F3.4 — Tenant Management
+**Fase Pausada:** FASE 02 — FEATURES (F2.1 concluído, F2.2 aguardando frontend)
+**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 17% (1/6) | FASE 03 🟡 50% (3/6)
+**Testes:** 270 passing, 0 failing
 
 > 🔓 **O sistema já é operável por um humano.** Desde o F3.2 existe login web
 > em `/login`. Uma pessoa com vínculo em vários estabelecimentos escolhe onde
@@ -31,12 +31,12 @@
 
 | Item | Status |
 |------|--------|
-| **Fase Atual** | FASE 03 — ADMIN FRONTEND (0/6 sprints) |
-| **Próxima Sprint** | F3.1 — Frontend Setup & Layout |
+| **Fase Atual** | FASE 03 — ADMIN FRONTEND (3/6 sprints) |
+| **Próxima Sprint** | F3.4 — Tenant Management |
 | **Fase Concluída** | FASE 01 — FOUNDATION (7/7) |
 | **Fase Pausada** | FASE 02 — FEATURES (1/6, retoma após F3.6) |
-| **Testes Totais** | 264 passing, 0 failing |
-| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 17 · FASE 03: 20 |
+| **Testes Totais** | 270 passing, 0 failing |
+| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 17 · FASE 03: 26 |
 
 ### Ordem de Execução Atualizada
 
@@ -45,7 +45,7 @@ FASE 01 — FOUNDATION      ✅ COMPLETO   (7 sprints, 189 testes)
         ↓
 FASE 02 — FEATURES        🟡 PAUSADO    (F2.1 ✅ | F2.2-F2.6 aguardando)
         ↓
-FASE 03 — ADMIN FRONTEND  📋 ATIVO      (F3.1-F3.6, ~53 testes)  ← VOCÊ ESTÁ AQUI
+FASE 03 — ADMIN FRONTEND  🟡 ATIVO      (F3.1-F3.6, ~59 testes)  ← VOCÊ ESTÁ AQUI
         ↓
 FASE 02 (retomada)        📋 F2.2 — Inventory Management
 ```
@@ -80,18 +80,18 @@ FASE 02 (retomada)        📋 F2.2 — Inventory Management
 |--------|------|--------|-------|--------|--------------------------|
 | **F3.1** | Frontend Setup & Layout | ✅ DONE | 15/15 | 6/6 | Página placeholder com Tailwind aplicado |
 | **F3.2** | Authentication (Login/Logout) | ✅ DONE | 22/22 | 14/14 | **Login em `/login` com email + senha** |
-| **F3.3** | Admin Dashboard | 📋 TODO | 0/15 | 0/6 | Painel com menu lateral e widgets |
+| **F3.3** | Admin Dashboard | ✅ DONE | 15/15 | 6/6 | Painel com menu lateral e widgets reais |
 | **F3.4** | Tenant Management | 📋 TODO | 0/25 | 0/12 | **Cadastrar novo estabelecimento (tenant)** |
 | **F3.5** | User Management | 📋 TODO | 0/25 | 0/12 | **Cadastrar usuários (admin, operador)** |
 | **F3.6** | Company & Roles Management | 📋 TODO | 0/20 | 0/10 | Empresas, endereços e permissões |
 
-**Total FASE 03:** 120 itens, ~53 testes
+**Total FASE 03:** 120 itens, ~59 testes
 
 ---
 
 ## 🎯 FASE 03 — ADMIN FRONTEND
 
-**Status:** 📋 TODO (0/6 sprints) — **FASE ATIVA**
+**Status:** 🟡 EM ANDAMENTO (3/6 sprints) — **FASE ATIVA**
 
 **Stack:** Laravel Blade + Tailwind CSS + Alpine.js
 
@@ -101,14 +101,14 @@ Sem isso, o sistema só é operável via cURL/Postman.
 
 **Roadmap detalhado:** [ROADMAP_FASE_03_ADMIN_FRONTEND.md](ROADMAP_FASE_03_ADMIN_FRONTEND.md)
 
-**Progresso:** 0/6 sprints, 0/~53 testes
+**Progresso:** 3/6 sprints, 26/~59 testes
 
 ### Sprints
 
 #### Sprint F3.1 — Frontend Setup & Layout
 
-**Status:** 📋 TODO  
-**Objetivo:** Instalar Tailwind, criar layout base e componentes Blade reutilizáveis  
+**Status:** 📋 TODO
+**Objetivo:** Instalar Tailwind, criar layout base e componentes Blade reutilizáveis
 **Como testar:** acessar `http://localhost:8000` e ver a página com estilo Tailwind aplicado
 
 **Checklist:**
@@ -136,8 +136,8 @@ middleware redireciona, rota placeholder responde 200
 
 #### Sprint F3.2 — Authentication (Login/Logout)
 
-**Status:** 📋 TODO  
-**Objetivo:** Tela de login funcional com sessão e logout  
+**Status:** 📋 TODO
+**Objetivo:** Tela de login funcional com sessão e logout
 **Como testar:** acessar `/login`, entrar com `admin@lucraone-dev.local`, chegar no dashboard
 
 **Checklist:**
@@ -167,33 +167,33 @@ isolamento entre tenants
 
 #### Sprint F3.3 — Admin Dashboard
 
-**Status:** 📋 TODO  
-**Objetivo:** Painel inicial com navegação lateral  
+**Status:** ✅ DONE
+**Objetivo:** Painel inicial com navegação lateral
 **Como testar:** após login, ver widgets de resumo e navegar pelo menu
 
 **Checklist:**
 
-- [ ] Sidebar com navegação (Dashboard, Tenants, Usuários, Empresas, Roles)
-- [ ] Header com nome do usuário + botão logout
-- [ ] Breadcrumbs
-- [ ] Menu responsivo (mobile)
-- [ ] Estado ativo do item de menu
-- [ ] Widget: total de tenants
-- [ ] Widget: total de usuários
-- [ ] Widget: total de empresas
-- [ ] Widget: último acesso
-- [ ] Atalhos para seções principais
-- [ ] 6 testes de dashboard
+- [x] Sidebar com navegação (Dashboard, Tenants, Usuários, Empresas, Roles)
+- [x] Header com nome do usuário + botão logout
+- [x] Breadcrumbs
+- [x] Menu responsivo (mobile)
+- [x] Estado ativo do item de menu
+- [x] Widget: total de tenants
+- [x] Widget: total de usuários
+- [x] Widget: total de empresas
+- [x] Widget: último acesso
+- [x] Atalhos para seções principais
+- [x] 6 testes de dashboard
 
-**Testes previstos (6):** dashboard carrega, widgets exibem contagens corretas,
+**Testes implementados (6):** dashboard carrega, widgets exibem contagens corretas,
 menu renderiza, links funcionam, breadcrumbs corretos, responsivo
 
 ---
 
 #### Sprint F3.4 — Tenant Management
 
-**Status:** 📋 TODO  
-**Objetivo:** CRUD completo de tenants (estabelecimentos)  
+**Status:** 📋 TODO
+**Objetivo:** CRUD completo de tenants (estabelecimentos)
 **Como testar:** criar um novo estabelecimento pela interface, sem tinker
 
 **Checklist:**
@@ -225,8 +225,8 @@ menu renderiza, links funcionam, breadcrumbs corretos, responsivo
 
 #### Sprint F3.5 — User Management
 
-**Status:** 📋 TODO  
-**Objetivo:** CRUD de usuários por tenant, com atribuição de papéis  
+**Status:** 📋 TODO
+**Objetivo:** CRUD de usuários por tenant, com atribuição de papéis
 **Como testar:** criar usuário operador e fazer login com ele
 
 **Checklist:**
@@ -256,8 +256,8 @@ menu renderiza, links funcionam, breadcrumbs corretos, responsivo
 
 #### Sprint F3.6 — Company & Roles Management
 
-**Status:** 📋 TODO  
-**Objetivo:** CRUD de empresas/endereços e gestão de papéis e permissões  
+**Status:** 📋 TODO
+**Objetivo:** CRUD de empresas/endereços e gestão de papéis e permissões
 **Como testar:** cadastrar empresa e ajustar permissões de um papel
 
 **Checklist:**
@@ -304,7 +304,7 @@ menu renderiza, links funcionam, breadcrumbs corretos, responsivo
 
 #### Sprint F2.1 — Products Management
 
-**Status:** ✅ DONE  
+**Status:** ✅ DONE
 **Objetivo:** CRUD de produtos, categorias hierarchicas, preços multi-moeda
 
 **Checklist:**
@@ -463,7 +463,7 @@ Resultado: 6 execuções seguidas com tempo crescendo de 4,1x a 11,6x contra
 
 #### Sprint F1.1 — Bootstrap
 
-**Status:** ✅ DONE  
+**Status:** ✅ DONE
 **Objetivo:** Projeto Laravel, MySQL, Redis, Docker, CI, estrutura modular
 
 **Checklist:**
@@ -952,4 +952,3 @@ Meta: login web + painel administrativo + cadastro de
 tenants, usuários, empresas e permissões pela interface.
 Sem depender de tinker ou Postman.
 ```
-

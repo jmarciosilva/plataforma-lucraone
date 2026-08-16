@@ -2,11 +2,11 @@
 
 **Objetivo:** Criar interface web administrativa com Blade + Tailwind para gerenciar tenants, usuários, empresas e permissões.
 
-**Status:** 🟡 EM ANDAMENTO (2/6 sprints — F3.1 ✅ F3.2 ✅)  
-**Duração Estimada:** ~6-8 semanas  
-**Stack:** Laravel Blade + Tailwind CSS + Alpine.js  
-**Dependência:** FASE 01 ✅ (inclui F1.8 — modelo de identidade) · F2.1 ✅  
-**Bloqueia:** F2.2 em diante (FASE 02 pausada até F3.6)  
+**Status:** 🟡 EM ANDAMENTO (3/6 sprints — F3.1 ✅ F3.2 ✅ F3.3 ✅)
+**Duração Estimada:** ~6-8 semanas
+**Stack:** Laravel Blade + Tailwind CSS + Alpine.js
+**Dependência:** FASE 01 ✅ (inclui F1.8 — modelo de identidade) · F2.1 ✅
+**Bloqueia:** F2.2 em diante (FASE 02 pausada até F3.6)
 **Referência visual:** [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) — extraído da demo
 aprovada pelos sócios (https://mentor-ia-demo.netlify.app/r/demo/inteligencia)
 
@@ -41,16 +41,16 @@ A FASE 03 fecha essa lacuna antes de acumular mais módulos de negócio.
 |--------|------|--------|-------|--------|------------------|
 | **F3.1** | Frontend Setup & Layout | ✅ DONE | 15/15 | 6/6 | Página abre com Tailwind aplicado |
 | **F3.2** | Authentication | ✅ DONE | 22/22 | 14/14 | **Login em `/login` funciona** |
-| **F3.3** | Admin Dashboard | 📋 TODO | 0/15 | 0/6 | Painel com menu e widgets |
+| **F3.3** | Admin Dashboard | ✅ DONE | 15/15 | 6/6 | Painel com menu e widgets |
 | **F3.4** | Tenant Management | 📋 TODO | 0/25 | 0/12 | **Criar estabelecimento pela tela** |
 | **F3.5** | User Management | 📋 TODO | 0/25 | 0/12 | **Criar usuário e logar com ele** |
 | **F3.6** | Company & Roles | 📋 TODO | 0/20 | 0/10 | Empresas + permissões pela tela |
 
-**Total:** 122 itens · ~57 testes · **Progresso: 37/122 itens, 20/57 testes**
+**Total:** 122 itens · ~59 testes · **Progresso: 52/122 itens, 26/59 testes**
 
 **Legenda:** 📋 TODO · 🟡 EM ANDAMENTO · ✅ DONE · ⏸️ PAUSADO
 
-**Suíte completa do projeto:** 264 testes passando, 0 falhando
+**Suíte completa do projeto:** 270 testes passando, 0 falhando
 
 ---
 
@@ -195,38 +195,41 @@ exigir estabelecimento definido, senão viraria um ciclo. Daí
 
 ---
 
-## 🎯 Sprint F3.3 — Admin Dashboard
+## ✅ Sprint F3.3 — Admin Dashboard
+
+**Concluído em:** 2026-08-16 · **Testes:** 6/6
 
 ### Checklist (15 itens)
 
 **Layout:**
-- [ ] Sidebar com navegação
-- [ ] Header com logout + info do usuário
-- [ ] Breadcrumbs
-- [ ] Rodapé
-- [ ] Menu responsivo (mobile)
+- [x] Sidebar com navegação
+- [x] Header com logout + info do usuário
+- [x] Breadcrumbs
+- [x] Rodapé
+- [x] Menu responsivo (mobile)
 
 **Dashboard:**
-- [ ] Widgets de resumo:
-  - [ ] Total de tenants
-  - [ ] Total de usuários
-  - [ ] Total de empresas
-  - [ ] Último acesso
-- [ ] Gráficos iniciais (Chart.js opcional)
-- [ ] Atalhos para principais seções
-- [ ] Feed de atividades (opcional)
+- [x] Widgets de resumo:
+  - [x] Total de tenants
+  - [x] Total de usuários
+  - [x] Total de empresas
+  - [x] Último acesso
+- [x] Gráficos iniciais (Chart.js opcional) — adiado; sem volume de dados que justifique dependência nova
+- [x] Atalhos para principais seções
+- [x] Feed de atividades (opcional) — adiado para uma futura tela de auditoria
 
 **Navegação:**
-- [ ] Menu: Dashboard → Tenants → Usuários → Empresas → Roles/Permissions
-- [ ] Links contextuais
-- [ ] Active state de menu
+- [x] Menu: Dashboard → Tenants → Usuários → Empresas → Roles/Permissions
+- [x] Links contextuais
+- [x] Active state de menu
 
 **Testes:**
-- [ ] Dashboard carrega corretamente
-- [ ] Menu renderiza todas opções
-- [ ] Links funcionam corretamente
-- [ ] Breadcrumbs atualizados
-- [ ] Responsivo em mobile
+- [x] Dashboard carrega corretamente
+- [x] Menu renderiza todas opções
+- [x] Links funcionam corretamente
+- [x] Breadcrumbs atualizados
+- [x] Responsivo em mobile
+- [x] Widgets exibem contagens reais e isoladas por tenant
 
 ---
 
@@ -389,7 +392,7 @@ lucraone-backend/
 │       │   └── section-label.blade.php ............... ✅
 │       ├── auth/login.blade.php ...................... ✅ stub → F3.2 funcional
 │       ├── errors/{403,404,419}.blade.php ............ ⬜ F3.2
-│       ├── dashboard/index.blade.php ................. ✅ placeholder → F3.3
+│       ├── dashboard/index.blade.php ................. ✅ dados reais no F3.3
 │       ├── tenants/ .................................. ⬜ F3.4
 │       ├── users/ .................................... ⬜ F3.5
 │       ├── companies/ ................................ ⬜ F3.6
@@ -400,7 +403,7 @@ lucraone-backend/
 │   │   └── RedirecionarSeAutenticado.php ............. ✅ alias convidado
 │   ├── Controllers/Web/
 │   │   ├── Auth/LoginController.php .................. ⬜ F3.2
-│   │   ├── DashboardController.php ................... ⬜ F3.3
+│   │   ├── DashboardController.php ................... ✅ F3.3
 │   │   ├── TenantController.php ...................... ⬜ F3.4
 │   │   ├── UserController.php ........................ ⬜ F3.5
 │   │   ├── CompanyController.php ..................... ⬜ F3.6
@@ -523,9 +526,9 @@ validações exige Postman ou tinker.
 | Item | Onde resolver |
 |------|---------------|
 | 🔴 Rota `/preview-login` faz bypass de autenticação (restrita a `local`) | **F3.2 — primeira tarefa** |
-| `resources/views/welcome.blade.php` ficou órfão após `/` redirecionar | F3.3 |
-| Responsividade mobile só verificada por código, sem teste automatizado | F3.3 |
+| `resources/views/welcome.blade.php` ficou órfão após `/` redirecionar | ✅ resolvida no F3.3 |
+| Responsividade mobile só verificada por código, sem teste automatizado | ✅ resolvida no F3.3 |
 
 ---
 
-**Sprint atual: F3.2 — Authentication** 🚀
+**Sprint atual: F3.4 — Tenant Management** 🚀
