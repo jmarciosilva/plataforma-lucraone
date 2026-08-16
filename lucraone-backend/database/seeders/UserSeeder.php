@@ -6,6 +6,7 @@ use App\Modules\Identity\Domain\Models\TenantUser;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
@@ -53,6 +54,31 @@ class UserSeeder extends Seeder
         }
 
         $this->seedContadorMultiEstabelecimento($tenants);
+        $this->seedAdministradorTeste($tenants);
+    }
+
+    /**
+     * Usuário fixo para testes manuais da aplicação inteira.
+     */
+    private function seedAdministradorTeste($tenants): void
+    {
+        if ($tenants->isEmpty()) {
+            return;
+        }
+
+        $admin = User::firstOrNew(['email' => 'jmarciosilva@gmail.com']);
+        $admin->forceFill([
+            'id' => $admin->id ?? (string) Str::ulid(),
+            'name' => 'José Marcio Ferreira da Silva',
+            'status' => User::STATUS_ACTIVE,
+            'password' => Hash::make('12345678'),
+            'email_verified_at' => $admin->email_verified_at ?? now(),
+        ])->save();
+
+        foreach ($tenants as $tenant) {
+            $admin->joinTenant($tenant->id, TenantUser::STATUS_ACTIVE);
+            $admin->assignRole('admin', $tenant->id);
+        }
     }
 
     /**
