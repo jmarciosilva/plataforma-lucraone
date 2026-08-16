@@ -68,14 +68,14 @@
             </svg>
         </x-nav-item>
 
-        <x-nav-item rota="empresas" rotulo="empresas">
+        <x-nav-item rota="companies.index" rotulo="empresas">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
                 <rect x="3" y="7" width="18" height="14" rx="2" />
                 <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
             </svg>
         </x-nav-item>
 
-        <x-nav-item rota="permissoes" rotulo="permissões">
+        <x-nav-item rota="roles.index" rotulo="permissões">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
                 <rect x="4" y="10" width="16" height="11" rx="2" />
                 <path d="M8 10V7a4 4 0 0 1 8 0v3" />

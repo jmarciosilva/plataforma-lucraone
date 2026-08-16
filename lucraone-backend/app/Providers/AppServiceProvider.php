@@ -2,6 +2,12 @@
 
 namespace App\Providers;
 
+use App\Modules\Authorization\Domain\Models\Permission;
+use App\Modules\Authorization\Domain\Models\Role;
+use App\Modules\Authorization\Http\Policies\PermissionPolicy;
+use App\Modules\Authorization\Http\Policies\RolePolicy;
+use App\Modules\Companies\Domain\Models\Company;
+use App\Modules\Companies\Http\Policies\CompanyPolicy;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Identity\Http\Policies\UserPolicy;
 use App\Modules\Tenancy\Domain\Models\Tenant;
@@ -28,5 +34,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Tenant::class, TenantPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Company::class, CompanyPolicy::class);
+        Gate::policy(Role::class, RolePolicy::class);
+        Gate::policy(Permission::class, PermissionPolicy::class);
     }
 }

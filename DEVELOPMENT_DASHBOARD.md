@@ -1,9 +1,9 @@
 # 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-16 (F3.5 — user management)
-**Fase Ativa:** FASE 03 — ADMIN FRONTEND 🟡 (5/6 sprints)
-**Fase Pausada:** FASE 02 — FEATURES ⏸️ (1/6 sprints)
-**Testes:** 294 passing
+**Atualizado:** 2026-08-16 (F3.6 — company & roles management)
+**Fase Ativa:** FASE 02 — FEATURES 🟡 (retomada em F2.2)
+**Fase Concluída:** FASE 03 — ADMIN FRONTEND ✅ (6/6 sprints)
+**Testes:** 304 passing
 
 ---
 
@@ -15,13 +15,13 @@
 │  8/8 sprints · 227 testes  (F1.8 acrescentado)               │
 │  ████████████████████████████████████████████████  100%      │
 ├─────────────────────────────────────────────────────────────┤
-│  FASE 02 — FEATURES              ⏸️  PAUSADO                 │
+│  FASE 02 — FEATURES              🟡 ATIVO  ← AQUI            │
 │  1/6 sprints · 17 testes                                     │
 │  ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   17%      │
 ├─────────────────────────────────────────────────────────────┤
-│  FASE 03 — ADMIN FRONTEND        🟡 ATIVO  ← AQUI            │
-│  5/6 sprints · 50/~59 testes                                 │
-│  ████████████████████████████████████████░░░░░░░░   83%      │
+│  FASE 03 — ADMIN FRONTEND        ✅ COMPLETO                 │
+│  6/6 sprints · 60 testes                                     │
+│  ████████████████████████████████████████████████  100%      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -223,38 +223,38 @@ Conclusão:
   ✅ 8 ProductApiTest + 9 CategoryApiTest
 ```
 
-### ⏸️ Sprints F2.2 a F2.6 (AGUARDANDO FASE 03)
+### 🟡 Sprints F2.2 a F2.6 (RETOMADA APÓS FASE 03)
 
 ```
-F2.2 — Inventory Management    ⏸️  0/20 itens
+F2.2 — Inventory Management    📋  0/20 itens  ← próximo
 F2.3 — Orders / Vendas          ⏸️  0/20 itens
 F2.4 — Payments                 ⏸️  0/20 itens
 F2.5 — Reports                  ⏸️  0/20 itens
 F2.6 — Integrations             ⏸️  0/20 itens
 
-Retomada prevista: após conclusão do F3.6
+Retomada liberada: FASE 03 concluída.
 ```
 
 ---
 
-## 🖥️ FASE 03 — ADMIN FRONTEND (ATIVO)
+## 🖥️ FASE 03 — ADMIN FRONTEND (CONCLUÍDA)
 
 **Stack:** Laravel Blade + Tailwind CSS + Alpine.js
 **Roadmap:** [ROADMAP_FASE_03_ADMIN_FRONTEND.md](ROADMAP_FASE_03_ADMIN_FRONTEND.md)
 
-### 📋 Sprint F3.1 — Frontend Setup & Layout
+### ✅ Sprint F3.1 — Frontend Setup & Layout
 
 ```
-Status:     📋 TODO
-Progresso:  0/15 itens
-Tests:      0/5
+Status:     ✅ DONE (100%)
+Progresso:  15/15 itens
+Tests:      6/6 passing ✅
 
 Escopo:
-  ⬜ Tailwind CSS + Alpine.js + Vite
-  ⬜ Layout principal (header, sidebar, footer)
-  ⬜ Layout de autenticação
-  ⬜ Componentes: Button, Input, Select, Modal, Alert, Table, FormGroup
-  ⬜ Middleware de auth para rotas web
+  ✅ Tailwind CSS + Alpine.js + Vite
+  ✅ Layout principal (header, sidebar, footer)
+  ✅ Layout de autenticação
+  ✅ Componentes: Button, Input, Select, Modal, Alert, Table, FormGroup
+  ✅ Middleware de auth para rotas web
 
 Como validar:  http://localhost:8000 renderiza com Tailwind aplicado
 ```
@@ -331,17 +331,18 @@ Escopo:
 Como validar:  criar usuário operador e fazer login com ele
 ```
 
-### 📋 Sprint F3.6 — Company & Roles Management
+### ✅ Sprint F3.6 — Company & Roles Management
 
 ```
-Status:     📋 TODO
-Progresso:  0/20 itens
-Tests:      0/10
+Status:     ✅ DONE (100%)
+Progresso:  20/20 itens
+Tests:      10/10 passing ✅
 
 Escopo:
-  ⬜ CRUD de empresas + endereços
-  ⬜ Listagem de roles e permissions
-  ⬜ Atribuição de permissions a roles
+  ✅ CRUD de empresas + endereços
+  ✅ Listagem de roles e permissions
+  ✅ Atribuição de permissions a roles
+  ✅ RBAC aplicado nas telas
 
 Como validar:  cadastrar empresa e ajustar permissões de um papel
 ```
@@ -427,13 +428,13 @@ Breakdown FASE 01 (189):
 Breakdown FASE 02 (17):
   F2.1 (Products API):    ✅ 17 passing
 
-Breakdown FASE 03 (0 / meta ~53):
-  F3.1 (Setup):           ⬜ 0/5
-  F3.2 (Auth UI):         ⬜ 0/8
+Breakdown FASE 03 (60):
+  F3.1 (Setup):           ✅ 6/6
+  F3.2 (Auth UI):         ✅ 14/14
   F3.3 (Dashboard):       ✅ 6/6
   F3.4 (Tenants):         ✅ 12/12
   F3.5 (Users):           ✅ 12/12
-  F3.6 (Companies/Roles): ⬜ 0/10
+  F3.6 (Companies/Roles): ✅ 10/10
 ```
 
 ### Documentação
@@ -511,15 +512,15 @@ Foundation Phase:       ✅ 100% (7/7 sprints) — 189 TESTS
 
 ## ⚙️ Próximas Ações (Roadmap)
 
-### 🔜 Imediato — Sprint F3.6 (Company & Roles Management)
+### 🔜 Imediato — Sprint F2.2 (Inventory Management)
 
-- [ ] CRUD de empresas e endereços por tenant
-- [ ] Listagem de roles e permissions
-- [ ] Atribuição de permissions a roles
-- [ ] Validar RBAC nas telas
-- [ ] 10 testes
+- [ ] Inventário por produto/empresa
+- [ ] Movimentações de estoque
+- [ ] Alertas de estoque baixo
+- [ ] Isolamento por tenant
+- [ ] Testes da sprint
 
-### Depois — F3.6 (Companies/Roles) → retomada F2.2
+### Depois — F2.2 → F2.3 Orders / Vendas
 
 ### 🔧 Dívida técnica
 
@@ -667,8 +668,8 @@ Uma sprint é considerada **pronta** quando:
 **Current Status:**
 - FASE 01 (F1.1 → F1.7): 100% pronto ✅
 - F2.1 (Products): 100% pronto ✅
-- F2.2 → F2.6: ⏸️ aguardando FASE 03
-- F3.1 → F3.5: 100% pronto ✅ · F3.6 próximo
+- F3.1 → F3.6: 100% pronto ✅
+- F2.2 → F2.6: 🟡 retomada iniciada; F2.2 próximo
 
 ---
 
@@ -683,19 +684,19 @@ Uma sprint é considerada **pronta** quando:
 
 ---
 
-**Próxima atualização:** Ao concluir o Sprint F3.6
-**Gerado:** 2026-08-16 (FASE 03 — Admin Frontend planejada)
+**Próxima atualização:** Ao concluir o Sprint F2.2
+**Gerado:** 2026-08-16 (F3.6 concluído — retomada F2.2 liberada)
 **Repositório:** D:\PROJETO-LUCRAONE
 
 ---
 
 ## 📍 Onde Estamos
 
-✅ **FASE 01 — FOUNDATION:** 189 testes, 7/7 sprints, segurança OWASP validada
+✅ **FASE 01 — FOUNDATION:** 227 testes, 8/8 sprints, segurança OWASP validada
 ✅ **F2.1 — Products:** 17 testes, API de produtos/categorias/preços funcionando
-🟡 **FASE 03 — ADMIN FRONTEND:** 5/6 sprints concluídos; próximo F3.6
+✅ **FASE 03 — ADMIN FRONTEND:** 6/6 sprints concluídos; 60 testes
 
-**Lacuna que a FASE 03 resolve:** o sistema não tem tela de login nem painel
-administrativo. Toda operação hoje depende de `tinker` + Postman.
+**Lacuna resolvida pela FASE 03:** login web, painel administrativo, tenants,
+usuários, empresas e permissões já são operáveis pela interface.
 
-**Status:** Ready for F3.1 — Frontend Setup & Layout
+**Status:** Ready for F2.2 — Inventory Management

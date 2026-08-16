@@ -1,11 +1,11 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (F3.5 concluído — user management)
-**Fase Atual:** FASE 03 — ADMIN FRONTEND (5/6 sprints)
-**Próxima Sprint:** F3.6 — Company & Roles Management
-**Fase Pausada:** FASE 02 — FEATURES (F2.1 concluído, F2.2 aguardando frontend)
-**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 17% (1/6) | FASE 03 🟡 83% (5/6)
-**Testes:** 294 passing, 0 failing
+**Atualizado em:** 2026-08-16 (F3.6 concluído — company & roles management)
+**Fase Atual:** FASE 02 — FEATURES (retomada em F2.2)
+**Próxima Sprint:** F2.2 — Inventory Management
+**Fase Concluída:** FASE 03 — ADMIN FRONTEND (6/6 sprints)
+**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 17% (1/6) | FASE 03 ✅ 100% (6/6)
+**Testes:** 304 passing, 0 failing
 
 > 🔓 **O sistema já é operável por um humano.** Desde o F3.2 existe login web
 > em `/login`. Uma pessoa com vínculo em vários estabelecimentos escolhe onde
@@ -31,23 +31,20 @@
 
 | Item | Status |
 |------|--------|
-| **Fase Atual** | FASE 03 — ADMIN FRONTEND (5/6 sprints) |
-| **Próxima Sprint** | F3.6 — Company & Roles Management |
-| **Fase Concluída** | FASE 01 — FOUNDATION (7/7) |
-| **Fase Pausada** | FASE 02 — FEATURES (1/6, retoma após F3.6) |
-| **Testes Totais** | 294 passing, 0 failing |
-| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 17 · FASE 03: 50 |
+| **Fase Atual** | FASE 02 — FEATURES (retomada em F2.2) |
+| **Próxima Sprint** | F2.2 — Inventory Management |
+| **Fases Concluídas** | FASE 01 — FOUNDATION (8/8) · FASE 03 — ADMIN FRONTEND (6/6) |
+| **Testes Totais** | 304 passing, 0 failing |
+| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 17 · FASE 03: 60 |
 
 ### Ordem de Execução Atualizada
 
 ```
-FASE 01 — FOUNDATION      ✅ COMPLETO   (7 sprints, 189 testes)
+FASE 01 — FOUNDATION      ✅ COMPLETO   (8 sprints, 227 testes)
         ↓
-FASE 02 — FEATURES        🟡 PAUSADO    (F2.1 ✅ | F2.2-F2.6 aguardando)
+FASE 03 — ADMIN FRONTEND  ✅ COMPLETO   (F3.1-F3.6, 60 testes)
         ↓
-FASE 03 — ADMIN FRONTEND  🟡 ATIVO      (F3.1-F3.6, ~59 testes)  ← VOCÊ ESTÁ AQUI
-        ↓
-FASE 02 (retomada)        📋 F2.2 — Inventory Management
+FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.2 é o próximo)
 ```
 
 ### FASE 01 Sprints Status
@@ -83,15 +80,15 @@ FASE 02 (retomada)        📋 F2.2 — Inventory Management
 | **F3.3** | Admin Dashboard | ✅ DONE | 15/15 | 6/6 | Painel com menu lateral e widgets reais |
 | **F3.4** | Tenant Management | ✅ DONE | 25/25 | 12/12 | **Cadastrar novo estabelecimento (tenant)** |
 | **F3.5** | User Management | ✅ DONE | 25/25 | 12/12 | **Cadastrar usuários (admin, operador)** |
-| **F3.6** | Company & Roles Management | 📋 TODO | 0/20 | 0/10 | Empresas, endereços e permissões |
+| **F3.6** | Company & Roles Management | ✅ DONE | 20/20 | 10/10 | Empresas, endereços e permissões |
 
-**Total FASE 03:** 120 itens, ~59 testes
+**Total FASE 03:** 120 itens, 60 testes
 
 ---
 
 ## 🎯 FASE 03 — ADMIN FRONTEND
 
-**Status:** 🟡 EM ANDAMENTO (5/6 sprints) — **FASE ATIVA**
+**Status:** ✅ CONCLUÍDA (6/6 sprints)
 
 **Stack:** Laravel Blade + Tailwind CSS + Alpine.js
 
@@ -101,13 +98,13 @@ Sem isso, o sistema só é operável via cURL/Postman.
 
 **Roadmap detalhado:** [ROADMAP_FASE_03_ADMIN_FRONTEND.md](ROADMAP_FASE_03_ADMIN_FRONTEND.md)
 
-**Progresso:** 5/6 sprints, 50/~59 testes
+**Progresso:** 6/6 sprints, 60/60 testes
 
 ### Sprints
 
 #### Sprint F3.1 — Frontend Setup & Layout
 
-**Status:** 📋 TODO
+**Status:** ✅ DONE
 **Objetivo:** Instalar Tailwind, criar layout base e componentes Blade reutilizáveis
 **Como testar:** acessar `http://localhost:8000` e ver a página com estilo Tailwind aplicado
 
@@ -267,39 +264,42 @@ no tenant atual (`tenant_user.status`) e os papéis em `user_role.tenant_id`.
 
 **Checklist:**
 
-- [ ] Listagem de empresas (`/companies`)
-- [ ] Criar empresa (nome, CNPJ, tenant)
-- [ ] Editar empresa
-- [ ] Deletar empresa
-- [ ] Listar endereços da empresa
-- [ ] Criar/editar endereço
-- [ ] Listagem de roles (`/roles`)
-- [ ] Listagem de permissions (`/permissions`)
-- [ ] Visualizar permissions de cada role
-- [ ] Atribuir permissions a role (modal)
-- [ ] Listar usuários por role
-- [ ] Componente CompanyTable / CompanyForm
-- [ ] Componente RoleTable / PermissionTable
-- [ ] Componente PermissionAssigner
-- [ ] 10 testes de company e roles
+- [x] Listagem de empresas (`/companies`)
+- [x] Criar empresa (nome, CNPJ, tenant)
+- [x] Editar empresa
+- [x] Deletar empresa
+- [x] Listar endereços da empresa
+- [x] Criar/editar endereço
+- [x] Listagem de roles (`/roles`)
+- [x] Listagem de permissions (`/permissions`)
+- [x] Visualizar permissions de cada role
+- [x] Atribuir permissions a role (modal)
+- [x] Listar usuários por role
+- [x] Componente CompanyTable / CompanyForm
+- [x] Componente RoleTable / PermissionTable
+- [x] Componente PermissionAssigner
+- [x] 10 testes de company e roles
+
+**Nota:** empresas são desativadas com `status = INACTIVE` em vez de apagadas,
+preservando histórico conforme a política de entidades principais da fundação.
 
 ---
 
 ### ✅ Critério de Conclusão da FASE 03
 
-- [ ] Usuário faz login pela interface web
-- [ ] Dashboard carrega com dados reais
-- [ ] Novo tenant criado pela interface
-- [ ] Novos usuários criados pela interface
-- [ ] Permissões (RBAC) respeitadas nas telas
-- [ ] Layout responsivo em mobile
-- [ ] ~53 testes passando
+- [x] Usuário faz login pela interface web
+- [x] Dashboard carrega com dados reais
+- [x] Novo tenant criado pela interface
+- [x] Novos usuários criados pela interface
+- [x] Permissões (RBAC) respeitadas nas telas
+- [x] Layout responsivo em mobile
+- [x] 60 testes de FASE 03 passando
 
 ---
 
 ## 🎯 FASE 02 — FEATURES
 
-**Status:** ⏸️ PAUSADO (1/6 sprints) — retoma em F2.2 após conclusão da FASE 03
+**Status:** 🟡 ATIVO (1/6 sprints) — retomada em F2.2 após conclusão da FASE 03
 
 **Objetivo:** Implementar módulos de negócio para gerenciar produtos, inventário, pedidos, pagamentos, relatórios e integrações.
 

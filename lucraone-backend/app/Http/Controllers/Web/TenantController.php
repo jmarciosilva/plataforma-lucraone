@@ -232,6 +232,7 @@ class TenantController extends Controller
         $permissions = collect([
             'create-role', 'update-role', 'delete-role', 'view-roles',
             'create-permission', 'update-permission', 'delete-permission', 'view-permissions',
+            'manage-companies', 'view-companies',
             'manage-users', 'view-users',
             'manage-branches', 'view-branches', 'view-all-branches',
         ])->mapWithKeys(function (string $name) use ($tenant) {

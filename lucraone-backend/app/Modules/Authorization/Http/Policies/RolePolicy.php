@@ -9,12 +9,13 @@ class RolePolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasAnyPermission(['view-roles', 'update-role', 'create-role']);
     }
 
     public function view(User $user, Role $role): bool
     {
-        return $user->canAccessTenant($role->tenant_id);
+        return $user->canAccessTenant($role->tenant_id)
+            && $user->hasAnyPermission(['view-roles', 'update-role', 'create-role']);
     }
 
     public function create(User $user): bool

@@ -2,7 +2,7 @@
 
 **Objetivo:** Criar interface web administrativa com Blade + Tailwind para gerenciar tenants, usuários, empresas e permissões.
 
-**Status:** 🟡 EM ANDAMENTO (5/6 sprints — F3.1 ✅ F3.2 ✅ F3.3 ✅ F3.4 ✅ F3.5 ✅)
+**Status:** ✅ CONCLUÍDA (6/6 sprints — F3.1 ✅ F3.2 ✅ F3.3 ✅ F3.4 ✅ F3.5 ✅ F3.6 ✅)
 **Duração Estimada:** ~6-8 semanas
 **Stack:** Laravel Blade + Tailwind CSS + Alpine.js
 **Dependência:** FASE 01 ✅ (inclui F1.8 — modelo de identidade) · F2.1 ✅
@@ -44,13 +44,13 @@ A FASE 03 fecha essa lacuna antes de acumular mais módulos de negócio.
 | **F3.3** | Admin Dashboard | ✅ DONE | 15/15 | 6/6 | Painel com menu e widgets |
 | **F3.4** | Tenant Management | ✅ DONE | 25/25 | 12/12 | **Criar estabelecimento pela tela** |
 | **F3.5** | User Management | ✅ DONE | 25/25 | 12/12 | **Criar usuário e logar com ele** |
-| **F3.6** | Company & Roles | 📋 TODO | 0/20 | 0/10 | Empresas + permissões pela tela |
+| **F3.6** | Company & Roles | ✅ DONE | 20/20 | 10/10 | Empresas + permissões pela tela |
 
-**Total:** 122 itens · ~59 testes · **Progresso: 102/122 itens, 50/59 testes**
+**Total:** 122 itens · 60 testes · **Progresso: 122/122 itens, 60/60 testes**
 
 **Legenda:** 📋 TODO · 🟡 EM ANDAMENTO · ✅ DONE · ⏸️ PAUSADO
 
-**Suíte completa do projeto:** 294 testes passando, 0 falhando
+**Suíte completa do projeto:** 304 testes passando, 0 falhando
 
 ---
 
@@ -341,38 +341,44 @@ vínculo atual é desativado para não derrubar acessos legítimos em outros ten
 
 ---
 
-## 🎯 Sprint F3.6 — Company & Roles Management
+## ✅ Sprint F3.6 — Company & Roles Management
+
+**Concluído em:** 2026-08-16 · **Testes:** 10/10
 
 ### Checklist (20 itens)
 
 **Company Management:**
-- [ ] Lista de empresas (`/companies`)
-- [ ] Criar empresa
-- [ ] Editar empresa
-- [ ] Deletar empresa
-- [ ] Listar endereços da empresa
-- [ ] Criar endereço
+- [x] Lista de empresas (`/companies`)
+- [x] Criar empresa
+- [x] Editar empresa
+- [x] Deletar empresa
+- [x] Listar endereços da empresa
+- [x] Criar endereço
 
 **Roles & Permissions Management:**
-- [ ] Lista de roles (`/roles`)
-- [ ] Lista de permissions (`/permissions`)
-- [ ] Visualizar permissions de cada role
-- [ ] Assign permissions a role (modal)
-- [ ] Visualizar usuários com determinado role
+- [x] Lista de roles (`/roles`)
+- [x] Lista de permissions (`/permissions`)
+- [x] Visualizar permissions de cada role
+- [x] Assign permissions a role (modal)
+- [x] Visualizar usuários com determinado role
 
 **Componentes:**
-- [ ] CompanyTable
-- [ ] CompanyForm
-- [ ] RoleTable
-- [ ] PermissionTable
-- [ ] PermissionAssigner (modal)
+- [x] CompanyTable
+- [x] CompanyForm
+- [x] RoleTable
+- [x] PermissionTable
+- [x] PermissionAssigner (modal)
 
 **Testes:**
-- [ ] CRUD de companies funciona
-- [ ] Endereços ligados a empresas
-- [ ] Roles e permissions listam corretamente
-- [ ] Assign permission a role salva
-- [ ] Filtros de roles/permissions funcionam
+- [x] CRUD de companies funciona
+- [x] Endereços ligados a empresas
+- [x] Roles e permissions listam corretamente
+- [x] Assign permission a role salva
+- [x] Filtros de roles/permissions funcionam
+
+**Nota de implementação:** a ação de "deletar empresa" desativa o cadastro
+(`status = INACTIVE`) em vez de apagar a linha. Isso segue a política da
+fundação de preservar entidades principais para histórico e auditoria.
 
 ---
 
@@ -408,8 +414,9 @@ lucraone-backend/
 │       ├── dashboard/index.blade.php ................. ✅ dados reais no F3.3
 │       ├── tenants/ .................................. ✅ F3.4
 │       ├── users/ .................................... ✅ F3.5
-│       ├── companies/ ................................ ⬜ F3.6
-│       └── roles/ .................................... ⬜ F3.6
+│       ├── companies/ ................................ ✅ F3.6
+│       ├── permissions/ .............................. ✅ F3.6
+│       └── roles/ .................................... ✅ F3.6
 ├── app/Http/
 │   ├── Middleware/
 │   │   ├── AutenticarWeb.php ......................... ✅ alias auth.web
@@ -419,14 +426,18 @@ lucraone-backend/
 │   │   ├── DashboardController.php ................... ✅ F3.3
 │   │   ├── TenantController.php ...................... ✅ F3.4
 │   │   ├── UserController.php ........................ ✅ F3.5
-│   │   ├── CompanyController.php ..................... ⬜ F3.6
-│   │   └── RoleController.php ........................ ⬜ F3.6
+│   │   ├── CompanyController.php ..................... ✅ F3.6
+│   │   ├── PermissionController.php .................. ✅ F3.6
+│   │   └── RoleController.php ........................ ✅ F3.6
 │   └── Requests/
 │       ├── Auth/LoginRequest.php ..................... ⬜ F3.2
 │       ├── StoreTenantRequest.php .................... ✅ F3.4
 │       ├── StoreUserRequest.php ...................... ✅ F3.5
 │       ├── UpdateUserRequest.php ..................... ✅ F3.5
-│       └── StoreCompanyRequest.php ................... ⬜ F3.6
+│       ├── StoreAddressRequest.php ................... ✅ F3.6
+│       ├── StoreCompanyRequest.php ................... ✅ F3.6
+│       ├── SyncRolePermissionsRequest.php ............ ✅ F3.6
+│       └── UpdateCompanyRequest.php .................. ✅ F3.6
 ├── routes/web.php .................................... ✅
 ├── vite.config.js .................................... ✅ fontes via bunny()
 └── tests/Feature/Admin/LayoutTest.php ................ ✅ 6 testes
@@ -545,4 +556,4 @@ validações exige Postman ou tinker.
 
 ---
 
-**Sprint atual: F3.6 — Company & Roles Management** 🚀
+**Próximo sprint: F2.2 — Inventory Management** 🚀

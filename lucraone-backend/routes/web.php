@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\Web\Auth\LoginController;
+use App\Http\Controllers\Web\CompanyController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\EstabelecimentoController;
+use App\Http\Controllers\Web\PermissionController;
+use App\Http\Controllers\Web\RoleController;
 use App\Http\Controllers\Web\TenantController;
 use App\Http\Controllers\Web\UserController;
 use Illuminate\Support\Facades\Route;
@@ -53,4 +56,18 @@ Route::middleware('auth.web')->group(function () {
     Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])
         ->name('users.reset-password');
     Route::resource('users', UserController::class);
+
+    Route::post('/companies/{company}/addresses', [CompanyController::class, 'storeAddress'])
+        ->name('companies.addresses.store');
+    Route::put('/companies/{company}/addresses/{address}', [CompanyController::class, 'updateAddress'])
+        ->name('companies.addresses.update');
+    Route::post('/companies/{company}/restore', [CompanyController::class, 'restore'])
+        ->name('companies.restore');
+    Route::resource('companies', CompanyController::class);
+
+    Route::post('/roles/{role}/permissions', [RoleController::class, 'syncPermissions'])
+        ->name('roles.permissions.sync');
+    Route::resource('roles', RoleController::class)->only(['index', 'show']);
+
+    Route::get('/permissions', PermissionController::class)->name('permissions.index');
 });
