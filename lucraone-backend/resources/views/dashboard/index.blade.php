@@ -6,9 +6,51 @@
 
     <x-slot:acoes>
         <x-button variante="secundario" href="{{ route('dashboard') }}">atualizar</x-button>
+        @if ($comercial)
+            <x-button variante="secundario" href="{{ route('reports.index') }}">relatórios</x-button>
+        @endif
     </x-slot:acoes>
 
-    <x-section-label>o painel até agora</x-section-label>
+    @if ($comercial)
+        <x-section-label>o negócio nos últimos 30 dias</x-section-label>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <x-kpi
+                rotulo="faturamento"
+                :valor="number_format($comercial['faturamento']['valor'], 2, ',', '.')"
+                :variacao="$comercial['faturamento']['variacao']"
+                comparativo="vs. 30 dias anteriores"
+                nota="pedidos enviados e concluídos"
+            />
+            <x-kpi
+                rotulo="pedidos"
+                :valor="$comercial['pedidos']['valor']"
+                :variacao="$comercial['pedidos']['variacao']"
+                comparativo="vs. 30 dias anteriores"
+                nota="pedidos faturados"
+            />
+            <x-kpi
+                rotulo="ticket médio"
+                :valor="number_format($comercial['ticket_medio']['valor'], 2, ',', '.')"
+                :variacao="$comercial['ticket_medio']['variacao']"
+                comparativo="vs. 30 dias anteriores"
+                nota="faturamento por pedido"
+            />
+            <x-kpi
+                rotulo="estoque a custo"
+                :valor="number_format($comercial['estoque']['valor_custo'], 2, ',', '.')"
+                nota="{{ $comercial['estoque']['baixo'] }} item(ns) em baixo estoque"
+            />
+        </div>
+
+        <div class="mt-3">
+            <a href="{{ route('reports.index') }}" class="text-sm font-semibold lowercase text-sol transition-opacity hover:opacity-70">
+                abrir relatórios completos →
+            </a>
+        </div>
+    @endif
+
+    <x-section-label class="{{ $comercial ? 'mt-8' : '' }}">o painel até agora</x-section-label>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <x-kpi rotulo="tenants" :valor="$metricas['tenants']" nota="estabelecimentos acessíveis" />

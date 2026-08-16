@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\InventoryWebController;
 use App\Http\Controllers\Web\OrderWebController;
 use App\Http\Controllers\Web\PermissionController;
 use App\Http\Controllers\Web\ProductWebController;
+use App\Http\Controllers\Web\ReportWebController;
 use App\Http\Controllers\Web\RoleController;
 use App\Http\Controllers\Web\TenantController;
 use App\Http\Controllers\Web\UserController;
@@ -113,4 +114,12 @@ Route::middleware('auth.web')->group(function () {
         ->name('sales.customers.restore');
     Route::resource('customers', CustomerWebController::class)
         ->names('sales.customers');
+
+    Route::get('/reports', [ReportWebController::class, 'index'])->name('reports.index');
+    Route::get('/reports/sales', [ReportWebController::class, 'sales'])->name('reports.sales');
+    Route::get('/reports/inventory', [ReportWebController::class, 'inventory'])->name('reports.inventory');
+    Route::get('/reports/customers', [ReportWebController::class, 'customers'])->name('reports.customers');
+    Route::get('/reports/{tipo}/export', [ReportWebController::class, 'export'])
+        ->whereIn('tipo', ['sales', 'inventory', 'customers'])
+        ->name('reports.export');
 });

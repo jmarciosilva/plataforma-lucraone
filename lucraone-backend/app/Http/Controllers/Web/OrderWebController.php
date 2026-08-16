@@ -220,7 +220,7 @@ class OrderWebController extends Controller
             'abertos' => $orders->whereNotIn('status', [Order::STATUS_COMPLETED, Order::STATUS_CANCELLED])->count(),
             'confirmados' => $orders->where('status', Order::STATUS_CONFIRMED)->count(),
             'faturado' => number_format(
-                $orders->whereIn('status', [Order::STATUS_SHIPPED, Order::STATUS_COMPLETED])->sum(fn (Order $order) => (float) $order->total),
+                Order::query()->revenue()->sum('total'),
                 2,
                 ',',
                 '.'

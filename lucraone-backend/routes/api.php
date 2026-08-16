@@ -20,3 +20,6 @@ require __DIR__ . '/../app/Modules/Inventory/Routes/api.php';
 
 // Sales Module Routes
 require __DIR__ . '/../app/Modules/Sales/Routes/api.php';
+
+// Reporting Module Routes
+require __DIR__ . '/../app/Modules/Reporting/Routes/api.php';

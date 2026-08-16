@@ -101,9 +101,47 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
+    /*
+    | Os escopos qualificam a coluna com a tabela porque relatórios fazem join
+    | com customers, que também tem uma coluna status.
+    */
+
     public function scopeOpen($query)
     {
-        return $query->whereNotIn('status', [self::STATUS_COMPLETED, self::STATUS_CANCELLED]);
+        return $query->whereNotIn(
+            $query->qualifyColumn('status'),
+            [self::STATUS_COMPLETED, self::STATUS_CANCELLED]
+        );
+    }
+
+    /**
+     * Pedidos que contam como faturamento.
+     *
+     * São os que já saíram do estoque: enviados e concluídos. Definir isso em um
+     * lugar só evita que a tela de vendas e os relatórios discordem sobre quanto
+     * o estabelecimento vendeu.
+     */
+    public function scopeRevenue($query)
+    {
+        return $query->whereIn(
+            $query->qualifyColumn('status'),
+            [self::STATUS_SHIPPED, self::STATUS_COMPLETED]
+        );
+    }
+
+    /**
+     * Carteira em aberto: pedidos que ainda não viraram faturamento e não foram
+     * cancelados.
+     *
+     * Não é o complemento de `open()` — aquele ainda inclui enviado, que já é
+     * receita e seria contado duas vezes.
+     */
+    public function scopeBacklog($query)
+    {
+        return $query->whereIn(
+            $query->qualifyColumn('status'),
+            [self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_CONFIRMED]
+        );
     }
 
     /**

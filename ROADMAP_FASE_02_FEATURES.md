@@ -3,7 +3,7 @@
 
 **Projeto:** Plataforma SaaS Inteligente de Automação Comercial  
 **Fase:** 02 — FEATURES  
-**Status:** 🟡 ATIVO — F2.3 Sales & Orders concluída, F2.4 é o próximo
+**Status:** 🟡 ATIVO — F2.4 Reporting & Analytics concluída, F2.5 é o próximo
 **Prioridade:** Alta  
 **Dependência:** FASE 01 ✅ Concluída · FASE 03 ✅ Concluída
 **Estimativa:** 6 sprints (~12-16 semanas)  
@@ -33,8 +33,8 @@
 | F2.1b — Products Web UI | ✅ DONE | ✅ DONE | 8 web |
 | F2.2 — Inventory Management | ✅ DONE | ✅ DONE | 11 API/web |
 | F2.3 — Sales & Orders | ✅ DONE | ✅ DONE | 26 API/web |
-| F2.4 — Reporting & Analytics | 📋 TODO | 📋 TODO | — |
-| F2.5 — Advanced Automation | ⏸️ Aguarda F2.4 | ⏸️ Aguarda F2.4 | — |
+| F2.4 — Reporting & Analytics | ✅ DONE | ✅ DONE | 28 API/web |
+| F2.5 — Advanced Automation | 📋 TODO | 📋 TODO | — |
 | F2.6 — Integration APIs | ⏸️ Aguarda F2.5 | ⏸️ Aguarda F2.5 | — |
 
 > **Nota sobre numeração:** esta tabela listava anteriormente "F2.4 Payments /
@@ -169,13 +169,13 @@ app/Modules/
 │   ├── Infrastructure/
 │   └── Http/
 │
-├── Payments/             # 🟡 F2.4 — Futuro
+├── Payments/             # ⏸️ Sem sprint na FASE 02 — ver nota da F2.3
 │   ├── Domain/
 │   ├── Application/
 │   ├── Infrastructure/
 │   └── Http/
 │
-├── Reporting/            # 🟡 F2.5 — Futuro
+├── Reporting/            # ✅ F2.4 — API + Web UI
 │   ├── Domain/
 │   ├── Application/
 │   ├── Infrastructure/
@@ -492,55 +492,95 @@ conferir reserva/baixa na tela de `estoque`.
 
 ## Sprint F2.4 — Reporting & Analytics
 
-**Duração:** ~2 semanas  
+**Status:** ✅ DONE
+**Concluído em:** 2026-08-16
+**Testes:** 28 passing (`tests/Feature/Reporting` + `tests/Feature/Admin/ReportWebManagementTest.php`)
+**Duração:** ~2 semanas
 **Objetivo:** Gerar relatórios executivos e dashboards pela API e pelo painel web.
-**Como testar:** acessar relatórios no painel, filtrar período e conferir KPIs
-com dados reais do tenant.
+**Como testar:** acessar o menu `relatórios`, trocar intervalo e agrupamento,
+conferir os KPIs contra os menus `vendas`, `estoque` e `clientes`, e exportar CSV.
 
 ### Requisitos
 
 #### Modelos
-- [ ] Report (query definition, schedule, recipients)
-- [ ] Dashboard (widget definitions)
+- [ ] Report (query definition, schedule, recipients) — adiado, ver nota
+- [ ] Dashboard (widget definitions) — adiado, ver nota
 
 #### API Endpoints
-- [ ] GET /api/v1/reports/sales (daily/weekly/monthly)
-- [ ] GET /api/v1/reports/inventory (stock status)
-- [ ] GET /api/v1/reports/customers (top customers)
-- [ ] GET /api/v1/dashboard/summary (KPIs)
-- [ ] GET /api/v1/analytics/trends (sales trends)
+- [x] GET /api/v1/reports/sales (daily/weekly/monthly)
+- [x] GET /api/v1/reports/inventory (stock status)
+- [x] GET /api/v1/reports/customers (top customers)
+- [x] GET /api/v1/dashboard/summary (KPIs)
+- [x] GET /api/v1/analytics/trends (sales trends)
 
 #### Frontend Web
-- [ ] Menu `relatórios` no painel
-- [ ] Dashboard de KPIs comerciais
-- [ ] Filtros por período, empresa e filial
-- [ ] Relatório de vendas
-- [ ] Relatório de estoque
-- [ ] Relatório de clientes
-- [ ] Gráficos/tabelas responsivos
-- [ ] Exportação simples quando aplicável
-- [ ] Modal de ajuda contextual de relatórios
+- [x] Menu `relatórios` no painel
+- [x] Dashboard de KPIs comerciais (em `/reports` e faixa no `/dashboard`)
+- [x] Filtros por período e empresa, com atalhos de 7/30/90 dias
+- [ ] Filtro por filial — serviços aceitam, sem UI (filiais não têm tela)
+- [x] Relatório de vendas
+- [x] Relatório de estoque
+- [x] Relatório de clientes
+- [x] Gráficos/tabelas responsivos
+- [x] Exportação CSV dos três relatórios
+- [x] Modal de ajuda contextual de relatórios
 
 #### Features
-- [ ] Real-time KPI dashboard
-- [ ] Sales by period (day/week/month/year)
-- [ ] Inventory value analysis
-- [ ] Top selling products
-- [ ] Customer segmentation
-- [ ] Revenue forecasting (basic)
-- [ ] Scheduled report generation (emails)
+- [x] Real-time KPI dashboard (calculado sob demanda, sem cache)
+- [x] Sales by period (day/week/month/year)
+- [x] Inventory value analysis (valor a custo, a venda e margem potencial)
+- [x] Top selling products
+- [x] Customer segmentation (vip / recorrente / novo / sem compra)
+- [x] Revenue forecasting (basic) — regressão linear, rotulada como estimativa
+- [ ] Scheduled report generation (emails) — adiado para F2.5, ver nota
 
-#### Testes (15+)
-- [ ] Report accuracy
-- [ ] Aggregation performance
-- [ ] Date filtering
-- [ ] Tenant isolation in reports
-- [ ] Web: relatórios renderizam KPIs reais
-- [ ] Web: filtros alteram resultado
+#### Testes (28)
+- [x] Report accuracy (faturamento conta só enviado e concluído)
+- [x] Carteira em aberto não soma pedido já faturado
+- [x] Date filtering
+- [x] Agrupamento por dia, semana e mês
+- [x] Baldes vazios preenchidos com zero
+- [x] Top produtos ordenados por receita
+- [x] Valor de estoque a custo e a venda
+- [x] Alerta de baixo estoque
+- [x] Segmentação de clientes
+- [x] Comparação com período anterior
+- [x] Variação nula sem base anterior
+- [x] Projeção de tendência e piso em zero
+- [x] Tenant isolation in reports
+- [x] Granularidade inválida recusada
+- [x] Endpoints exigem autenticação e permissão
+- [x] Web: relatórios renderizam KPIs reais
+- [x] Web: filtros alteram resultado
+- [x] Web: exportação CSV de vendas e estoque
+- [x] Web: dashboard mostra faixa comercial
+- [x] Web: usuário sem permissão recebe 403
+- [x] Browser: fluxo manual validado
+- [ ] Aggregation performance — não medida; ver nota
 
 #### Documentação
-- [ ] Reporting Architecture
-- [ ] Analytics Guide
+- [x] Reporting Architecture (`lucraone-backend/docs/architecture/REPORTING.md`)
+- [x] Analytics Guide — coberto pelo mesmo documento e pelo modal de ajuda
+
+**Notas de escopo:**
+
+- **Relatórios fixos em vez de motor genérico.** Os modelos `Report`/`Dashboard`
+  do roadmap descrevem um construtor de relatórios: query definida pelo usuário e
+  guardada no banco. Os cinco endpoints pedidos são todos determinados, e
+  executar query definida por usuário exigiria interpretador próprio e whitelist
+  de colunas — sprint inteira gasta numa demanda que ainda não existe. Decisão e
+  caminho de evolução registrados em `docs/architecture/REPORTING.md`.
+- **Envio agendado por e-mail adiado para F2.5.** Exigiria criar Mailable, Job e
+  scheduler do zero — o projeto não tem nenhum, e `MAIL_MAILER=log`. A F2.5 já
+  prevê "scheduled tasks (cron)" e "actions: send email"; montar a infraestrutura
+  lá evita construir duas vezes.
+- **Performance de agregação não foi medida.** As consultas agregam no banco
+  (`GROUP BY`), exceto o valor de estoque, que soma em PHP porque cruza preço de
+  custo e de venda por produto. Com o volume atual não há baseline que valha; a
+  medição pertence a um teste de carga, não a esta sprint.
+- **Fuso do estabelecimento aplicado no agrupamento.** Sem isso, venda às 22h em
+  Brasília cairia no dia seguinte. Offset fixo — regiões com horário de verão
+  terão erro de uma hora nas viradas.
 
 ---
 
@@ -735,7 +775,7 @@ F2.2 — Inventory (depende de produtos cadastráveis pela tela) ✓
   ↓
 F2.3 — Sales (depende de produtos + inventory) ✓
   ↓
-F2.4 — Reporting (depende de sales)
+F2.4 — Reporting (depende de sales) ✓
   ↓
 F2.5 — Automation (independente)
   ↓
@@ -826,5 +866,5 @@ Antes de começar F2.2, implementar F2.1b para que produtos estejam operáveis n
 
 **Autor:** Claude Code  
 **Data de Criação:** 2026-08-16  
-**Status:** F2.3 Sales & Orders concluída · F2.4 Reporting & Analytics é o próximo passo
-**Próxima Atualização:** Quando F2.4 iniciar
+**Status:** F2.4 Reporting & Analytics concluída · F2.5 Advanced Automation é o próximo passo
+**Próxima Atualização:** Quando F2.5 iniciar

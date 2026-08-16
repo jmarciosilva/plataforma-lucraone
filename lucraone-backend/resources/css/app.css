@@ -22,6 +22,15 @@
     --color-linha: #eee9e4;
     --color-nevoa: #faf8f6;
 
+    /*
+    | Marca de gráfico — passo mais escuro do matiz do sol.
+    |
+    | O sol (#ff7a00) rende 2,55:1 contra o fundo branco: baixo demais para
+    | preencher barra. Este passo mantém o matiz da marca e alcança 3:1, com
+    | separação de 12,3 ΔE do aço sob protanopia. Botão e menu seguem no sol.
+    */
+    --color-grafico: #d06400;
+
     /* Tipografia */
     --font-sans: 'Karla', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
     --font-letreiro: 'Archivo', ui-sans-serif, system-ui, sans-serif;

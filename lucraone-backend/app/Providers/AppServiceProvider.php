@@ -55,5 +55,12 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(StockLevel::class, StockLevelPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(Customer::class, CustomerPolicy::class);
+
+        // Relatórios são leitura agregada, sem modelo próprio — daí um Gate
+        // nomeado em vez de uma Policy.
+        Gate::define(
+            'view-reports',
+            fn (User $user) => $user->hasAnyPermission(['view-reports', 'manage-sales', 'create-role'])
+        );
     }
 }

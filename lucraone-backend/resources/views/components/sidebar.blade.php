@@ -117,6 +117,15 @@
                 <circle cx="12" cy="7" r="4" />
             </svg>
         </x-nav-item>
+
+        <x-nav-item rota="reports.index" rotulo="relatórios">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                <path d="M3 3v18h18" />
+                <path d="M7 15v-4" />
+                <path d="M12 15V7" />
+                <path d="M17 15v-6" />
+            </svg>
+        </x-nav-item>
     </nav>
 
     {{-- Rodapé: usuário e saída --}}

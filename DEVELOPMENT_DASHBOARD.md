@@ -1,9 +1,9 @@
 # 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-16 (F2.3 — sales & orders)
-**Fase Ativa:** FASE 02 — FEATURES 🟡 (F2.4 é o próximo)
+**Atualizado:** 2026-08-16 (F2.4 — reporting & analytics)
+**Fase Ativa:** FASE 02 — FEATURES 🟡 (F2.5 é o próximo)
 **Fase Concluída:** FASE 03 — ADMIN FRONTEND ✅ (6/6 sprints)
-**Testes:** 349 passing
+**Testes:** 377 passing
 
 ---
 
@@ -16,8 +16,8 @@
 │  ████████████████████████████████████████████████  100%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 02 — FEATURES              🟡 ATIVO  ← AQUI            │
-│  Products + Inventory + Sales (F2.1 → F2.3)                  │
-│  ████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   50%      │
+│  Products + Inventory + Sales + Reporting (F2.1 → F2.4)      │
+│  ██████████████████████████░░░░░░░░░░░░░░░░░░░░░░   67%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 03 — ADMIN FRONTEND        ✅ COMPLETO                 │
 │  6/6 sprints · 60 testes                                     │
@@ -278,14 +278,38 @@ Conclusão:
   ✅ RBAC com manage-sales/view-sales e manage-customers/view-customers
 ```
 
-### 🟡 Sprints F2.4 a F2.6 (PRÓXIMAS)
+### ✅ Sprint F2.4 — Reporting & Analytics (DONE)
 
 ```
-F2.4 — Reporting & Analytics    📋  0/20 itens  ← próximo
-F2.5 — Advanced Automation      ⏸️  0/20 itens
+Status:     ✅ DONE (90%)
+Progresso:  relatórios operáveis por API e painel
+Tests:      28/28 passing ✅
+
+Conclusão:
+  ✅ Módulo Reporting sem tabelas novas — agrega o dado existente
+  ✅ ReportPeriod com fuso do estabelecimento
+  ✅ DateBucket compatível com MySQL e SQLite (dia/semana/mês/ano)
+  ✅ API de vendas, estoque, clientes, KPIs e tendências
+  ✅ Tela /reports com KPIs, gráfico e rankings
+  ✅ Exportação CSV dos três relatórios
+  ✅ Faixa de KPIs comerciais no /dashboard
+  ✅ Gráficos em HTML/CSS, sem dependência nova
+  ✅ Cor de gráfico com contraste validado (≥3:1)
+  ✅ Gate view-reports na web e na API
+
+Adiado:
+  ⏸️ Envio agendado por e-mail → F2.5 (precisa de Mail/Job/scheduler)
+  ⏸️ Modelos Report/Dashboard genéricos → sem demanda real
+```
+
+### 🟡 Sprints F2.5 a F2.6 (PRÓXIMAS)
+
+```
+F2.5 — Advanced Automation      📋  0/20 itens  ← próximo
 F2.6 — Integration APIs         ⏸️  0/20 itens
 
-Vendas já alimentam dados reais para os relatórios da F2.4.
+A F2.5 traz a infraestrutura de fila/e-mail que o envio agendado
+de relatório está esperando.
 ```
 
 ---
@@ -434,6 +458,7 @@ Modular Monolith:
   ✅ Products (F2.1)
   ✅ Inventory (F2.2)
   ✅ Sales (F2.3)
+  ✅ Reporting (F2.4)
 
 Padrão DDD:
   ✅ Domain/
@@ -479,11 +504,12 @@ Breakdown FASE 01 (189):
   F1.6 (Audit):           ✅ 15 passing
   F1.7 (Hardening):       ✅ 87 passing
 
-Breakdown FASE 02 (87):
+Breakdown FASE 02 (115):
   F2.1 (Products API):    ✅ 42 passing
   F2.1b (Products Web):   ✅ 8 passing
   F2.2 (Inventory):       ✅ 11 passing
   F2.3 (Sales & Orders):  ✅ 26 passing
+  F2.4 (Reporting):       ✅ 28 passing
 
 Breakdown FASE 03 (60):
   F3.1 (Setup):           ✅ 6/6
@@ -569,15 +595,16 @@ Foundation Phase:       ✅ 100% (7/7 sprints) — 189 TESTS
 
 ## ⚙️ Próximas Ações (Roadmap)
 
-### 🔜 Imediato — Sprint F2.4 (Reporting & Analytics)
+### 🔜 Imediato — Sprint F2.5 (Advanced Automation)
 
-- [ ] Relatório de vendas por período
-- [ ] Relatório de estoque e valor em estoque
-- [ ] Relatório de clientes (top compradores)
-- [ ] Dashboard de KPIs comerciais com filtros
+- [ ] Regras "quando X então faça Y" por tenant
+- [ ] Gatilhos: produto criado, estoque baixo, pedido concluído
+- [ ] Ações: enviar e-mail, criar tarefa, atualizar preço
+- [ ] Infraestrutura de fila, Mailable e scheduler (herda o adiado da F2.4)
+- [ ] Histórico de execução com erros
 - [ ] Testes API e web da sprint
 
-### Depois — F2.4 → F2.5 Advanced Automation
+### Depois — F2.5 → F2.6 Integration APIs
 
 ### 🔧 Dívida técnica
 
@@ -598,7 +625,7 @@ Em aberto:
 
 - [x] F2.2 — Inventory Management
 - [x] F2.3 — Sales & Orders
-- [ ] F2.4 — Reporting & Analytics
+- [x] F2.4 — Reporting & Analytics
 - [ ] F2.5 — Advanced Automation
 - [ ] F2.6 — Integration APIs
 
@@ -728,8 +755,9 @@ Uma sprint é considerada **pronta** quando:
 - F2.1b (Products Web UI): 100% pronto ✅
 - F2.2 (Inventory): 100% pronto ✅
 - F2.3 (Sales & Orders): 100% pronto ✅
+- F2.4 (Reporting & Analytics): 100% pronto ✅
 - F3.1 → F3.6: 100% pronto ✅
-- F2.4 → F2.6: 🟡 próximos módulos de negócio
+- F2.5 → F2.6: 🟡 próximos módulos de negócio
 
 ---
 
@@ -744,8 +772,8 @@ Uma sprint é considerada **pronta** quando:
 
 ---
 
-**Próxima atualização:** Ao concluir o Sprint F2.4
-**Gerado:** 2026-08-16 (F2.3 concluído — F2.4 liberada)
+**Próxima atualização:** Ao concluir o Sprint F2.5
+**Gerado:** 2026-08-16 (F2.4 concluído — F2.5 liberada)
 **Repositório:** D:\PROJETO-LUCRAONE
 
 ---
@@ -756,9 +784,10 @@ Uma sprint é considerada **pronta** quando:
 ✅ **F2.1/F2.1b — Products:** API e painel web de produtos/categorias/preços funcionando
 ✅ **F2.2 — Inventory:** API e painel web de estoque funcionando
 ✅ **F2.3 — Sales & Orders:** pedidos, clientes e movimentação de estoque por status
+✅ **F2.4 — Reporting:** relatórios de vendas, estoque e clientes com gráficos e CSV
 ✅ **FASE 03 — ADMIN FRONTEND:** 6/6 sprints concluídos; 60 testes
 
 **Lacuna resolvida pela FASE 03:** login web, painel administrativo, tenants,
 usuários, empresas e permissões já são operáveis pela interface.
 
-**Status:** Ready for F2.4 — Reporting & Analytics
+**Status:** Ready for F2.5 — Advanced Automation

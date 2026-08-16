@@ -1,11 +1,11 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (F2.3 concluído — sales & orders)
-**Fase Atual:** FASE 02 — FEATURES (F2.4 é o próximo)
-**Próxima Sprint:** F2.4 — Reporting & Analytics
+**Atualizado em:** 2026-08-16 (F2.4 concluído — reporting & analytics)
+**Fase Atual:** FASE 02 — FEATURES (F2.5 é o próximo)
+**Próxima Sprint:** F2.5 — Advanced Automation
 **Fase Concluída:** FASE 03 — ADMIN FRONTEND (6/6 sprints)
-**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 4 entregas concluídas | FASE 03 ✅ 100% (6/6)
-**Testes:** 349 passing, 0 failing
+**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 5 entregas concluídas | FASE 03 ✅ 100% (6/6)
+**Testes:** 377 passing, 0 failing
 
 > 🔓 **O sistema já é operável por um humano.** Desde o F3.2 existe login web
 > em `/login`. Uma pessoa com vínculo em vários estabelecimentos escolhe onde
@@ -31,11 +31,11 @@
 
 | Item | Status |
 |------|--------|
-| **Fase Atual** | FASE 02 — FEATURES (F2.4 é o próximo) |
-| **Próxima Sprint** | F2.4 — Reporting & Analytics |
+| **Fase Atual** | FASE 02 — FEATURES (F2.5 é o próximo) |
+| **Próxima Sprint** | F2.5 — Advanced Automation |
 | **Fases Concluídas** | FASE 01 — FOUNDATION (8/8) · FASE 03 — ADMIN FRONTEND (6/6) |
-| **Testes Totais** | 349 passing, 0 failing |
-| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 62+ · FASE 03: 60 |
+| **Testes Totais** | 377 passing, 0 failing |
+| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 90+ · FASE 03: 60 |
 
 ### Ordem de Execução Atualizada
 
@@ -44,7 +44,7 @@ FASE 01 — FOUNDATION      ✅ COMPLETO   (8 sprints, 227 testes)
         ↓
 FASE 03 — ADMIN FRONTEND  ✅ COMPLETO   (F3.1-F3.6, 60 testes)
         ↓
-FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.1b ✅ | F2.2 ✅ | F2.3 ✅ | F2.4 é o próximo)
+FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.1b ✅ | F2.2 ✅ | F2.3 ✅ | F2.4 ✅ | F2.5 é o próximo)
 ```
 
 ### FASE 01 Sprints Status
@@ -68,8 +68,8 @@ FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.1b ✅ | F2.2 ✅ | F
 | **F2.1b** | Products Web UI | ✅ DONE | 20/20 (100%) | 8 web |
 | **F2.2** | Inventory Management | ✅ DONE | 20/20 (100%) | 11 API/web |
 | **F2.3** | Sales & Orders | ✅ DONE | 20/20 (100%) | 26 API/web |
-| **F2.4** | Reporting & Analytics | 📋 PRÓXIMO | 0/20 | - |
-| **F2.5** | Advanced Automation | ⏸️ AGUARDA F2.4 | 0/20 | - |
+| **F2.4** | Reporting & Analytics | ✅ DONE | 18/20 (90%) | 28 API/web |
+| **F2.5** | Advanced Automation | 📋 PRÓXIMO | 0/20 | - |
 | **F2.6** | Integration APIs | ⏸️ AGUARDA F2.5 | 0/20 | - |
 
 ### FASE 03 Sprints Status (ATIVO)
@@ -300,11 +300,11 @@ preservando histórico conforme a política de entidades principais da fundaçã
 
 ## 🎯 FASE 02 — FEATURES
 
-**Status:** 🟡 ATIVO — F2.4 é o próximo após F2.3
+**Status:** 🟡 ATIVO — F2.5 é o próximo após F2.4
 
 **Objetivo:** Implementar módulos de negócio para gerenciar produtos, inventário, pedidos, pagamentos, relatórios e integrações.
 
-**Progresso:** F2.1 API + F2.1b Web UI + F2.2 Inventory + F2.3 Sales concluídas
+**Progresso:** F2.1 API + F2.1b Web UI + F2.2 Inventory + F2.3 Sales + F2.4 Reporting concluídas
 
 ### Sprints
 
@@ -418,6 +418,41 @@ Rascunho e aguardando não tocam no estoque.
 
 **Como validar:** acessar `/orders`, criar pedido, adicionar item, avançar para
 aguardando → confirmado → enviado e conferir a posição em `/inventory`.
+
+---
+
+#### Sprint F2.4 — Reporting & Analytics
+
+**Status:** ✅ DONE
+**Objetivo:** Responder quanto se vendeu, quanto está parado no estoque e quem
+são os clientes que sustentam o faturamento
+
+**Checklist:**
+
+- [x] Módulo `Reporting` sem tabelas novas — agrega sobre orders/inventory/prices
+- [x] `ReportPeriod` com início, fim, granularidade e fuso do estabelecimento
+- [x] `DateBucket` com SQL de agrupamento compatível com MySQL e SQLite
+- [x] Serviços de vendas, estoque, clientes, KPIs e tendência
+- [x] API `/api/v1/reports/{sales,inventory,customers}`
+- [x] API `/api/v1/dashboard/summary` e `/api/v1/analytics/trends`
+- [x] Tela `/reports` com KPIs, gráfico de faturamento e rankings
+- [x] Telas de vendas, estoque e clientes com filtros de período e empresa
+- [x] Exportação CSV dos três relatórios
+- [x] Faixa de KPIs comerciais no `/dashboard`
+- [x] Componentes de gráfico `x-chart-colunas` e `x-chart-barras` (HTML/CSS)
+- [x] Token de cor `grafico` com contraste validado (≥3:1 sobre branco)
+- [x] Gate `view-reports` aplicado na web **e** na API
+- [x] Modal de ajuda contextual de relatórios
+- [x] `docs/architecture/REPORTING.md`
+- [x] 28 testes feature API/web passando
+
+**Definições que os números seguem:** faturamento = pedidos enviados e
+concluídos (`Order::scopeRevenue`); carteira em aberto = rascunho, aguardando e
+confirmado (`Order::scopeBacklog`). O recorte usa a data de criação do pedido,
+deslocada pelo fuso do estabelecimento.
+
+**Como validar:** acessar `/reports`, trocar intervalo e agrupamento, conferir os
+KPIs contra os menus `vendas`, `estoque` e `clientes`, e exportar CSV.
 
 ---
 
