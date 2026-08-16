@@ -1,9 +1,9 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (FASE 01 COMPLETE)  
-**Fase:** FASE 01 — FOUNDATION (✅ 100% COMPLETE)  
-**Próxima Fase:** FASE 02 — FEATURES (READY TO START)  
-**Progresso Geral:** 100% (7/7 sprints concluídas, 189 testes passando)
+**Atualizado em:** 2026-08-16 (FASE 02.F2.1 COMPLETE)  
+**Fase Atual:** FASE 02 — FEATURES (IN PROGRESS - 1/6 sprints completo)  
+**Próxima Sprint:** F2.2 — Inventory Management (READY TO START)  
+**Progresso Geral:** ~18% (1/6 sprints completo em FASE 02, 189+17=206 testes passando)
 
 ---
 
@@ -11,13 +11,13 @@
 
 | Item | Status |
 |------|--------|
-| **Fase Concluída** | FASE 01 — FOUNDATION ✅ |
-| **Próxima Fase** | FASE 02 — FEATURES |
-| **Progresso Geral** | 100% (7/7 sprints concluídas) |
-| **Testes Totais** | 189 passing, 0 failing |
-| **Cumulative Tests** | F1.1 (7) + F1.2 (18) + F1.3 (16) + F1.4 (12) + F1.5 (17) + F1.6 (15) + F1.7 (87) = 189 total |
+| **Fase Atual** | FASE 02 — FEATURES (1/6 sprints) |
+| **Próxima Sprint** | F2.2 — Inventory Management |
+| **Progresso Geral** | ~18% (1/6 sprints completado em FASE 02) |
+| **Testes Totais** | 206 passing, 0 failing |
+| **Cumulative Tests** | FASE 01: 189 | FASE 02: F2.1 (17) |
 
-### Sprints Status
+### FASE 01 Sprints Status
 
 | Sprint | Status | Itens | Testes |
 |--------|--------|-------|--------|
@@ -28,6 +28,66 @@
 | **F1.5** | ✅ DONE | 6/6 (100%) | 17 passing |
 | **F1.6** | ✅ DONE | 6/6 (100%) | 15 passing |
 | **F1.7** | ✅ DONE | 7/7 (100%) | 87 passing |
+
+### FASE 02 Sprints Status
+
+| Sprint | Status | Itens | Testes |
+|--------|--------|-------|--------|
+| **F2.1** | ✅ DONE | 20/20 (100%) | 17 passing |
+| **F2.2** | 📋 TODO | 20/20 | - |
+| **F2.3** | 📋 TODO | 20/20 | - |
+| **F2.4** | 📋 TODO | 20/20 | - |
+| **F2.5** | 📋 TODO | 20/20 | - |
+| **F2.6** | 📋 TODO | 20/20 | - |
+
+---
+
+## 🎯 FASE 02 — FEATURES
+
+**Status:** 🟡 IN PROGRESS (1/6 sprints)
+
+**Objetivo:** Implementar módulos de negócio para gerenciar produtos, inventário, pedidos, pagamentos, relatórios e integrações.
+
+**Progresso:** 1/6 sprints concluídas (F2.1), 17 testes passando
+
+### Sprints
+
+#### Sprint F2.1 — Products Management
+
+**Status:** ✅ DONE  
+**Objetivo:** CRUD de produtos, categorias hierarchicas, preços multi-moeda
+
+**Checklist:**
+
+- [x] Product model com SKU único por tenant
+- [x] Category model com suporte a hierarquia parent-child
+- [x] Price model com tipos (cost, sale, suggested_retail)
+- [x] PriceHistory model para auditoria de preços
+- [x] ProductController com índice, criar, mostrar, atualizar, deletar, buscar
+- [x] CategoryController com hierarquia (roots, children)
+- [x] PriceController com histórico e preços por tipo
+- [x] StoreProductRequest validation
+- [x] StoreCategoryRequest validation
+- [x] StorePriceRequest validation
+- [x] ProductResource serialization
+- [x] CategoryResource serialization
+- [x] PriceResource serialization
+- [x] HasUlid trait para auto-geração de ULIDs
+- [x] 17 testes passando (8 ProductApiTest + 9 CategoryApiTest)
+- [x] Tenant isolation em todos endpoints
+- [x] Soft delete support
+- [x] Foreign key constraints com cascade/set null
+- [x] Multi-currency support
+- [x] Margin calculation para preços
+
+**Conclusão:** 20/20 — 100% ✅
+
+**Entregáveis Validados:**
+- ✅ 17 testes API passando
+- ✅ ULID auto-generation funcionando
+- ✅ Response serialization com 'data' wrapper
+- ✅ Tenant isolation validado
+- ✅ Hierarquia de categorias funcionando
 
 ---
 
