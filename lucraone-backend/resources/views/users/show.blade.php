@@ -5,11 +5,14 @@
     </x-slot:subtitulo>
 
     <x-slot:acoes>
+        <x-button variante="secundario" x-data @click="$dispatch('abrir-modal', 'help-users')">ajuda</x-button>
         <x-button variante="secundario" href="{{ route('users.index') }}">voltar</x-button>
         @if (! $user->trashed())
             <x-button href="{{ route('users.edit', $user) }}">editar</x-button>
         @endif
     </x-slot:acoes>
+
+    @include('users._help')
 
     @if (session('senha_temporaria'))
         <x-alert tipo="atencao" titulo="senha temporária">

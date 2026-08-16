@@ -65,6 +65,8 @@ class UserManagementTest extends TestCase
             ->get(route('users.index'))
             ->assertOk()
             ->assertSee('usuários')
+            ->assertSee('ajuda de usuários')
+            ->assertSee('usuário é uma pessoa com conta global', false)
             ->assertSee('novo usuário')
             ->assertSee('Bruno Caixa')
             ->assertDontSee('Clara Outro Tenant');

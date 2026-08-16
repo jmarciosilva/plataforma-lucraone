@@ -41,6 +41,8 @@ class TenantManagementTest extends TestCase
             ->get(route('tenants.index'))
             ->assertOk()
             ->assertSee('tenants')
+            ->assertSee('ajuda de tenants')
+            ->assertSee('tenant é o espaço isolado', false)
             ->assertSee('novo tenant')
             ->assertSee('Casa Alta')
             ->assertSee('Padaria Central');

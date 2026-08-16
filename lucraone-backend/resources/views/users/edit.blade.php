@@ -5,8 +5,11 @@
     </x-slot:subtitulo>
 
     <x-slot:acoes>
+        <x-button variante="secundario" x-data @click="$dispatch('abrir-modal', 'help-users')">ajuda</x-button>
         <x-button variante="secundario" href="{{ route('users.show', $user) }}">voltar</x-button>
     </x-slot:acoes>
+
+    @include('users._help')
 
     <x-section-label>edição</x-section-label>
 

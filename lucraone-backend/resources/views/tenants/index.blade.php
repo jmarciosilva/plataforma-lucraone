@@ -5,8 +5,11 @@
     </x-slot:subtitulo>
 
     <x-slot:acoes>
+        <x-button variante="secundario" x-data @click="$dispatch('abrir-modal', 'help-tenants')">ajuda</x-button>
         <x-button href="{{ route('tenants.create') }}">novo tenant</x-button>
     </x-slot:acoes>
+
+    @include('tenants._help')
 
     <x-section-label>filtros</x-section-label>
 

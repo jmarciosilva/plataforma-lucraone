@@ -5,11 +5,14 @@
     </x-slot:subtitulo>
 
     <x-slot:acoes>
+        <x-button variante="secundario" x-data @click="$dispatch('abrir-modal', 'help-tenants')">ajuda</x-button>
         <x-button variante="secundario" href="{{ route('tenants.index') }}">voltar</x-button>
         @if (! $tenant->trashed())
             <x-button href="{{ route('tenants.edit', $tenant) }}">editar</x-button>
         @endif
     </x-slot:acoes>
+
+    @include('tenants._help')
 
     <x-section-label>resumo</x-section-label>
 
