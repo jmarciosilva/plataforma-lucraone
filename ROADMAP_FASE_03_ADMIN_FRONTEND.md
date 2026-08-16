@@ -40,53 +40,80 @@ A FASE 03 fecha essa lacuna antes de acumular mais módulos de negócio.
 | Sprint | Nome | Status | Itens | Testes | Como você valida |
 |--------|------|--------|-------|--------|------------------|
 | **F3.1** | Frontend Setup & Layout | ✅ DONE | 15/15 | 6/6 | Página abre com Tailwind aplicado |
-| **F3.2** | Authentication | 📋 TODO | 0/20 | 0/8 | **Login em `/login` funciona** |
+| **F3.2** | Authentication | 🟡 EM ANDAMENTO | 0/20 | 0/8 | **Login em `/login` funciona** |
 | **F3.3** | Admin Dashboard | 📋 TODO | 0/15 | 0/6 | Painel com menu e widgets |
 | **F3.4** | Tenant Management | 📋 TODO | 0/25 | 0/12 | **Criar estabelecimento pela tela** |
 | **F3.5** | User Management | 📋 TODO | 0/25 | 0/12 | **Criar usuário e logar com ele** |
 | **F3.6** | Company & Roles | 📋 TODO | 0/20 | 0/10 | Empresas + permissões pela tela |
 
-**Total:** 120 itens · ~53 testes
+**Total:** 120 itens · ~53 testes · **Progresso: 15/120 itens, 6/53 testes**
 
-**Legenda:** 📋 TODO · 🟡 IN PROGRESS · ✅ DONE · ⏸️ PAUSADO
+**Legenda:** 📋 TODO · 🟡 EM ANDAMENTO · ✅ DONE · ⏸️ PAUSADO
+
+**Suíte completa do projeto:** 237 testes passando, 0 falhando
 
 ---
 
-## 🎯 Sprint F3.1 — Frontend Setup & Layout
+## ✅ Sprint F3.1 — Frontend Setup & Layout (CONCLUÍDO)
 
-### Checklist (15 itens)
+**Concluído em:** 2026-08-16 · **Testes:** 6/6 · **Commit:** `e4c9979`
+
+### Checklist (15/15)
 
 > 🎨 Todo o visual segue o [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
 
-- [ ] Instalar Tailwind CSS via npm + configurar Vite
-- [ ] **Aplicar paleta no `tailwind.config.js`** — sol `#FF7A00`, ambar, brasa,
-      ok, grafite, aco, linha, nevoa; raio `modulo: 14px`; sombra `cartao`
-- [ ] **Criar utilitários customizados** — `.cartao`, `.gradiente-sol`,
-      `.gradiente-sol-suave`, `.texto-sol`, `.rotulo-secao`
-- [ ] **Carregar fontes** — Karla (corpo), Archivo (logo), Martian Mono (valores)
-- [ ] Configurar estrutura de arquivos (layouts, components, views)
-- [ ] **Sidebar 240px** — logo `lucra.one` com `.texto-sol`, subtítulo com nome
-      do tenant ativo, itens de menu com ícone 32×32 e estado ativo em gradiente
-- [ ] Criar layout principal (sidebar + área de conteúdo)
-- [ ] Criar componentes reutilizáveis:
-  - [ ] Button (primário com `gradiente-sol`, secundário, danger com `brasa`)
-  - [ ] Input (text, email, password, textarea) — borda `linha`, foco `sol`
-  - [ ] Select (dropdown)
-  - [ ] Modal
-  - [ ] Alert/Toast (sucesso `ok`, erro `brasa`, atenção `alerta`)
-  - [ ] Table (dentro de `.cartao`, com paginação)
-  - [ ] Form Group (label + input + error)
-  - [ ] **Card de KPI** — rótulo pequeno → valor grande em mono → variação com seta
-  - [ ] **Rótulo de seção** — MAIÚSCULAS, `tracking-wide`, cor `aco`
-- [ ] Criar página de welcome/placeholder
-- [ ] Setup Alpine.js para interatividade
-- [ ] Criar middleware para auth em web routes
-- [ ] Configurar redirects (login → dashboard)
-- [ ] Testes de componentes renderizarem corretamente
+- [x] Tailwind CSS + Vite configurados (v4 já vinha no Laravel 13)
+- [x] **Paleta aplicada em `resources/css/app.css` via `@theme`** — sol `#FF7A00`,
+      ambar, rosa, brasa, ok, alerta, ouro, grafite, aco, fumaca, linha, nevoa;
+      raio `modulo: 14px`; sombra `cartao`
+      <br>*(Tailwind v4 configura por CSS — não existe `tailwind.config.js`)*
+- [x] **Utilitários customizados** — `.cartao`, `.rotulo-secao`, `.gradiente-sol`,
+      `.gradiente-sol-suave`, `.texto-sol`
+- [x] **Fontes auto-hospedadas via `bunny()`** — Karla (corpo), Archivo (logo),
+      Martian Mono (valores monetários)
+- [x] Estrutura de arquivos (`components/layouts/`, `components/`, views)
+- [x] **Sidebar 240px** — logo `LUCRAONE` com **ONE** em `.texto-sol`, subtítulo
+      com tenant ativo + ambiente, ícones 32×32, item ativo em gradiente suave
+- [x] Layout principal (`<x-layouts.app>`) com slots `subtitulo` e `acoes`
+- [x] Layout de autenticação (`<x-layouts.auth>`)
+- [x] Componentes reutilizáveis:
+  - [x] Button — `primario` (gradiente), `secundario`, `perigo`, `fantasma`
+  - [x] Input — text, email, password, textarea; borda muda com erro
+  - [x] Select — com `opcoes` e opção vazia
+  - [x] Modal — Alpine, abre por evento `abrir-modal`
+  - [x] Alert — `sucesso`, `erro`, `atencao`, `info`; dispensável
+  - [x] Table — dentro de `.cartao`, com paginação opcional
+  - [x] Form Group — label + campo + erro (ou texto de ajuda)
+  - [x] **KPI** — rótulo → valor em mono → variação com seta colorida
+  - [x] **Rótulo de seção** — MAIÚSCULAS, `tracking-wide`, cor `aco`
+  - [x] Badge — pills de status
+  - [x] Nav-item — rotas inexistentes ficam desabilitadas sem quebrar o menu
+- [x] Dashboard placeholder com KPIs e próximos passos
+- [x] Alpine.js instalado e inicializado
+- [x] Middlewares web: `auth.web` e `convidado`
+- [x] Redirects: `/` → dashboard, visitante → `/login`
+- [x] 6 testes em `tests/Feature/Admin/LayoutTest.php`
+
+### Correções de bugs feitas durante o sprint
+
+A suíte completa revelou defeitos reais no F2.1 e no scaffolding:
+
+| Bug | Impacto |
+|-----|---------|
+| `products.sku` com unique **global** em vez de por tenant | Dois tenants não poderiam usar o mesmo código de produto |
+| `categories.slug` com o mesmo defeito | Mesmo problema |
+| Pivot `product_categories` exigia `id` que `attach()` não preenche | Associar produto a categoria falhava |
+| Soft delete de categoria deixava filhos órfãos apontando para pai invisível | Hierarquia inconsistente |
+| `config/auth.php` apontava para `App\Models\User` (scaffolding) | Login por sessão não funcionaria |
+| Migration ULID não derrubava o índice morph antes da coluna | Abortava no SQLite |
+| `ApiAuthenticationMiddleware` global convertia redirect em JSON 401 | Quebraria o fluxo web |
+| CI não compilava assets — `@vite()` falha sem manifest | Testes de view quebrariam no CI |
+
+**Suíte:** 231/237 → **237/237 passando**
 
 ---
 
-## 🎯 Sprint F3.2 — Authentication (Login/Logout)
+## 🟡 Sprint F3.2 — Authentication (Login/Logout) — EM ANDAMENTO
 
 ### Checklist (20 itens)
 
@@ -94,35 +121,42 @@ A FASE 03 fecha essa lacuna antes de acumular mais módulos de negócio.
 > `routes/web.php`. É um bypass de autenticação criado no F3.1 para permitir
 > ver o painel antes do login existir.
 
+> ℹ️ **Nota de arquitetura:** o painel web usa o **guard `web` (sessão)**, não
+> Sanctum. Sanctum continua servindo a API (`/api/*`) com tokens. São dois
+> canais de autenticação distintos sobre o mesmo model `User` — o navegador
+> recebe cookie de sessão, o cliente de API recebe bearer token.
+
 **Views:**
 - [ ] **Remover a rota temporária `/preview-login`**
 - [ ] Tela de login (`/login`) — substituir o stub por formulário funcional
-- [ ] Tela de logout (redirect)
-- [ ] Tela de "não autorizado" (403)
-- [ ] Tela de "não encontrado" (404)
+- [ ] Tela de erro 403 (não autorizado)
+- [ ] Tela de erro 404 (não encontrado)
+- [ ] Tela de erro 419 (sessão expirada / CSRF)
 
 **Funcionalidades:**
-- [ ] Formulário de login (email + password)
-- [ ] Validação client-side (Alpine.js)
-- [ ] Validação server-side (FormRequest)
-- [ ] Autenticação via Sanctum
-- [ ] Armazenar token em session/cookie
-- [ ] Logout (limpar sessão)
-- [ ] Verificação de tenant na sessão
-- [ ] "Lembrar-me" (optional)
-- [ ] Tratamento de erros (credenciais inválidas)
-- [ ] Redirect para dashboard após login
-- [ ] Middleware web-only (não permite API)
+- [ ] Formulário de login (email + senha)
+- [ ] Validação client-side (Alpine.js) — campos obrigatórios, botão desabilitado
+- [ ] Validação server-side (`LoginRequest`)
+- [ ] Autenticação por sessão via guard `web`
+- [ ] `session()->regenerate()` no login (previne session fixation)
+- [ ] Resolução de tenant a partir do usuário logado
+- [ ] Logout com invalidação de sessão e novo token CSRF
+- [ ] Opção "lembrar-me"
+- [ ] Mensagem de erro em credenciais inválidas (sem revelar se o e-mail existe)
+- [ ] Bloqueio de usuário com status ≠ `ACTIVE`
+- [ ] Rate limiting por e-mail + IP (freio a força bruta)
+- [ ] Registro de `last_login_at`
+- [ ] Redirect pós-login para `/dashboard` (ou destino pretendido)
 
-**Testes:**
+**Testes (8):**
 - [ ] Login com credenciais válidas → dashboard
-- [ ] Login com credenciais inválidas → erro
-- [ ] Logout redireciona para login
-- [ ] Usuário não autenticado → login
-- [ ] Session persiste entre requisições
-- [ ] Token é armazenado corretamente
-- [ ] Múltiplos usuários mesmo tenant não veem dados um do outro
-- [ ] Logout limpa session corretamente
+- [ ] Login com credenciais inválidas → erro, permanece deslogado
+- [ ] Usuário `INVITED`/`INACTIVE` não consegue entrar
+- [ ] Logout invalida a sessão e redireciona para login
+- [ ] Visitante em rota protegida → login
+- [ ] Sessão persiste entre requisições
+- [ ] Tenant é resolvido a partir do usuário logado
+- [ ] Rate limiting bloqueia após tentativas repetidas
 
 ---
 
@@ -291,95 +325,63 @@ A FASE 03 fecha essa lacuna antes de acumular mais módulos de negócio.
 
 ---
 
-## 📁 Estrutura de Diretórios (Nova)
+## 📁 Estrutura de Diretórios
+
+`✅` já existe · `⬜` chega no sprint indicado
 
 ```
 lucraone-backend/
 ├── resources/
-│   ├── views/
-│   │   ├── layouts/
-│   │   │   ├── app.blade.php        (layout principal)
-│   │   │   ├── auth.blade.php       (layout login)
-│   │   │   └── error.blade.php      (erro)
-│   │   ├── components/              (componentes reutilizáveis)
-│   │   │   ├── button.blade.php
-│   │   │   ├── input.blade.php
-│   │   │   ├── modal.blade.php
-│   │   │   ├── table.blade.php
-│   │   │   └── sidebar.blade.php
-│   │   ├── auth/
-│   │   │   ├── login.blade.php
-│   │   │   └── logout.blade.php
-│   │   ├── dashboard/
-│   │   │   └── index.blade.php
-│   │   ├── tenants/
-│   │   │   ├── index.blade.php
-│   │   │   ├── create.blade.php
-│   │   │   ├── edit.blade.php
-│   │   │   └── show.blade.php
-│   │   ├── users/
-│   │   │   ├── index.blade.php
-│   │   │   ├── create.blade.php
-│   │   │   ├── edit.blade.php
-│   │   │   └── show.blade.php
-│   │   ├── companies/
-│   │   │   ├── index.blade.php
-│   │   │   ├── create.blade.php
-│   │   │   └── edit.blade.php
-│   │   └── roles/
-│   │       ├── index.blade.php
-│   │       └── show.blade.php
-│   └── css/
-│       └── app.css                  (Tailwind + custom)
-│   └── js/
-│       └── app.js                   (Alpine.js + bundle)
-├── app/
-│   └── Http/
-│       ├── Controllers/
-│       │   ├── Web/
-│       │   │   ├── DashboardController.php
-│       │   │   ├── TenantController.php
-│       │   │   ├── UserController.php
-│       │   │   ├── CompanyController.php
-│       │   │   └── RoleController.php
-│       │   └── Auth/
-│       │       ├── LoginController.php
-│       │       └── LogoutController.php
-│       └── Requests/
-│           ├── LoginRequest.php
-│           ├── StoreTenantRequest.php
-│           ├── StoreUserRequest.php
-│           └── StoreCompanyRequest.php
-├── routes/
-│   └── web.php                      (web routes para Blade)
-└── tailwind.config.js               (Tailwind customizado)
+│   ├── css/app.css ................................... ✅ design system (@theme)
+│   ├── js/app.js ..................................... ✅ Alpine.js
+│   └── views/
+│       ├── components/
+│       │   ├── layouts/
+│       │   │   ├── app.blade.php ..................... ✅ painel com sidebar
+│       │   │   └── auth.blade.php .................... ✅ card centrado
+│       │   ├── sidebar.blade.php ..................... ✅
+│       │   ├── nav-item.blade.php .................... ✅
+│       │   ├── button.blade.php ...................... ✅
+│       │   ├── input.blade.php ....................... ✅
+│       │   ├── select.blade.php ...................... ✅
+│       │   ├── form-group.blade.php .................. ✅
+│       │   ├── card.blade.php ........................ ✅
+│       │   ├── kpi.blade.php ......................... ✅
+│       │   ├── badge.blade.php ....................... ✅
+│       │   ├── alert.blade.php ....................... ✅
+│       │   ├── modal.blade.php ....................... ✅
+│       │   ├── table.blade.php ....................... ✅
+│       │   └── section-label.blade.php ............... ✅
+│       ├── auth/login.blade.php ...................... ✅ stub → F3.2 funcional
+│       ├── errors/{403,404,419}.blade.php ............ ⬜ F3.2
+│       ├── dashboard/index.blade.php ................. ✅ placeholder → F3.3
+│       ├── tenants/ .................................. ⬜ F3.4
+│       ├── users/ .................................... ⬜ F3.5
+│       ├── companies/ ................................ ⬜ F3.6
+│       └── roles/ .................................... ⬜ F3.6
+├── app/Http/
+│   ├── Middleware/
+│   │   ├── AutenticarWeb.php ......................... ✅ alias auth.web
+│   │   └── RedirecionarSeAutenticado.php ............. ✅ alias convidado
+│   ├── Controllers/Web/
+│   │   ├── Auth/LoginController.php .................. ⬜ F3.2
+│   │   ├── DashboardController.php ................... ⬜ F3.3
+│   │   ├── TenantController.php ...................... ⬜ F3.4
+│   │   ├── UserController.php ........................ ⬜ F3.5
+│   │   ├── CompanyController.php ..................... ⬜ F3.6
+│   │   └── RoleController.php ........................ ⬜ F3.6
+│   └── Requests/
+│       ├── Auth/LoginRequest.php ..................... ⬜ F3.2
+│       ├── StoreTenantRequest.php .................... ⬜ F3.4
+│       ├── StoreUserRequest.php ...................... ⬜ F3.5
+│       └── StoreCompanyRequest.php ................... ⬜ F3.6
+├── routes/web.php .................................... ✅
+├── vite.config.js .................................... ✅ fontes via bunny()
+└── tests/Feature/Admin/LayoutTest.php ................ ✅ 6 testes
 ```
 
----
-
-## 🚀 Próximos Passos
-
-### Fase 03.1 Iniciará com:
-1. **Instalação do Tailwind CSS**
-2. **Criação de layout base**
-3. **Componentes Blade reutilizáveis**
-4. **Setup de routes web**
-5. **Autenticação web middleware**
-
-### Dependências Novas:
-```bash
-npm install -D tailwindcss postcss autoprefixer
-npm install alpinejs
-```
-
-### Controllers Necessários:
-- `Web/DashboardController`
-- `Web/Auth/LoginController`
-- `Web/Auth/LogoutController`
-- `Web/TenantController`
-- `Web/UserController`
-- `Web/CompanyController`
-- `Web/RoleController`
+> Não existe `tailwind.config.js`: no Tailwind v4 a configuração vive em
+> `resources/css/app.css`, dentro do bloco `@theme`.
 
 ---
 
@@ -388,22 +390,28 @@ npm install alpinejs
 Ao final de cada sprint você poderá validar pelo navegador. Nenhuma dessas
 validações exige Postman ou tinker.
 
-### Após F3.1 — Setup & Layout
+### ✅ Após F3.1 — Setup & Layout (disponível agora)
 ```
-1. docker-compose exec app npm run build
-2. Abrir http://localhost:8000
-3. ✅ Página renderiza com estilos Tailwind (fontes, cores, espaçamento)
-4. ✅ Acessar /dashboard sem login → redireciona para /login
+1. npm run build            (roda no host — node_modules não está no container)
+2. Abrir http://localhost:8000/login
+   ✅ Card com logo LUCRAONE, ONE em gradiente laranja→rosa
+   ✅ Campos e-mail/senha estilizados, botão em gradiente
+3. Abrir http://localhost:8000/dashboard sem sessão
+   ✅ Redireciona para /login
+4. Abrir http://localhost:8000/preview-login       ⚠️ rota temporária
+   ✅ Sidebar com menu, KPIs e rodapé com usuário
 ```
 
 ### Após F3.2 — Authentication
 ```
 1. Abrir http://localhost:8000/login
-2. Email: admin@lucraone-dev.local
-3. Senha: (a definida no UserSeeder)
-4. ✅ Login redireciona para /dashboard
-5. ✅ Senha errada mostra mensagem de erro
-6. ✅ Botão logout volta para /login
+2. E-mail: admin@lucraone-dev.local
+   Senha:  password                    (definida no UserSeeder)
+3. ✅ Login redireciona para /dashboard
+4. ✅ Senha errada mostra erro sem revelar se o e-mail existe
+5. ✅ Botão "sair" na sidebar volta para /login
+6. ✅ Voltar para /dashboard depois de sair → redireciona para /login
+7. ✅ /preview-login não existe mais
 ```
 
 ### Após F3.3 — Dashboard
@@ -463,16 +471,26 @@ validações exige Postman ou tinker.
 
 ---
 
-## 📌 Pré-requisitos Técnicos (resolver no F3.1)
+## 📌 Dívida Técnica
 
-Pendências identificadas durante os testes manuais de F2.1:
+### Resolvida no F3.1
 
-- [ ] Aplicar migration `2026_08_16_000000_update_personal_access_tokens_for_ulid.php`
-      (coluna `tokenable_id` era `bigint`, incompatível com ULID)
-- [ ] Corrigir 5 testes com falha de constraint no SQLite in-memory
-- [ ] Documentar rota de health correta: `/api/health` (não `/health`)
-- [ ] Container `app` não tem `bash` — usar `docker-compose exec app sh`
+- [x] Migration `personal_access_tokens.tokenable_id` para ULID
+      (também corrigida a ordem: índice morph cai antes da coluna)
+- [x] 5 testes com falha de constraint — eram bugs reais de migration, não dos testes
+- [x] `config/auth.php` apontando para o `User` errado
+- [x] Rota de health é `/api/health`, não `/health`
+- [x] Container `app` não tem `bash` — usar `docker-compose exec app sh`
+- [x] CI não compilava assets
+
+### Aberta
+
+| Item | Onde resolver |
+|------|---------------|
+| 🔴 Rota `/preview-login` faz bypass de autenticação (restrita a `local`) | **F3.2 — primeira tarefa** |
+| `resources/views/welcome.blade.php` ficou órfão após `/` redirecionar | F3.3 |
+| Responsividade mobile só verificada por código, sem teste automatizado | F3.3 |
 
 ---
 
-**Pronto para começar F3.1?** 🚀
+**Sprint atual: F3.2 — Authentication** 🚀
