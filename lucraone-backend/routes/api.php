@@ -11,3 +11,6 @@ Route::prefix('auth')->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])
         ->name('auth.logout');
 });
+
+// Products Module Routes
+require __DIR__ . '/../app/Modules/Products/Routes/api.php';
