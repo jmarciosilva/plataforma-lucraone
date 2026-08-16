@@ -44,6 +44,14 @@ class User extends Model implements AuthenticatableContract
         'updated_at' => 'datetime',
     ];
 
+    /**
+     * Tenant ao qual o usuário pertence.
+     */
+    public function tenant()
+    {
+        return $this->belongsTo(\App\Modules\Tenancy\Domain\Models\Tenant::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'ACTIVE';

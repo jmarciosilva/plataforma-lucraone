@@ -4,29 +4,25 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Pivot entre produtos e categorias.
+ *
+ * Sem coluna tenant_id: os dois lados já são escopados por tenant nas suas
+ * próprias tabelas, então um vínculo entre tenants diferentes é impossível —
+ * o TenantScope impede carregar o registro do outro tenant para associar.
+ * Uma coluna denormalizada aqui só criaria mais um ponto para sair de sincronia.
+ */
 return new class extends Migration
 {
     public function up(): void
     {
         Schema::create('product_categories', function (Blueprint $table) {
-            $table->ulid('id')->primary();
-            $table->ulid('tenant_id');
             $table->ulid('product_id');
             $table->ulid('category_id');
             $table->timestamps();
 
-            // Unique constraint
-            $table->unique(['tenant_id', 'product_id', 'category_id']);
-
-            // Indices
-            $table->index(['tenant_id', 'product_id']);
-            $table->index(['tenant_id', 'category_id']);
-
-            // Foreign keys
-            $table->foreign('tenant_id')
-                ->references('id')
-                ->on('tenants')
-                ->onDelete('cascade');
+            $table->primary(['product_id', 'category_id']);
+            $table->index('category_id');
 
             $table->foreign('product_id')
                 ->references('id')

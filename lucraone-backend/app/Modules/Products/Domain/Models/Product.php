@@ -64,7 +64,7 @@ class Product extends Model
             'product_categories',
             'product_id',
             'category_id'
-        );
+        )->withTimestamps();
     }
 
     public function prices()

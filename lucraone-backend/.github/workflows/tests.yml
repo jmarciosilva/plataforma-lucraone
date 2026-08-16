@@ -55,6 +55,19 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-suggest
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # Os testes de view usam @vite(), que falha sem o manifest compilado.
+      - name: Build frontend assets
+        run: npm run build
+
       - name: Copy .env
         run: cp .env.example .env.testing
 

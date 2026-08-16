@@ -18,6 +18,17 @@ class Category extends Model
         return CategoryFactory::new();
     }
 
+    /**
+     * Soft delete é um UPDATE, então a foreign key "on delete set null" não
+     * dispara. Sem isto, os filhos ficariam apontando para um pai invisível.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (Category $categoria) {
+            $categoria->children()->update(['parent_id' => null]);
+        });
+    }
+
     protected $table = 'categories';
 
     protected $fillable = [
@@ -67,6 +78,6 @@ class Category extends Model
             'product_categories',
             'category_id',
             'product_id'
-        );
+        )->withTimestamps();
     }
 }

@@ -12,15 +12,17 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->ulid('tenant_id');
             $table->ulid('company_id');
-            $table->string('sku')->unique('products_tenant_id_sku_unique'); // Unique per tenant
+            $table->string('sku');
             $table->string('name');
             $table->text('description')->nullable();
             $table->enum('status', ['active', 'inactive', 'discontinued'])->default('active');
             $table->timestamps();
             $table->softDeletes();
 
+            // SKU é único dentro do tenant — tenants diferentes podem repetir o mesmo código
+            $table->unique(['tenant_id', 'sku']);
+
             // Indices
-            $table->index(['tenant_id', 'sku']);
             $table->index(['tenant_id', 'company_id']);
             $table->index(['tenant_id', 'status']);
 

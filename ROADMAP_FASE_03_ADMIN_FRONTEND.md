@@ -2,7 +2,7 @@
 
 **Objetivo:** Criar interface web administrativa com Blade + Tailwind para gerenciar tenants, usuários, empresas e permissões.
 
-**Status:** 📋 A INICIAR (0/6 sprints)  
+**Status:** 🟡 EM ANDAMENTO (1/6 sprints — F3.1 ✅)  
 **Duração Estimada:** ~6-8 semanas  
 **Stack:** Laravel Blade + Tailwind CSS + Alpine.js  
 **Dependência:** FASE 01 ✅ · F2.1 ✅  
@@ -39,7 +39,7 @@ A FASE 03 fecha essa lacuna antes de acumular mais módulos de negócio.
 
 | Sprint | Nome | Status | Itens | Testes | Como você valida |
 |--------|------|--------|-------|--------|------------------|
-| **F3.1** | Frontend Setup & Layout | 📋 TODO | 0/15 | 0/5 | Página abre com Tailwind aplicado |
+| **F3.1** | Frontend Setup & Layout | ✅ DONE | 15/15 | 6/6 | Página abre com Tailwind aplicado |
 | **F3.2** | Authentication | 📋 TODO | 0/20 | 0/8 | **Login em `/login` funciona** |
 | **F3.3** | Admin Dashboard | 📋 TODO | 0/15 | 0/6 | Painel com menu e widgets |
 | **F3.4** | Tenant Management | 📋 TODO | 0/25 | 0/12 | **Criar estabelecimento pela tela** |
@@ -90,8 +90,13 @@ A FASE 03 fecha essa lacuna antes de acumular mais módulos de negócio.
 
 ### Checklist (20 itens)
 
+> 🔴 **Primeira tarefa do sprint:** apagar a rota `/preview-login` de
+> `routes/web.php`. É um bypass de autenticação criado no F3.1 para permitir
+> ver o painel antes do login existir.
+
 **Views:**
-- [ ] Tela de login (`/login`)
+- [ ] **Remover a rota temporária `/preview-login`**
+- [ ] Tela de login (`/login`) — substituir o stub por formulário funcional
 - [ ] Tela de logout (redirect)
 - [ ] Tela de "não autorizado" (403)
 - [ ] Tela de "não encontrado" (404)

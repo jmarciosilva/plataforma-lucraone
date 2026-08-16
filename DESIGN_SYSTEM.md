@@ -249,64 +249,75 @@ operacionais futuras (PDV, KDS), se surgirem.
 
 ## 6. Configuração Tailwind
 
-```js
-// tailwind.config.js
-export default {
-  content: ['./resources/**/*.blade.php', './resources/**/*.js'],
-  theme: {
-    extend: {
-      colors: {
-        sol:     '#FF7A00',
-        ambar:   '#FFB300',
-        brasa:   '#E11D48',
-        ok:      '#16A34A',
-        alerta:  '#F59E0B',
-        ouro:    '#C9954F',
-        grafite: '#1C1917',
-        aco:     '#8A8480',
-        fumaca:  '#9A9184',
-        linha:   '#EEE9E4',
-        nevoa:   '#FAF8F6',
-      },
-      borderRadius: {
-        modulo: '14px',
-      },
-      boxShadow: {
-        cartao: '0 1px 2px rgba(28,25,23,0.04), 0 8px 24px -12px rgba(28,25,23,0.08)',
-      },
-      fontFamily: {
-        sans:      ['Karla', 'system-ui', 'sans-serif'],
-        letreiro:  ['Archivo', 'system-ui', 'sans-serif'],
-        comanda:   ['"Martian Mono"', 'ui-monospace', 'monospace'],
-      },
-    },
-  },
+O projeto usa **Tailwind v4**, cuja configuração é feita em CSS via `@theme` —
+não existe `tailwind.config.js`. Implementado em `resources/css/app.css`:
+
+```css
+@import 'tailwindcss';
+
+@theme {
+    /* Paleta */
+    --color-sol: #ff7a00;
+    --color-ambar: #ffb300;
+    --color-rosa: #ff4d8d;
+    --color-brasa: #e11d48;
+    --color-ok: #16a34a;
+    --color-alerta: #f59e0b;
+    --color-ouro: #c9954f;
+    --color-grafite: #1c1917;
+    --color-aco: #8a8480;
+    --color-fumaca: #9a9184;
+    --color-linha: #eee9e4;
+    --color-nevoa: #faf8f6;
+
+    /* Tipografia */
+    --font-sans: 'Karla', ui-sans-serif, system-ui, sans-serif;
+    --font-letreiro: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+    --font-comanda: 'Martian Mono', ui-monospace, monospace;
+
+    /* Formas */
+    --radius-modulo: 14px;
+    --shadow-cartao: 0 1px 2px rgba(28, 25, 23, 0.04), 0 8px 24px -12px rgba(28, 25, 23, 0.08);
 }
 ```
+
+Os prefixos são significativos: `--color-*` gera `bg-sol`/`text-sol`/`border-sol`,
+`--font-*` gera `font-comanda`, `--radius-*` gera `rounded-modulo`,
+`--shadow-*` gera `shadow-cartao`.
 
 ### Classes utilitárias customizadas
 
 ```css
-/* resources/css/app.css */
 @layer components {
-  .cartao {
-    @apply rounded-modulo border border-linha bg-white shadow-cartao;
-  }
+  .cartao      { @apply rounded-modulo border border-linha bg-white shadow-cartao; }
+  .rotulo-secao{ @apply mb-3 text-sm font-semibold uppercase tracking-wide text-aco; }
+
   .gradiente-sol {
-    background-image: linear-gradient(120deg, #FFB300, #FF7A00 48%, #FF4D8D);
+    background-image: linear-gradient(120deg, var(--color-ambar), var(--color-sol) 48%, var(--color-rosa));
   }
   .gradiente-sol-suave {
-    background-image: linear-gradient(120deg, #FFF8E1, #FFF3E8 48%, #FFEEF4);
+    background-image: linear-gradient(120deg, #fff8e1, #fff3e8 48%, #ffeef4);
   }
   .texto-sol {
     color: transparent;
-    background-image: linear-gradient(120deg, #F59E0B, #FF7A00 45%, #FF4D8D);
+    background-image: linear-gradient(120deg, var(--color-alerta), var(--color-sol) 45%, var(--color-rosa));
     background-clip: text;
   }
-  .rotulo-secao {
-    @apply mb-3 text-sm font-semibold uppercase tracking-wide text-aco;
-  }
 }
+```
+
+### Fontes
+
+Carregadas via `laravel-vite-plugin/fonts` com o helper `bunny()`, que baixa e
+**auto-hospeda** os arquivos no build — sem requisição a CDN externo em runtime:
+
+```js
+// vite.config.js
+fonts: [
+    bunny('Karla', { weights: [400, 500, 600, 700] }),
+    bunny('Archivo', { weights: [600, 700] }),
+    bunny('Martian Mono', { weights: [400, 500] }),
+],
 ```
 
 ---
@@ -340,14 +351,37 @@ que hoje só existe no backend.
 
 ---
 
-## 8. Decisões a Confirmar
+## 8. Decisões Tomadas (2026-08-16)
 
-- [ ] Fontes: licenciar Karla/Archivo/Martian Mono (Google Fonts, todas livres)
-      ou usar alternativas do sistema?
-- [ ] Menu do admin: quais itens? Sugestão inicial —
-      `dashboard · tenants · usuários · empresas · permissões · produtos`
-- [ ] Nome exibido no logo: `lucra.one`? `LUCRAONE`?
-- [ ] Modo escuro: fora do escopo da FASE 03 (só claro) — confirma?
+- [x] **Fontes:** usar as mesmas da referência — Karla, Archivo, Martian Mono
+- [x] **Menu do admin:** `dashboard · tenants · usuários · empresas · permissões · produtos`
+- [x] **Logo:** `LUCRAONE`, com **ONE** em gradiente (`LUCRA<span class="texto-sol">ONE</span>`)
+- [x] **Minúsculas:** títulos de página e itens de menu em minúsculas, como na referência
+- [x] **Modo escuro:** fora do escopo da FASE 03 — apenas modo claro
+
+---
+
+## 9. Componentes Blade Implementados (F3.1)
+
+Todos em `resources/views/components/`:
+
+| Componente | Uso |
+|-----------|-----|
+| `<x-layouts.app>` | Layout do painel com sidebar, título e slots `subtitulo`/`acoes` |
+| `<x-layouts.auth>` | Layout centrado para login, com slots `subtitulo`/`rodape` |
+| `<x-sidebar>` | Marca, tenant ativo, navegação e bloco do usuário |
+| `<x-nav-item>` | Item de menu; rotas inexistentes ficam desabilitadas sem quebrar |
+| `<x-button>` | Variantes `primario`, `secundario`, `perigo`, `fantasma` |
+| `<x-input>` | text, email, password, textarea — borda muda com erro de validação |
+| `<x-select>` | Dropdown com `opcoes` e opção vazia |
+| `<x-form-group>` | Label + campo + mensagem de erro (ou texto de ajuda) |
+| `<x-card>` | `.cartao` com padding configurável |
+| `<x-kpi>` | Rótulo → valor mono → variação com seta colorida |
+| `<x-badge>` | Pills de status: `sucesso`, `erro`, `atencao`, `destaque`, `neutro` |
+| `<x-alert>` | Avisos dispensáveis via Alpine |
+| `<x-modal>` | Diálogo com Alpine; abre por evento `abrir-modal` |
+| `<x-table>` | Tabela dentro de `.cartao`, com paginação opcional |
+| `<x-section-label>` | Rótulo de seção em maiúsculas |
 
 ---
 

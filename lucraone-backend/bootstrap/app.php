@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\AutenticarWeb;
+use App\Http\Middleware\RedirecionarSeAutenticado;
 use App\Modules\Identity\Http\Middleware\ApiAuthenticationMiddleware;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenantMiddleware;
 use App\Modules\Tenancy\TenancyServiceProvider;
@@ -20,10 +22,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->append(
-            ResolveTenantMiddleware::class,
-            ApiAuthenticationMiddleware::class
-        );
+        // ApiAuthenticationMiddleware converte AuthenticationException em JSON 401.
+        // Fica restrito ao grupo api: no navegador queremos redirect para /login,
+        // não um corpo JSON.
+        $middleware->api(append: [
+            ApiAuthenticationMiddleware::class,
+        ]);
+
+        $middleware->append(ResolveTenantMiddleware::class);
+
+        $middleware->alias([
+            'auth.web' => AutenticarWeb::class,
+            'convidado' => RedirecionarSeAutenticado::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

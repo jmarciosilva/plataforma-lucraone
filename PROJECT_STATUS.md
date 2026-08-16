@@ -1,10 +1,11 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (FASE 03 planejada — Admin Frontend)  
-**Fase Atual:** FASE 03 — ADMIN FRONTEND (PRÓXIMA A INICIAR)  
-**Próxima Sprint:** F3.1 — Frontend Setup & Layout  
+**Atualizado em:** 2026-08-16 (F3.1 concluído)  
+**Fase Atual:** FASE 03 — ADMIN FRONTEND (1/6 sprints)  
+**Próxima Sprint:** F3.2 — Authentication (Login/Logout)  
 **Fase Pausada:** FASE 02 — FEATURES (F2.1 concluído, F2.2 aguardando frontend)  
-**Progresso Geral:** FASE 01 ✅ 100% | FASE 02 🟡 17% (1/6) | FASE 03 📋 0% (0/6)
+**Progresso Geral:** FASE 01 ✅ 100% | FASE 02 🟡 17% (1/6) | FASE 03 🟡 17% (1/6)  
+**Testes:** 237 passing, 0 failing
 
 > ⚠️ **Decisão de sequenciamento (2026-08-16):** a FASE 02 foi pausada após F2.1
 > porque o sistema não possui interface de acesso — não há tela de login nem painel
@@ -64,7 +65,7 @@ FASE 02 (retomada)        📋 F2.2 — Inventory Management
 
 | Sprint | Nome | Status | Itens | Testes | O que você poderá testar |
 |--------|------|--------|-------|--------|--------------------------|
-| **F3.1** | Frontend Setup & Layout | 📋 TODO | 0/15 | 0/5 | Página placeholder com Tailwind aplicado |
+| **F3.1** | Frontend Setup & Layout | ✅ DONE | 15/15 | 6/6 | Página placeholder com Tailwind aplicado |
 | **F3.2** | Authentication (Login/Logout) | 📋 TODO | 0/20 | 0/8 | **Login em `/login` com email + senha** |
 | **F3.3** | Admin Dashboard | 📋 TODO | 0/15 | 0/6 | Painel com menu lateral e widgets |
 | **F3.4** | Tenant Management | 📋 TODO | 0/25 | 0/12 | **Cadastrar novo estabelecimento (tenant)** |
@@ -775,12 +776,17 @@ Nenhum bloqueio impeditivo.
 
 ### Dívida técnica (identificada nos testes manuais de F2.1)
 
-| Item | Impacto | Onde resolver |
-|------|---------|---------------|
-| `personal_access_tokens.tenable_id` era `bigint`, incompatível com ULID | `createToken()` falhava | Migration criada — aplicar com `migrate --force` |
-| 5 testes com falha de constraint no SQLite in-memory | Suíte não roda 100% limpa | F3.1 |
-| Rota de health documentada como `/health`, real é `/api/health` | Confusão em testes | ✅ corrigido no TESTING_GUIDE |
+| Item | Impacto | Situação |
+|------|---------|----------|
+| `personal_access_tokens.tokenable_id` era `bigint`, incompatível com ULID | `createToken()` falhava | ✅ resolvido no F3.1 |
+| `products.sku` tinha unique **global**, não por tenant | Dois tenants não podiam usar o mesmo SKU | ✅ resolvido no F3.1 |
+| `categories.slug` tinha unique **global**, não por tenant | Mesmo problema | ✅ resolvido no F3.1 |
+| Pivot `product_categories` exigia `id` que `attach()` não preenchia | Associar produto a categoria falhava | ✅ resolvido no F3.1 |
+| Soft delete de categoria deixava filhos apontando para pai invisível | Hierarquia inconsistente | ✅ resolvido no F3.1 |
+| `config/auth.php` apontava para `App\Models\User` (scaffolding) em vez do módulo Identity | Login por sessão não funcionaria | ✅ resolvido no F3.1 |
+| Rota de health documentada como `/health`, real é `/api/health` | Confusão em testes | ✅ documentado |
 | Container `app` sem `bash` | `docker-compose exec app bash` falha | ✅ documentado (usar `sh`) |
+| Rota `/preview-login` faz bypass de autenticação (só em `local`) | Risco se vazar para outro ambiente | 🔴 **apagar no F3.2** |
 
 ---
 

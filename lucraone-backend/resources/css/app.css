@@ -3,7 +3,73 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+/*
+| Design System — LUCRAONE Admin
+| Tokens extraídos da referência aprovada. Ver DESIGN_SYSTEM.md na raiz do projeto.
+*/
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    /* Paleta */
+    --color-sol: #ff7a00;
+    --color-ambar: #ffb300;
+    --color-rosa: #ff4d8d;
+    --color-brasa: #e11d48;
+    --color-ok: #16a34a;
+    --color-alerta: #f59e0b;
+    --color-ouro: #c9954f;
+    --color-grafite: #1c1917;
+    --color-aco: #8a8480;
+    --color-fumaca: #9a9184;
+    --color-linha: #eee9e4;
+    --color-nevoa: #faf8f6;
+
+    /* Tipografia */
+    --font-sans: 'Karla', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    --font-letreiro: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+    --font-comanda: 'Martian Mono', ui-monospace, 'Cascadia Code', monospace;
+
+    /* Formas */
+    --radius-modulo: 14px;
+
+    /* Sombra do cartão — camada rasa de contato + camada difusa ampla */
+    --shadow-cartao: 0 1px 2px rgba(28, 25, 23, 0.04), 0 8px 24px -12px rgba(28, 25, 23, 0.08);
+}
+
+@layer base {
+    body {
+        @apply bg-white font-sans text-grafite antialiased;
+    }
+
+    /* Evita o flash de conteúdo antes do Alpine assumir */
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    /* Cartão — container padrão de conteúdo */
+    .cartao {
+        @apply rounded-modulo border border-linha bg-white shadow-cartao;
+    }
+
+    /* Rótulo que agrupa blocos da página */
+    .rotulo-secao {
+        @apply mb-3 text-sm font-semibold uppercase tracking-wide text-aco;
+    }
+
+    /* Gradiente primário — ícones ativos e botões de destaque */
+    .gradiente-sol {
+        background-image: linear-gradient(120deg, var(--color-ambar), var(--color-sol) 48%, var(--color-rosa));
+    }
+
+    /* Versão suave — fundo do item de menu ativo */
+    .gradiente-sol-suave {
+        background-image: linear-gradient(120deg, #fff8e1, #fff3e8 48%, #ffeef4);
+    }
+
+    /* Texto com gradiente — usado no "ONE" do logo */
+    .texto-sol {
+        color: transparent;
+        background-image: linear-gradient(120deg, var(--color-alerta), var(--color-sol) 45%, var(--color-rosa));
+        background-clip: text;
+    }
 }
