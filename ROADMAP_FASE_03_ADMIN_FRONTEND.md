@@ -2,7 +2,7 @@
 
 **Objetivo:** Criar interface web administrativa com Blade + Tailwind para gerenciar tenants, usuários, empresas e permissões.
 
-**Status:** 🟡 EM ANDAMENTO (3/6 sprints — F3.1 ✅ F3.2 ✅ F3.3 ✅)
+**Status:** 🟡 EM ANDAMENTO (4/6 sprints — F3.1 ✅ F3.2 ✅ F3.3 ✅ F3.4 ✅)
 **Duração Estimada:** ~6-8 semanas
 **Stack:** Laravel Blade + Tailwind CSS + Alpine.js
 **Dependência:** FASE 01 ✅ (inclui F1.8 — modelo de identidade) · F2.1 ✅
@@ -42,15 +42,15 @@ A FASE 03 fecha essa lacuna antes de acumular mais módulos de negócio.
 | **F3.1** | Frontend Setup & Layout | ✅ DONE | 15/15 | 6/6 | Página abre com Tailwind aplicado |
 | **F3.2** | Authentication | ✅ DONE | 22/22 | 14/14 | **Login em `/login` funciona** |
 | **F3.3** | Admin Dashboard | ✅ DONE | 15/15 | 6/6 | Painel com menu e widgets |
-| **F3.4** | Tenant Management | 📋 TODO | 0/25 | 0/12 | **Criar estabelecimento pela tela** |
+| **F3.4** | Tenant Management | ✅ DONE | 25/25 | 12/12 | **Criar estabelecimento pela tela** |
 | **F3.5** | User Management | 📋 TODO | 0/25 | 0/12 | **Criar usuário e logar com ele** |
 | **F3.6** | Company & Roles | 📋 TODO | 0/20 | 0/10 | Empresas + permissões pela tela |
 
-**Total:** 122 itens · ~59 testes · **Progresso: 52/122 itens, 26/59 testes**
+**Total:** 122 itens · ~59 testes · **Progresso: 77/122 itens, 38/59 testes**
 
 **Legenda:** 📋 TODO · 🟡 EM ANDAMENTO · ✅ DONE · ⏸️ PAUSADO
 
-**Suíte completa do projeto:** 270 testes passando, 0 falhando
+**Suíte completa do projeto:** 282 testes passando, 0 falhando
 
 ---
 
@@ -233,49 +233,55 @@ exigir estabelecimento definido, senão viraria um ciclo. Daí
 
 ---
 
-## 🎯 Sprint F3.4 — Tenant Management
+## ✅ Sprint F3.4 — Tenant Management
+
+**Concluído em:** 2026-08-16 · **Testes:** 12/12
 
 ### Checklist (25 itens)
 
 **Views:**
-- [ ] Lista de tenants (`/tenants`)
-- [ ] Detalhe de tenant (`/tenants/{id}`)
-- [ ] Criar tenant (`/tenants/create`)
-- [ ] Editar tenant (`/tenants/{id}/edit`)
-- [ ] Deletar tenant (modal confirmação)
+- [x] Lista de tenants (`/tenants`)
+- [x] Detalhe de tenant (`/tenants/{id}`)
+- [x] Criar tenant (`/tenants/create`)
+- [x] Editar tenant (`/tenants/{id}/edit`)
+- [x] Deletar tenant (modal confirmação)
 
 **Funcionalidades:**
-- [ ] Listagem com paginação (20 por página)
-- [ ] Busca por nome
-- [ ] Filtro por status (ACTIVE, INACTIVE, TRIAL, ARCHIVED)
-- [ ] Ordenação (nome, status, criação)
-- [ ] Criar novo tenant:
-  - [ ] Nome
-  - [ ] Slug (auto-gerado)
-  - [ ] Status (enum)
-  - [ ] Plan (free, standard, enterprise)
-  - [ ] Timezone
-  - [ ] Locale (pt-BR, en-US)
-  - [ ] Moeda
-- [ ] Editar tenant (exceto ID)
-- [ ] Soft delete com recover
-- [ ] Visualizar detalhes (com info de criação/atualização)
+- [x] Listagem com paginação (20 por página)
+- [x] Busca por nome
+- [x] Filtro por status (TRIAL, ACTIVE, SUSPENDED, CANCELLED)
+- [x] Ordenação (nome, status, criação)
+- [x] Criar novo tenant:
+  - [x] Nome
+  - [x] Slug (auto-gerado)
+  - [x] Status (enum)
+  - [x] Plan (free, standard, enterprise)
+  - [x] Timezone
+  - [x] Locale (pt-BR, en-US)
+  - [x] Moeda
+- [x] Editar tenant (exceto ID)
+- [x] Soft delete com recover
+- [x] Visualizar detalhes (com info de criação/atualização)
 
 **Componentes:**
-- [ ] TenantTable (listar com ações)
-- [ ] TenantForm (create + edit)
-- [ ] TenantCard (widget)
-- [ ] DeleteModal (confirmação)
+- [x] TenantTable (listar com ações)
+- [x] TenantForm (create + edit)
+- [x] TenantCard (widget)
+- [x] DeleteModal (confirmação)
 
 **Testes:**
-- [ ] Listar tenants renderiza corretamente
-- [ ] Busca filtra tenants
-- [ ] Criar tenant salva no BD
-- [ ] Editar tenant atualiza dados
-- [ ] Deletar tenant soft deletes
-- [ ] Validações server-side funcionam
-- [ ] Paginação funciona
-- [ ] Usuário sem permissão → 403
+- [x] Listar tenants renderiza corretamente
+- [x] Busca filtra tenants
+- [x] Criar tenant salva no BD
+- [x] Editar tenant atualiza dados
+- [x] Deletar tenant soft deletes
+- [x] Validações server-side funcionam
+- [x] Paginação funciona
+- [x] Usuário sem permissão → 403
+
+**Nota de implementação:** `ARCHIVED` não existe no enum real de `tenants`.
+O arquivo/arquivamento foi implementado como `deleted_at` via SoftDeletes,
+mantendo os status reais do schema (`TRIAL`, `ACTIVE`, `SUSPENDED`, `CANCELLED`).
 
 ---
 
@@ -393,7 +399,7 @@ lucraone-backend/
 │       ├── auth/login.blade.php ...................... ✅ stub → F3.2 funcional
 │       ├── errors/{403,404,419}.blade.php ............ ⬜ F3.2
 │       ├── dashboard/index.blade.php ................. ✅ dados reais no F3.3
-│       ├── tenants/ .................................. ⬜ F3.4
+│       ├── tenants/ .................................. ✅ F3.4
 │       ├── users/ .................................... ⬜ F3.5
 │       ├── companies/ ................................ ⬜ F3.6
 │       └── roles/ .................................... ⬜ F3.6
@@ -404,13 +410,13 @@ lucraone-backend/
 │   ├── Controllers/Web/
 │   │   ├── Auth/LoginController.php .................. ⬜ F3.2
 │   │   ├── DashboardController.php ................... ✅ F3.3
-│   │   ├── TenantController.php ...................... ⬜ F3.4
+│   │   ├── TenantController.php ...................... ✅ F3.4
 │   │   ├── UserController.php ........................ ⬜ F3.5
 │   │   ├── CompanyController.php ..................... ⬜ F3.6
 │   │   └── RoleController.php ........................ ⬜ F3.6
 │   └── Requests/
 │       ├── Auth/LoginRequest.php ..................... ⬜ F3.2
-│       ├── StoreTenantRequest.php .................... ⬜ F3.4
+│       ├── StoreTenantRequest.php .................... ✅ F3.4
 │       ├── StoreUserRequest.php ...................... ⬜ F3.5
 │       └── StoreCompanyRequest.php ................... ⬜ F3.6
 ├── routes/web.php .................................... ✅
@@ -531,4 +537,4 @@ validações exige Postman ou tinker.
 
 ---
 
-**Sprint atual: F3.4 — Tenant Management** 🚀
+**Sprint atual: F3.5 — User Management** 🚀

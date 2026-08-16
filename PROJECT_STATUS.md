@@ -1,11 +1,11 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (F3.3 concluído — dashboard com dados reais)
-**Fase Atual:** FASE 03 — ADMIN FRONTEND (3/6 sprints)
-**Próxima Sprint:** F3.4 — Tenant Management
+**Atualizado em:** 2026-08-16 (F3.4 concluído — tenant management)
+**Fase Atual:** FASE 03 — ADMIN FRONTEND (4/6 sprints)
+**Próxima Sprint:** F3.5 — User Management
 **Fase Pausada:** FASE 02 — FEATURES (F2.1 concluído, F2.2 aguardando frontend)
-**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 17% (1/6) | FASE 03 🟡 50% (3/6)
-**Testes:** 270 passing, 0 failing
+**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 17% (1/6) | FASE 03 🟡 67% (4/6)
+**Testes:** 282 passing, 0 failing
 
 > 🔓 **O sistema já é operável por um humano.** Desde o F3.2 existe login web
 > em `/login`. Uma pessoa com vínculo em vários estabelecimentos escolhe onde
@@ -31,12 +31,12 @@
 
 | Item | Status |
 |------|--------|
-| **Fase Atual** | FASE 03 — ADMIN FRONTEND (3/6 sprints) |
-| **Próxima Sprint** | F3.4 — Tenant Management |
+| **Fase Atual** | FASE 03 — ADMIN FRONTEND (4/6 sprints) |
+| **Próxima Sprint** | F3.5 — User Management |
 | **Fase Concluída** | FASE 01 — FOUNDATION (7/7) |
 | **Fase Pausada** | FASE 02 — FEATURES (1/6, retoma após F3.6) |
-| **Testes Totais** | 270 passing, 0 failing |
-| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 17 · FASE 03: 26 |
+| **Testes Totais** | 282 passing, 0 failing |
+| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 17 · FASE 03: 38 |
 
 ### Ordem de Execução Atualizada
 
@@ -81,7 +81,7 @@ FASE 02 (retomada)        📋 F2.2 — Inventory Management
 | **F3.1** | Frontend Setup & Layout | ✅ DONE | 15/15 | 6/6 | Página placeholder com Tailwind aplicado |
 | **F3.2** | Authentication (Login/Logout) | ✅ DONE | 22/22 | 14/14 | **Login em `/login` com email + senha** |
 | **F3.3** | Admin Dashboard | ✅ DONE | 15/15 | 6/6 | Painel com menu lateral e widgets reais |
-| **F3.4** | Tenant Management | 📋 TODO | 0/25 | 0/12 | **Cadastrar novo estabelecimento (tenant)** |
+| **F3.4** | Tenant Management | ✅ DONE | 25/25 | 12/12 | **Cadastrar novo estabelecimento (tenant)** |
 | **F3.5** | User Management | 📋 TODO | 0/25 | 0/12 | **Cadastrar usuários (admin, operador)** |
 | **F3.6** | Company & Roles Management | 📋 TODO | 0/20 | 0/10 | Empresas, endereços e permissões |
 
@@ -91,7 +91,7 @@ FASE 02 (retomada)        📋 F2.2 — Inventory Management
 
 ## 🎯 FASE 03 — ADMIN FRONTEND
 
-**Status:** 🟡 EM ANDAMENTO (3/6 sprints) — **FASE ATIVA**
+**Status:** 🟡 EM ANDAMENTO (4/6 sprints) — **FASE ATIVA**
 
 **Stack:** Laravel Blade + Tailwind CSS + Alpine.js
 
@@ -101,7 +101,7 @@ Sem isso, o sistema só é operável via cURL/Postman.
 
 **Roadmap detalhado:** [ROADMAP_FASE_03_ADMIN_FRONTEND.md](ROADMAP_FASE_03_ADMIN_FRONTEND.md)
 
-**Progresso:** 3/6 sprints, 26/~59 testes
+**Progresso:** 4/6 sprints, 38/~59 testes
 
 ### Sprints
 
@@ -192,34 +192,36 @@ menu renderiza, links funcionam, breadcrumbs corretos, responsivo
 
 #### Sprint F3.4 — Tenant Management
 
-**Status:** 📋 TODO
+**Status:** ✅ DONE
 **Objetivo:** CRUD completo de tenants (estabelecimentos)
 **Como testar:** criar um novo estabelecimento pela interface, sem tinker
 
 **Checklist:**
 
-- [ ] Listagem de tenants (`/tenants`) com paginação
-- [ ] Busca por nome
-- [ ] Filtro por status (ACTIVE, INACTIVE, TRIAL, ARCHIVED)
-- [ ] Ordenação (nome, status, data)
-- [ ] Formulário de criação (`/tenants/create`)
-- [ ] Campo nome
-- [ ] Campo slug (auto-gerado a partir do nome)
-- [ ] Campo status
-- [ ] Campo plano (free, standard, enterprise)
-- [ ] Campo timezone
-- [ ] Campo locale (pt-BR, en-US)
-- [ ] Campo moeda
-- [ ] Formulário de edição (`/tenants/{id}/edit`)
-- [ ] Página de detalhe (`/tenants/{id}`)
-- [ ] Soft delete com modal de confirmação
-- [ ] Restaurar tenant excluído
-- [ ] Componente TenantTable
-- [ ] Componente TenantForm
-- [ ] Componente DeleteModal
-- [ ] Validação server-side (StoreTenantRequest)
-- [ ] Controle de permissão (só admin cria tenant)
-- [ ] 12 testes de tenant management
+- [x] Listagem de tenants (`/tenants`) com paginação
+- [x] Busca por nome
+- [x] Filtro por status (TRIAL, ACTIVE, SUSPENDED, CANCELLED)
+- [x] Ordenação (nome, status, data)
+- [x] Formulário de criação (`/tenants/create`)
+- [x] Campo nome
+- [x] Campo slug (auto-gerado a partir do nome)
+- [x] Campo status
+- [x] Campo plano (free, standard, enterprise)
+- [x] Campo timezone
+- [x] Campo locale (pt-BR, en-US)
+- [x] Campo moeda
+- [x] Formulário de edição (`/tenants/{id}/edit`)
+- [x] Página de detalhe (`/tenants/{id}`)
+- [x] Soft delete com modal de confirmação
+- [x] Restaurar tenant excluído
+- [x] Componente TenantTable
+- [x] Componente TenantForm
+- [x] Componente DeleteModal
+- [x] Validação server-side (StoreTenantRequest)
+- [x] Controle de permissão (só admin cria tenant)
+- [x] 12 testes de tenant management
+
+**Nota:** arquivamento usa `deleted_at` via SoftDeletes; `ARCHIVED` não é status do enum real de tenants.
 
 ---
 

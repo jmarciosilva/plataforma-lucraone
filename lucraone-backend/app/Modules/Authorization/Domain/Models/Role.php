@@ -30,7 +30,9 @@ class Role extends Model
             'role_permission',
             'role_id',
             'permission_id'
-        )->withTimestamps();
+        )
+            ->withoutGlobalScopes()
+            ->withTimestamps();
     }
 
     public function permissionsForTenant()

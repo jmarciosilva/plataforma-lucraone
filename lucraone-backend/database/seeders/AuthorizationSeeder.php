@@ -6,6 +6,7 @@ use App\Modules\Authorization\Domain\Models\Permission;
 use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class AuthorizationSeeder extends Seeder
 {
@@ -44,9 +45,10 @@ class AuthorizationSeeder extends Seeder
 
         $permissions = [];
         foreach ($permissionNames as $name) {
-            $permissions[$name] = Permission::factory()
-                ->forTenant($tenant->id)
-                ->create(['name' => $name]);
+            $permissions[$name] = Permission::withoutGlobalScopes()->firstOrCreate(
+                ['tenant_id' => $tenant->id, 'name' => $name],
+                ['id' => (string) Str::ulid(), 'description' => $name]
+            );
         }
 
         return $permissions;
@@ -54,25 +56,25 @@ class AuthorizationSeeder extends Seeder
 
     private function createRoles(Tenant $tenant, array $permissions): void
     {
-        $admin = Role::factory()
-            ->admin()
-            ->forTenant($tenant->id)
-            ->create();
+        $admin = Role::withoutGlobalScopes()->firstOrCreate(
+            ['tenant_id' => $tenant->id, 'name' => 'admin'],
+            ['id' => (string) Str::ulid(), 'description' => 'Administrator role with full access']
+        );
 
-        $manager = Role::factory()
-            ->manager()
-            ->forTenant($tenant->id)
-            ->create();
+        $manager = Role::withoutGlobalScopes()->firstOrCreate(
+            ['tenant_id' => $tenant->id, 'name' => 'manager'],
+            ['id' => (string) Str::ulid(), 'description' => 'Manager role with limited administrative access']
+        );
 
-        $user = Role::factory()
-            ->user()
-            ->forTenant($tenant->id)
-            ->create();
+        $user = Role::withoutGlobalScopes()->firstOrCreate(
+            ['tenant_id' => $tenant->id, 'name' => 'user'],
+            ['id' => (string) Str::ulid(), 'description' => 'Regular user role']
+        );
 
-        $viewer = Role::factory()
-            ->viewer()
-            ->forTenant($tenant->id)
-            ->create();
+        $viewer = Role::withoutGlobalScopes()->firstOrCreate(
+            ['tenant_id' => $tenant->id, 'name' => 'viewer'],
+            ['id' => (string) Str::ulid(), 'description' => 'Viewer role with read-only access']
+        );
 
         $adminPermissions = [
             'create-role', 'update-role', 'delete-role', 'view-roles',

@@ -27,6 +27,7 @@ class UserSeeder extends Seeder
             );
 
             $admin->joinTenant($tenant->id, TenantUser::STATUS_ACTIVE);
+            $admin->assignRole('admin', $tenant->id);
 
             // Completa até 3 pessoas com vínculo ativo neste estabelecimento
             $ativos = $tenant->memberships()

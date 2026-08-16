@@ -3,6 +3,7 @@
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\EstabelecimentoController;
+use App\Http\Controllers\Web\TenantController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -41,4 +42,8 @@ Route::middleware('auth.web:sem-tenant')->group(function () {
 // Painel: exige estabelecimento em uso
 Route::middleware('auth.web')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+    Route::post('/tenants/{tenant}/restore', [TenantController::class, 'restore'])
+        ->name('tenants.restore');
+    Route::resource('tenants', TenantController::class);
 });

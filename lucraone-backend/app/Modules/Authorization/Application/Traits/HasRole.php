@@ -24,7 +24,9 @@ trait HasRole
             'user_role',
             'user_id',
             'role_id'
-        )->withTimestamps();
+        )
+            ->withoutGlobalScopes()
+            ->withTimestamps();
     }
 
     /**

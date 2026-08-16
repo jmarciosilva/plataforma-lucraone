@@ -1,9 +1,9 @@
 # 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-16 (F3.3 — dashboard com dados reais)
-**Fase Ativa:** FASE 03 — ADMIN FRONTEND 🟡 (3/6 sprints)
+**Atualizado:** 2026-08-16 (F3.4 — tenant management)
+**Fase Ativa:** FASE 03 — ADMIN FRONTEND 🟡 (4/6 sprints)
 **Fase Pausada:** FASE 02 — FEATURES ⏸️ (1/6 sprints)
-**Testes:** 270 passing
+**Testes:** 282 passing
 
 ---
 
@@ -20,8 +20,8 @@
 │  ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   17%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 03 — ADMIN FRONTEND        🟡 ATIVO  ← AQUI            │
-│  3/6 sprints · 26/~59 testes                                 │
-│  ████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░   50%      │
+│  4/6 sprints · 38/~59 testes                                 │
+│  ████████████████████████████████░░░░░░░░░░░░░░░░   67%      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -299,18 +299,18 @@ Escopo:
 Como validar:  painel carrega com contagens reais do banco
 ```
 
-### 📋 Sprint F3.4 — Tenant Management
+### ✅ Sprint F3.4 — Tenant Management
 
 ```
-Status:     📋 TODO
-Progresso:  0/25 itens
-Tests:      0/12
+Status:     ✅ DONE (100%)
+Progresso:  25/25 itens
+Tests:      12/12 passing ✅
 
 Escopo:
-  ⬜ CRUD completo de tenants (estabelecimentos)
-  ⬜ Busca, filtro por status, ordenação, paginação
-  ⬜ Campos: nome, slug, status, plano, timezone, locale, moeda
-  ⬜ Soft delete com confirmação + restaurar
+  ✅ CRUD completo de tenants (estabelecimentos)
+  ✅ Busca, filtro por status, ordenação, paginação
+  ✅ Campos: nome, slug, status, plano, timezone, locale, moeda
+  ✅ Soft delete com confirmação + restaurar
 
 Como validar:  criar novo estabelecimento pela interface (sem tinker)
 ```
@@ -431,7 +431,7 @@ Breakdown FASE 03 (0 / meta ~53):
   F3.1 (Setup):           ⬜ 0/5
   F3.2 (Auth UI):         ⬜ 0/8
   F3.3 (Dashboard):       ✅ 6/6
-  F3.4 (Tenants):         ⬜ 0/12
+  F3.4 (Tenants):         ✅ 12/12
   F3.5 (Users):           ⬜ 0/12
   F3.6 (Companies/Roles): ⬜ 0/10
 ```
@@ -511,15 +511,15 @@ Foundation Phase:       ✅ 100% (7/7 sprints) — 189 TESTS
 
 ## ⚙️ Próximas Ações (Roadmap)
 
-### 🔜 Imediato — Sprint F3.4 (Tenant Management)
+### 🔜 Imediato — Sprint F3.5 (User Management)
 
-- [ ] Listagem de tenants (`/tenants`) com busca, filtros e paginação
-- [ ] Formulário de criação e edição de estabelecimento
-- [ ] Soft delete com confirmação e restauração
-- [ ] Controle de permissão para gerenciamento
+- [ ] Listagem de usuários por tenant
+- [ ] Formulário de criação e edição de usuário
+- [ ] Atribuição de roles por estabelecimento
+- [ ] Ativar/desativar usuário
 - [ ] 12 testes
 
-### Depois — F3.4 (Tenants) → F3.5 (Users) → F3.6 (Companies/Roles)
+### Depois — F3.5 (Users) → F3.6 (Companies/Roles)
 
 ### 🔧 Dívida técnica
 
@@ -683,7 +683,7 @@ Uma sprint é considerada **pronta** quando:
 
 ---
 
-**Próxima atualização:** Ao concluir o Sprint F3.4
+**Próxima atualização:** Ao concluir o Sprint F3.5
 **Gerado:** 2026-08-16 (FASE 03 — Admin Frontend planejada)
 **Repositório:** D:\PROJETO-LUCRAONE
 
@@ -693,7 +693,7 @@ Uma sprint é considerada **pronta** quando:
 
 ✅ **FASE 01 — FOUNDATION:** 189 testes, 7/7 sprints, segurança OWASP validada
 ✅ **F2.1 — Products:** 17 testes, API de produtos/categorias/preços funcionando
-🟡 **FASE 03 — ADMIN FRONTEND:** 3/6 sprints concluídos; próximo F3.4
+🟡 **FASE 03 — ADMIN FRONTEND:** 4/6 sprints concluídos; próximo F3.5
 
 **Lacuna que a FASE 03 resolve:** o sistema não tem tela de login nem painel
 administrativo. Toda operação hoje depende de `tinker` + Postman.

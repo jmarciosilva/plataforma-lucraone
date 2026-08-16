@@ -4,7 +4,8 @@
     // Rotas ainda não criadas (sprints seguintes) caem em "#" sem quebrar o menu
     $existe = \Illuminate\Support\Facades\Route::has($rota);
     $href = $existe ? route($rota) : '#';
-    $ativo = $existe && request()->routeIs($rota . '*');
+    $prefixo = \Illuminate\Support\Str::before($rota, '.');
+    $ativo = $existe && (request()->routeIs($rota . '*') || request()->routeIs($prefixo . '.*'));
 @endphp
 
 <a
