@@ -6,7 +6,9 @@
 **Duração Estimada:** ~6-8 semanas  
 **Stack:** Laravel Blade + Tailwind CSS + Alpine.js  
 **Dependência:** FASE 01 ✅ · F2.1 ✅  
-**Bloqueia:** F2.2 em diante (FASE 02 pausada até F3.6)
+**Bloqueia:** F2.2 em diante (FASE 02 pausada até F3.6)  
+**Referência visual:** [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) — extraído da demo
+aprovada pelos sócios (https://mentor-ia-demo.netlify.app/r/demo/inteligencia)
 
 ---
 
@@ -54,17 +56,28 @@ A FASE 03 fecha essa lacuna antes de acumular mais módulos de negócio.
 
 ### Checklist (15 itens)
 
-- [ ] Instalar Tailwind CSS via npm
+> 🎨 Todo o visual segue o [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
+
+- [ ] Instalar Tailwind CSS via npm + configurar Vite
+- [ ] **Aplicar paleta no `tailwind.config.js`** — sol `#FF7A00`, ambar, brasa,
+      ok, grafite, aco, linha, nevoa; raio `modulo: 14px`; sombra `cartao`
+- [ ] **Criar utilitários customizados** — `.cartao`, `.gradiente-sol`,
+      `.gradiente-sol-suave`, `.texto-sol`, `.rotulo-secao`
+- [ ] **Carregar fontes** — Karla (corpo), Archivo (logo), Martian Mono (valores)
 - [ ] Configurar estrutura de arquivos (layouts, components, views)
-- [ ] Criar layout principal (header, sidebar, footer)
+- [ ] **Sidebar 240px** — logo `lucra.one` com `.texto-sol`, subtítulo com nome
+      do tenant ativo, itens de menu com ícone 32×32 e estado ativo em gradiente
+- [ ] Criar layout principal (sidebar + área de conteúdo)
 - [ ] Criar componentes reutilizáveis:
-  - [ ] Button (primário, secundário, danger)
-  - [ ] Input (text, email, password, textarea)
+  - [ ] Button (primário com `gradiente-sol`, secundário, danger com `brasa`)
+  - [ ] Input (text, email, password, textarea) — borda `linha`, foco `sol`
   - [ ] Select (dropdown)
   - [ ] Modal
-  - [ ] Alert/Toast
-  - [ ] Table (com paginação)
+  - [ ] Alert/Toast (sucesso `ok`, erro `brasa`, atenção `alerta`)
+  - [ ] Table (dentro de `.cartao`, com paginação)
   - [ ] Form Group (label + input + error)
+  - [ ] **Card de KPI** — rótulo pequeno → valor grande em mono → variação com seta
+  - [ ] **Rótulo de seção** — MAIÚSCULAS, `tracking-wide`, cor `aco`
 - [ ] Criar página de welcome/placeholder
 - [ ] Setup Alpine.js para interatividade
 - [ ] Criar middleware para auth em web routes
