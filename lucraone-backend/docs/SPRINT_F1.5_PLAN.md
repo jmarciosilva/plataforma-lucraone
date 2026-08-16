@@ -1,8 +1,9 @@
 # Sprint F1.5 — Authorization (Roles & Permissions)
 
-**Status:** 🟡 IN_PROGRESS  
+**Status:** ✅ COMPLETE  
 **Data Início:** 2026-08-13 20:50 UTC  
-**Objetivo:** Implementar RBAC (Role-Based Access Control) com isolamento por tenant
+**Data Conclusão:** 2026-08-16  
+**Resultado:** RBAC (Role-Based Access Control) com isolamento por tenant implementado (17 testes passando)
 
 ---
 
