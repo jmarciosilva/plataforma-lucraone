@@ -87,7 +87,7 @@ class ProductApiTest extends TestCase
             ->getJson("/api/v1/products/{$product->id}");
 
         $response->assertStatus(200)
-            ->assertJsonPath('data.id', $product->id)
+            ->assertJsonPath('data.id', (string) $product->id)
             ->assertJsonPath('data.sku', $product->sku);
     }
 

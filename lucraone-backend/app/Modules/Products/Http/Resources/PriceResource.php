@@ -10,8 +10,8 @@ class PriceResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'product_id' => $this->product_id,
+            'id' => (string) $this->id,
+            'product_id' => (string) $this->product_id,
             'currency' => $this->currency,
             'amount' => (float) $this->amount,
             'type' => $this->type,

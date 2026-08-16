@@ -2,6 +2,7 @@
 
 namespace App\Modules\Products\Domain\Models;
 
+use App\Modules\Core\Domain\Traits\HasUlid;
 use App\Modules\Tenancy\Domain\Models\HasTenant;
 use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use HasFactory, HasTenant, SoftDeletes;
+    use HasFactory, HasTenant, HasUlid, SoftDeletes;
 
     protected static function newFactory()
     {

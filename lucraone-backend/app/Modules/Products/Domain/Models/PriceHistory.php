@@ -2,12 +2,13 @@
 
 namespace App\Modules\Products\Domain\Models;
 
+use App\Modules\Core\Domain\Traits\HasUlid;
 use App\Modules\Tenancy\Domain\Models\HasTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class PriceHistory extends Model
 {
-    use HasTenant;
+    use HasTenant, HasUlid;
 
     protected $table = 'price_histories';
 

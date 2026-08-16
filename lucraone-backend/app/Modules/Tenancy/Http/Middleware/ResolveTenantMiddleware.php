@@ -27,6 +27,12 @@ class ResolveTenantMiddleware
             return $next($request);
         }
 
+        // Se não há token, deixar que auth:sanctum cuide (vai retornar 401)
+        // O middleware de tenant deve vir DEPOIS de auth:sanctum
+        if (!$this->hasAuthToken($request)) {
+            return $next($request);
+        }
+
         // Rotas autenticadas precisam de tenant resolvido
         if (! $this->resolver->resolve($request)) {
             throw new TenantNotResolvedException(
@@ -65,5 +71,13 @@ class ResolveTenantMiddleware
         }
 
         return false;
+    }
+
+    /**
+     * Verifica se há token no header de autenticação.
+     */
+    private function hasAuthToken(Request $request): bool
+    {
+        return $request->bearerToken() !== null;
     }
 }

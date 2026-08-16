@@ -81,7 +81,7 @@ class CategoryApiTest extends TestCase
             ->getJson("/api/v1/categories/{$category->id}");
 
         $response->assertStatus(200)
-            ->assertJsonPath('data.id', $category->id);
+            ->assertJsonPath('data.id', (string) $category->id);
     }
 
     /**
@@ -95,6 +95,7 @@ class CategoryApiTest extends TestCase
             ->withHeader('X-Tenant-ID', $this->tenant->id)
             ->putJson("/api/v1/categories/{$category->id}", [
                 'name' => 'Updated Category',
+                'slug' => 'updated-category',
             ]);
 
         $response->assertStatus(200)
@@ -161,8 +162,8 @@ class CategoryApiTest extends TestCase
 
         $response->assertStatus(200);
         $children = collect($response->json('data'))->pluck('id');
-        $this->assertTrue($children->contains($child1->id));
-        $this->assertTrue($children->contains($child2->id));
+        $this->assertTrue($children->contains((string) $child1->id));
+        $this->assertTrue($children->contains((string) $child2->id));
     }
 
     /**
@@ -181,7 +182,7 @@ class CategoryApiTest extends TestCase
             ]);
 
         $response->assertStatus(201)
-            ->assertJsonPath('data.parent_id', $parent->id);
+            ->assertJsonPath('data.parent_id', (string) $parent->id);
     }
 
     /**

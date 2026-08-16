@@ -10,7 +10,6 @@ use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Str;
 
 class PriceController extends Controller
 {
@@ -44,15 +43,13 @@ class PriceController extends Controller
                 'type' => $request->validated('type'),
             ],
             [
-                'id' => Str::ulid(),
                 'amount' => $request->validated('amount'),
             ]
         );
 
-        return response()->json(
-            new PriceResource($price),
-            201
-        );
+        return (new PriceResource($price))
+            ->response()
+            ->setStatusCode(201);
     }
 
     /**

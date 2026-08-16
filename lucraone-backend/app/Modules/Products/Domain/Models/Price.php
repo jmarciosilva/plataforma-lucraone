@@ -2,6 +2,7 @@
 
 namespace App\Modules\Products\Domain\Models;
 
+use App\Modules\Core\Domain\Traits\HasUlid;
 use App\Modules\Tenancy\Domain\Models\HasTenant;
 use Database\Factories\PriceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Price extends Model
 {
-    use HasFactory, HasTenant;
+    use HasFactory, HasTenant, HasUlid;
 
     protected static function newFactory()
     {
