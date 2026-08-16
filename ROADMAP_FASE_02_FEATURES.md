@@ -3,12 +3,16 @@
 
 **Projeto:** Plataforma SaaS Inteligente de Automação Comercial  
 **Fase:** 02 — FEATURES  
-**Status:** ⏸️ PAUSADO após F2.1 (retoma em F2.2 após a FASE 03)  
+**Status:** 🟡 ATIVO — F2.1 concluído, F2.2 é o próximo
 **Prioridade:** Alta  
-**Dependência:** FASE 01 ✅ Concluída · FASE 03 — ADMIN FRONTEND (pré-requisito para F2.2+)  
+**Dependência:** FASE 01 ✅ Concluída · FASE 03 ✅ Concluída
 **Estimativa:** 6 sprints (~12-16 semanas)  
 
-> ⏸️ **Pausa em 2026-08-16 — após F2.1.**
+> ✅ **Retomada liberada em 2026-08-16.**
+> A FASE 03 foi concluída, então a FASE 02 pode seguir para F2.2 —
+> Inventory Management.
+>
+> ⏸️ **Pausa anterior em 2026-08-16 — após F2.1.**
 > A FASE 02 entrega APIs de negócio, mas o sistema ainda não possui interface de
 > acesso: não há tela de login nem painel administrativo para cadastrar tenants,
 > usuários e empresas. Continuar acumulando endpoints sem UI tornaria o produto
@@ -16,18 +20,18 @@
 >
 > **Decisão:** inserir a [FASE 03 — ADMIN FRONTEND](ROADMAP_FASE_03_ADMIN_FRONTEND.md)
 > (Blade + Tailwind) antes de F2.2. A FASE 02 retoma no Sprint F2.2 — Inventory
-> Management assim que o F3.6 for concluído.
+> Management após o F3.6.
 
 ### Progresso Atual
 
 | Sprint | Status | Testes |
 |--------|--------|--------|
-| F2.1 — Products Management | ✅ DONE | 17 passing |
-| F2.2 — Inventory Management | ⏸️ Aguarda FASE 03 | — |
-| F2.3 — Orders / Vendas | ⏸️ Aguarda FASE 03 | — |
-| F2.4 — Payments | ⏸️ Aguarda FASE 03 | — |
-| F2.5 — Reports | ⏸️ Aguarda FASE 03 | — |
-| F2.6 — Integrations | ⏸️ Aguarda FASE 03 | — |
+| F2.1 — Products Management | ✅ DONE | 42 passing |
+| F2.2 — Inventory Management | 📋 TODO | — |
+| F2.3 — Orders / Vendas | ⏸️ Aguarda F2.2 | — |
+| F2.4 — Payments | ⏸️ Aguarda F2.3 | — |
+| F2.5 — Reports | ⏸️ Aguarda F2.4 | — |
+| F2.6 — Integrations | ⏸️ Aguarda F2.5 | — |
 
 ---
 
@@ -97,13 +101,13 @@ app/Modules/
 ├── Authorization/        # ✅ Já existe
 ├── Audit/                # ✅ Já existe
 │
-├── Products/             # 🟡 F2.1 — Novo
+├── Products/             # ✅ F2.1 — Implementado
 │   ├── Domain/
 │   ├── Application/
 │   ├── Infrastructure/
 │   └── Http/
 │
-├── Inventory/            # 🟡 F2.2 — Novo
+├── Inventory/            # 📋 F2.2 — Próximo
 │   ├── Domain/
 │   ├── Application/
 │   ├── Infrastructure/
@@ -140,60 +144,88 @@ app/Modules/
 
 ## Sprint F2.1 — Core Features: Products, Categories & Pricing
 
-**Duração:** ~2 semanas  
+**Status:** ✅ DONE
+**Concluído em:** 2026-08-16
+**Testes:** 42 passing (`tests/Feature/Products`)
 **Objetivo:** Permitir criação, categorização e precificação de produtos  
+
+**Validação real em 2026-08-16:** módulo `app/Modules/Products` presente,
+20 rotas API em `/api/v1`, migrations/factories criadas e suíte de Products
+passando com 42 testes.
 
 ### Requisitos
 
 #### Modelos
-- [ ] Product (SKU, name, description, tenant_id, company_id)
-- [ ] Category (name, parent_id, tenant_id) — hierarchical
-- [ ] ProductCategory (many-to-many)
-- [ ] Price (product_id, currency, amount, type, tenant_id)
-- [ ] PriceHistory (auditoria de mudanças de preço)
+- [x] Product (SKU, name, description, tenant_id, company_id)
+- [x] Category (name, parent_id, tenant_id) — hierarchical
+- [x] ProductCategory (many-to-many)
+- [x] Price (product_id, currency, amount, type, tenant_id)
+- [x] PriceHistory (auditoria de mudanças de preço)
 
 #### Banco de Dados
-- [ ] products table
-- [ ] categories table (with parent_id for hierarchy)
-- [ ] product_category pivot
-- [ ] prices table
-- [ ] price_history table (audit trail)
+- [x] products table
+- [x] categories table (with parent_id for hierarchy)
+- [x] product_category pivot
+- [x] prices table
+- [x] price_history table (audit trail)
 
 #### API Endpoints
-- [ ] POST /api/v1/products (create)
-- [ ] GET /api/v1/products (list with filters)
-- [ ] GET /api/v1/products/{id} (show)
-- [ ] PUT /api/v1/products/{id} (update)
-- [ ] DELETE /api/v1/products/{id} (soft delete)
-- [ ] POST /api/v1/categories (create)
-- [ ] GET /api/v1/categories (hierarchical list)
-- [ ] PUT /api/v1/categories/{id} (update)
-- [ ] POST /api/v1/prices (create/update)
-- [ ] GET /api/v1/prices/history/{product_id} (audit trail)
+- [x] POST /api/v1/products (create)
+- [x] GET /api/v1/products (list with filters)
+- [x] GET /api/v1/products/{id} (show)
+- [x] PUT /api/v1/products/{id} (update)
+- [x] DELETE /api/v1/products/{id} (soft delete)
+- [x] POST /api/v1/categories (create)
+- [x] GET /api/v1/categories (hierarchical list)
+- [x] GET /api/v1/categories/roots
+- [x] GET /api/v1/categories/{id}/children
+- [x] PUT /api/v1/categories/{id} (update)
+- [x] DELETE /api/v1/categories/{id} (soft delete)
+- [x] POST /api/v1/prices (create/update)
+- [x] GET /api/v1/prices/product/{product_id}
+- [x] GET /api/v1/prices/sale/{product_id}
+- [x] GET /api/v1/prices/cost/{product_id}
+- [x] GET /api/v1/prices/history/{product_id} (audit trail)
+- [x] DELETE /api/v1/prices/{price_id}
 
 #### Features
-- [ ] Category hierarchy (parent-child relationships)
-- [ ] Product image upload (abstração para storage)
-- [ ] Bulk import de produtos (CSV)
-- [ ] SKU uniqueness por tenant
-- [ ] Price versioning com histórico completo
-- [ ] Multi-currency support ready
-- [ ] Soft deletes para produtos e categorias
+- [x] Category hierarchy (parent-child relationships)
+- [x] SKU uniqueness por tenant
+- [x] Price versioning com histórico completo
+- [x] Multi-currency support ready
+- [x] Soft deletes para produtos e categorias
+- [x] Tenant isolation em products, categories e prices
+- [x] Busca de produtos por SKU/nome
+- [x] Filtro de produtos por status
+- [x] Cálculo de margem entre preço de custo e venda
+- [ ] Product image upload (adiado; não entrou no F2.1 entregue)
+- [ ] Bulk import de produtos (adiado; não entrou no F2.1 entregue)
 
-#### Testes (20+)
-- [ ] Product CRUD operations
-- [ ] Category hierarchy validation
-- [ ] Category isolation by tenant
-- [ ] Price history tracking
-- [ ] Bulk import validation
-- [ ] Concurrent price updates
-- [ ] SKU uniqueness enforcement
-- [ ] Cascading operations (delete category, orphan products)
+#### Testes (42)
+- [x] Product CRUD operations
+- [x] Category hierarchy validation
+- [x] Category isolation by tenant
+- [x] Price history tracking
+- [x] SKU uniqueness enforcement
+- [x] Slug de categoria único por tenant
+- [x] Soft delete de produto
+- [x] Associação produto-categoria
+- [x] Price scopes: sale/cost
+- [x] Multi-currency pricing
+- [x] Endpoints exigem autenticação
+- [x] Tenant isolation na API
+- [ ] Bulk import validation (adiado junto com importação CSV)
+- [ ] Concurrent price updates (não implementado no F2.1 entregue)
 
 #### Documentação
-- [ ] ADR-002: Product Domain Structure
-- [ ] Product Module Architecture
-- [ ] API Specification (OpenAPI)
+- [x] `TESTING_GUIDE.md` com testes manuais da API F2.1
+- [x] `PROJECT_STATUS.md` e `DEVELOPMENT_DASHBOARD.md` registram F2.1 como DONE
+- [ ] ADR-002: Product Domain Structure (pendente)
+- [ ] API Specification (OpenAPI) (pendente)
+
+**Nota:** a F2.1 foi considerada concluída como API operacional de produtos,
+categorias e preços. Upload de imagens, importação CSV e concorrência avançada
+de preços ficam para sprints futuras, pois não bloqueiam o Inventory Management.
 
 ---
 
@@ -515,23 +547,24 @@ Target: Início: 2026-08-19 | Fim: 2026-11-30
 
 ---
 
-# 12. Checklist de Inicialização F2.1
+# 12. Checklist de Inicialização F2.2
 
-Antes de começar F2.1:
+Antes de começar F2.2:
 
-- [ ] Revisar ROADMAP_FASE_02_FEATURES.md
+- [x] Revisar ROADMAP_FASE_02_FEATURES.md
+- [x] Confirmar F2.1 como concluído no checklist detalhado
 - [ ] Criar branches para cada sprint
-- [ ] Atualize PROJECT_STATUS.md com F2.1 status
-- [ ] Configure environment para F2.1 (if needed)
-- [ ] Crie ADR-002 (Product Domain)
-- [ ] Implemente primeiro Product model
-- [ ] Escreva testes para Product CRUD
-- [ ] Crie primeira migration para products table
-- [ ] Faça commit com `feat(F2.1): Initialize Products module`
+- [ ] Atualizar PROJECT_STATUS.md com início de F2.2
+- [ ] Configurar environment para F2.2, se necessário
+- [ ] Criar ADR-003 (Inventory Strategy), se a modelagem exigir decisão arquitetural
+- [ ] Implementar Inventory model
+- [ ] Escrever testes para movimentos de estoque
+- [ ] Criar migrations de inventories, inventory_movements e stock_levels
+- [ ] Fazer commit com `feat(F2.2): iniciar inventory management`
 
 ---
 
 **Autor:** Claude Code  
 **Data de Criação:** 2026-08-16  
-**Status:** Planejado  
-**Próxima Atualização:** Quando F2.1 iniciado
+**Status:** F2.1 concluído · F2.2 pronto para iniciar
+**Próxima Atualização:** Quando F2.2 iniciar
