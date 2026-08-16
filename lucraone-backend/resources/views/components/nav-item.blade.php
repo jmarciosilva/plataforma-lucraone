@@ -4,7 +4,9 @@
     // Rotas ainda não criadas (sprints seguintes) caem em "#" sem quebrar o menu
     $existe = \Illuminate\Support\Facades\Route::has($rota);
     $href = $existe ? route($rota) : '#';
-    $prefixo = \Illuminate\Support\Str::before($rota, '.');
+    // O grupo da rota é tudo menos a ação: "sales.orders.index" → "sales.orders".
+    // Usar só o primeiro segmento marcaria vendas e clientes ao mesmo tempo.
+    $prefixo = \Illuminate\Support\Str::beforeLast($rota, '.');
     $ativo = $existe && (request()->routeIs($rota . '*') || request()->routeIs($prefixo . '.*'));
 @endphp
 

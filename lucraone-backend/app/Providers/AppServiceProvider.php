@@ -18,6 +18,10 @@ use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Products\Http\Policies\CategoryPolicy;
 use App\Modules\Products\Http\Policies\ProductPolicy;
+use App\Modules\Sales\Domain\Models\Customer;
+use App\Modules\Sales\Domain\Models\Order;
+use App\Modules\Sales\Http\Policies\CustomerPolicy;
+use App\Modules\Sales\Http\Policies\OrderPolicy;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Tenancy\Http\Policies\TenantPolicy;
 use App\Modules\Tenancy\TenancyServiceProvider;
@@ -49,5 +53,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Category::class, CategoryPolicy::class);
         Gate::policy(Inventory::class, InventoryPolicy::class);
         Gate::policy(StockLevel::class, StockLevelPolicy::class);
+        Gate::policy(Order::class, OrderPolicy::class);
+        Gate::policy(Customer::class, CustomerPolicy::class);
     }
 }

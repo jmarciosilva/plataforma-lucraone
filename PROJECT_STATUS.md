@@ -1,11 +1,11 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (F2.2 concluído — inventory management)
-**Fase Atual:** FASE 02 — FEATURES (F2.3 é o próximo)
-**Próxima Sprint:** F2.3 — Sales & Orders
+**Atualizado em:** 2026-08-16 (F2.3 concluído — sales & orders)
+**Fase Atual:** FASE 02 — FEATURES (F2.4 é o próximo)
+**Próxima Sprint:** F2.4 — Reporting & Analytics
 **Fase Concluída:** FASE 03 — ADMIN FRONTEND (6/6 sprints)
-**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 2 entregas concluídas | FASE 03 ✅ 100% (6/6)
-**Testes:** 323 passing, 0 failing
+**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 4 entregas concluídas | FASE 03 ✅ 100% (6/6)
+**Testes:** 349 passing, 0 failing
 
 > 🔓 **O sistema já é operável por um humano.** Desde o F3.2 existe login web
 > em `/login`. Uma pessoa com vínculo em vários estabelecimentos escolhe onde
@@ -31,11 +31,11 @@
 
 | Item | Status |
 |------|--------|
-| **Fase Atual** | FASE 02 — FEATURES (F2.3 é o próximo) |
-| **Próxima Sprint** | F2.3 — Sales & Orders |
+| **Fase Atual** | FASE 02 — FEATURES (F2.4 é o próximo) |
+| **Próxima Sprint** | F2.4 — Reporting & Analytics |
 | **Fases Concluídas** | FASE 01 — FOUNDATION (8/8) · FASE 03 — ADMIN FRONTEND (6/6) |
-| **Testes Totais** | 323 passing, 0 failing |
-| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 36+ · FASE 03: 60 |
+| **Testes Totais** | 349 passing, 0 failing |
+| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 62+ · FASE 03: 60 |
 
 ### Ordem de Execução Atualizada
 
@@ -44,7 +44,7 @@ FASE 01 — FOUNDATION      ✅ COMPLETO   (8 sprints, 227 testes)
         ↓
 FASE 03 — ADMIN FRONTEND  ✅ COMPLETO   (F3.1-F3.6, 60 testes)
         ↓
-FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.1b ✅ | F2.2 ✅ | F2.3 é o próximo)
+FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.1b ✅ | F2.2 ✅ | F2.3 ✅ | F2.4 é o próximo)
 ```
 
 ### FASE 01 Sprints Status
@@ -67,10 +67,10 @@ FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.1b ✅ | F2.2 ✅ | F
 | **F2.1** | Products Management | ✅ DONE | 20/20 (100%) | 42 API/domain |
 | **F2.1b** | Products Web UI | ✅ DONE | 20/20 (100%) | 8 web |
 | **F2.2** | Inventory Management | ✅ DONE | 20/20 (100%) | 11 API/web |
-| **F2.3** | Orders / Vendas | 📋 PRÓXIMO | 0/20 | - |
-| **F2.4** | Payments | ⏸️ AGUARDA F3 | 0/20 | - |
-| **F2.5** | Reports | ⏸️ AGUARDA F3 | 0/20 | - |
-| **F2.6** | Integrations | ⏸️ AGUARDA F3 | 0/20 | - |
+| **F2.3** | Sales & Orders | ✅ DONE | 20/20 (100%) | 26 API/web |
+| **F2.4** | Reporting & Analytics | 📋 PRÓXIMO | 0/20 | - |
+| **F2.5** | Advanced Automation | ⏸️ AGUARDA F2.4 | 0/20 | - |
+| **F2.6** | Integration APIs | ⏸️ AGUARDA F2.5 | 0/20 | - |
 
 ### FASE 03 Sprints Status (ATIVO)
 
@@ -300,11 +300,11 @@ preservando histórico conforme a política de entidades principais da fundaçã
 
 ## 🎯 FASE 02 — FEATURES
 
-**Status:** 🟡 ATIVO — F2.3 é o próximo após F2.2
+**Status:** 🟡 ATIVO — F2.4 é o próximo após F2.3
 
 **Objetivo:** Implementar módulos de negócio para gerenciar produtos, inventário, pedidos, pagamentos, relatórios e integrações.
 
-**Progresso:** F2.1 API + F2.1b Web UI + F2.2 Inventory concluídas
+**Progresso:** F2.1 API + F2.1b Web UI + F2.2 Inventory + F2.3 Sales concluídas
 
 ### Sprints
 
@@ -385,6 +385,39 @@ cadastrar produto, adicionar preço e conferir detalhe/histórico.
 
 **Como validar:** acessar `/inventory`, registrar entrada/saída/ajuste e abrir
 o detalhe para conferir o histórico.
+
+---
+
+#### Sprint F2.3 — Sales & Orders
+
+**Status:** ✅ DONE
+**Objetivo:** Registrar pedidos de venda pelo painel e pela API, movimentando
+estoque nas transições de status
+
+**Checklist:**
+
+- [x] Módulo `Sales` com models Order, OrderItem e Customer
+- [x] Migrations de `orders`, `order_items` e `customers`
+- [x] `OrderService` centralizando fluxo de status e efeitos de estoque
+- [x] `OrderNumberGenerator` com numeração `PED-AAAAMM-0001` por tenant
+- [x] API `/api/v1/orders` (criar, listar, detalhar, mudar status, cancelar)
+- [x] API `/api/v1/customers` (criar, listar, detalhar)
+- [x] Tela `/orders` com KPIs, busca, filtros e listagem
+- [x] Tela de detalhe com itens, totais, mudança de status e cancelamento
+- [x] Cliente inline durante a criação do pedido
+- [x] CRUD completo de clientes em `/customers` com arquivar/restaurar
+- [x] Modais de ajuda contextual de vendas e de clientes
+- [x] Seeder de clientes de exemplo
+- [x] RBAC com `manage-sales`, `view-sales`, `manage-customers`, `view-customers`
+- [x] ADR-004 documentando o fluxo de pedidos
+- [x] 26 testes feature API/web passando
+
+**Fluxo de estoque (ADR-004):** confirmar reserva os itens; enviar converte a
+reserva em baixa definitiva; cancelar um pedido confirmado devolve a reserva.
+Rascunho e aguardando não tocam no estoque.
+
+**Como validar:** acessar `/orders`, criar pedido, adicionar item, avançar para
+aguardando → confirmado → enviado e conferir a posição em `/inventory`.
 
 ---
 

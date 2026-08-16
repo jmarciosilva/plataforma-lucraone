@@ -3,9 +3,11 @@
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\CategoryWebController;
 use App\Http\Controllers\Web\CompanyController;
+use App\Http\Controllers\Web\CustomerWebController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\EstabelecimentoController;
 use App\Http\Controllers\Web\InventoryWebController;
+use App\Http\Controllers\Web\OrderWebController;
 use App\Http\Controllers\Web\PermissionController;
 use App\Http\Controllers\Web\ProductWebController;
 use App\Http\Controllers\Web\RoleController;
@@ -96,4 +98,19 @@ Route::middleware('auth.web')->group(function () {
         ->name('inventory.index');
     Route::get('/inventory/{inventory}', [InventoryWebController::class, 'show'])
         ->name('inventory.show');
+
+    Route::post('/orders/{order}/items', [OrderWebController::class, 'storeItem'])
+        ->name('sales.orders.items.store');
+    Route::delete('/orders/{order}/items/{item}', [OrderWebController::class, 'destroyItem'])
+        ->name('sales.orders.items.destroy');
+    Route::put('/orders/{order}/status', [OrderWebController::class, 'updateStatus'])
+        ->name('sales.orders.status');
+    Route::resource('orders', OrderWebController::class)
+        ->only(['index', 'create', 'store', 'show', 'destroy'])
+        ->names('sales.orders');
+
+    Route::post('/customers/{customer}/restore', [CustomerWebController::class, 'restore'])
+        ->name('sales.customers.restore');
+    Route::resource('customers', CustomerWebController::class)
+        ->names('sales.customers');
 });

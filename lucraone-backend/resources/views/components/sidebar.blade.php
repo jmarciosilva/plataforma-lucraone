@@ -19,7 +19,7 @@
 <aside {{ $attributes->merge(['class' => 'w-60 shrink-0 flex-col border-r border-linha bg-white flex ' . $class]) }}>
 
     {{-- Marca --}}
-    <div class="px-5 pb-2 pt-6">
+    <div class="shrink-0 px-5 pb-2 pt-6">
         <p class="font-letreiro text-lg leading-none tracking-tight text-grafite">
             LUCRA<span class="texto-sol">ONE</span>
         </p>
@@ -44,7 +44,11 @@
     </div>
 
     {{-- Navegação --}}
-    <nav class="mt-4 flex flex-1 flex-col gap-1 px-3" aria-label="navegação principal">
+    {{--
+        min-h-0 + overflow-y-auto: sem o min-h-0 o item flex se recusa a encolher
+        abaixo do conteúdo e a lista vaza por baixo do rodapé em telas baixas.
+    --}}
+    <nav class="mt-4 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3 pb-2" aria-label="navegação principal">
         <x-nav-item rota="dashboard" rotulo="dashboard">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
                 <path d="M3 17l6-6 4 4 7-7" />
@@ -98,10 +102,25 @@
                 <path d="M8 16h8" />
             </svg>
         </x-nav-item>
+
+        <x-nav-item rota="sales.orders.index" rotulo="vendas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                <path d="M3 4h2l2.4 12.3a2 2 0 0 0 2 1.7h7.7a2 2 0 0 0 2-1.6L21 8H6" />
+                <circle cx="10" cy="20" r="1" />
+                <circle cx="18" cy="20" r="1" />
+            </svg>
+        </x-nav-item>
+
+        <x-nav-item rota="sales.customers.index" rotulo="clientes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+            </svg>
+        </x-nav-item>
     </nav>
 
     {{-- Rodapé: usuário e saída --}}
-    <div class="mt-auto border-t border-linha px-3 py-4">
+    <div class="mt-auto shrink-0 border-t border-linha px-3 py-4">
         @auth
             <p class="px-2 text-sm font-semibold lowercase text-grafite">
                 {{ auth()->user()->name }}

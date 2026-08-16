@@ -1,9 +1,9 @@
 # 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-16 (F2.2 — inventory management)
-**Fase Ativa:** FASE 02 — FEATURES 🟡 (F2.3 é o próximo)
+**Atualizado:** 2026-08-16 (F2.3 — sales & orders)
+**Fase Ativa:** FASE 02 — FEATURES 🟡 (F2.4 é o próximo)
 **Fase Concluída:** FASE 03 — ADMIN FRONTEND ✅ (6/6 sprints)
-**Testes:** 323 passing
+**Testes:** 349 passing
 
 ---
 
@@ -16,8 +16,8 @@
 │  ████████████████████████████████████████████████  100%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 02 — FEATURES              🟡 ATIVO  ← AQUI            │
-│  F2.1/F2.1b Products + F2.2 Inventory                        │
-│  ████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   17%      │
+│  Products + Inventory + Sales (F2.1 → F2.3)                  │
+│  ████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   50%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 03 — ADMIN FRONTEND        ✅ COMPLETO                 │
 │  6/6 sprints · 60 testes                                     │
@@ -259,15 +259,33 @@ Conclusão:
   ✅ RBAC com manage-inventory/view-inventory
 ```
 
-### 🟡 Sprints F2.3 a F2.6 (PRÓXIMAS)
+### ✅ Sprint F2.3 — Sales & Orders (DONE)
 
 ```
-F2.3 — Orders / Vendas          📋  0/20 itens  ← próximo
-F2.4 — Payments                 ⏸️  0/20 itens
-F2.5 — Reports                  ⏸️  0/20 itens
-F2.6 — Integrations             ⏸️  0/20 itens
+Status:     ✅ DONE (100%)
+Progresso:  pedidos operáveis por API e painel
+Tests:      26/26 passing ✅
 
-Retomada liberada: FASE 03 concluída; Products e Inventory já operáveis.
+Conclusão:
+  ✅ Models: Order, OrderItem, Customer
+  ✅ OrderService com fluxo de status e efeitos de estoque (ADR-004)
+  ✅ Numeração PED-AAAAMM-0001 por tenant
+  ✅ API de pedidos (criar, listar, status, cancelar) e de clientes
+  ✅ Tela /orders com KPIs, filtros, itens e mudança de status
+  ✅ Cliente inline no pedido + CRUD completo em /customers
+  ✅ Preço automático da tabela de preços
+  ✅ Reserva na confirmação, baixa no envio, liberação no cancelamento
+  ✅ RBAC com manage-sales/view-sales e manage-customers/view-customers
+```
+
+### 🟡 Sprints F2.4 a F2.6 (PRÓXIMAS)
+
+```
+F2.4 — Reporting & Analytics    📋  0/20 itens  ← próximo
+F2.5 — Advanced Automation      ⏸️  0/20 itens
+F2.6 — Integration APIs         ⏸️  0/20 itens
+
+Vendas já alimentam dados reais para os relatórios da F2.4.
 ```
 
 ---
@@ -415,6 +433,7 @@ Modular Monolith:
   ✅ Audit
   ✅ Products (F2.1)
   ✅ Inventory (F2.2)
+  ✅ Sales (F2.3)
 
 Padrão DDD:
   ✅ Domain/
@@ -460,10 +479,11 @@ Breakdown FASE 01 (189):
   F1.6 (Audit):           ✅ 15 passing
   F1.7 (Hardening):       ✅ 87 passing
 
-Breakdown FASE 02 (17):
+Breakdown FASE 02 (87):
   F2.1 (Products API):    ✅ 42 passing
   F2.1b (Products Web):   ✅ 8 passing
   F2.2 (Inventory):       ✅ 11 passing
+  F2.3 (Sales & Orders):  ✅ 26 passing
 
 Breakdown FASE 03 (60):
   F3.1 (Setup):           ✅ 6/6
@@ -549,15 +569,15 @@ Foundation Phase:       ✅ 100% (7/7 sprints) — 189 TESTS
 
 ## ⚙️ Próximas Ações (Roadmap)
 
-### 🔜 Imediato — Sprint F2.3 (Sales & Orders)
+### 🔜 Imediato — Sprint F2.4 (Reporting & Analytics)
 
-- [ ] Pedidos/vendas por tenant
-- [ ] Itens de pedido com preço de produto
-- [ ] Status de pedido
-- [ ] Reserva/baixa de estoque quando aplicável
+- [ ] Relatório de vendas por período
+- [ ] Relatório de estoque e valor em estoque
+- [ ] Relatório de clientes (top compradores)
+- [ ] Dashboard de KPIs comerciais com filtros
 - [ ] Testes API e web da sprint
 
-### Depois — F2.2 → F2.3 Orders / Vendas
+### Depois — F2.4 → F2.5 Advanced Automation
 
 ### 🔧 Dívida técnica
 
@@ -577,10 +597,10 @@ Em aberto:
 ### ⏸️ Retomada da FASE 02 (após F3.6)
 
 - [x] F2.2 — Inventory Management
-- [ ] F2.3 — Orders / Vendas
-- [ ] F2.4 — Payments
-- [ ] F2.5 — Reports
-- [ ] F2.6 — Integrations
+- [x] F2.3 — Sales & Orders
+- [ ] F2.4 — Reporting & Analytics
+- [ ] F2.5 — Advanced Automation
+- [ ] F2.6 — Integration APIs
 
 ---
 
@@ -707,8 +727,9 @@ Uma sprint é considerada **pronta** quando:
 - F2.1 (Products API): 100% pronto ✅
 - F2.1b (Products Web UI): 100% pronto ✅
 - F2.2 (Inventory): 100% pronto ✅
+- F2.3 (Sales & Orders): 100% pronto ✅
 - F3.1 → F3.6: 100% pronto ✅
-- F2.3 → F2.6: 🟡 próximos módulos de negócio
+- F2.4 → F2.6: 🟡 próximos módulos de negócio
 
 ---
 
@@ -723,8 +744,8 @@ Uma sprint é considerada **pronta** quando:
 
 ---
 
-**Próxima atualização:** Ao concluir o Sprint F2.3
-**Gerado:** 2026-08-16 (F2.2 concluído — F2.3 liberada)
+**Próxima atualização:** Ao concluir o Sprint F2.4
+**Gerado:** 2026-08-16 (F2.3 concluído — F2.4 liberada)
 **Repositório:** D:\PROJETO-LUCRAONE
 
 ---
@@ -734,9 +755,10 @@ Uma sprint é considerada **pronta** quando:
 ✅ **FASE 01 — FOUNDATION:** 227 testes, 8/8 sprints, segurança OWASP validada
 ✅ **F2.1/F2.1b — Products:** API e painel web de produtos/categorias/preços funcionando
 ✅ **F2.2 — Inventory:** API e painel web de estoque funcionando
+✅ **F2.3 — Sales & Orders:** pedidos, clientes e movimentação de estoque por status
 ✅ **FASE 03 — ADMIN FRONTEND:** 6/6 sprints concluídos; 60 testes
 
 **Lacuna resolvida pela FASE 03:** login web, painel administrativo, tenants,
 usuários, empresas e permissões já são operáveis pela interface.
 
-**Status:** Ready for F2.3 — Sales & Orders
+**Status:** Ready for F2.4 — Reporting & Analytics

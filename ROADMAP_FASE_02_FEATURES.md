@@ -3,7 +3,7 @@
 
 **Projeto:** Plataforma SaaS Inteligente de Automação Comercial  
 **Fase:** 02 — FEATURES  
-**Status:** 🟡 ATIVO — F2.2 Inventory concluída, F2.3 é o próximo
+**Status:** 🟡 ATIVO — F2.3 Sales & Orders concluída, F2.4 é o próximo
 **Prioridade:** Alta  
 **Dependência:** FASE 01 ✅ Concluída · FASE 03 ✅ Concluída
 **Estimativa:** 6 sprints (~12-16 semanas)  
@@ -32,10 +32,15 @@
 | F2.1 — Products Management | ✅ DONE | ✅ DONE via F2.1b | 42 API/domain |
 | F2.1b — Products Web UI | ✅ DONE | ✅ DONE | 8 web |
 | F2.2 — Inventory Management | ✅ DONE | ✅ DONE | 11 API/web |
-| F2.3 — Orders / Vendas | 📋 TODO | 📋 TODO | — |
-| F2.4 — Payments | ⏸️ Aguarda F2.3 | ⏸️ Aguarda F2.3 | — |
-| F2.5 — Reports | ⏸️ Aguarda F2.4 | ⏸️ Aguarda F2.4 | — |
-| F2.6 — Integrations | ⏸️ Aguarda F2.5 | ⏸️ Aguarda F2.5 | — |
+| F2.3 — Sales & Orders | ✅ DONE | ✅ DONE | 26 API/web |
+| F2.4 — Reporting & Analytics | 📋 TODO | 📋 TODO | — |
+| F2.5 — Advanced Automation | ⏸️ Aguarda F2.4 | ⏸️ Aguarda F2.4 | — |
+| F2.6 — Integration APIs | ⏸️ Aguarda F2.5 | ⏸️ Aguarda F2.5 | — |
+
+> **Nota sobre numeração:** esta tabela listava anteriormente "F2.4 Payments /
+> F2.5 Reports / F2.6 Integrations", divergindo da especificação detalhada da
+> seção 5. A especificação detalhada é a fonte de verdade; a tabela foi
+> corrigida. Pagamentos não têm sprint própria na FASE 02 — ver nota da F2.3.
 
 ---
 
@@ -158,7 +163,7 @@ app/Modules/
 │   ├── Infrastructure/
 │   └── Http/
 │
-├── Sales/                # 🟡 F2.3 — Novo
+├── Sales/                # ✅ F2.3 — API + Web UI
 │   ├── Domain/
 │   ├── Application/
 │   ├── Infrastructure/
@@ -395,64 +400,93 @@ registrar ajuste de entrada/saída e ver histórico de movimentações.
 
 ## Sprint F2.3 — Sales & Orders
 
-**Duração:** ~2 semanas  
+**Status:** ✅ DONE
+**Concluído em:** 2026-08-16
+**Testes:** 26 passing (`tests/Feature/Sales` + `tests/Feature/Admin/SalesWebManagementTest.php`)
+**Duração:** ~2 semanas
 **Objetivo:** Implementar sistema de pedidos e vendas pela API e pelo painel web.
-**Como testar:** criar pedido/venda no painel, alterar status e validar reserva
-ou baixa de estoque quando aplicável.
+**Como testar:** acessar o menu `vendas`, criar pedido escolhendo cliente
+existente ou cadastrando um novo na hora, adicionar itens, avançar o status e
+conferir reserva/baixa na tela de `estoque`.
 
 ### Requisitos
 
 #### Modelos
-- [ ] Order (order_number, customer_id, branch_id, status, total, tenant_id)
-- [ ] OrderItem (order_id, product_id, quantity, unit_price)
-- [ ] Customer (name, email, phone, company_id)
+- [x] Order (order_number, customer_id, branch_id, status, total, tenant_id)
+- [x] OrderItem (order_id, product_id, quantity, unit_price)
+- [x] Customer (name, email, phone, company_id)
 
 #### Banco de Dados
-- [ ] orders table
-- [ ] order_items table
-- [ ] customers table
+- [x] orders table
+- [x] order_items table
+- [x] customers table
 
 #### API Endpoints
-- [ ] POST /api/v1/orders (create)
-- [ ] GET /api/v1/orders (list)
-- [ ] GET /api/v1/orders/{id} (show)
-- [ ] PUT /api/v1/orders/{id}/status (update status)
-- [ ] DELETE /api/v1/orders/{id} (cancel)
-- [ ] POST /api/v1/customers (create)
-- [ ] GET /api/v1/customers (list)
+- [x] POST /api/v1/orders (create)
+- [x] GET /api/v1/orders (list)
+- [x] GET /api/v1/orders/{id} (show)
+- [x] PUT /api/v1/orders/{id}/status (update status)
+- [x] DELETE /api/v1/orders/{id} (cancel)
+- [x] POST /api/v1/customers (create)
+- [x] GET /api/v1/customers (list)
+- [x] GET /api/v1/customers/{id} (show)
 
 #### Frontend Web
-- [ ] Menu `vendas` no painel
-- [ ] Listagem de pedidos/vendas com busca e filtros
-- [ ] Criar pedido/venda pela tela
-- [ ] Adicionar/remover itens do pedido
-- [ ] Selecionar cliente ou criar cliente inline
-- [ ] Atualizar status do pedido
-- [ ] Tela de detalhe com itens, totais e histórico
-- [ ] Modal de ajuda contextual de vendas
+- [x] Menu `vendas` no painel
+- [x] Menu `clientes` no painel
+- [x] Listagem de pedidos/vendas com busca e filtros
+- [x] Criar pedido/venda pela tela
+- [x] Adicionar/remover itens do pedido
+- [x] Selecionar cliente ou criar cliente inline
+- [x] Atualizar status do pedido
+- [x] Tela de detalhe com itens, totais e histórico
+- [x] CRUD de clientes com busca, filtros e arquivamento
+- [x] Modal de ajuda contextual de vendas
+- [x] Modal de ajuda contextual de clientes
 
 #### Features
-- [ ] Order status workflow (draft → pending → confirmed → shipped → completed)
-- [ ] Inventory reservation on order creation
-- [ ] Automatic pricing from price table
-- [ ] Customer creation inline during order
-- [ ] Order cancellation with inventory release
-- [ ] Payment link generation
+- [x] Order status workflow (draft → pending → confirmed → shipped → completed)
+- [x] Inventory reservation na confirmação do pedido (ver ADR-004)
+- [x] Baixa definitiva de estoque no envio
+- [x] Automatic pricing from price table
+- [x] Customer creation inline during order
+- [x] Order cancellation with inventory release
+- [ ] Payment link generation (adiado; o módulo Payments não existe na FASE 02)
 
-#### Testes (22+)
-- [ ] Order creation
-- [ ] Inventory reservation
-- [ ] Status transitions
-- [ ] Concurrent orders (no overselling)
-- [ ] Cancellation scenarios
-- [ ] Pricing accuracy
-- [ ] Web: criar pedido pela tela
-- [ ] Web: atualizar status pela tela
-- [ ] Web: isolamento por tenant
+#### Testes (26)
+- [x] Order creation
+- [x] Inventory reservation
+- [x] Status transitions
+- [x] Concurrent orders (no overselling)
+- [x] Cancellation scenarios
+- [x] Pricing accuracy
+- [x] Produto sem preço de venda é recusado
+- [x] Pedido sem itens não pode ser confirmado
+- [x] Endpoints exigem autenticação
+- [x] API: isolamento por tenant em pedidos e clientes
+- [x] Web: criar pedido pela tela com cliente inline
+- [x] Web: adicionar e remover itens recalculando totais
+- [x] Web: atualizar status pela tela reserva estoque
+- [x] Web: cancelar pedido libera reserva
+- [x] Web: CRUD de clientes
+- [x] Web: isolamento por tenant
+- [x] Web: usuário sem permissão recebe 403
+- [x] Browser: fluxo manual validado (criar → item → confirmar → enviar → estoque)
 
 #### Documentação
-- [ ] ADR-004: Order Workflow
-- [ ] Sales Module Guide
+- [x] ADR-004: Order Workflow (`lucraone-backend/docs/adr/ADR-004-order-workflow.md`)
+- [x] Sales Module Guide via ADR-004 e modais de ajuda contextual
+
+**Notas de escopo:**
+
+- **Reserva na confirmação, não na criação.** O roadmap dizia "inventory
+  reservation on order creation", mas rascunho abandonado seguraria estoque e
+  impediria outra venda. Decisão registrada no ADR-004.
+- **Payment link generation adiado.** Não existe módulo Payments na FASE 02 —
+  a seção 5 vai de F2.3 (Sales) direto para F2.4 (Reporting). Gerar link de
+  pagamento sem gateway seria um campo inerte na tela.
+- **`branch_id` nasce nulo.** A coluna existe em `orders`, mas filiais ainda não
+  têm tela no painel, então o campo não é exposto.
 
 ---
 
@@ -697,9 +731,9 @@ F2.1 — Products ✓
   ↓
 F2.1b — Products Web UI (torna produtos testáveis pelo painel)
   ↓
-F2.2 — Inventory (depende de produtos cadastráveis pela tela)
+F2.2 — Inventory (depende de produtos cadastráveis pela tela) ✓
   ↓
-F2.3 — Sales (depende de produtos + inventory)
+F2.3 — Sales (depende de produtos + inventory) ✓
   ↓
 F2.4 — Reporting (depende de sales)
   ↓
@@ -792,5 +826,5 @@ Antes de começar F2.2, implementar F2.1b para que produtos estejam operáveis n
 
 **Autor:** Claude Code  
 **Data de Criação:** 2026-08-16  
-**Status:** F2.2 Inventory Management concluída · F2.3 Sales & Orders é o próximo passo
-**Próxima Atualização:** Quando F2.3 iniciar
+**Status:** F2.3 Sales & Orders concluída · F2.4 Reporting & Analytics é o próximo passo
+**Próxima Atualização:** Quando F2.4 iniciar
