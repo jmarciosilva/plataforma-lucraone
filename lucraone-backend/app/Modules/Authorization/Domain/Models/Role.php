@@ -2,16 +2,18 @@
 
 namespace App\Modules\Authorization\Domain\Models;
 
+use App\Modules\Identity\Domain\Models\User;
+use App\Modules\Tenancy\Domain\Models\HasTenant;
+use Database\Factories\RoleFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Modules\Tenancy\Domain\Models\HasTenant;
-use App\Modules\Identity\Domain\Models\User;
 
 class Role extends Model
 {
     use HasFactory, HasTenant;
 
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $fillable = [
@@ -55,7 +57,7 @@ class Role extends Model
 
     public function grantPermission(Permission $permission): void
     {
-        if ($permission->tenant_id === $this->tenant_id && !$this->hasPermission($permission)) {
+        if ($permission->tenant_id === $this->tenant_id && ! $this->hasPermission($permission)) {
             $this->permissions()->attach($permission->id, [
                 'tenant_id' => $this->tenant_id,
             ]);
@@ -76,6 +78,6 @@ class Role extends Model
 
     protected static function newFactory()
     {
-        return \Database\Factories\RoleFactory::new();
+        return RoleFactory::new();
     }
 }

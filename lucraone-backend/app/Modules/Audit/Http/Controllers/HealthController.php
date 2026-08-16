@@ -19,7 +19,7 @@ class HealthController
         $health['checks']['database'] = $this->checkDatabase();
         $health['checks']['cache'] = $this->checkCache();
 
-        $allHealthy = collect($health['checks'])->every(fn($check) => $check['status'] === 'healthy');
+        $allHealthy = collect($health['checks'])->every(fn ($check) => $check['status'] === 'healthy');
         $health['status'] = $allHealthy ? 'healthy' : 'degraded';
 
         $statusCode = $allHealthy ? 200 : 503;
@@ -31,6 +31,7 @@ class HealthController
     {
         try {
             DB::connection()->getPdo();
+
             return [
                 'status' => 'healthy',
                 'message' => 'Database connection OK',
@@ -38,7 +39,7 @@ class HealthController
         } catch (\Exception $e) {
             return [
                 'status' => 'unhealthy',
-                'message' => 'Database connection failed: ' . $e->getMessage(),
+                'message' => 'Database connection failed: '.$e->getMessage(),
             ];
         }
     }
@@ -63,7 +64,7 @@ class HealthController
         } catch (\Exception $e) {
             return [
                 'status' => 'unhealthy',
-                'message' => 'Cache connection failed: ' . $e->getMessage(),
+                'message' => 'Cache connection failed: '.$e->getMessage(),
             ];
         }
     }

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Identity\Http\Requests;
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LogoutRequest extends FormRequest
@@ -18,6 +19,6 @@ class LogoutRequest extends FormRequest
 
     protected function failedAuthorization()
     {
-        throw new \Illuminate\Auth\AuthenticationException();
+        throw new AuthenticationException;
     }
 }

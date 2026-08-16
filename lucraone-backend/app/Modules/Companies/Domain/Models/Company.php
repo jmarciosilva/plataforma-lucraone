@@ -2,19 +2,23 @@
 
 namespace App\Modules\Companies\Domain\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Modules\Branches\Domain\Models\Branch;
+use App\Modules\Companies\Domain\Events\CompanyCreated;
 use App\Modules\Tenancy\Domain\Models\HasTenant;
+use Database\Factories\CompanyFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Company extends Model
 {
     use HasFactory, HasTenant;
 
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $dispatchesEvents = [
-        'created' => \App\Modules\Companies\Domain\Events\CompanyCreated::class,
+        'created' => CompanyCreated::class,
     ];
 
     protected $fillable = [
@@ -41,7 +45,7 @@ class Company extends Model
     public function branches()
     {
         return $this->hasMany(
-            \App\Modules\Branches\Domain\Models\Branch::class,
+            Branch::class,
             'company_id',
             'id'
         );
@@ -53,7 +57,7 @@ class Company extends Model
     public function addresses()
     {
         return $this->morphMany(
-            \App\Modules\Companies\Domain\Models\Address::class,
+            Address::class,
             'addressable'
         );
     }
@@ -64,7 +68,7 @@ class Company extends Model
     public function primaryAddress()
     {
         return $this->morphOne(
-            \App\Modules\Companies\Domain\Models\Address::class,
+            Address::class,
             'addressable'
         )->where('is_primary', true);
     }
@@ -82,6 +86,6 @@ class Company extends Model
      */
     protected static function newFactory()
     {
-        return \Database\Factories\CompanyFactory::new();
+        return CompanyFactory::new();
     }
 }

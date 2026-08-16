@@ -2,24 +2,25 @@
 
 namespace Tests\Feature\Quality;
 
-use Tests\TestCase;
-use App\Modules\Identity\Domain\Models\User;
-use App\Modules\Authorization\Domain\Models\Role;
-use App\Modules\Authorization\Domain\Models\Permission;
-use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Audit\Domain\Models\AuditLog;
+use App\Modules\Authorization\Domain\Models\Permission;
+use App\Modules\Authorization\Domain\Models\Role;
+use App\Modules\Identity\Domain\Models\User;
+use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Tests\TestCase;
 
 class BackupRestoreTest extends TestCase
 {
     use RefreshDatabase;
 
     private Tenant $tenant;
+
     private User $user;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -185,7 +186,7 @@ class BackupRestoreTest extends TestCase
             'entity_id' => $this->user->id,
             'ip_address' => '127.0.0.1',
             'user_agent' => 'test',
-            'request_id' => 'test-req-' . Str::random(),
+            'request_id' => 'test-req-'.Str::random(),
             'endpoint' => '/api/users',
             'method' => 'POST',
         ]);

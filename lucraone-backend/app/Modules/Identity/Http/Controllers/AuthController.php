@@ -22,13 +22,13 @@ class AuthController
 
         $user = User::where('email', $email)->first();
 
-        if (!$user || !Hash::check($password, $user->password)) {
+        if (! $user || ! Hash::check($password, $user->password)) {
             return response()->json([
                 'message' => 'Credenciais inválidas',
             ], 401);
         }
 
-        if (!$user->isActive()) {
+        if (! $user->isActive()) {
             return response()->json([
                 'message' => 'Usuário não está ativo',
             ], 403);
@@ -55,7 +55,7 @@ class AuthController
     {
         $user = auth('sanctum')->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'Não autenticado'], 401);
         }
 

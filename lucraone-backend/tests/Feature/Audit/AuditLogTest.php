@@ -2,10 +2,11 @@
 
 namespace Tests\Feature\Audit;
 
-use Tests\Feature\Tenancy\TenancyTestCase;
-use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Audit\Domain\Models\AuditLog;
+use App\Modules\Identity\Domain\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Tests\Feature\Tenancy\TenancyTestCase;
 
 class AuditLogTest extends TenancyTestCase
 {
@@ -91,7 +92,7 @@ class AuditLogTest extends TenancyTestCase
 
         // Create logs directly instead of using actingAs which has transaction issues
         $logA = AuditLog::create([
-            'id' => \Illuminate\Support\Str::ulid(),
+            'id' => Str::ulid(),
             'tenant_id' => $this->tenantA->id,
             'user_id' => $userA->id,
             'action' => 'create',
@@ -105,7 +106,7 @@ class AuditLogTest extends TenancyTestCase
         ]);
 
         $logB = AuditLog::create([
-            'id' => \Illuminate\Support\Str::ulid(),
+            'id' => Str::ulid(),
             'tenant_id' => $this->tenantB->id,
             'user_id' => $userB->id,
             'action' => 'create',
@@ -122,8 +123,8 @@ class AuditLogTest extends TenancyTestCase
         $this->assertEquals($this->tenantB->id, $logB->tenant_id);
 
         $tenantALogs = AuditLog::forTenant($this->tenantA->id)->get();
-        $this->assertTrue($tenantALogs->contains('id', $logA->id), "tenantALogs should contain logA");
-        $this->assertFalse($tenantALogs->contains('id', $logB->id), "tenantALogs should not contain logB");
+        $this->assertTrue($tenantALogs->contains('id', $logA->id), 'tenantALogs should contain logA');
+        $this->assertFalse($tenantALogs->contains('id', $logB->id), 'tenantALogs should not contain logB');
     }
 
     /**
@@ -142,7 +143,7 @@ class AuditLogTest extends TenancyTestCase
 
         $userLogs = AuditLog::forUser($user->id)->get();
         $this->assertCount(2, $userLogs);
-        $this->assertTrue($userLogs->every(fn($log) => $log->user_id === $user->id));
+        $this->assertTrue($userLogs->every(fn ($log) => $log->user_id === $user->id));
     }
 
     /**

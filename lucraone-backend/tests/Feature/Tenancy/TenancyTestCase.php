@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Tenancy;
 
-use Tests\TestCase;
-use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Tenancy\Application\TenantContext;
+use App\Modules\Tenancy\Domain\Models\Tenant;
+use Tests\TestCase;
 
 /**
  * Base test case para testes de tenancy.
@@ -14,10 +14,12 @@ use App\Modules\Tenancy\Application\TenantContext;
 abstract class TenancyTestCase extends TestCase
 {
     protected Tenant $tenantA;
+
     protected Tenant $tenantB;
+
     protected TenantContext $tenantContext;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -28,7 +30,7 @@ abstract class TenancyTestCase extends TestCase
         $this->tenantB = Tenant::factory()->active()->create();
     }
 
-    public function tearDown(): void
+    protected function tearDown(): void
     {
         // Limpar contexto após cada teste
         $this->tenantContext->clear();

@@ -2,11 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Modules\Audit\Domain\Models\AuditLog;
+use App\Modules\Identity\Domain\Models\User;
+use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
-use App\Modules\Audit\Domain\Models\AuditLog;
-use App\Modules\Tenancy\Domain\Models\Tenant;
-use App\Modules\Identity\Domain\Models\User;
 
 class AuditLogFactory extends Factory
 {
@@ -31,7 +31,7 @@ class AuditLogFactory extends Factory
             'ip_address' => $this->faker->ipv4(),
             'user_agent' => $this->faker->userAgent(),
             'request_id' => (string) Str::ulid(),
-            'endpoint' => '/api/' . $this->faker->word(),
+            'endpoint' => '/api/'.$this->faker->word(),
             'method' => $this->faker->randomElement(['GET', 'POST', 'PUT', 'DELETE']),
             'status_code' => $this->faker->randomElement([200, 201, 204, 400, 401, 403, 404, 500]),
             'description' => $this->faker->sentence(),

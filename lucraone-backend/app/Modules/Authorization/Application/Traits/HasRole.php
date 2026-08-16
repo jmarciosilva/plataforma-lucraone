@@ -3,7 +3,6 @@
 namespace App\Modules\Authorization\Application\Traits;
 
 use App\Modules\Authorization\Domain\Models\Role;
-use App\Modules\Authorization\Domain\Models\Permission;
 
 trait HasRole
 {
@@ -39,16 +38,18 @@ trait HasRole
                 return true;
             }
         }
+
         return false;
     }
 
     public function hasAllRoles($roles): bool
     {
         foreach ($roles as $role) {
-            if (!$this->hasRole($role)) {
+            if (! $this->hasRole($role)) {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -76,16 +77,18 @@ trait HasRole
                 return true;
             }
         }
+
         return false;
     }
 
     public function hasAllPermissions($permissions): bool
     {
         foreach ($permissions as $permission) {
-            if (!$this->hasPermission($permission)) {
+            if (! $this->hasPermission($permission)) {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -97,7 +100,7 @@ trait HasRole
                 ->first();
         }
 
-        if ($role && $role->tenant_id === $this->tenant_id && !$this->hasRole($role)) {
+        if ($role && $role->tenant_id === $this->tenant_id && ! $this->hasRole($role)) {
             $this->roles()->attach($role->id, [
                 'tenant_id' => $this->tenant_id,
             ]);
@@ -126,6 +129,7 @@ trait HasRole
                     ->first()
                     ?->id;
             }
+
             return $role->id;
         })->filter()->toArray();
 

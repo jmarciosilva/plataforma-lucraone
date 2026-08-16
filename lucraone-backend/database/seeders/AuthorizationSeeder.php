@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Authorization\Domain\Models\Permission;
+use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Tenancy\Domain\Models\Tenant;
+use Illuminate\Database\Seeder;
 
 class AuthorizationSeeder extends Seeder
 {

@@ -2,8 +2,8 @@
 
 namespace App\Modules\Tenancy\Application;
 
-use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Tenancy\Domain\Exceptions\TenantNotResolvedException;
+use App\Modules\Tenancy\Domain\Models\Tenant;
 
 /**
  * Mantém o contexto do tenant atual durante a requisição.
@@ -14,6 +14,7 @@ use App\Modules\Tenancy\Domain\Exceptions\TenantNotResolvedException;
 class TenantContext
 {
     private ?string $tenantId = null;
+
     private ?Tenant $tenant = null;
 
     /**
@@ -32,7 +33,7 @@ class TenantContext
      */
     public function id(): string
     {
-        if (null === $this->tenantId) {
+        if ($this->tenantId === null) {
             throw new TenantNotResolvedException('Tenant não foi resolvido nesta requisição');
         }
 
@@ -46,7 +47,7 @@ class TenantContext
      */
     public function tenant(): Tenant
     {
-        if (null === $this->tenant) {
+        if ($this->tenant === null) {
             $this->tenant = Tenant::findOrFail($this->id());
         }
 
@@ -58,7 +59,7 @@ class TenantContext
      */
     public function resolved(): bool
     {
-        return null !== $this->tenantId;
+        return $this->tenantId !== null;
     }
 
     /**
@@ -82,9 +83,10 @@ class TenantContext
 
         try {
             $this->set($tenantId);
+
             return call_user_func($callback);
         } finally {
-            if (null === $previousTenantId) {
+            if ($previousTenantId === null) {
                 $this->clear();
             } else {
                 $this->tenantId = $previousTenantId;

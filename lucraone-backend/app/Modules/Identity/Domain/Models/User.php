@@ -2,20 +2,22 @@
 
 namespace App\Modules\Identity\Domain\Models;
 
+use App\Modules\Authorization\Application\Traits\HasRole;
+use App\Modules\Tenancy\Domain\Models\HasTenant;
+use Database\Factories\UserFactory;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Modules\Tenancy\Domain\Models\HasTenant;
-use App\Modules\Authorization\Application\Traits\HasRole;
 
 class User extends Model implements AuthenticatableContract
 {
-    use HasFactory, HasTenant, HasApiTokens, Authenticatable, Notifiable, HasRole;
+    use Authenticatable, HasApiTokens, HasFactory, HasRole, HasTenant, Notifiable;
 
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $fillable = [
@@ -54,6 +56,6 @@ class User extends Model implements AuthenticatableContract
 
     protected static function newFactory()
     {
-        return \Database\Factories\UserFactory::new();
+        return UserFactory::new();
     }
 }

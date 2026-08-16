@@ -2,21 +2,22 @@
 
 namespace Tests\Feature\Performance;
 
-use Tests\TestCase;
-use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Authorization\Domain\Models\Role;
+use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Tests\TestCase;
 
 class PerformanceBaselineTest extends TestCase
 {
     use RefreshDatabase;
 
     private Tenant $tenant;
+
     private User $user;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -259,7 +260,7 @@ class PerformanceBaselineTest extends TestCase
         }
 
         sort($times);
-        $p95Index = (int)(count($times) * 0.95);
+        $p95Index = (int) (count($times) * 0.95);
         $p95 = $times[$p95Index] ?? end($times);
 
         echo "P95 Health Check: {$p95}ms\n";
@@ -386,7 +387,7 @@ class PerformanceBaselineTest extends TestCase
         for ($i = 0; $i < 5; $i++) {
             $startTime = microtime(true);
 
-            DB::select("SELECT 1");
+            DB::select('SELECT 1');
 
             $endTime = microtime(true);
             $times[] = ($endTime - $startTime) * 1000;
@@ -399,7 +400,7 @@ class PerformanceBaselineTest extends TestCase
         $this->assertLessThan(
             10,
             $average,
-            "DB connection should be < 10ms average"
+            'DB connection should be < 10ms average'
         );
     }
 
@@ -473,7 +474,7 @@ class PerformanceBaselineTest extends TestCase
         }
 
         sort($times);
-        $p95 = $times[(int)(count($times) * 0.95)];
+        $p95 = $times[(int) (count($times) * 0.95)];
         $average = array_sum($times) / count($times);
 
         echo "Login under load - P95: {$p95}ms, Avg: {$average}ms\n";

@@ -2,8 +2,8 @@
 
 namespace App\Modules\Authorization\Http\Policies;
 
-use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Authorization\Domain\Models\Permission;
+use App\Modules\Identity\Domain\Models\User;
 
 class PermissionPolicy
 {

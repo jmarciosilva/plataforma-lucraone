@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Quality;
 
-use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class DocumentationReviewTest extends TestCase
 {
@@ -52,7 +52,7 @@ class DocumentationReviewTest extends TestCase
         $archPath = base_path('docs/ARCHITECTURE.md');
 
         // Check if ARCHITECTURE exists (optional but good to have)
-        if (!file_exists($archPath)) {
+        if (! file_exists($archPath)) {
             // At minimum, README should have architecture section
             $readmePath = base_path('README.md');
             $content = file_get_contents($readmePath);
@@ -185,7 +185,7 @@ class DocumentationReviewTest extends TestCase
         }
 
         // At minimum, README should mention authentication
-        if (!$found) {
+        if (! $found) {
             $readmePath = base_path('README.md');
             $content = file_get_contents($readmePath);
             $found = str_contains($content, 'Authentication')
@@ -217,7 +217,7 @@ class DocumentationReviewTest extends TestCase
         }
 
         // At minimum, mention in README
-        if (!$found) {
+        if (! $found) {
             $readmePath = base_path('README.md');
             $content = file_get_contents($readmePath);
             $found = str_contains($content, 'Authorization')
@@ -285,11 +285,11 @@ class DocumentationReviewTest extends TestCase
         $this->assertTrue(is_dir($modulesPath), 'Modules directory should exist');
 
         // Check for at least one controller
-        $files = glob($modulesPath . '/*/Http/Controllers/*.php');
+        $files = glob($modulesPath.'/*/Http/Controllers/*.php');
         $this->assertGreaterThan(0, count($files), 'Controllers should exist');
 
         // Verify proper namespace structure in at least one file
-        if (!empty($files)) {
+        if (! empty($files)) {
             $content = file_get_contents($files[0]);
             $this->assertTrue(
                 str_contains($content, 'namespace') && str_contains($content, 'class'),
@@ -367,10 +367,10 @@ class DocumentationReviewTest extends TestCase
             'Migrations directory should exist'
         );
 
-        $migrations = glob($migrationsPath . '/*.php');
+        $migrations = glob($migrationsPath.'/*.php');
         $this->assertGreaterThan(0, count($migrations), 'Database migrations should exist');
 
-        echo "✅ Database Schema: Documented via migrations (" . count($migrations) . " migrations)\n";
+        echo '✅ Database Schema: Documented via migrations ('.count($migrations)." migrations)\n";
     }
 
     /**

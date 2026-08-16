@@ -2,9 +2,10 @@
 
 namespace App\Modules\Companies\Domain\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Modules\Tenancy\Domain\Models\HasTenant;
+use Database\Factories\AddressFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Modelo polimórfico para endereços reutilizável em múltiplas entidades.
@@ -20,6 +21,7 @@ class Address extends Model
     use HasFactory, HasTenant;
 
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $fillable = [
@@ -67,8 +69,8 @@ class Address extends Model
         }
 
         $parts[] = $this->district;
-        $parts[] = $this->city . ' - ' . $this->state;
-        $parts[] = 'CEP: ' . $this->postal_code;
+        $parts[] = $this->city.' - '.$this->state;
+        $parts[] = 'CEP: '.$this->postal_code;
 
         return implode(', ', $parts);
     }
@@ -78,6 +80,6 @@ class Address extends Model
      */
     protected static function newFactory()
     {
-        return \Database\Factories\AddressFactory::new();
+        return AddressFactory::new();
     }
 }

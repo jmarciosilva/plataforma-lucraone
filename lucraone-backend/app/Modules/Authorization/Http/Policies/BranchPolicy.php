@@ -2,8 +2,8 @@
 
 namespace App\Modules\Authorization\Http\Policies;
 
-use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Companies\Domain\Models\Branch;
+use App\Modules\Identity\Domain\Models\User;
 
 class BranchPolicy
 {

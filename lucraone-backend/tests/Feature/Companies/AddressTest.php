@@ -2,11 +2,12 @@
 
 namespace Tests\Feature\Companies;
 
-use Tests\Feature\Tenancy\TenancyTestCase;
-use App\Modules\Companies\Domain\Models\Company;
-use App\Modules\Companies\Domain\Models\Address;
 use App\Modules\Branches\Domain\Models\Branch;
+use App\Modules\Companies\Domain\Models\Address;
+use App\Modules\Companies\Domain\Models\Company;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Tests\Feature\Tenancy\TenancyTestCase;
 
 class AddressTest extends TenancyTestCase
 {
@@ -20,7 +21,7 @@ class AddressTest extends TenancyTestCase
         $company = Company::factory()->create();
 
         $address = Address::create([
-            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'id' => (string) Str::ulid(),
             'tenant_id' => $company->tenant_id,
             'addressable_type' => Company::class,
             'addressable_id' => $company->id,
@@ -49,7 +50,7 @@ class AddressTest extends TenancyTestCase
         $company = Company::factory()->create();
 
         $address1 = Address::create([
-            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'id' => (string) Str::ulid(),
             'tenant_id' => $company->tenant_id,
             'addressable_type' => Company::class,
             'addressable_id' => $company->id,
@@ -63,7 +64,7 @@ class AddressTest extends TenancyTestCase
         ]);
 
         $address2 = Address::create([
-            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'id' => (string) Str::ulid(),
             'tenant_id' => $company->tenant_id,
             'addressable_type' => Company::class,
             'addressable_id' => $company->id,
@@ -87,7 +88,7 @@ class AddressTest extends TenancyTestCase
         $company = Company::factory()->create();
 
         Address::create([
-            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'id' => (string) Str::ulid(),
             'tenant_id' => $company->tenant_id,
             'addressable_type' => Company::class,
             'addressable_id' => $company->id,
@@ -115,7 +116,7 @@ class AddressTest extends TenancyTestCase
         $branch = Branch::factory()->create();
 
         $address = Address::create([
-            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'id' => (string) Str::ulid(),
             'tenant_id' => $branch->tenant_id,
             'addressable_type' => Branch::class,
             'addressable_id' => $branch->id,
@@ -140,7 +141,7 @@ class AddressTest extends TenancyTestCase
         $company = Company::factory()->create();
 
         $address = Address::create([
-            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'id' => (string) Str::ulid(),
             'tenant_id' => $company->tenant_id,
             'addressable_type' => Company::class,
             'addressable_id' => $company->id,
@@ -168,7 +169,7 @@ class AddressTest extends TenancyTestCase
     {
         $companyA = Company::factory()->forCurrentTenant($this->tenantA->id)->create();
         $addressA = Address::create([
-            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'id' => (string) Str::ulid(),
             'tenant_id' => $this->tenantA->id,
             'addressable_type' => Company::class,
             'addressable_id' => $companyA->id,
@@ -182,7 +183,7 @@ class AddressTest extends TenancyTestCase
 
         $companyB = Company::factory()->forCurrentTenant($this->tenantB->id)->create();
         Address::create([
-            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'id' => (string) Str::ulid(),
             'tenant_id' => $this->tenantB->id,
             'addressable_type' => Company::class,
             'addressable_id' => $companyB->id,

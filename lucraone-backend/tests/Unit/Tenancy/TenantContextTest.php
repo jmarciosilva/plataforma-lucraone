@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\Tenancy;
 
-use PHPUnit\Framework\TestCase;
 use App\Modules\Tenancy\Application\TenantContext;
 use App\Modules\Tenancy\Domain\Exceptions\TenantNotResolvedException;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\TestCase;
 
 class TenantContextTest extends TestCase
 {
@@ -14,7 +14,7 @@ class TenantContextTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->context = new TenantContext();
+        $this->context = new TenantContext;
     }
 
     /**

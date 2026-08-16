@@ -2,8 +2,9 @@
 
 namespace App\Modules\Audit\Application\Services;
 
-use Illuminate\Support\Facades\Log;
 use App\Modules\Audit\Domain\Models\AuditLog;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class StructuredLoggingService
 {
@@ -17,7 +18,7 @@ class StructuredLoggingService
     private function enrichContext(): void
     {
         $this->context = [
-            'request_id' => request()->header('X-Request-ID') ?? \Illuminate\Support\Str::ulid(),
+            'request_id' => request()->header('X-Request-ID') ?? Str::ulid(),
             'user_id' => auth()->user()?->id,
             'tenant_id' => auth()->user()?->tenant_id ?? (app('TenantContext')->getTenantId()),
             'ip_address' => request()->ip(),
@@ -76,6 +77,7 @@ class StructuredLoggingService
     public function setContext(string $key, $value): self
     {
         $this->context[$key] = $value;
+
         return $this;
     }
 

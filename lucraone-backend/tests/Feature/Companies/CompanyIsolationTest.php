@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\Companies;
 
-use Tests\Feature\Tenancy\TenancyTestCase;
-use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Branches\Domain\Models\Branch;
+use App\Modules\Companies\Domain\Models\Company;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Tests\Feature\Tenancy\TenancyTestCase;
 
 class CompanyIsolationTest extends TenancyTestCase
 {
@@ -120,10 +122,10 @@ class CompanyIsolationTest extends TenancyTestCase
         $company1 = Company::factory()->create();
 
         // Tentar criar outra com mesmo CNPJ no mesmo tenant deve falhar
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
 
         Company::create([
-            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'id' => (string) Str::ulid(),
             'tenant_id' => $company1->tenant_id,
             'legal_name' => 'Outra Empresa',
             'document' => $company1->document, // Mesmo CNPJ
@@ -140,10 +142,10 @@ class CompanyIsolationTest extends TenancyTestCase
         $branch1 = Branch::factory()->forCompany($company)->create();
 
         // Tentar criar outra branch com mesmo código deve falhar
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
 
         Branch::create([
-            'id' => (string) \Illuminate\Support\Str::ulid(),
+            'id' => (string) Str::ulid(),
             'tenant_id' => $company->tenant_id,
             'company_id' => $company->id,
             'name' => 'Another Branch',

@@ -2,24 +2,24 @@
 
 namespace Tests\Feature\Quality;
 
-use Tests\TestCase;
-use App\Modules\Identity\Domain\Models\User;
-use App\Modules\Authorization\Domain\Models\Role;
-use App\Modules\Authorization\Domain\Models\Permission;
-use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Audit\Domain\Models\AuditLog;
+use App\Modules\Authorization\Domain\Models\Role;
+use App\Modules\Identity\Domain\Models\User;
+use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Tests\TestCase;
 
 class FinalAuditTest extends TestCase
 {
     use RefreshDatabase;
 
     private Tenant $tenant;
+
     private User $user;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -164,7 +164,7 @@ class FinalAuditTest extends TestCase
             'entity_id' => 'test-123',
             'ip_address' => '127.0.0.1',
             'user_agent' => 'test-agent',
-            'request_id' => 'req-' . Str::random(),
+            'request_id' => 'req-'.Str::random(),
             'endpoint' => '/test',
             'method' => 'POST',
         ]);
@@ -250,7 +250,7 @@ class FinalAuditTest extends TestCase
         $duration = (microtime(true) - $start) * 1000;
 
         // Should be fast (< 200ms in test environment)
-        $this->assertLessThan(200, $duration, "Health check should be fast");
+        $this->assertLessThan(200, $duration, 'Health check should be fast');
 
         echo "✅ Performance acceptable: {$duration}ms\n";
     }

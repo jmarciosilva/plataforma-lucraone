@@ -2,8 +2,8 @@
 
 namespace App\Modules\Authorization\Http\Policies;
 
-use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Authorization\Domain\Models\Role;
+use App\Modules\Identity\Domain\Models\User;
 
 class RolePolicy
 {
@@ -32,7 +32,7 @@ class RolePolicy
     {
         return $user->tenant_id === $role->tenant_id
             && $user->hasPermission('delete-role')
-            && !$this->isBuiltInRole($role);
+            && ! $this->isBuiltInRole($role);
     }
 
     private function isBuiltInRole(Role $role): bool

@@ -2,22 +2,25 @@
 
 namespace Tests\Feature\Security;
 
-use Tests\TestCase;
-use App\Modules\Identity\Domain\Models\User;
-use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Authorization\Domain\Models\Permission;
+use App\Modules\Authorization\Domain\Models\Role;
+use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Tests\TestCase;
 
 class SecurityAuditTest extends TestCase
 {
     use RefreshDatabase;
 
     private Tenant $tenantA;
+
     private Tenant $tenantB;
+
     private User $userA;
+
     private User $userB;
 
     protected function setUp(): void

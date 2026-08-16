@@ -2,18 +2,20 @@
 
 namespace Tests\Feature\Security;
 
-use Tests\Feature\Tenancy\TenancyTestCase;
-use App\Modules\Identity\Domain\Models\User;
-use App\Modules\Authorization\Domain\Models\Role;
-use App\Modules\Authorization\Domain\Models\Permission;
 use App\Modules\Audit\Domain\Models\AuditLog;
+use App\Modules\Authorization\Domain\Models\Permission;
+use App\Modules\Authorization\Domain\Models\Role;
+use App\Modules\Companies\Domain\Models\Company;
+use App\Modules\Identity\Domain\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Tests\Feature\Tenancy\TenancyTestCase;
 
 class CrossTenantValidationTest extends TenancyTestCase
 {
     use RefreshDatabase;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
         // Tenants created in parent setUp
@@ -43,7 +45,7 @@ class CrossTenantValidationTest extends TenancyTestCase
      */
     public function test_company_isolation_between_tenants(): void
     {
-        $companyA = \App\Modules\Companies\Domain\Models\Company::factory()
+        $companyA = Company::factory()
             ->forCurrentTenant($this->tenantA->id)
             ->create();
 
@@ -136,7 +138,7 @@ class CrossTenantValidationTest extends TenancyTestCase
     {
         // Create logs for both tenants
         $logA = AuditLog::create([
-            'id' => \Illuminate\Support\Str::ulid(),
+            'id' => Str::ulid(),
             'tenant_id' => $this->tenantA->id,
             'user_id' => null,
             'action' => 'create',
@@ -150,7 +152,7 @@ class CrossTenantValidationTest extends TenancyTestCase
         ]);
 
         $logB = AuditLog::create([
-            'id' => \Illuminate\Support\Str::ulid(),
+            'id' => Str::ulid(),
             'tenant_id' => $this->tenantB->id,
             'user_id' => null,
             'action' => 'create',

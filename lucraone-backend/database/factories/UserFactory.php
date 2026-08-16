@@ -2,11 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Modules\Identity\Domain\Models\User;
+use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use App\Modules\Tenancy\Domain\Models\Tenant;
-use App\Modules\Identity\Domain\Models\User;
 
 class UserFactory extends Factory
 {

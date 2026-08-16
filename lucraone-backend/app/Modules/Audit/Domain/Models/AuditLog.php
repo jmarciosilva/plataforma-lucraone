@@ -2,16 +2,20 @@
 
 namespace App\Modules\Audit\Domain\Models;
 
+use App\Modules\Identity\Domain\Models\User;
+use App\Modules\Tenancy\Application\TenantContext;
+use App\Modules\Tenancy\Domain\Models\HasTenant;
+use Database\Factories\AuditLogFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Modules\Tenancy\Domain\Models\HasTenant;
-use App\Modules\Identity\Domain\Models\User;
+use Illuminate\Support\Str;
 
 class AuditLog extends Model
 {
     use HasFactory, HasTenant;
 
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $fillable = [
@@ -53,16 +57,16 @@ class AuditLog extends Model
         $request = request();
 
         $tenantId = $user?->tenant_id;
-        if (!$tenantId && app()->has(\App\Modules\Tenancy\Application\TenantContext::class)) {
+        if (! $tenantId && app()->has(TenantContext::class)) {
             try {
-                $tenantId = app(\App\Modules\Tenancy\Application\TenantContext::class)->id();
+                $tenantId = app(TenantContext::class)->id();
             } catch (\Exception $e) {
                 // Se não conseguir resolver, deixa NULL
             }
         }
 
         return self::create([
-            'id' => \Illuminate\Support\Str::ulid(),
+            'id' => Str::ulid(),
             'tenant_id' => $tenantId,
             'user_id' => $user?->id,
             'action' => $action,
@@ -71,7 +75,7 @@ class AuditLog extends Model
             'changes' => $changes,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
-            'request_id' => $request->header('X-Request-ID') ?? \Illuminate\Support\Str::ulid(),
+            'request_id' => $request->header('X-Request-ID') ?? Str::ulid(),
             'endpoint' => $request->path(),
             'method' => $request->method(),
             'status_code' => null,
@@ -97,6 +101,6 @@ class AuditLog extends Model
 
     protected static function newFactory()
     {
-        return \Database\Factories\AuditLogFactory::new();
+        return AuditLogFactory::new();
     }
 }

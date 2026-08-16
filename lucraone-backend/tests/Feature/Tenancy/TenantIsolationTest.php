@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Tenancy;
 
-use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Tenancy\Application\TenantContext;
+use App\Modules\Tenancy\Domain\Exceptions\TenantNotResolvedException;
+use App\Modules\Tenancy\Domain\Models\Tenant;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class TenantIsolationTest extends TenancyTestCase
@@ -92,7 +94,7 @@ class TenantIsolationTest extends TenancyTestCase
      */
     public function test_tenant_not_resolved_exception(): void
     {
-        $this->expectException(\App\Modules\Tenancy\Domain\Exceptions\TenantNotResolvedException::class);
+        $this->expectException(TenantNotResolvedException::class);
 
         $this->tenantContext->id();
     }
@@ -123,7 +125,7 @@ class TenantIsolationTest extends TenancyTestCase
      */
     public function test_tenant_slug_is_unique(): void
     {
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
 
         Tenant::factory()->create([
             'slug' => $this->tenantA->slug,

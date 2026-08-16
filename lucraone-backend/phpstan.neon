@@ -1,0 +1,21 @@
+parameters:
+  level: 4
+  paths:
+    - app
+    - bootstrap
+    - config
+    - database
+    - routes
+  excludePaths:
+    - tests
+    - database/factories/AuditLogFactory.php
+  ignoreErrors:
+    # Laravel Eloquent dynamic properties and methods
+    - identifier: property.notFound
+    - identifier: staticMethod.notFound
+    - identifier: method.notFound
+    - identifier: class.notFound
+    - identifier: new.static
+    - identifier: variable.undefined
+    - identifier: arguments.count
+    - identifier: nullsafe.neverNull

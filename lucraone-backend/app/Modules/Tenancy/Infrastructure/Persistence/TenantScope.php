@@ -2,10 +2,10 @@
 
 namespace App\Modules\Tenancy\Infrastructure\Persistence;
 
+use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
-use App\Modules\Tenancy\Application\TenantContext;
 
 /**
  * Global Scope que filtra automaticamente modelos pelo tenant atual.
@@ -22,7 +22,7 @@ class TenantScope implements Scope
 
         // Se tenant foi resolvido, aplicar filtro
         if ($tenantContext->resolved()) {
-            $builder->where($model->getTable() . '.tenant_id', '=', $tenantContext->id());
+            $builder->where($model->getTable().'.tenant_id', '=', $tenantContext->id());
         }
     }
 }

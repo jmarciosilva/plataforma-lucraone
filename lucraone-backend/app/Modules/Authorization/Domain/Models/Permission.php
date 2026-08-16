@@ -2,15 +2,17 @@
 
 namespace App\Modules\Authorization\Domain\Models;
 
+use App\Modules\Tenancy\Domain\Models\HasTenant;
+use Database\Factories\PermissionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Modules\Tenancy\Domain\Models\HasTenant;
 
 class Permission extends Model
 {
     use HasFactory, HasTenant;
 
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $fillable = [
@@ -43,6 +45,6 @@ class Permission extends Model
 
     protected static function newFactory()
     {
-        return \Database\Factories\PermissionFactory::new();
+        return PermissionFactory::new();
     }
 }

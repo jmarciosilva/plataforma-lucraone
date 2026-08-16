@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Authorization;
 
-use Tests\Feature\Tenancy\TenancyTestCase;
-use App\Modules\Identity\Domain\Models\User;
-use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Authorization\Domain\Models\Permission;
+use App\Modules\Authorization\Domain\Models\Role;
+use App\Modules\Identity\Domain\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\Tenancy\TenancyTestCase;
 
 class RBACTest extends TenancyTestCase
 {

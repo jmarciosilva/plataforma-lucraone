@@ -2,18 +2,17 @@
 
 namespace App\Modules\Tenancy\Http\Middleware;
 
+use App\Modules\Tenancy\Application\TenantResolver;
+use App\Modules\Tenancy\Domain\Exceptions\TenantNotResolvedException;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Modules\Tenancy\Application\TenantResolver;
-use App\Modules\Tenancy\Domain\Exceptions\TenantNotResolvedException;
 
 class ResolveTenantMiddleware
 {
     public function __construct(
         private TenantResolver $resolver
-    ) {
-    }
+    ) {}
 
     /**
      * Handle an incoming request.
@@ -29,7 +28,7 @@ class ResolveTenantMiddleware
         }
 
         // Rotas autenticadas precisam de tenant resolvido
-        if (!$this->resolver->resolve($request)) {
+        if (! $this->resolver->resolve($request)) {
             throw new TenantNotResolvedException(
                 'Não foi possível resolver o tenant para esta requisição'
             );
@@ -43,8 +42,8 @@ class ResolveTenantMiddleware
      */
     private function isPublicRoute(Request $request): bool
     {
-        // Health checks (Laravel 11)
-        if ($request->is('up')) {
+        // Health checks (Laravel 11 + custom)
+        if ($request->is('up', 'health', 'api/health', 'api/v1/health')) {
             return true;
         }
 

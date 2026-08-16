@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Modules\Tenancy\TenancyServiceProvider;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -12,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         // Registrar módulos
-        $this->app->register(\App\Modules\Tenancy\TenancyServiceProvider::class);
+        $this->app->register(TenancyServiceProvider::class);
     }
 
     /**

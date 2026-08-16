@@ -12,6 +12,5 @@ class TenantCreated
 
     public function __construct(
         public Tenant $tenant
-    ) {
-    }
+    ) {}
 }

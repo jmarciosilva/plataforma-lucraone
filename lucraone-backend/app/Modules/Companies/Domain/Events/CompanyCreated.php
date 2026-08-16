@@ -12,6 +12,5 @@ class CompanyCreated
 
     public function __construct(
         public Company $company
-    ) {
-    }
+    ) {}
 }

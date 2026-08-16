@@ -1,5 +1,9 @@
 <?php
 
+use App\Modules\Identity\Http\Middleware\ApiAuthenticationMiddleware;
+use App\Modules\Tenancy\Http\Middleware\ResolveTenantMiddleware;
+use App\Modules\Tenancy\TenancyServiceProvider;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -7,7 +11,7 @@ use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
-        \App\Modules\Tenancy\TenancyServiceProvider::class,
+        TenancyServiceProvider::class,
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -17,8 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(
-            \App\Modules\Tenancy\Http\Middleware\ResolveTenantMiddleware::class,
-            \App\Modules\Identity\Http\Middleware\ApiAuthenticationMiddleware::class
+            ResolveTenantMiddleware::class,
+            ApiAuthenticationMiddleware::class
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -26,7 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
 
-        $exceptions->render(function (Illuminate\Auth\AuthenticationException $e, Request $request) {
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json(['message' => 'Não autenticado'], 401);
             }

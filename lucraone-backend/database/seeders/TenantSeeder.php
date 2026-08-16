@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
-use App\Modules\Tenancy\Domain\Models\Tenant;
 
 class TenantSeeder extends Seeder
 {

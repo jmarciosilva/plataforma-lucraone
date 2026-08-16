@@ -2,23 +2,26 @@
 
 namespace Tests\Feature\API;
 
-use Tests\TestCase;
-use App\Modules\Identity\Domain\Models\User;
-use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Authorization\Domain\Models\Permission;
+use App\Modules\Authorization\Domain\Models\Role;
+use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class ApiIntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
     private Tenant $tenant;
+
     private User $adminUser;
+
     private User $managerUser;
+
     private User $regularUser;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 

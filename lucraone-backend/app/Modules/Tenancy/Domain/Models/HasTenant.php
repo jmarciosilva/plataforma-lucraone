@@ -2,6 +2,7 @@
 
 namespace App\Modules\Tenancy\Domain\Models;
 
+use App\Modules\Tenancy\Application\TenantContext;
 use App\Modules\Tenancy\Infrastructure\Persistence\TenantScope;
 
 /**
@@ -17,7 +18,7 @@ trait HasTenant
      */
     public static function bootHasTenant(): void
     {
-        static::addGlobalScope(new TenantScope());
+        static::addGlobalScope(new TenantScope);
     }
 
     /**
@@ -43,7 +44,7 @@ trait HasTenant
      */
     public static function forCurrentTenant(array $attributes = []): static
     {
-        $tenantContext = app(\App\Modules\Tenancy\Application\TenantContext::class);
+        $tenantContext = app(TenantContext::class);
         $attributes['tenant_id'] = $tenantContext->id();
 
         return new static($attributes);

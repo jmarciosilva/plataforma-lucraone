@@ -16,7 +16,7 @@ class CompanyFactory extends Factory
         return [
             'id' => (string) Str::ulid(),
             'tenant_id' => Tenant::factory(),
-            'legal_name' => $this->faker->company() . ' LTDA',
+            'legal_name' => $this->faker->company().' LTDA',
             'trade_name' => $this->faker->company(),
             'document' => $this->generateCNPJ(),
             'state_registration' => $this->faker->numerify('##########'),

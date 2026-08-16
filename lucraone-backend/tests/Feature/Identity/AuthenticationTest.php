@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Identity;
 
-use Tests\Feature\Tenancy\TenancyTestCase;
 use App\Modules\Identity\Domain\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Feature\Tenancy\TenancyTestCase;
 
 class AuthenticationTest extends TenancyTestCase
 {

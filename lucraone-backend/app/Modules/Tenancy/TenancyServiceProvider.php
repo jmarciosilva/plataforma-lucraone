@@ -2,9 +2,9 @@
 
 namespace App\Modules\Tenancy;
 
-use Illuminate\Support\ServiceProvider;
 use App\Modules\Tenancy\Application\TenantContext;
 use App\Modules\Tenancy\Application\TenantResolver;
+use Illuminate\Support\ServiceProvider;
 
 class TenancyServiceProvider extends ServiceProvider
 {
@@ -15,7 +15,7 @@ class TenancyServiceProvider extends ServiceProvider
     {
         // Registrar TenantContext como singleton
         $this->app->singleton(TenantContext::class, function () {
-            return new TenantContext();
+            return new TenantContext;
         });
 
         // Registrar TenantResolver

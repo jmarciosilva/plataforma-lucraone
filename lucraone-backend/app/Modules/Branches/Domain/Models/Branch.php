@@ -2,15 +2,19 @@
 
 namespace App\Modules\Branches\Domain\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Modules\Companies\Domain\Models\Address;
+use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Tenancy\Domain\Models\HasTenant;
+use Database\Factories\BranchFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Branch extends Model
 {
     use HasFactory, HasTenant;
 
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $fillable = [
@@ -37,7 +41,7 @@ class Branch extends Model
     public function company()
     {
         return $this->belongsTo(
-            \App\Modules\Companies\Domain\Models\Company::class,
+            Company::class,
             'company_id',
             'id'
         );
@@ -49,7 +53,7 @@ class Branch extends Model
     public function addresses()
     {
         return $this->morphMany(
-            \App\Modules\Companies\Domain\Models\Address::class,
+            Address::class,
             'addressable'
         );
     }
@@ -60,7 +64,7 @@ class Branch extends Model
     public function primaryAddress()
     {
         return $this->morphOne(
-            \App\Modules\Companies\Domain\Models\Address::class,
+            Address::class,
             'addressable'
         )->where('is_primary', true);
     }
@@ -80,7 +84,7 @@ class Branch extends Model
      */
     public function getCompanyAttribute()
     {
-        return \App\Modules\Companies\Domain\Models\Company::where('id', $this->company_id)
+        return Company::where('id', $this->company_id)
             ->where('tenant_id', $this->tenant_id)
             ->first();
     }
@@ -90,6 +94,6 @@ class Branch extends Model
      */
     protected static function newFactory()
     {
-        return \Database\Factories\BranchFactory::new();
+        return BranchFactory::new();
     }
 }

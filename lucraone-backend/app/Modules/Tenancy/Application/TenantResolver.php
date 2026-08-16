@@ -15,8 +15,7 @@ class TenantResolver
 {
     public function __construct(
         private TenantContext $context
-    ) {
-    }
+    ) {}
 
     /**
      * Resolve o tenant para a requisição.
@@ -28,6 +27,7 @@ class TenantResolver
         // Estratégia 1: Obter do usuário autenticado
         if (Auth::check() && Auth::user()?->tenant_id) {
             $this->context->set(Auth::user()->tenant_id);
+
             return true;
         }
 

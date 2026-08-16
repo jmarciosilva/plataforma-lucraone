@@ -2,18 +2,24 @@
 
 namespace App\Modules\Tenancy\Domain\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Modules\Companies\Domain\Models\Company;
+use App\Modules\Identity\Domain\Models\User;
+use App\Modules\Tenancy\Domain\Events\TenantCreated;
+use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Tenant extends Model
 {
     use HasFactory;
+
     protected $keyType = 'string';
+
     public $incrementing = false;
 
     protected $dispatchesEvents = [
-        'created' => \App\Modules\Tenancy\Domain\Events\TenantCreated::class,
+        'created' => TenantCreated::class,
     ];
 
     protected $fillable = [
@@ -39,7 +45,7 @@ class Tenant extends Model
      */
     public function companies()
     {
-        return $this->hasMany(\App\Modules\Companies\Domain\Models\Company::class, 'tenant_id', 'id');
+        return $this->hasMany(Company::class, 'tenant_id', 'id');
     }
 
     /**
@@ -47,7 +53,7 @@ class Tenant extends Model
      */
     public function users()
     {
-        return $this->hasMany(\App\Modules\Identity\Domain\Models\User::class, 'tenant_id', 'id');
+        return $this->hasMany(User::class, 'tenant_id', 'id');
     }
 
     /**
@@ -73,6 +79,6 @@ class Tenant extends Model
      */
     protected static function newFactory()
     {
-        return \Database\Factories\TenantFactory::new();
+        return TenantFactory::new();
     }
 }

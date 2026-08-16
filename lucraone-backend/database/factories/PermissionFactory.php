@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 use App\Modules\Authorization\Domain\Models\Permission;
 use App\Modules\Tenancy\Domain\Models\Tenant;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 class PermissionFactory extends Factory
 {
@@ -20,7 +20,7 @@ class PermissionFactory extends Factory
             'id' => (string) Str::ulid(),
             'tenant_id' => Tenant::factory(),
             'name' => "{$action}-{$resource}",
-            'description' => ucfirst($action) . " $resource",
+            'description' => ucfirst($action)." $resource",
         ];
     }
 
@@ -38,7 +38,7 @@ class PermissionFactory extends Factory
         return $this->state(function (array $attributes) use ($action, $resource) {
             return [
                 'name' => "{$action}-{$resource}",
-                'description' => ucfirst($action) . " {$resource}",
+                'description' => ucfirst($action)." {$resource}",
             ];
         });
     }

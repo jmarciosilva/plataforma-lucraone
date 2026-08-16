@@ -13,7 +13,7 @@ class TenantFactory extends Factory
     public function definition(): array
     {
         $name = $this->faker->company();
-        $slug = Str::slug($name) . '-' . Str::random(4);
+        $slug = Str::slug($name).'-'.Str::random(4);
 
         return [
             'id' => (string) Str::ulid(),
