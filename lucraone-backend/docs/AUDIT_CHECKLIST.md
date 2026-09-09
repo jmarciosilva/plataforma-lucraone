@@ -424,12 +424,13 @@ RISCOS: Nenhum crítico
 
 ### Curto Prazo (F1.1 Final)
 
-- [ ] Validar Docker localmente (MySQL, Redis, app)
-- [ ] Configurar Laravel Pint (code style)
-- [ ] Configurar PHPStan/Psalm (análise estática)
-- [ ] Criar CI/CD pipeline (.github/workflows)
-- [ ] Implementar health check endpoint
-- [ ] Criar .env.example
+- [x] Validar Docker localmente (MySQL, Redis, app)
+- [x] Configurar Laravel Pint (code style)
+- [x] Configurar PHPStan (análise estática, nível 4)
+- [x] Implementar health check endpoint
+- [x] Criar .env.example
+- ~~Criar CI/CD pipeline~~ — descartado em 2026-09-09: um desenvolvedor só.
+  As mesmas verificações rodam sob demanda no container.
 
 ### Médio Prazo (F1.3)
 

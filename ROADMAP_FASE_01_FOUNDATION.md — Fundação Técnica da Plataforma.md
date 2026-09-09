@@ -174,15 +174,20 @@ commercial-platform/
 │   └── adr/
 │
 ├── docker/
+│   ├── Dockerfile          # multi-stage: alvos dev e prod
+│   ├── entrypoint.sh
+│   ├── nginx/
+│   └── php/
 │
-├── .github/
-│   └── workflows/
-│
-├── docker-compose.yml
 ├── README.md
 ├── SECURITY.md
 └── ROADMAP.md
 ```
+
+> **docker-compose.yml fica na raiz do repositório**, um nível acima desta
+> pasta — ele orquestra o projeto inteiro, não só o backend. Ver `DOCKER.md`.
+>
+> Não há `.github/`: o projeto tem um desenvolvedor só e dispensa CI.
 
 ---
 

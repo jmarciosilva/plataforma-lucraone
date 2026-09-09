@@ -1,11 +1,34 @@
 # Status do Projeto LUCRAONE
 
-**Atualizado em:** 2026-08-16 (F2.4 concluído — reporting & analytics)
-**Fase Atual:** FASE 02 — FEATURES (F2.5 é o próximo)
-**Próxima Sprint:** F2.5 — Advanced Automation
+**Atualizado em:** 2026-09-09 (F2.5 concluído — automação avançada)
+**Fase Atual:** FASE 02 — FEATURES (F2.6 é o próximo)
+**Próxima Sprint:** F2.6 — Integration APIs
 **Fase Concluída:** FASE 03 — ADMIN FRONTEND (6/6 sprints)
-**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 5 entregas concluídas | FASE 03 ✅ 100% (6/6)
-**Testes:** 377 passing, 0 failing
+**Progresso Geral:** FASE 01 ✅ 100% (8 sprints) | FASE 02 🟡 6 entregas concluídas | FASE 03 ✅ 100% (6/6)
+**Testes:** 417 passing, 0 failing
+
+> 🐳 **Ambiente Docker reorganizado (2026-09-09).** A stack passou a ser
+> nginx + php-fpm + fila + agendador + Vite, com `docker-compose.yml` na raiz
+> do repositório e `Dockerfile` multi-stage (alvos `dev` e `prod`). O guia está
+> em `DOCKER.md`. Cinco defeitos anteriores apareceram na verificação:
+>
+> 1. **`DatabaseSeeder` usava `WithoutModelEvents`**, que desliga o `creating`
+>    onde o `HasUlid` gera a chave — `db:seed` quebrava com "Field 'id' doesn't
+>    have a default value". Cada seeder vinha sendo remendado com
+>    `'id' => Str::ulid()` em vez de tratar a causa.
+> 2. **Configuração do Laravel no ambiente do container.** O PHP publica o
+>    ambiente em `$_SERVER`, que o `Env` lê antes de tudo, e o `force="true"`
+>    do PHPUnit só alcança `getenv()` e `$_ENV`. Resultado: `artisan test`
+>    rodava contra o MySQL de desenvolvimento e o apagava a cada
+>    `RefreshDatabase`. A configuração voltou para o `.env`, como no Sail.
+> 3. **`phpunit.xml` sem `force="true"`** — as variáveis só valiam quando ainda
+>    não existiam no ambiente.
+> 4. **`.env.example` divergente do projeto** — apontava para sqlite, locale
+>    `en` e `SESSION_DRIVER=database`, que quebraria: não existe migration de
+>    `sessions`. Como o entrypoint copia esse arquivo, ele precisava estar certo.
+> 5. **CI que nunca executou** — os workflows estavam em
+>    `lucraone-backend/.github/`, e o GitHub Actions só lê `.github/` na raiz.
+>    Removidos: o projeto tem um desenvolvedor só.
 
 > 🔓 **O sistema já é operável por um humano.** Desde o F3.2 existe login web
 > em `/login`. Uma pessoa com vínculo em vários estabelecimentos escolhe onde
@@ -31,11 +54,11 @@
 
 | Item | Status |
 |------|--------|
-| **Fase Atual** | FASE 02 — FEATURES (F2.5 é o próximo) |
-| **Próxima Sprint** | F2.5 — Advanced Automation |
+| **Fase Atual** | FASE 02 — FEATURES (F2.6 é o próximo) |
+| **Próxima Sprint** | F2.6 — Integration APIs |
 | **Fases Concluídas** | FASE 01 — FOUNDATION (8/8) · FASE 03 — ADMIN FRONTEND (6/6) |
-| **Testes Totais** | 377 passing, 0 failing |
-| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 90+ · FASE 03: 60 |
+| **Testes Totais** | 417 passing, 0 failing |
+| **Cumulative Tests** | FASE 01: 227 (inc. F1.8) · FASE 02: 130 · FASE 03: 60 |
 
 ### Ordem de Execução Atualizada
 
@@ -44,7 +67,7 @@ FASE 01 — FOUNDATION      ✅ COMPLETO   (8 sprints, 227 testes)
         ↓
 FASE 03 — ADMIN FRONTEND  ✅ COMPLETO   (F3.1-F3.6, 60 testes)
         ↓
-FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.1b ✅ | F2.2 ✅ | F2.3 ✅ | F2.4 ✅ | F2.5 é o próximo)
+FASE 02 — FEATURES        🟡 ATIVO      (F2.1 ✅ | F2.1b ✅ | F2.2 ✅ | F2.3 ✅ | F2.4 ✅ | F2.5 ✅ | F2.6 é o próximo)
 ```
 
 ### FASE 01 Sprints Status
@@ -596,10 +619,15 @@ Resultado: 6 execuções seguidas com tempo crescendo de 4,1x a 11,6x contra
 - [x] git init + commits estruturados
 - [x] Configurar code style (Pint) — 56 issues fixed
 - [x] Configurar static analysis (PHPStan) — Level 4, 0 errors
-- [x] CI/CD pipeline (.github/workflows) — tests.yml + code-quality.yml
 - [x] Health check endpoint (/health) — Database and cache checks
 
-**Conclusão:** 15/15 — 100% ✅
+> **CI/CD removido em 2026-09-09.** O projeto tem um desenvolvedor só; o
+> pipeline nunca chegou a executar (os workflows estavam em
+> `lucraone-backend/.github/`, e o GitHub Actions só lê `.github/` na raiz).
+> Pint, PHPStan e a suíte rodam sob demanda no container. Os arquivos seguem
+> recuperáveis pelo histórico: `git show 9c518b1:lucraone-backend/.github/`.
+
+**Conclusão:** 14/14 — 100% ✅
 
 **Entregáveis Validados:**
 - ✅ Projeto Laravel funcionando
@@ -607,7 +635,7 @@ Resultado: 6 execuções seguidas com tempo crescendo de 4,1x a 11,6x contra
 - ✅ Redis 7 container pronto
 - ✅ Arquitetura modular estabelecida
 - ✅ Documentação completa
-- 🟡 Docker (app build pendente, mas infra OK)
+- ✅ Docker (stack completa: nginx + php-fpm + fila + agendador + Vite)
 
 ---
 

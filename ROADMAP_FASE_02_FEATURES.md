@@ -3,7 +3,7 @@
 
 **Projeto:** Plataforma SaaS Inteligente de Automação Comercial  
 **Fase:** 02 — FEATURES  
-**Status:** 🟡 ATIVO — F2.4 Reporting & Analytics concluída, F2.5 é o próximo
+**Status:** 🟡 ATIVO — F2.5 Advanced Automation concluída, F2.6 é o próximo
 **Prioridade:** Alta  
 **Dependência:** FASE 01 ✅ Concluída · FASE 03 ✅ Concluída
 **Estimativa:** 6 sprints (~12-16 semanas)  
@@ -34,8 +34,8 @@
 | F2.2 — Inventory Management | ✅ DONE | ✅ DONE | 11 API/web |
 | F2.3 — Sales & Orders | ✅ DONE | ✅ DONE | 26 API/web |
 | F2.4 — Reporting & Analytics | ✅ DONE | ✅ DONE | 28 API/web |
-| F2.5 — Advanced Automation | 📋 TODO | 📋 TODO | — |
-| F2.6 — Integration APIs | ⏸️ Aguarda F2.5 | ⏸️ Aguarda F2.5 | — |
+| F2.5 — Advanced Automation | ✅ DONE | ✅ DONE | 40 testes |
+| F2.6 — Integration APIs | 📋 TODO | 📋 TODO | — |
 
 > **Nota sobre numeração:** esta tabela listava anteriormente "F2.4 Payments /
 > F2.5 Reports / F2.6 Integrations", divergindo da especificação detalhada da
@@ -584,9 +584,9 @@ conferir os KPIs contra os menus `vendas`, `estoque` e `clientes`, e exportar CS
 
 ---
 
-## Sprint F2.5 — Advanced Automation
+## Sprint F2.5 — Advanced Automation ✅
 
-**Duração:** ~2 semanas  
+**Status:** ✅ DONE — 40 testes  
 **Objetivo:** Automações de negócio baseadas em regras, com API e painel web
 para operadores configurarem regras sem tinker.
 **Como testar:** criar uma regra no painel, simular gatilho e consultar histórico
@@ -595,42 +595,58 @@ de execução.
 ### Requisitos
 
 #### Modelos
-- [ ] AutomationRule (trigger, condition, action, tenant_id)
-- [ ] AutomationLog (execution history)
+- [x] AutomationRule (trigger, condition, action, tenant_id)
+- [x] AutomationLog (execution history)
+- [x] Notification — avisos no painel, alvo da ação `create_notification`
 
 #### API Endpoints
-- [ ] GET /api/v1/automation-rules
-- [ ] POST /api/v1/automation-rules
-- [ ] GET /api/v1/automation-rules/{id}
-- [ ] PUT /api/v1/automation-rules/{id}
-- [ ] DELETE /api/v1/automation-rules/{id}
-- [ ] GET /api/v1/automation-logs
+- [x] GET /api/v1/automation-rules
+- [x] POST /api/v1/automation-rules
+- [x] GET /api/v1/automation-rules/{id}
+- [x] PUT /api/v1/automation-rules/{id}
+- [x] DELETE /api/v1/automation-rules/{id}
+- [x] GET /api/v1/automation-logs
 
 #### Frontend Web
-- [ ] Menu `automações` no painel
-- [ ] Listagem de regras
-- [ ] Criar/editar regra
-- [ ] Ativar/desativar regra
-- [ ] Listar execuções e erros
-- [ ] Tela de detalhe da regra
-- [ ] Modal de ajuda contextual de automações
+- [x] Menu `automações` no painel
+- [x] Listagem de regras
+- [x] Criar/editar regra
+- [x] Ativar/desativar regra
+- [x] Listar execuções e erros
+- [x] Tela de detalhe da regra
+- [x] Modal de ajuda contextual de automações
+- [x] Tela de notificações (`/notificacoes`) com marcar como lido
 
 #### Features
-- [ ] Rules engine: when X then do Y
-- [ ] Triggers: product created, stock low, order completed
-- [ ] Actions: send email, create task, update price
-- [ ] Scheduled tasks (cron)
-- [ ] Audit log de execuções
+- [x] Rules engine: when X then do Y (`RuleEngine` + `ConditionEvaluator`)
+- [x] Triggers: `product_created`, `stock_low`, `order_completed`
+- [x] Actions: `send_email`, `create_notification`, `update_price`
+- [x] Scheduled tasks (cron) — `automations:prune-logs` e `sales:summary`
+- [x] Audit log de execuções — toda passagem grava `executado`, `ignorado` ou
+      `falhou`, porque "por que essa regra não rodou?" é a pergunta mais comum
 
-#### Testes (12+)
-- [ ] Rule evaluation
-- [ ] Action execution
-- [ ] Error handling
-- [ ] Web: criar regra pela tela
-- [ ] Web: consultar histórico de execução
+#### Testes (40)
+- [x] Rule evaluation (`RuleEngineTest`)
+- [x] Action execution (`RuleEngineTest`)
+- [x] Error handling — regra que falha não derruba as demais
+- [x] Web: criar regra pela tela (`AutomationWebManagementTest`)
+- [x] Web: consultar histórico de execução
+- [x] API (`AutomationApiTest`), agendamento (`ScheduledTasksTest`)
 
 #### Documentação
-- [ ] Automation Rules Guide
+- [ ] Automation Rules Guide — **pendente**, único item não entregue da sprint
+
+### Decisões de projeto
+
+- **Condições só com E lógico.** Sem OU nem parênteses: a regra que precisaria
+  disso são duas regras. É o que permite a tela ser um formulário em vez de um
+  editor de expressão.
+- **Campos vêm de um catálogo (`TriggerCatalog`).** Uma condição não alcança
+  dado que o gatilho não declarou expor.
+- **O gancho fica no model, não no controller.** Produto nasce por três
+  caminhos — API, painel e seeder — e o gatilho precisa valer nos três.
+- **A avaliação roda na fila.** Enviar e-mail ou reprecificar não pode segurar
+  a resposta de quem só cadastrou um produto.
 
 ---
 

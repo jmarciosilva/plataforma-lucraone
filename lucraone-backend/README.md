@@ -1,8 +1,9 @@
 # LUCRAONE — Plataforma SaaS Inteligente de Automação Comercial
 
-**Versão:** 0.1.0 (Foundation Phase)  
-**Status:** ✅ COMPLETE (FASE 01)  
-**Data:** 2026-08-16
+**Versão:** 0.5.0  
+**Status:** FASE 01 e FASE 03 concluídas · FASE 02 em andamento (F2.5 entregue)  
+**Testes:** 417 passando  
+**Data:** 2026-09-09
 
 ---
 
@@ -56,78 +57,76 @@ Module/
 
 ## Pré-requisitos
 
-- Docker & Docker Compose
+- Docker Desktop (Docker Engine 24+ e Compose v2)
 - Git
-- PHP 8.3+ (local, opcional se usar Docker)
-- Composer (local, opcional se usar Docker)
+
+Só isso. PHP, Composer e Node rodam dentro dos containers.
 
 ---
 
 ## Instalação
 
+O `docker-compose.yml` fica na **raiz do repositório**, um nível acima desta
+pasta — todos os comandos abaixo saem de lá.
+
 ### 1. Clone o repositório
 
 ```bash
 git clone <repositório>
-cd lucraone-backend
+cd PROJETO-LUCRAONE
 ```
 
-### 2. Configure o ambiente
+### 2. Suba o ambiente
 
 ```bash
-cp .env.example .env
-# Edite .env se necessário
+docker compose up -d --build
 ```
 
-### 3. Docker
+Não é preciso copiar o `.env` nem rodar as migrations à mão: o entrypoint cria
+o `.env` a partir do `.env.example`, gera a `APP_KEY`, espera o MySQL responder
+e aplica as migrations na subida.
+
+A primeira execução leva alguns minutos (compila extensões PHP e instala as
+dependências). Acompanhe com `docker compose logs -f app`.
+
+### 3. Popule o banco (opcional)
 
 ```bash
-docker-compose up -d
+docker compose exec app php artisan db:seed
 ```
 
-Aguarde MySQL e Redis ficarem saudáveis (verificar com `docker-compose logs`).
+O painel fica em **http://localhost:8000** e os e-mails em
+**http://localhost:8025**.
 
-### 4. Migrações
-
-```bash
-docker-compose exec app php artisan migrate
-```
-
-### 5. Seeders (Opcional)
-
-```bash
-docker-compose exec app php artisan db:seed
-```
+📖 O guia completo do ambiente — containers, portas, produção e problemas
+comuns — está em [`DOCKER.md`](../DOCKER.md).
 
 ---
 
 ## Desenvolvimento Local
 
-### Iniciar ambiente
+### Iniciar e parar
 
 ```bash
-docker-compose up -d
+docker compose up -d     # subir
+docker compose down      # parar (mantém os dados)
+docker compose down -v   # parar e apagar banco, redis e dependências
 ```
 
 ### Ver logs
 
 ```bash
-docker-compose logs -f app
-docker-compose logs -f queue-worker
-docker-compose logs -f mysql
-docker-compose logs -f redis
-```
-
-### Parar
-
-```bash
-docker-compose down
+docker compose logs -f app         # aplicação
+docker compose logs -f queue       # fila (automações, e-mail)
+docker compose logs -f scheduler   # tarefas agendadas
+docker compose logs -f node        # Vite / assets
+docker compose logs -f mysql
 ```
 
 ### Tinker (REPL)
 
 ```bash
-docker-compose exec app php artisan tinker
+docker compose exec app php artisan tinker
 ```
 
 ---
@@ -136,13 +135,13 @@ docker-compose exec app php artisan tinker
 
 ```bash
 # Todos os testes
-docker-compose exec app php artisan test
+docker compose exec app php artisan test
 
 # Testes específicos
-docker-compose exec app php artisan test --filter=TenancyTest
+docker compose exec app php artisan test --filter=TenancyTest
 
 # Com cobertura
-docker-compose exec app php artisan test --coverage
+docker compose exec app php artisan test --coverage
 ```
 
 ---
@@ -152,14 +151,17 @@ docker-compose exec app php artisan test --coverage
 ### Lint (PHP Pint)
 
 ```bash
-docker-compose exec app ./vendor/bin/pint
+docker compose exec app ./vendor/bin/pint
 ```
 
-### Static Analysis
+### Análise Estática (PHPStan)
 
 ```bash
-# Será adicionado na próxima etapa
+docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=1G
 ```
+
+> Ambos rodam sob demanda. O projeto tem um desenvolvedor só, então não há
+> pipeline de CI: a verificação acontece aqui, antes do commit.
 
 ---
 
@@ -197,13 +199,13 @@ Database: lucraone
 ### Backup
 
 ```bash
-docker-compose exec mysql mysqldump -u lucraone -p lucraone > backup.sql
+docker compose exec mysql mysqldump -u lucraone -p lucraone > backup.sql
 ```
 
 ### Restore
 
 ```bash
-docker-compose exec -T mysql mysql -u lucraone -p lucraone < backup.sql
+docker compose exec -T mysql mysql -u lucraone -p lucraone < backup.sql
 ```
 
 ---
@@ -213,7 +215,7 @@ docker-compose exec -T mysql mysql -u lucraone -p lucraone < backup.sql
 ### Acesso
 
 ```bash
-docker-compose exec redis redis-cli
+docker compose exec redis redis-cli
 ```
 
 ### Cache
@@ -247,43 +249,62 @@ Connection: `redis`
 
 ## Roadmap
 
-### Fase Concluída
+### FASE 01 — FOUNDATION ✅
 
-**FASE 01 — FOUNDATION** ✅
+- ✅ F1.1 — Bootstrap (Docker, estrutura modular, code quality, health checks)
+- ✅ F1.2 — Tenancy (multi-tenant com isolamento por global scope)
+- ✅ F1.3 — Companies & Branches (estrutura organizacional)
+- ✅ F1.4 — Identity (autenticação com Sanctum)
+- ✅ F1.5 — Authorization (RBAC com roles e permissions por estabelecimento)
+- ✅ F1.6 — Audit & Observability (auditoria e logs estruturados)
+- ✅ F1.7 — Hardening (security audit e performance baseline)
+- ✅ F1.8 — Identity Refactor (uma pessoa, vários estabelecimentos)
 
-Status: 🟢 COMPLETE (189 testes, 100%)
+### FASE 03 — ADMIN FRONTEND ✅
 
-**Sprints Concluídas:**
-- ✅ F1.1 — Bootstrap (100% — Docker, estrutura modular, code quality, CI/CD, health checks)
-- ✅ F1.2 — Tenancy (100% — Multi-tenant com isolamento)
-- ✅ F1.3 — Companies & Branches (100% — Estrutura organizacional)
-- ✅ F1.4 — Identity (100% — Autenticação com Sanctum)
-- ✅ F1.5 — Authorization (100% — RBAC com roles & permissions)
-- ✅ F1.6 — Audit & Observability (100% — Auditoria e logs estruturados)
-- ✅ F1.7 — Hardening & Final Validation (100% — Security audit e performance baseline)
+Entrou na frente da F2.2: sem tela de login o sistema só era operável por
+Postman. Blade + Tailwind + Alpine.
 
-### Próxima Fase
+- ✅ F3.1 — Frontend setup e layout do painel
+- ✅ F3.2 — Login web com sessão e escolha de estabelecimento
+- ✅ F3.3 — Dashboard administrativo
+- ✅ F3.4 — Gerenciar tenants
+- ✅ F3.5 — Gerenciar usuários
+- ✅ F3.6 — Gerenciar empresas e permissões
 
-**FASE 02 — FEATURES** (Ready to start)
-- F2.1 — Core Features (Products, Categories, Prices)
-- F2.2 — Inventory Management
-- F2.3 — Sales & Orders
-- F2.4 — Reporting & Analytics
-- F2.5 — Advanced Automation
-- F2.6 — Integration APIs
+### FASE 02 — FEATURES 🟡
+
+- ✅ F2.1 — Core Features (Products, Categories, Prices) — API
+- ✅ F2.1b — Produtos pelo painel
+- ✅ F2.2 — Inventory Management
+- ✅ F2.3 — Sales & Orders
+- ✅ F2.4 — Reporting & Analytics
+- ✅ F2.5 — Advanced Automation (regras, gatilhos, notificações, e-mail)
+- ⬜ F2.6 — Integration APIs
+
+### Pendências conhecidas
+
+- **A API v1 não verifica autorização.** As Policies existem e o painel web as
+  usa, mas nenhum controller de `/api/v1` chama `Gate::authorize`. Qualquer
+  token válido opera o estabelecimento inteiro, independente do papel.
+- **`POST /api/auth/login` não tem rate limiting.** O login web tem (5
+  tentativas por e-mail+IP); a API não herdou.
+- **Índices únicos ignoram `deleted_at`.** O SKU de um produto arquivado
+  continua ocupado e impede recriar o mesmo código.
 
 ---
 
-## Métricas FASE 01
+## Métricas
 
 | Métrica | Resultado |
 |---------|-----------|
-| Testes Automatizados | ✅ 189/189 passing (100%) |
-| Sprints Concluídas | ✅ 7/7 (100%) |
-| Cobertura de Segurança | ✅ OWASP Top 10 validado |
-| Multi-Tenancy | ✅ Isolamento testado |
-| Documentação | ✅ Completa |
-| Performance Baseline | ✅ Estabelecido |
+| Testes automatizados | 417 passando |
+| Sprints concluídas | FASE 01: 8/8 · FASE 03: 6/6 · FASE 02: 6/7 |
+| Módulos | 12 (`app/Modules/`) |
+| Multi-tenancy | Isolamento testado (cross-tenant e RBAC) |
+| Performance baseline | Estabelecido |
+| Análise estática | PHPStan nível 4 (11 apontamentos abertos) |
+| Estilo | Pint (18 arquivos fora do padrão) |
 
 ## Status Detalhado
 
@@ -293,11 +314,16 @@ Veja `PROJECT_STATUS.md` para tracking completo de todas as sprints e tarefas.
 
 ## Contribuindo
 
-1. Feature branch: `git checkout -b feature/name`
-2. Commit mensagens: `feat:`, `fix:`, `test:`, `docs:`, `refactor:`
-3. Testes: garantir cobertura
-4. Code style: executar `pint`
-5. PR com checklist
+Projeto de um desenvolvedor só — não há PR nem CI. A disciplina fica no commit:
+
+1. Branch por feature: `git checkout -b feature/nome`
+2. Mensagens: `feat:`, `fix:`, `test:`, `docs:`, `refactor:`
+3. Antes de commitar, rodar no container:
+   ```bash
+   docker compose exec app php artisan test
+   docker compose exec app ./vendor/bin/pint
+   docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=1G
+   ```
 
 ---
 
@@ -325,4 +351,4 @@ Proprietário — LUCRAONE
 
 ---
 
-**Última atualização:** 2026-08-16 (FASE 01 — Foundation concluída)
+**Última atualização:** 2026-09-09 (F2.5 entregue · ambiente Docker reorganizado)

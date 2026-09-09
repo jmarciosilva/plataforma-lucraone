@@ -1,9 +1,9 @@
 # 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-08-16 (F2.4 — reporting & analytics)
-**Fase Ativa:** FASE 02 — FEATURES 🟡 (F2.5 é o próximo)
+**Atualizado:** 2026-09-09 (F2.5 — automação avançada)
+**Fase Ativa:** FASE 02 — FEATURES 🟡 (F2.6 é o próximo)
 **Fase Concluída:** FASE 03 — ADMIN FRONTEND ✅ (6/6 sprints)
-**Testes:** 377 passing
+**Testes:** 417 passing
 
 ---
 
@@ -16,8 +16,9 @@
 │  ████████████████████████████████████████████████  100%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 02 — FEATURES              🟡 ATIVO  ← AQUI            │
-│  Products + Inventory + Sales + Reporting (F2.1 → F2.4)      │
-│  ██████████████████████████░░░░░░░░░░░░░░░░░░░░░░   67%      │
+│  Products + Inventory + Sales + Reporting + Automation       │
+│  (F2.1 → F2.5; falta só F2.6 — Integration APIs)             │
+│  ██████████████████████████████████████████░░░░░░   86%      │
 ├─────────────────────────────────────────────────────────────┤
 │  FASE 03 — ADMIN FRONTEND        ✅ COMPLETO                 │
 │  6/6 sprints · 60 testes                                     │
@@ -51,8 +52,8 @@ Conclusão:
   ✅ Documentação arquitetural
   ✅ Code quality pipeline (Pint — 56 issues fixed)
   ✅ Static analysis (PHPStan — 0 errors at level 4)
-  ✅ CI/CD pipeline (.github/workflows)
   ✅ Health check endpoint (/health)
+  ⛔ CI/CD removido em 2026-09-09 — um desenvolvedor só, sem pipeline
 ```
 
 ### ✅ Sprint F1.2 — Tenancy (DONE)
