@@ -6,6 +6,12 @@ use App\Modules\Authorization\Domain\Models\Permission;
 use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Authorization\Http\Policies\PermissionPolicy;
 use App\Modules\Authorization\Http\Policies\RolePolicy;
+use App\Modules\Automation\Application\Listeners\ProcessAutomationTrigger;
+use App\Modules\Automation\Domain\Events\AutomationTriggered;
+use App\Modules\Automation\Domain\Models\AutomationRule;
+use App\Modules\Automation\Domain\Models\Notification;
+use App\Modules\Automation\Http\Policies\AutomationRulePolicy;
+use App\Modules\Automation\Http\Policies\NotificationPolicy;
 use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Companies\Http\Policies\CompanyPolicy;
 use App\Modules\Identity\Domain\Models\User;
@@ -25,6 +31,7 @@ use App\Modules\Sales\Http\Policies\OrderPolicy;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Tenancy\Http\Policies\TenantPolicy;
 use App\Modules\Tenancy\TenancyServiceProvider;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -55,6 +62,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(StockLevel::class, StockLevelPolicy::class);
         Gate::policy(Order::class, OrderPolicy::class);
         Gate::policy(Customer::class, CustomerPolicy::class);
+        Gate::policy(AutomationRule::class, AutomationRulePolicy::class);
+        Gate::policy(Notification::class, NotificationPolicy::class);
 
         // Relatórios são leitura agregada, sem modelo próprio — daí um Gate
         // nomeado em vez de uma Policy.
@@ -62,5 +71,9 @@ class AppServiceProvider extends ServiceProvider
             'view-reports',
             fn (User $user) => $user->hasAnyPermission(['view-reports', 'manage-sales', 'create-role'])
         );
+
+        // O módulo Automation escuta um evento só; registrar à mão é mais
+        // explícito do que depender da descoberta automática de listeners.
+        Event::listen(AutomationTriggered::class, ProcessAutomationTrigger::class);
     }
 }

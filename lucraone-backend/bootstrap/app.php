@@ -2,7 +2,9 @@
 
 use App\Http\Middleware\AutenticarWeb;
 use App\Http\Middleware\RedirecionarSeAutenticado;
+use App\Modules\Automation\Infrastructure\Console\PruneAutomationLogsCommand;
 use App\Modules\Identity\Http\Middleware\ApiAuthenticationMiddleware;
+use App\Modules\Reporting\Infrastructure\Console\SendSalesSummaryCommand;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenantMiddleware;
 use App\Modules\Tenancy\TenancyServiceProvider;
 use Illuminate\Auth\AuthenticationException;
@@ -21,6 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    // A descoberta automática só varre app/Console/Commands; os comandos vivem
+    // dentro dos módulos, então precisam ser registrados à mão.
+    ->withCommands([
+        PruneAutomationLogsCommand::class,
+        SendSalesSummaryCommand::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         // ApiAuthenticationMiddleware converte AuthenticationException em JSON 401.
         // Fica restrito ao grupo api: no navegador queremos redirect para /login,

@@ -45,6 +45,8 @@ class AuthorizationSeeder extends Seeder
             'manage-customers',
             'view-customers',
             'view-reports',
+            'manage-automations',
+            'view-automations',
             'manage-users',
             'view-users',
             'manage-branches',
@@ -96,6 +98,7 @@ class AuthorizationSeeder extends Seeder
             'manage-sales', 'view-sales',
             'manage-customers', 'view-customers',
             'view-reports',
+            'manage-automations', 'view-automations',
             'manage-users', 'view-users',
             'manage-branches', 'view-branches', 'view-all-branches',
         ];
@@ -113,6 +116,7 @@ class AuthorizationSeeder extends Seeder
             'manage-sales', 'view-sales',
             'manage-customers', 'view-customers',
             'view-reports',
+            'view-automations',
             'manage-users', 'view-users',
             'manage-assigned-branches', 'view-branches',
         ];
@@ -130,6 +134,7 @@ class AuthorizationSeeder extends Seeder
             'view-sales',
             'view-customers',
             'view-reports',
+            'view-automations',
             'view-users',
             'view-assigned-branches',
         ];
@@ -147,6 +152,7 @@ class AuthorizationSeeder extends Seeder
             'view-sales',
             'view-customers',
             'view-reports',
+            'view-automations',
             'view-branches',
         ];
 

@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\Web\Auth\LoginController;
+use App\Http\Controllers\Web\AutomationWebController;
 use App\Http\Controllers\Web\CategoryWebController;
 use App\Http\Controllers\Web\CompanyController;
 use App\Http\Controllers\Web\CustomerWebController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\EstabelecimentoController;
 use App\Http\Controllers\Web\InventoryWebController;
+use App\Http\Controllers\Web\NotificationWebController;
 use App\Http\Controllers\Web\OrderWebController;
 use App\Http\Controllers\Web\PermissionController;
 use App\Http\Controllers\Web\ProductWebController;
@@ -122,4 +124,18 @@ Route::middleware('auth.web')->group(function () {
     Route::get('/reports/{tipo}/export', [ReportWebController::class, 'export'])
         ->whereIn('tipo', ['sales', 'inventory', 'customers'])
         ->name('reports.export');
+
+    // "logs" antes do resource: senão /automations/logs cairia no {automation}
+    Route::get('/automations/logs', [AutomationWebController::class, 'logs'])
+        ->name('automations.logs');
+    Route::post('/automations/{automation}/toggle', [AutomationWebController::class, 'toggle'])
+        ->name('automations.toggle');
+    Route::resource('automations', AutomationWebController::class);
+
+    Route::post('/notificacoes/ler-todos', [NotificationWebController::class, 'readAll'])
+        ->name('notifications.read-all');
+    Route::post('/notificacoes/{notification}/ler', [NotificationWebController::class, 'read'])
+        ->name('notifications.read');
+    Route::get('/notificacoes', [NotificationWebController::class, 'index'])
+        ->name('notifications.index');
 });

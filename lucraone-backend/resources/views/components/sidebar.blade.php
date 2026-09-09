@@ -14,6 +14,12 @@
     // Só faz sentido oferecer a troca para quem tem mais de um vínculo
     $podeTrocar = auth()->check()
         && auth()->user()->estabelecimentosDisponiveis()->count() > 1;
+
+    // Contador de avisos: só consulta com estabelecimento resolvido, senão o
+    // escopo de tenant não filtraria nada.
+    $avisosNaoLidos = auth()->check() && $contexto->resolved()
+        ? \App\Http\Controllers\Web\NotificationWebController::naoLidos(auth()->id())
+        : 0;
 @endphp
 
 <aside {{ $attributes->merge(['class' => 'w-60 shrink-0 flex-col border-r border-linha bg-white flex ' . $class]) }}>
@@ -124,6 +130,19 @@
                 <path d="M7 15v-4" />
                 <path d="M12 15V7" />
                 <path d="M17 15v-6" />
+            </svg>
+        </x-nav-item>
+
+        <x-nav-item rota="automations.index" rotulo="automações">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                <path d="M13 2L4.5 13H12l-1 9 8.5-11H12l1-9z" />
+            </svg>
+        </x-nav-item>
+
+        <x-nav-item rota="notifications.index" rotulo="avisos" :contador="$avisosNaoLidos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.7 21a2 2 0 0 1-3.4 0" />
             </svg>
         </x-nav-item>
     </nav>

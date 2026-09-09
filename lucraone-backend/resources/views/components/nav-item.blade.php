@@ -1,4 +1,4 @@
-@props(['rota', 'rotulo'])
+@props(['rota', 'rotulo', 'contador' => null])
 
 @php
     // Rotas ainda não criadas (sprints seguintes) caem em "#" sem quebrar o menu
@@ -25,4 +25,11 @@
         {{ $slot }}
     </span>
     {{ $rotulo }}
+
+    @if ($contador)
+        <span
+            class="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-brasa px-1.5 py-0.5 text-[0.65rem] font-bold text-white"
+            aria-label="{{ $contador }} não lidos"
+        >{{ $contador > 99 ? '99+' : $contador }}</span>
+    @endif
 </a>

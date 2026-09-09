@@ -2,6 +2,8 @@
 
 namespace App\Modules\Sales\Application;
 
+use App\Modules\Automation\Domain\Events\AutomationTriggered;
+use App\Modules\Automation\Domain\TriggerCatalog;
 use App\Modules\Inventory\Application\InventoryAdjustmentService;
 use App\Modules\Inventory\Domain\Models\InventoryMovement;
 use App\Modules\Products\Domain\Models\Price;
@@ -180,7 +182,13 @@ class OrderService
                 ...$this->timestampFor($status),
             ])->save();
 
-            return $order->fresh(['items', 'customer', 'company']);
+            $atualizado = $order->fresh(['items', 'customer', 'company']);
+
+            if ($status === Order::STATUS_COMPLETED) {
+                $this->anunciarPedidoConcluido($atualizado);
+            }
+
+            return $atualizado;
         });
     }
 
@@ -190,6 +198,18 @@ class OrderService
     public function cancel(Order $order, ?string $userId = null): Order
     {
         return $this->changeStatus($order, Order::STATUS_CANCELLED, $userId);
+    }
+
+    private function anunciarPedidoConcluido(Order $order): void
+    {
+        AutomationTriggered::dispatch($order->tenant_id, TriggerCatalog::PEDIDO_CONCLUIDO, [
+            'order_id' => $order->id,
+            'numero' => $order->order_number,
+            'total' => (float) $order->total,
+            'itens' => $order->items->count(),
+            'cliente' => $order->customer?->name ?? 'sem cliente',
+            'company_id' => $order->company_id,
+        ]);
     }
 
     /**

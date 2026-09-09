@@ -2,6 +2,8 @@
 
 namespace App\Modules\Products\Domain\Models;
 
+use App\Modules\Automation\Domain\Events\AutomationTriggered;
+use App\Modules\Automation\Domain\TriggerCatalog;
 use App\Modules\Core\Domain\Traits\HasUlid;
 use App\Modules\Tenancy\Domain\Models\HasTenant;
 use Database\Factories\ProductFactory;
@@ -12,6 +14,29 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Product extends Model
 {
     use HasFactory, HasTenant, HasUlid, SoftDeletes;
+
+    /**
+     * Anuncia o produto novo para as automações.
+     *
+     * O gancho é no model, não no controller, porque produto nasce por três
+     * caminhos — API, painel e seeder — e o gatilho tem que valer nos três.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (Product $product) {
+            if (! $product->tenant_id) {
+                return;
+            }
+
+            AutomationTriggered::dispatch($product->tenant_id, TriggerCatalog::PRODUTO_CRIADO, [
+                'product_id' => $product->id,
+                'nome' => $product->name,
+                'sku' => $product->sku,
+                'status' => $product->status,
+                'company_id' => $product->company_id,
+            ]);
+        });
+    }
 
     protected static function newFactory()
     {

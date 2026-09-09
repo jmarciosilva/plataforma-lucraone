@@ -2,6 +2,8 @@
 
 namespace App\Modules\Inventory\Application;
 
+use App\Modules\Automation\Domain\Events\AutomationTriggered;
+use App\Modules\Automation\Domain\TriggerCatalog;
 use App\Modules\Inventory\Domain\Models\Inventory;
 use App\Modules\Inventory\Domain\Models\InventoryMovement;
 use App\Modules\Products\Domain\Models\Product;
@@ -59,8 +61,43 @@ class InventoryAdjustmentService
                 'moved_at' => now(),
             ]);
 
-            return $inventory->fresh(['product', 'company', 'stockLevel']);
+            $atualizado = $inventory->fresh(['product', 'company', 'stockLevel']);
+
+            $this->anunciarEstoqueBaixo($atualizado, $before, $after);
+
+            return $atualizado;
         });
+    }
+
+    /**
+     * Dispara o gatilho de estoque baixo apenas na travessia do ponto de
+     * reposição.
+     *
+     * Anunciar a cada movimento enquanto o saldo já está baixo encheria a caixa
+     * de entrada do operador e faria ele desligar a regra.
+     */
+    private function anunciarEstoqueBaixo(Inventory $inventory, float $antes, float $depois): void
+    {
+        $nivel = $inventory->stockLevel;
+
+        if (! $nivel) {
+            return;
+        }
+
+        $ponto = (float) $nivel->reorder_point;
+
+        if (! ($depois <= $ponto && $antes > $ponto)) {
+            return;
+        }
+
+        AutomationTriggered::dispatch($inventory->tenant_id, TriggerCatalog::ESTOQUE_BAIXO, [
+            'product_id' => $inventory->product_id,
+            'produto' => $inventory->product?->name,
+            'sku' => $inventory->product?->sku,
+            'quantidade' => $depois,
+            'ponto_reposicao' => $ponto,
+            'company_id' => $inventory->company_id,
+        ]);
     }
 
     private function quantityAfter(string $type, float $before, float $quantity): float
