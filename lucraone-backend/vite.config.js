@@ -25,8 +25,27 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    /*
+    | Rodando no container, o Vite precisa escutar em todas as interfaces para
+    | ser alcançável de fora dele — mas o endereço gravado em public/hot, que o
+    | navegador lê, tem que continuar sendo localhost. Daí host e hmr.host
+    | apontarem para lugares diferentes.
+    |
+    | Fora do Docker nenhuma das variáveis existe e tudo cai no padrão de
+    | sempre: localhost, sem polling.
+    */
     server: {
+        host: process.env.VITE_DEV_HOST || 'localhost',
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: process.env.VITE_HMR_HOST || 'localhost',
+        },
         watch: {
+            // Bind mount do Windows não entrega eventos de inotify ao
+            // container: sem polling o HMR fica mudo. No host, polling seria
+            // só CPU gasta à toa.
+            usePolling: process.env.VITE_USE_POLLING === 'true',
             ignored: ['**/storage/framework/views/**'],
         },
     },

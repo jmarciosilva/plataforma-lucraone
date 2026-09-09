@@ -1,0 +1,7 @@
+* text=auto eol=lf
+
+# Scripts executados dentro do container: CRLF quebra o shebang.
+*.sh text eol=lf
+
+*.md diff=markdown
+*.yml text

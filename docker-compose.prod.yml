@@ -1,0 +1,118 @@
+# =============================================================================
+# LUCRAONE — sobreposição de produção
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# O que muda em relação ao desenvolvimento:
+#
+#   - imagem construída no alvo `prod`: código e assets embutidos, opcache
+#     ligado, sem phpunit/pint/phpstan
+#   - nenhum bind mount — o container não depende da pasta do host
+#   - sem container Vite: os assets já foram compilados no build
+#   - banco e redis deixam de publicar porta no host
+#   - segredos vêm do ambiente, sem valor padrão: a subida falha se faltar
+#
+# Antes de subir, exporte (ou coloque num .env desta pasta):
+#   APP_KEY=base64:...        php artisan key:generate --show
+#   APP_URL=https://...
+#   DB_PASSWORD=...
+#   DB_ROOT_PASSWORD=...
+# =============================================================================
+
+x-app-prod: &app-prod
+  build:
+    context: ./lucraone-backend
+    dockerfile: docker/Dockerfile
+    target: prod
+  image: lucraone-app:prod
+  # A pasta do host não entra: a imagem é o artefato. Deploy é container novo,
+  # e é isso que autoriza o opcache.validate_timestamps=0 do php-prod.ini.
+  volumes:
+    - storage:/app/storage
+  # Em produção a configuração vem por variável de ambiente mesmo: não há .env
+  # na imagem, nem suíte de testes rodando dentro do container para atrapalhar.
+  environment: &app-prod-environment
+    WAIT_FOR_DB_HOST: mysql
+    WAIT_FOR_DB_PORT: "3306"
+
+    APP_ENV: production
+    APP_DEBUG: "false"
+    APP_KEY: ${APP_KEY:?defina APP_KEY}
+    APP_URL: ${APP_URL:?defina APP_URL}
+
+    DB_CONNECTION: mysql
+    DB_HOST: mysql
+    DB_PORT: "3306"
+    DB_DATABASE: ${DB_DATABASE:-lucraone}
+    DB_USERNAME: ${DB_USERNAME:-lucraone}
+    DB_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+    REDIS_PASSWORD: "null"
+
+    CACHE_STORE: redis
+    QUEUE_CONNECTION: redis
+    LOG_LEVEL: warning
+
+    MAIL_MAILER: ${MAIL_MAILER:-smtp}
+    MAIL_HOST: ${MAIL_HOST:?defina MAIL_HOST}
+    MAIL_PORT: ${MAIL_PORT:-587}
+    MAIL_USERNAME: ${MAIL_USERNAME:-}
+    MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+
+services:
+
+  nginx:
+    volumes:
+      # Sem o código do host: o nginx precisa dos estáticos de public/, que
+      # agora vivem dentro da imagem da aplicação.
+      - public:/app/public:ro
+      - ./lucraone-backend/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${APP_PORT:-80}:80"
+
+  app:
+    <<: *app-prod
+    volumes:
+      - storage:/app/storage
+      - public:/app/public
+    environment:
+      <<: *app-prod-environment
+      AUTO_MIGRATE: "true"
+
+  queue:
+    <<: *app-prod
+
+  scheduler:
+    <<: *app-prod
+
+  # Assets já compilados na imagem — não há dev server em produção.
+  node:
+    profiles: ["nunca"]
+
+  mysql:
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-lucraone}
+      MYSQL_USER: ${DB_USERNAME:-lucraone}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?defina DB_ROOT_PASSWORD}
+    # Banco não fala com o mundo: só com a rede interna do compose.
+    ports: !override []
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  redis:
+    ports: !override []
+
+  # Em produção o e-mail sai por SMTP real.
+  mailpit:
+    profiles: ["nunca"]
+
+volumes:
+  storage:
+  public:

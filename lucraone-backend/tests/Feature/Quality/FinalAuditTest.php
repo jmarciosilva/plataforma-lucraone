@@ -267,8 +267,9 @@ class FinalAuditTest extends TestCase
         // .env.example should exist
         $this->assertTrue(file_exists(base_path('.env.example')));
 
-        // docker-compose should exist
-        $this->assertTrue(file_exists(base_path('docker-compose.yml')));
+        // O compose vive na raiz do repositório, fora do base_path; o que este
+        // projeto carrega é o Dockerfile da própria imagem.
+        $this->assertTrue(file_exists(base_path('docker/Dockerfile')));
 
         // README should exist
         $this->assertTrue(file_exists(base_path('README.md')));
@@ -336,7 +337,7 @@ class FinalAuditTest extends TestCase
 
         // Configuration files
         $this->assertTrue(file_exists(base_path('.env.example')));
-        $this->assertTrue(file_exists(base_path('docker-compose.yml')));
+        $this->assertTrue(file_exists(base_path('docker/Dockerfile')));
 
         echo "✅ Documentation complete\n";
     }

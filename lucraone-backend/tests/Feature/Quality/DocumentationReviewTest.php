@@ -256,11 +256,18 @@ class DocumentationReviewTest extends TestCase
      */
     public function test_docker_documentation(): void
     {
-        $dockerComposePath = base_path('docker-compose.yml');
+        // O docker-compose.yml orquestra o repositório inteiro e vive na raiz,
+        // fora do base_path — e fora do container, que só enxerga /app. O que
+        // pertence a este projeto, e é verificável de qualquer lugar, é o
+        // Dockerfile que constrói a imagem da aplicação.
+        $this->assertTrue(
+            file_exists(base_path('docker/Dockerfile')),
+            'docker/Dockerfile should exist'
+        );
 
         $this->assertTrue(
-            file_exists($dockerComposePath),
-            'docker-compose.yml should exist'
+            file_exists(base_path('docker/nginx/default.conf')),
+            'configuração do nginx should exist'
         );
 
         // Check README mentions Docker

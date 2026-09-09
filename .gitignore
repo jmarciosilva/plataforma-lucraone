@@ -1,0 +1,20 @@
+# Raiz do repositório.
+#
+# O ignore do Laravel fica em lucraone-backend/.gitignore; aqui só entra o que
+# é da orquestração e do sistema operacional.
+
+# Sobrescritas locais do compose (portas, senhas). Nunca versionar.
+.env
+docker-compose.override.yml
+
+# Sistema operacional
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Editores
+.idea/
+.vscode/
+.zed/
+*.swp
+*~

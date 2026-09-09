@@ -1,0 +1,60 @@
+# Contexto de build da imagem da aplicação.
+#
+# Sem este arquivo o Docker envia ~500 MB de vendor/, node_modules/ e .git a
+# cada build — e pior, assa dentro da imagem dependências instaladas no
+# Windows, que os estágios `vendor` e `assets` deveriam reinstalar no Linux.
+
+# Dependências: reinstaladas dentro da imagem
+vendor/
+node_modules/
+
+# Assets: recompilados pelo estágio `assets`
+public/build/
+public/hot
+
+# Symlink gerado pelo `storage:link`, recriado pelo entrypoint a cada subida.
+# Sem esta linha o build falha com "invalid file request public/storage": o
+# BuildKit não sabe empacotar um symlink que aponta para fora do contexto.
+public/storage
+
+# Segredos e estado local
+.env
+.env.*.local
+.env.backup
+.env.production
+auth.json
+
+# Estado descartável
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/framework/testing/*
+storage/app/public/*
+.phpunit.result.cache
+.phpunit.cache/
+database/*.sqlite
+database/*.sqlite-journal
+
+# Histórico e CI não influenciam a imagem
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# Ferramental de editor
+.idea/
+.vscode/
+.zed/
+.nova/
+.cursor/
+.codex/
+_ide_helper.php
+*.swp
+*~
+
+# Docs e scripts de host
+docs/
+README.md
+prepare-testing.sh
+prepare-testing.ps1

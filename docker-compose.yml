@@ -1,0 +1,233 @@
+# =============================================================================
+# LUCRAONE — ambiente de desenvolvimento
+#
+#   docker compose up -d --build     sobe tudo
+#   docker compose logs -f app       acompanha a aplicação
+#   docker compose exec app sh       abre um shell no container
+#   docker compose down              derruba (mantém os dados)
+#   docker compose down -v           derruba e apaga banco, redis e vendor
+#
+# Painel:  http://localhost:8000        E-mails: http://localhost:8025
+#
+# Portas do host podem ser trocadas por um .env nesta pasta — útil porque
+# 3306, 6379, 1025 e 8025 colidem com os containers loja-* deste mesmo host:
+#   APP_PORT=8001
+#   DB_PORT_HOST=3307
+# =============================================================================
+
+name: lucraone
+
+# Os três containers da aplicação são a mesma imagem com comandos diferentes.
+# Descrever build, volumes e environment uma vez só é o que impede que a fila
+# e o agendador acordem apontando para um banco diferente do painel.
+x-app: &app
+  build:
+    context: ./lucraone-backend
+    dockerfile: docker/Dockerfile
+    target: dev
+  image: lucraone-app:dev
+  restart: unless-stopped
+  volumes:
+    - ./lucraone-backend:/app
+    # Volume nomeado: isola as dependências instaladas no Linux do vendor/ que
+    # o Composer do Windows deixou na pasta do projeto.
+    - vendor:/app/vendor
+    # Artefatos gerados, tirados do bind mount.
+    #
+    # Toda leitura de arquivo no bind mount do Windows é cara. Views Blade
+    # compiladas são lidas a cada requisição, e o manifesto de pacotes em
+    # bootstrap/cache também — deixá-los no sistema de arquivos do próprio
+    # container derruba boa parte do tempo de resposta.
+    #
+    # Nada aqui é fonte: tudo é regenerado por artisan. storage/logs e
+    # storage/app ficam de fora de propósito, para você abrir pelo Windows.
+    - views:/app/storage/framework/views
+    - framework_cache:/app/storage/framework/cache
+    - bootstrap_cache:/app/bootstrap/cache
+  # Nenhuma variável com nome de configuração do Laravel entra aqui.
+  #
+  # O PHP CLI publica o ambiente do container em $$_SERVER, e o Env do Laravel
+  # lê $$_SERVER antes de qualquer outra fonte — inclusive antes do que o
+  # PHPUnit define com force="true", que só alcança getenv() e $$_ENV. Um
+  # DB_CONNECTION=mysql declarado aqui faria `artisan test` rodar contra o banco
+  # de desenvolvimento e apagá-lo a cada RefreshDatabase.
+  #
+  # A configuração vem de lucraone-backend/.env, que o entrypoint cria a partir
+  # do .env.example na primeira subida. É a mesma escolha do Laravel Sail.
+  # Ao trocar a senha do banco, troque nos dois lugares: .env e o serviço mysql.
+  environment: &app-environment
+    # Nomes propositalmente fora do espaço de configuração do Laravel: são
+    # instruções para o entrypoint, não para o framework.
+    WAIT_FOR_DB_HOST: mysql
+    WAIT_FOR_DB_PORT: "3306"
+  depends_on:
+    mysql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  networks:
+    - lucraone
+
+services:
+
+  # --- borda ---------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: lucraone-nginx
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:80"
+    volumes:
+      # public/ precisa estar visível aqui: o nginx serve os arquivos estáticos
+      # sem passar pelo PHP.
+      - ./lucraone-backend:/app:ro
+      - ./lucraone-backend/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    healthcheck:
+      # 127.0.0.1, não localhost: dentro do container o nome resolve para ::1
+      # primeiro, e o `listen 80` do nginx só atende IPv4 — a sonda levava
+      # "connection refused" com o site funcionando normalmente.
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/up"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    networks:
+      - lucraone
+
+  # --- aplicação -----------------------------------------------------------
+  app:
+    <<: *app
+    container_name: lucraone-app
+    environment:
+      <<: *app-environment
+      # Só este container migra: a fila e o agendador subindo junto
+      # disputariam a mesma tabela de migrations.
+      AUTO_MIGRATE: "true"
+
+  queue:
+    <<: *app
+    container_name: lucraone-queue
+    command:
+      - php
+      - artisan
+      - queue:work
+      - redis
+      - --tries=3
+      - --backoff=10
+      - --max-time=3600
+    # Espera o `app` para não correr as migrations em paralelo com ele.
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_started
+
+  scheduler:
+    <<: *app
+    container_name: lucraone-scheduler
+    # schedule:work é o cron do desenvolvimento — dispara o resumo de vendas e
+    # a poda de automation_logs definidos em routes/console.php.
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_started
+
+  # --- assets --------------------------------------------------------------
+  node:
+    image: node:22-alpine
+    container_name: lucraone-node
+    restart: unless-stopped
+    working_dir: /app
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    volumes:
+      - ./lucraone-backend:/app
+      - node_modules:/app/node_modules
+    environment:
+      # O Vite precisa escutar em todas as interfaces para ser alcançável de
+      # fora do container, mas o hot file lido pelo navegador tem que dizer
+      # "localhost" — daí as duas variáveis apontarem para lugares diferentes.
+      VITE_DEV_HOST: 0.0.0.0
+      VITE_HMR_HOST: localhost
+      # Bind mount do Windows não propaga eventos inotify: sem polling o
+      # navegador nunca recarrega.
+      VITE_USE_POLLING: "true"
+    command:
+      - sh
+      - -c
+      - '[ -f node_modules/.package-lock.json ] || npm ci --ignore-scripts; exec npm run dev'
+    networks:
+      - lucraone
+
+  # --- infraestrutura ------------------------------------------------------
+  mysql:
+    image: mysql:8.4
+    container_name: lucraone-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-lucraone}
+      MYSQL_USER: ${DB_USERNAME:-lucraone}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-lucraone_dev_pwd_2026}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_pwd_2026}
+    ports:
+      - "${DB_PORT_HOST:-3306}:3306"
+    volumes:
+      - mysql:/var/lib/mysql
+    healthcheck:
+      # Autenticado de propósito: `mysqladmin ping` anônimo responde OK durante
+      # a inicialização, antes do banco da aplicação existir.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASSWORD:-root_pwd_2026}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - lucraone
+
+  redis:
+    image: redis:7-alpine
+    container_name: lucraone-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT_HOST:-6379}:6379"
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - lucraone
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: lucraone-mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAIL_PORT_HOST:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+    networks:
+      - lucraone
+
+volumes:
+  mysql:
+  redis:
+  vendor:
+  node_modules:
+  views:
+  framework_cache:
+  bootstrap_cache:
+
+networks:
+  lucraone:
+    driver: bridge
