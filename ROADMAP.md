@@ -1,7 +1,8 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-09-10 · **SEC-04 em andamento** — 489 testes no total: 440
-PASS, 47 EXPECTED FAIL do SEC-04 e 2 risky preexistentes
+**Atualizado:** 2026-09-10 · **SEC-04 em andamento** — 500 testes no total: 472
+PASS, 25 EXPECTED FAIL do SEC-04, 2 risky preexistentes e 1 falha preexistente de
+`PerformanceBaselineTest`
 
 > 🔴 **A F2.6 está bloqueada.** Ela continua sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
@@ -213,8 +214,8 @@ Sales. Os únicos testes de 403 na API estão em `ReportApiTest` e
 - preservar o isolamento multi-tenant (`auth:sanctum` → `tenant` → Policy);
 - não criar um segundo sistema de autorização.
 
-Como o SEC-04 vem antes, as Policies aplicadas aqui já estarão sem o coringa
-`create-role`. Os testes de 403 devem usar um usuário sem **nenhuma** das
+Como o SEC-04 vem antes, as Policies aplicadas aqui já estão sem o coringa
+`create-role`, removido em `6c770dc`. Os testes de 403 devem usar um usuário sem **nenhuma** das
 permissões aceitas pela Policy e incluir um caso com `create-role`, para
 garantir que o coringa não volte.
 
@@ -306,6 +307,56 @@ deles era conhecido na F1.7, concluída em 2026-08-14 — os fluxos envolvidos
 surgiram depois dela. Os identificadores seguem o relatório da auditoria; E4 a
 E6 foram variantes descartadas ou absorvidas pelos demais.
 
+#### Estado atual
+
+| Frente | Status | Evidência |
+|---|---|---|
+| Platform Admin / X1 | ✅ Concluído | `faf3c4e` |
+| Remoção de `create-role` como coringa dos módulos de negócio | ✅ Concluído | `6c770dc` |
+| Matriz explícita do admin de estabelecimento (26 permissões) | ✅ Concluído | `6c770dc` |
+| Provisionamento de novos estabelecimentos | ✅ Concluído | `6c770dc` |
+| Data fix dos admins existentes | ✅ Concluído | `6c770dc` |
+| E1 — Escalada por `update-role` | Pendente | — |
+| E2 — Escalada por `manage-users` | Pendente | — |
+| E3 — Administração local de identidade global | Pendente | — |
+| E7 — Entidade e permissão avaliadas em estabelecimentos diferentes | Pendente | — |
+
+O SEC-04 continua **em andamento**: só passa a `Resolvido` quando E1, E2, E3 e E7
+também estiverem corrigidos e todos os [critérios de aceite](#critérios-de-aceite)
+estiverem verdes. Por isso a F2.6 permanece bloqueada e não iniciada.
+
+**Evidência atual.** O SEC-04 tem 83 testes: 58 PASS, 25 EXPECTED FAIL, 0 ERROR e
+231 assertions.
+
+| Grupo | PASS | FAIL | Situação |
+|---|---|---|---|
+| X1 | 21 | 0 | Corrigido |
+| `create-role` e admin explícito | 33 | 0 | Corrigido |
+| E1 | 0 | 3 | Pendente |
+| E2 | 0 | 3 | Pendente |
+| E3 | 1 | 5 | Pendente |
+| E7 | 3 | 14 | Pendente |
+| **Total** | **58** | **25** | |
+
+As 25 falhas são de caracterização, ainda esperadas enquanto E1, E2, E3 e E7
+permanecem pendentes — não são regressões.
+
+A suíte completa tem 500 testes: 472 PASS, 25 EXPECTED FAIL do SEC-04, 2 risky
+preexistentes, 1 falha preexistente de `PerformanceBaselineTest`, 0 ERROR, 0
+SKIPPED e 1468 assertions. Não houve regressão funcional atribuível às correções:
+a falha de `test_performance_with_growing_data` foi reproduzida também no
+commit-base `6f932c8`, sem as alterações do `create-role` (ver
+[Outras pendências de qualidade](#outras-pendências-de-qualidade)).
+
+**Commits de evidência.**
+
+| Commit | Título |
+|---|---|
+| `bb64d86950c77670454d4f7c97f52e6d5f345ba0` | test(security): registrar baseline executável do SEC-04 |
+| `faf3c4ed8769a612d3eec19d8a248175c300efcf` | fix(security): separar Platform Admin da autorização de tenant |
+| `6f932c841c6c0ef7e2a436a70ad48253fcf85549` | docs(security): sincronizar progresso do SEC-04 após Platform Admin e X1 |
+| `6c770dcd2ef90c3624d30d9b6950041e73bfb3ac` | fix(security): remover bypass create-role dos módulos de negócio |
+
 #### Implementação 1 — Platform Admin + X1
 
 O baseline executável do SEC-04 foi publicado em
@@ -324,12 +375,40 @@ somente Platform Admin administra tenants. A proteção continua no backend pela
 Policy; a sidebar foi sincronizada apenas como UX. Platform Admin também funciona
 sem `create-role`.
 
-**Evidência atual.** O SEC-04 tem 72 testes: 25 PASS, 47 EXPECTED FAIL e 0
-ERROR. X1 está corrigido com 21 PASS e 0 FAIL — 15 da baseline e 6 positivos
-de Platform Admin. A suíte completa tem 489 testes: 440 PASS, 47 falhas SEC-04
-esperadas, 2 risky preexistentes, 0 SKIPPED e 1353 assertions. O SEC-04 continua
-em andamento: E1, E2, E3, E7 e os bypasses de `create-role` nos módulos seguem
-pendentes; por isso a F2.6 permanece bloqueada e não iniciada.
+**Evidência na publicação.** Com essa correção, o SEC-04 passou a ter 72 testes:
+25 PASS, 47 EXPECTED FAIL e 0 ERROR. X1 ficou corrigido com 21 PASS e 0 FAIL — 15
+da baseline e 6 positivos de Platform Admin. A suíte completa tinha 489 testes:
+440 PASS, 47 falhas SEC-04 esperadas, 2 risky preexistentes, 0 SKIPPED e 1353
+assertions. Esse progresso foi sincronizado na documentação em
+`6f932c841c6c0ef7e2a436a70ad48253fcf85549`.
+
+#### Implementação 2 — remoção do coringa `create-role`
+
+A segunda correção de produção foi publicada em
+`6c770dcd2ef90c3624d30d9b6950041e73bfb3ac`.
+
+Ela removeu `create-role` como autorização coringa dos módulos de negócio — das
+Policies `Product`, `Category`, `Inventory`, `StockLevel`, `Order`, `Customer`,
+`Company` e `AutomationRule`, do Gate `view-reports` e do filtro de destinatários
+de `relatorios:enviar-resumo`. `create-role` permanece somente no domínio legítimo
+de papéis e permissões (`RolePolicy` e `PermissionPolicy`).
+
+Para que os admins legítimos deixassem de depender do coringa:
+
+- `AdminPermissionMatrix` define as 26 permissões explícitas do papel `admin` de
+  estabelecimento, usadas pelo `AuthorizationSeeder` e pelo `TenantController`;
+- estabelecimentos criados pelo painel passaram a receber as 26 permissões; antes
+  o `TenantController` provisionava só 19;
+- a migration `2026_09_10_000001_grant_explicit_business_permissions_to_admin_roles`
+  complementa os papéis `admin` já existentes de forma aditiva, idempotente e
+  tenant-aware, com um snapshot histórico próprio das 26 permissões, desacoplado
+  da matriz da aplicação. Ela não altera papéis personalizados nem Platform Admin.
+
+A cobertura positiva está em `TenantAdminExplicitPermissionsSecurityTest`, que
+prova o acesso do admin pelas permissões explícitas e o data fix, e em
+`TenantManagementTest`, que confere as 26 permissões no estabelecimento novo. Os
+testes de `CreateRoleBypassSecurityTest`, que caracterizavam o coringa, passaram a
+verde.
 
 #### Vetores confirmados
 
@@ -343,19 +422,27 @@ pendentes; por isso a F2.6 permanece bloqueada e não iniciada.
 | **E7** | **Policy avalia entidade e permissão em estabelecimentos diferentes** | 2026-09-10 | Código e ordem de middleware do framework |
 
 Na auditoria pré-implementação, nenhum dos vetores tinha teste que o demonstrasse
-ou o impedisse. O baseline executável passou a caracterizá-los; após a primeira
-correção, X1 tem 21 testes verdes e os demais vetores continuam sem correção.
+ou o impedisse. O baseline executável passou a caracterizá-los. Após as duas
+correções, X1 e o coringa `create-role` estão corrigidos, com testes verdes; E1,
+E2, E3 e E7 continuam sem correção.
 
-**Coringa `create-role`.** A permissão aparece ao lado das permissões
-específicas em 10 Policies (`Product`, `Category`, `Inventory`, `StockLevel`,
-`Order`, `Customer`, `Company`, `AutomationRule`, `Role`, `Permission`), no Gate
-`view-reports` e no filtro de destinatários do comando `relatorios:enviar-resumo`. A
-capacidade que o nome descreve — criar papel — não tem rota: a permissão
-funciona só como marcador de "é admin". Estabelecimentos criados pelo painel dão
-ao papel `admin` apenas 19 permissões, sem `manage-sales`, `view-sales`,
-`manage-customers`, `view-customers`, `view-reports`, `manage-automations` e
-`view-automations`; nesses estabelecimentos o admin só acessa vendas, clientes,
-relatórios e automações pelo coringa.
+**Coringa `create-role` — achado histórico.** A permissão aparecia ao lado das
+permissões específicas em 10 Policies (`Product`, `Category`, `Inventory`,
+`StockLevel`, `Order`, `Customer`, `Company`, `AutomationRule`, `Role`,
+`Permission`), no Gate `view-reports` e no filtro de destinatários do comando
+`relatorios:enviar-resumo`. A capacidade que o nome descreve — criar papel — não
+tem rota: a permissão funcionava só como marcador de "é admin". Estabelecimentos
+criados pelo painel davam ao papel `admin` apenas 19 permissões, sem
+`manage-sales`, `view-sales`, `manage-customers`, `view-customers`,
+`view-reports`, `manage-automations` e `view-automations`; nesses
+estabelecimentos o admin só acessava vendas, clientes, relatórios e automações
+pelo coringa.
+
+**Status atual do coringa.** Corrigido em `6c770dc`: `create-role` saiu das oito
+Policies de negócio, do Gate `view-reports` e do resumo de vendas, e permanece
+apenas em `RolePolicy` e `PermissionPolicy`, no domínio de papéis e permissões. O
+papel `admin` de todo estabelecimento — novo ou existente — opera os módulos
+pelas 26 permissões explícitas.
 
 **X1 — Administração indevida entre estabelecimentos.** Antes da correção, a
 `TenantPolicy` usava `create-role` como único critério, verificado no estabelecimento ativo, e o
@@ -453,7 +540,8 @@ administração da plataforma pelo X1.
    plataforma — gerenciar estabelecimentos — sem criar esse nível.
 2. **`create-role` como marcador improvisado de administrador.** Antes de X1, a `TenantPolicy`
    registra a decisão como provisória ("até F3.6"), e as Policies seguintes
-   copiaram o padrão.
+   copiaram o padrão. O padrão saiu da `TenantPolicy` em `faf3c4e` e das Policies
+   de negócio em `6c770dc`.
 3. **Delegação de permissões e papéis sem contenção.** Sincronizar permissões e
    atribuir papéis só validam "pertence ao estabelecimento ativo", nunca "quem
    executa pode delegar isso".
@@ -514,17 +602,18 @@ não serão transformados em globais. O invariante se mantém:
 
 #### Remoção do coringa `create-role`
 
-O SEC-04 deve remover `create-role` como bypass administrativo das Policies de
-domínio, do Gate `view-reports` e do comando `relatorios:enviar-resumo`. A
-primeira correção removeu apenas seu uso como autoridade de plataforma na
-`TenantPolicy`; os bypasses nos módulos permanecem pendentes:
+O SEC-04 removeu `create-role` como bypass administrativo das Policies de
+domínio, do Gate `view-reports` e do comando `relatorios:enviar-resumo`, em duas
+etapas. A primeira correção (`faf3c4e`) removeu seu uso como autoridade de
+plataforma na `TenantPolicy`; a segunda (`6c770dc`) removeu os bypasses nos
+módulos:
 
 - `ProductPolicy`, `CategoryPolicy`, `InventoryPolicy`, `StockLevelPolicy`,
   `OrderPolicy`, `CustomerPolicy`, `CompanyPolicy` e `AutomationRulePolicy`;
 - Gate `view-reports` e resumo de vendas.
 
 O uso de `create-role` no próprio domínio de roles e permissions continua sendo
-tratado separadamente. Depois da remoção dos bypasses pendentes:
+tratado separadamente. Com a remoção dos bypasses:
 
 ```
 manage-products     → gerencia produtos
@@ -539,7 +628,9 @@ view-reports        → visualiza relatórios
 `create-role` passa a significar somente a capacidade de criar papéis, caso essa
 funcionalidade venha a existir, e continua no catálogo de permissões. Antes de
 remover o coringa, os admins de estabelecimentos provisionados pelo painel
-precisam receber explicitamente as permissões de que dependiam dele.
+precisavam receber explicitamente as permissões de que dependiam dele; isso foi
+feito no mesmo commit, pela matriz explícita de 26 permissões, pelo
+provisionamento corrigido e pelo data fix dos admins existentes.
 
 #### Contenção da delegação
 
@@ -600,13 +691,13 @@ para autorizar operação em B.
 
 O SEC-04 só é `Resolvido` quando testes demonstrarem, no mínimo:
 
-**Platform Admin**
+**Platform Admin** — ✅ atendido em `faf3c4e`
 
 - admin de tenant recebe 403 nas operações de `/tenants`;
 - Platform Admin executa as operações autorizadas de `/tenants`;
 - possuir apenas `create-role` não concede acesso de plataforma.
 
-**`create-role`**
+**`create-role`** — ✅ atendido em `6c770dc`
 
 - usuário somente com `create-role` não usa como bypass as Policies de Products,
   Categories, Inventory, Sales, Customers, Companies, Automation e Reports;
@@ -676,8 +767,8 @@ interpolados com os dados do gatilho. Não há restrição a usuários ou contat
 estabelecimento, limite de destinatários, limite de envios por regra ou período,
 nem registro voltado a detectar abuso.
 
-**Quem pode configurar.** Quem tem `manage-automations` ou `create-role`,
-verificado na API e no painel.
+**Quem pode configurar.** Quem tem `manage-automations`, verificado na API e no
+painel. Até `6c770dc`, `create-role` também servia como coringa.
 
 **Agravante enquanto o SEC-01 estiver aberto.** O gatilho `product_created`
 dispara na criação de produto, que hoje qualquer usuário autenticado faz pela
@@ -819,9 +910,15 @@ há medição de impacto que justifique segurar a F2.6.
 ### Ordem recomendada
 
 ```
-SEC-04 — create-role
+SEC-04 — create-role              🟡 EM ANDAMENTO
+  ├─ Platform Admin / X1          ✅
+  ├─ bypass create-role           ✅
+  ├─ E1                           pendente
+  ├─ E2                           pendente
+  ├─ E3                           pendente
+  └─ E7                           pendente
         ↓
-SEC-01 — API Authorization
+SEC-01 — API Authorization        bloqueado pelo SEC-04
         ↓
 SEC-02 — API Authentication
         ↓
@@ -846,10 +943,11 @@ F2.6 — Integration APIs
 
 **Sobre a ordem.** O SEC-04 vem antes do SEC-01 por dependência arquitetural. O
 SEC-01 vai aplicar as Policies às 34 rotas da API que hoje não as usam, e o
-SEC-04 muda o significado e o alcance dessas Policies: hoje `create-role` é
-coringa em várias delas, a gestão de estabelecimentos quebra o isolamento entre
-clientes, `update-role` e `manage-users` permitem escalada de privilégio, e a
-permissão pode ser avaliada num estabelecimento diferente do da entidade.
+SEC-04 muda o significado e o alcance dessas Policies: `create-role` era coringa
+em várias delas e a gestão de estabelecimentos quebrava o isolamento entre
+clientes — ambos já corrigidos —, enquanto `update-role` e `manage-users` ainda
+permitem escalada de privilégio e a permissão ainda pode ser avaliada num
+estabelecimento diferente do da entidade.
 Espalhar as Policies atuais pela API antes de corrigi-las levaria esses defeitos
 para a API e obrigaria a refazer o SEC-01 e os seus testes.
 
@@ -908,7 +1006,7 @@ criar novo ID:
   ponto conhecido em que um cliente alcança dados e operações de outro": E3 e E7
   também atravessam estabelecimentos;
 - constatou que estabelecimentos criados pelo painel dependem do coringa para
-  vendas, clientes, relatórios e automações;
+  vendas, clientes, relatórios e automações — corrigido em `6c770dc`;
 - registrou a decisão por um marcador explícito de Platform Admin;
 - confirmou que os fluxos de E2, E3 e E7 surgiram depois da F1.7, com a F1.8 e as
   telas de 2026-08-16. A F1.7 permanece como está.
@@ -942,7 +1040,7 @@ Não bloqueiam a F2.6 e não receberam ID.
 | PHPStan (nível 4) | 11 erros — tipos de retorno de View e acesso a `$id` em união de tipos |
 | Pint | 22 arquivos fora do padrão — imports não usados, ordenação |
 | Automation Rules Guide | Não escrito — único item não entregue da F2.5 |
-| `performance with growing data` | Intermitente sob carga: assertiva sensível a tempo, passa isolada |
+| `performance with growing data` | Intermitente sob carga: assertiva sensível a tempo, passa isolada. Reproduzida também no commit-base `6f932c8`, antes da remoção do coringa `create-role` — não é regressão do SEC-04 |
 
 > O item "`.env.testing` com `APP_KEY` versionada", que ficava nesta tabela, virou
 > o SEC-06.
