@@ -34,11 +34,11 @@ class OrderPolicy
 
     private function canView(User $user): bool
     {
-        return $user->hasAnyPermission(['view-sales', 'manage-sales', 'create-role']);
+        return $user->hasAnyPermission(['view-sales', 'manage-sales']);
     }
 
     private function canManage(User $user): bool
     {
-        return $user->hasAnyPermission(['manage-sales', 'create-role']);
+        return $user->hasPermission('manage-sales');
     }
 }

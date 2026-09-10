@@ -69,7 +69,7 @@ class AppServiceProvider extends ServiceProvider
         // nomeado em vez de uma Policy.
         Gate::define(
             'view-reports',
-            fn (User $user) => $user->hasAnyPermission(['view-reports', 'manage-sales', 'create-role'])
+            fn (User $user) => $user->hasAnyPermission(['view-reports', 'manage-sales'])
         );
 
         // O módulo Automation escuta um evento só; registrar à mão é mais

@@ -43,11 +43,11 @@ class CompanyPolicy
 
     private function canViewCompanies(User $user): bool
     {
-        return $user->hasAnyPermission(['view-companies', 'manage-companies', 'create-role']);
+        return $user->hasAnyPermission(['view-companies', 'manage-companies']);
     }
 
     private function canManageCompanies(User $user): bool
     {
-        return $user->hasAnyPermission(['manage-companies', 'create-role']);
+        return $user->hasPermission('manage-companies');
     }
 }

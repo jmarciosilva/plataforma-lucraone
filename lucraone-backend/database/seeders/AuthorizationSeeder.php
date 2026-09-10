@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Modules\Authorization\Domain\AdminPermissionMatrix;
 use App\Modules\Authorization\Domain\Models\Permission;
 use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Tenancy\Domain\Models\Tenant;
@@ -89,19 +90,7 @@ class AuthorizationSeeder extends Seeder
             ['id' => (string) Str::ulid(), 'description' => 'Viewer role with read-only access']
         );
 
-        $adminPermissions = [
-            'create-role', 'update-role', 'delete-role', 'view-roles',
-            'create-permission', 'update-permission', 'delete-permission', 'view-permissions',
-            'manage-companies', 'view-companies',
-            'manage-products', 'view-products',
-            'manage-inventory', 'view-inventory',
-            'manage-sales', 'view-sales',
-            'manage-customers', 'view-customers',
-            'view-reports',
-            'manage-automations', 'view-automations',
-            'manage-users', 'view-users',
-            'manage-branches', 'view-branches', 'view-all-branches',
-        ];
+        $adminPermissions = AdminPermissionMatrix::NAMES;
 
         foreach ($adminPermissions as $permName) {
             if (isset($permissions[$permName])) {

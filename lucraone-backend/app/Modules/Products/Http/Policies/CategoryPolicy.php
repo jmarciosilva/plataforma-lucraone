@@ -43,11 +43,11 @@ class CategoryPolicy
 
     private function canViewProducts(User $user): bool
     {
-        return $user->hasAnyPermission(['view-products', 'manage-products', 'create-role']);
+        return $user->hasAnyPermission(['view-products', 'manage-products']);
     }
 
     private function canManageProducts(User $user): bool
     {
-        return $user->hasAnyPermission(['manage-products', 'create-role']);
+        return $user->hasPermission('manage-products');
     }
 }

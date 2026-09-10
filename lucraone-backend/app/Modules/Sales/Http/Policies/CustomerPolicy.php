@@ -39,11 +39,11 @@ class CustomerPolicy
 
     private function canView(User $user): bool
     {
-        return $user->hasAnyPermission(['view-customers', 'manage-customers', 'view-sales', 'manage-sales', 'create-role']);
+        return $user->hasAnyPermission(['view-customers', 'manage-customers', 'view-sales', 'manage-sales']);
     }
 
     private function canManage(User $user): bool
     {
-        return $user->hasAnyPermission(['manage-customers', 'manage-sales', 'create-role']);
+        return $user->hasAnyPermission(['manage-customers', 'manage-sales']);
     }
 }

@@ -29,11 +29,11 @@ class StockLevelPolicy
 
     private function canView(User $user): bool
     {
-        return $user->hasAnyPermission(['view-inventory', 'manage-inventory', 'create-role']);
+        return $user->hasAnyPermission(['view-inventory', 'manage-inventory']);
     }
 
     private function canManage(User $user): bool
     {
-        return $user->hasAnyPermission(['manage-inventory', 'create-role']);
+        return $user->hasPermission('manage-inventory');
     }
 }

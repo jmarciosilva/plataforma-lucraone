@@ -34,7 +34,7 @@ class AutomationRulePolicy
 
     private function canView(User $user): bool
     {
-        return $user->hasAnyPermission(['view-automations', 'manage-automations', 'create-role']);
+        return $user->hasAnyPermission(['view-automations', 'manage-automations']);
     }
 
     /**
@@ -43,6 +43,6 @@ class AutomationRulePolicy
      */
     private function canManage(User $user): bool
     {
-        return $user->hasAnyPermission(['manage-automations', 'create-role']);
+        return $user->hasPermission('manage-automations');
     }
 }

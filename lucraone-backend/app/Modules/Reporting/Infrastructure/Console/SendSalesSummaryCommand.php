@@ -102,7 +102,7 @@ class SendSalesSummaryCommand extends Command
         return $tenant->activeUsers()
             ->get()
             ->filter(fn (User $user) => $user->hasAnyPermission(
-                ['view-reports', 'manage-sales', 'create-role'],
+                ['view-reports', 'manage-sales'],
                 $tenant->id
             ))
             ->pluck('email')

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTenantRequest;
 use App\Http\Requests\UpdateTenantRequest;
+use App\Modules\Authorization\Domain\AdminPermissionMatrix;
 use App\Modules\Authorization\Domain\Models\Permission;
 use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Identity\Domain\Models\TenantUser;
@@ -229,15 +230,7 @@ class TenantController extends Controller
 
     private function provisionarAutorizacaoPadrao(Tenant $tenant, $usuario): void
     {
-        $permissions = collect([
-            'create-role', 'update-role', 'delete-role', 'view-roles',
-            'create-permission', 'update-permission', 'delete-permission', 'view-permissions',
-            'manage-companies', 'view-companies',
-            'manage-products', 'view-products',
-            'manage-inventory', 'view-inventory',
-            'manage-users', 'view-users',
-            'manage-branches', 'view-branches', 'view-all-branches',
-        ])->mapWithKeys(function (string $name) use ($tenant) {
+        $permissions = collect(AdminPermissionMatrix::NAMES)->mapWithKeys(function (string $name) use ($tenant) {
             $permission = Permission::withoutGlobalScopes()->firstOrCreate(
                 ['tenant_id' => $tenant->id, 'name' => $name],
                 ['id' => (string) Str::ulid(), 'description' => $name]

@@ -107,7 +107,25 @@ class TenantManagementTest extends TestCase
         ]);
 
         $this->assertTrue($this->admin->canAccessTenant($tenant->id));
-        $this->assertTrue($this->admin->hasPermission('create-role', $tenant->id));
+
+        foreach ([
+            'create-role', 'update-role', 'delete-role', 'view-roles',
+            'create-permission', 'update-permission', 'delete-permission', 'view-permissions',
+            'manage-companies', 'view-companies',
+            'manage-products', 'view-products',
+            'manage-inventory', 'view-inventory',
+            'manage-sales', 'view-sales',
+            'manage-customers', 'view-customers',
+            'view-reports',
+            'manage-automations', 'view-automations',
+            'manage-users', 'view-users',
+            'manage-branches', 'view-branches', 'view-all-branches',
+        ] as $permission) {
+            $this->assertTrue(
+                $this->admin->hasPermission($permission, $tenant->id),
+                "o admin do tenant novo precisa receber {$permission} explicitamente"
+            );
+        }
     }
 
     public function test_validacao_server_side_funciona(): void
