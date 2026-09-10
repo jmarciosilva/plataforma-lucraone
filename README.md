@@ -17,8 +17,8 @@ O plano de execução está em **[ROADMAP.md](ROADMAP.md)**.
 | **Fase funcional atual** | FASE 02 — Features (6 de 7 sprints entregues) |
 | **Última sprint concluída** | F2.5 — Advanced Automation |
 | **Próxima sprint funcional** | F2.6 — Integration APIs |
-| **Status da F2.6** | 🔴 **Bloqueada temporariamente** por pendências de segurança pré-F2.6 |
-| **Testes** | 417 passando |
+| **Status da F2.6** | 🔴 **Bloqueada temporariamente** pelo hardening de segurança pré-F2.6 |
+| **Testes** | 489 no total · 440 aprovados · 47 falhas SEC-04 esperadas · 2 risky preexistentes |
 | **Módulos** | 12 |
 | **Superfícies** | Painel web (sessão) + API REST `/api/v1` (Sanctum) |
 
@@ -27,6 +27,10 @@ resolvidos. Essas pendências não são uma fase nova e não reabrem a F1.7: sã
 correções identificadas depois que os módulos da FASE 02 cresceram. Lista em
 [Limitações conhecidas](#limitações-conhecidas); detalhe e critério de liberação
 em [ROADMAP.md](ROADMAP.md#pendências-bloqueadoras-pré-f26).
+
+O hardening está em andamento. No SEC-04, Platform Admin e o vetor X1 foram
+corrigidos; E1, E2, E3, E7 e os bypasses de `create-role` nos módulos de negócio
+continuam pendentes. A F2.6 permanece bloqueada.
 
 O sistema é operável por uma pessoa desde a F3.2: há login em `/login`, e quem
 tem vínculo com vários estabelecimentos escolhe onde vai trabalhar e troca pelo
@@ -131,7 +135,7 @@ e nos ADRs em [`lucraone-backend/docs/adr/`](lucraone-backend/docs/adr/).
 ## Desenvolvimento
 
 ```bash
-docker compose exec app php artisan test        # 417 testes
+docker compose exec app php artisan test        # 489 testes; 47 falhas SEC-04 esperadas
 docker compose exec app ./vendor/bin/pint       # estilo
 docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=1G
 docker compose exec app php artisan tinker
@@ -157,7 +161,7 @@ correção e ordem recomendada estão em
 | SEC-01 | 7 dos 14 controllers da API não verificam permissão | Crítica | Sim |
 | SEC-02 | Login da API sem rate limiting; tokens sem expiração nem abilities | Crítica | Sim |
 | SEC-03 | `TenantResolver` aceita `X-Tenant-ID` sem usuário autenticado | Alta | Sim |
-| SEC-04 | `create-role` age como superadmin e dá acesso à gestão de todos os estabelecimentos | Crítica | Sim |
+| SEC-04 | Em andamento: Platform Admin/X1 corrigidos; vetores de autorização e bypasses de `create-role` nos módulos ainda pendentes | Crítica | Sim |
 | SEC-05 | Automações enviam e-mail para qualquer destinatário | Média | Recomendado |
 | SEC-06 | `APP_KEY` versionada em `.env.testing` | Média | Recomendado |
 | COR-01 | Índices únicos ignoram soft delete (SKU, slug, e-mail) | Alta | Recomendado |
