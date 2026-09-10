@@ -14,11 +14,19 @@ O plano de execução está em **[ROADMAP.md](ROADMAP.md)**.
 
 | | |
 |---|---|
-| **Fase ativa** | FASE 02 — Features (6 de 7 sprints entregues) |
-| **Próxima sprint** | F2.6 — Integration APIs |
+| **Fase funcional atual** | FASE 02 — Features (6 de 7 sprints entregues) |
+| **Última sprint concluída** | F2.5 — Advanced Automation |
+| **Próxima sprint funcional** | F2.6 — Integration APIs |
+| **Status da F2.6** | 🔴 **Bloqueada temporariamente** por pendências de segurança pré-F2.6 |
 | **Testes** | 417 passando |
 | **Módulos** | 12 |
 | **Superfícies** | Painel web (sessão) + API REST `/api/v1` (Sanctum) |
+
+A F2.6 só começa quando os bloqueadores obrigatórios **SEC-01 a SEC-04** estiverem
+resolvidos. Essas pendências não são uma fase nova e não reabrem a F1.7: são
+correções identificadas depois que os módulos da FASE 02 cresceram. Lista em
+[Limitações conhecidas](#limitações-conhecidas); detalhe e critério de liberação
+em [ROADMAP.md](ROADMAP.md#pendências-bloqueadoras-pré-f26).
 
 O sistema é operável por uma pessoa desde a F3.2: há login em `/login`, e quem
 tem vínculo com vários estabelecimentos escolhe onde vai trabalhar e troca pelo
@@ -139,16 +147,21 @@ demanda antes do commit.
 
 ## Limitações conhecidas
 
-Levantadas em auditoria de 2026-09-09. A lista completa, com severidade e
-caminho de correção, está em [ROADMAP.md](ROADMAP.md#pendências-abertas).
+Levantadas em auditoria de 2026-09-09 e conferidas contra o código em
+2026-09-10. São as **pendências pré-F2.6**; evidências, objetivo de cada
+correção e ordem recomendada estão em
+[ROADMAP.md](ROADMAP.md#pendências-bloqueadoras-pré-f26).
 
-- **A API v1 não verifica autorização.** 12 dos 14 controllers de API não
-  chamam `Gate::authorize`. As Policies existem e o painel web as usa, mas
-  qualquer token válido opera o estabelecimento inteiro, independente do papel.
-- **`POST /api/auth/login` não tem rate limiting.** Nenhuma rota `/api` tem.
-  O login web tem (5 tentativas por e-mail+IP); a API não herdou.
-- **Índices únicos ignoram `deleted_at`.** O SKU de um produto arquivado fica
-  ocupado para sempre e impede recriar o mesmo código.
+| ID | Pendência | Prioridade | Bloqueia F2.6 |
+|---|---|---|---|
+| SEC-01 | 7 dos 14 controllers da API não verificam permissão | Crítica | Sim |
+| SEC-02 | Login da API sem rate limiting; tokens sem expiração nem abilities | Crítica | Sim |
+| SEC-03 | `TenantResolver` aceita `X-Tenant-ID` sem usuário autenticado | Alta | Sim |
+| SEC-04 | `create-role` age como superadmin e dá acesso à gestão de todos os estabelecimentos | Crítica | Sim |
+| SEC-05 | Automações enviam e-mail para qualquer destinatário | Média | Recomendado |
+| SEC-06 | `APP_KEY` versionada em `.env.testing` | Média | Recomendado |
+| COR-01 | Índices únicos ignoram soft delete (SKU, slug, e-mail) | Alta | Recomendado |
+| PERF-01 | `hasAnyPermission()` repete consultas a cada permissão verificada | Média | Não |
 
 ---
 
