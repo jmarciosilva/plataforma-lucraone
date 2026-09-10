@@ -71,6 +71,7 @@ class UserSeeder extends Seeder
             'id' => $admin->id ?? (string) Str::ulid(),
             'name' => 'José Marcio Ferreira da Silva',
             'status' => User::STATUS_ACTIVE,
+            'is_platform_admin' => false,
             'password' => Hash::make('12345678'),
             'email_verified_at' => $admin->email_verified_at ?? now(),
         ])->save();

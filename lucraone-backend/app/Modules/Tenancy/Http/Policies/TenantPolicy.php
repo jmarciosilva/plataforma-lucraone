@@ -39,8 +39,6 @@ class TenantPolicy
 
     private function canManageTenants(User $user): bool
     {
-        // Hoje o papel admin já carrega create-role; até F3.6, isso é o melhor
-        // sinal existente de administração ampla do painel.
-        return $user->hasPermission('create-role');
+        return $user->isPlatformAdmin();
     }
 }

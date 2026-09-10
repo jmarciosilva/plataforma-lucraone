@@ -24,6 +24,7 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => Hash::make('password'),
             'status' => User::STATUS_ACTIVE,
+            'is_platform_admin' => false,
             'last_login_at' => now(),
             'remember_token' => Str::random(10),
         ];
@@ -82,6 +83,16 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'status' => User::STATUS_ACTIVE,
             'email_verified_at' => now(),
+        ]);
+    }
+
+    /**
+     * Operador da plataforma, independente de qualquer papel de tenant.
+     */
+    public function platformAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_platform_admin' => true,
         ]);
     }
 

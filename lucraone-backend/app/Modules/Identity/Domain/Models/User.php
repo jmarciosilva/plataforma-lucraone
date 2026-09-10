@@ -47,6 +47,7 @@ class User extends Model implements AuthenticatableContract
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'is_platform_admin' => 'boolean',
         'last_login_at' => 'datetime',
         'password' => 'hashed',
         'created_at' => 'datetime',
@@ -148,6 +149,17 @@ class User extends Model implements AuthenticatableContract
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;
+    }
+
+    /**
+     * A pessoa pode administrar operações exclusivas da plataforma?
+     *
+     * Esta autoridade pertence à identidade global e não aos papéis ou
+     * permissões de qualquer estabelecimento.
+     */
+    public function isPlatformAdmin(): bool
+    {
+        return (bool) $this->is_platform_admin;
     }
 
     protected static function newFactory()

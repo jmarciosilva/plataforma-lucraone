@@ -26,7 +26,7 @@ class TenantManagementTest extends TestCase
         parent::setUp();
 
         $this->tenantAtual = Tenant::factory()->active()->create(['name' => 'Casa Alta']);
-        $this->admin = User::factory()->forTenant($this->tenantAtual)->create([
+        $this->admin = User::factory()->platformAdmin()->forTenant($this->tenantAtual)->create([
             'name' => 'Ana Admin',
         ]);
 

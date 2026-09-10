@@ -32,6 +32,8 @@ class PlatformTenantAdministrationSecurityTest extends TestCase
 
     private User $adminA;
 
+    private User $platformAdmin;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -48,6 +50,12 @@ class PlatformTenantAdministrationSecurityTest extends TestCase
         // Papel admin real do seed — hoje inclui create-role. Sem vínculo com B.
         $this->adminA = $this->membroComPapel($this->tenantA, 'admin');
         $this->membroComPapel($this->tenantB, 'admin');
+
+        // A autoridade de plataforma não recebe papel nem permissão de tenant.
+        $this->platformAdmin = User::factory()
+            ->platformAdmin()
+            ->forTenant($this->tenantA)
+            ->create();
     }
 
     public function test_admin_de_estabelecimento_nao_lista_estabelecimentos_da_plataforma(): void
@@ -164,6 +172,78 @@ class PlatformTenantAdministrationSecurityTest extends TestCase
         $this->actingAs($usuario)
             ->call(strtoupper($metodo), $url, $dados)
             ->assertForbidden();
+    }
+
+    public function test_platform_admin_sem_create_role_lista_estabelecimentos(): void
+    {
+        $this->assertFalse($this->platformAdmin->hasPermission('create-role', $this->tenantA->id));
+
+        $this->actingAs($this->platformAdmin)
+            ->get(route('tenants.index'))
+            ->assertOk()
+            ->assertSee('Loja B');
+    }
+
+    public function test_platform_admin_visualiza_estabelecimento(): void
+    {
+        $this->actingAs($this->platformAdmin)
+            ->get(route('tenants.show', $this->tenantB))
+            ->assertOk()
+            ->assertSee('Loja B');
+    }
+
+    public function test_platform_admin_cria_estabelecimento(): void
+    {
+        $resposta = $this->actingAs($this->platformAdmin)
+            ->post(route('tenants.store'), $this->dadosDeEstabelecimento('Loja Criada Pela Plataforma'));
+
+        $criado = Tenant::where('slug', 'loja-criada-pela-plataforma')->firstOrFail();
+
+        $resposta->assertRedirect(route('tenants.show', $criado));
+        $this->assertDatabaseHas('tenants', [
+            'id' => $criado->id,
+            'name' => 'Loja Criada Pela Plataforma',
+        ]);
+    }
+
+    public function test_platform_admin_altera_estabelecimento(): void
+    {
+        $resposta = $this->actingAs($this->platformAdmin)
+            ->put(route('tenants.update', $this->tenantB), [
+                ...$this->dadosDeEstabelecimento('Loja B Alterada Pela Plataforma', 'SUSPENDED'),
+                'slug' => 'loja-b-alterada-pela-plataforma',
+            ]);
+
+        $resposta->assertRedirect(route('tenants.show', $this->tenantB));
+        $this->assertDatabaseHas('tenants', [
+            'id' => $this->tenantB->id,
+            'name' => 'Loja B Alterada Pela Plataforma',
+            'status' => 'SUSPENDED',
+            'active' => false,
+        ]);
+    }
+
+    public function test_platform_admin_arquiva_estabelecimento(): void
+    {
+        $resposta = $this->actingAs($this->platformAdmin)
+            ->delete(route('tenants.destroy', $this->tenantB));
+
+        $resposta->assertRedirect(route('tenants.index', ['trashed' => 'with']));
+        $this->assertSoftDeleted('tenants', ['id' => $this->tenantB->id]);
+    }
+
+    public function test_platform_admin_restaura_estabelecimento(): void
+    {
+        $this->tenantB->delete();
+
+        $resposta = $this->actingAs($this->platformAdmin)
+            ->post(route('tenants.restore', $this->tenantB->id));
+
+        $resposta->assertRedirect(route('tenants.show', $this->tenantB));
+        $this->assertDatabaseHas('tenants', [
+            'id' => $this->tenantB->id,
+            'deleted_at' => null,
+        ]);
     }
 
     private function dadosDeEstabelecimento(string $nome, string $status = 'ACTIVE'): array
