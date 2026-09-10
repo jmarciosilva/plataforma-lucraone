@@ -286,47 +286,339 @@ exatamente o cenário em que o resolver confia no header.
 
 ### SEC-04 — create-role
 
-**Crítica · Pendente · Bloqueia F2.6: Sim** — Origem: Policies da F2.1b
-(`8fbc4c3`) e da F3.4 (`b8c19ae`), 2026-08-16
+**Crítica · Pendente · Bloqueia F2.6: Sim** — Origem: identidade global da F1.8
+(`c73b369`) e Policies e telas da F2.1b (`8fbc4c3`), F3.4 (`b8c19ae`), F3.5
+(`e1548e8`) e F3.6 (`a13fe95`), todas de 2026-08-16
 
-**Problema.** A permissão `create-role` produz três efeitos que quem a concede
-não enxerga:
+**Escopo.** O item leva o nome `create-role` porque foi por essa permissão que o
+problema apareceu, mas o que ele corrige é o modelo de autorização: a separação
+entre a autoridade da plataforma e a autoridade de um estabelecimento, a
+contenção da delegação de poder e o contexto de estabelecimento usado pelas
+Policies. Continua sendo **um único bloqueador**: os vetores abaixo não viram
+itens separados.
 
-1. **Superadmin implícito.** Aparece como coringa, ao lado das permissões
-   específicas, em 10 Policies (`Product`, `Category`, `Inventory`,
-   `StockLevel`, `Order`, `Customer`, `Company`, `AutomationRule`, `Role`,
-   `Permission`), no Gate `view-reports` e no filtro de destinatários do
-   comando `sales:summary`.
-2. **Gestão de todos os estabelecimentos.** A `TenantPolicy` usa `create-role`
-   como único critério, verificado no estabelecimento atual, e o
-   `TenantController` consulta `Tenant::query()` sem filtro. O admin de
-   qualquer estabelecimento lista, abre, edita — inclusive o status, podendo
-   suspender ou cancelar —, arquiva e restaura os estabelecimentos de todos os
-   outros, e cria novos. Não existe papel de administrador da plataforma, e todo
-   admin recebe `create-role`, tanto pelo `AuthorizationSeeder` quanto pelo
-   provisionamento de novo estabelecimento. O teste
-   `test_listagem_de_tenants_renderiza_corretamente` afirma esse comportamento:
-   o admin vê um estabelecimento que não é o seu.
-3. **Escalada por `update-role`.** `RolePolicy::update` exige só `update-role`,
-   e a sincronização de permissões do papel aceita qualquer permissão do
-   estabelecimento. Quem tem `update-role` pode conceder `create-role` a
-   qualquer papel, inclusive ao próprio.
+**Histórico.** A auditoria de 2026-09-09 registrou o coringa, a gestão de todos
+os estabelecimentos (X1) e a escalada por `update-role` (E1). A auditoria
+pré-implementação de 2026-09-10, feita só por leitura de código, testes e
+histórico, confirmou os três e encontrou mais três vetores: E2, E3 e E7. Nenhum
+deles era conhecido na F1.7, concluída em 2026-08-14 — os fluxos envolvidos
+surgiram depois dela. Os identificadores seguem o relatório da auditoria; E4 a
+E6 foram variantes descartadas ou absorvidas pelos demais.
 
-**Consequência.** O item 2 é uma quebra de isolamento entre estabelecimentos no
-painel web — o único ponto conhecido em que um cliente alcança dados e operações
-de outro.
+#### Vetores confirmados
 
-**Objetivo futuro.**
+| ID | Vetor | Registrado em | Evidência |
+|---|---|---|---|
+| — | `create-role` como coringa administrativo | 2026-09-09 | Código |
+| X1 | Administração indevida entre estabelecimentos | 2026-09-09 | Código e testes |
+| E1 | Escalada por `update-role` | 2026-09-09 | Código |
+| **E2** | **Escalada por `manage-users`** — vulnerabilidade crítica | 2026-09-10 | Código |
+| **E3** | **Administração local de identidade global** — vulnerabilidade crítica | 2026-09-10 | Código |
+| **E7** | **Policy avalia entidade e permissão em estabelecimentos diferentes** | 2026-09-10 | Código e ordem de middleware do framework |
 
-- revisar semanticamente `create-role`, restringindo-a ao gerenciamento de papéis;
-- remover as dependências implícitas das demais Policies;
-- separar a administração da plataforma, que gerencia estabelecimentos, da
-  administração de um estabelecimento — decisão que merece ADR;
-- impedir que um usuário conceda permissões que ele mesmo não possui.
+Nenhum dos vetores tem teste que o demonstre ou o impeça.
 
-**Por que bloqueia.** Pelo item 2, é falha de isolamento, da mesma classe que o
-SEC-01 e o SEC-03. Além disso, o SEC-01 vai ligar essas Policies à API: sem esta
-revisão, o coringa passa a valer lá também. E a F2.6 vai criar uma Policy para
+**Coringa `create-role`.** A permissão aparece ao lado das permissões
+específicas em 10 Policies (`Product`, `Category`, `Inventory`, `StockLevel`,
+`Order`, `Customer`, `Company`, `AutomationRule`, `Role`, `Permission`), no Gate
+`view-reports` e no filtro de destinatários do comando `sales:summary`. A
+capacidade que o nome descreve — criar papel — não tem rota: a permissão
+funciona só como marcador de "é admin". Estabelecimentos criados pelo painel dão
+ao papel `admin` apenas 19 permissões, sem `manage-sales`, `view-sales`,
+`manage-customers`, `view-customers`, `view-reports`, `manage-automations` e
+`view-automations`; nesses estabelecimentos o admin só acessa vendas, clientes,
+relatórios e automações pelo coringa.
+
+**X1 — Administração indevida entre estabelecimentos.** A `TenantPolicy` usa
+`create-role` como único critério, verificado no estabelecimento ativo, e o
+`TenantController` consulta `Tenant::query()` sem filtro. O admin de qualquer
+estabelecimento lista, abre, edita — inclusive o status —, arquiva e restaura os
+estabelecimentos de todos os outros, e cria novos, tornando-se admin deles. Não
+existe administrador da plataforma, e todo admin recebe `create-role`, tanto pelo
+`AuthorizationSeeder` quanto pelo provisionamento de novo estabelecimento. O teste
+`test_listagem_de_tenants_renderiza_corretamente` afirma esse comportamento: o
+admin vê um estabelecimento que não é o seu.
+
+**E1 — Escalada por `update-role`.** Em `POST /roles/{role}/permissions`,
+`RolePolicy::update` exige só `update-role`, `SyncRolePermissionsRequest` valida
+apenas que as permissões existem no estabelecimento ativo, e o controller
+substitui o conjunto sem compará-lo às permissões de quem executa. Não há
+proteção do próprio papel, de papéis de sistema (existe só em `delete`, que não
+tem rota) nem do último administrador. Quem tem `update-role` concede
+`create-role` a qualquer papel, inclusive ao próprio. No seed só `admin` tem
+`update-role`; o vetor se abre com qualquer papel personalizado que a receba.
+
+**E2 — Escalada por `manage-users`.** *Vulnerabilidade crítica.* O papel padrão
+`manager` recebe `manage-users` no seed. `UserPolicy::create` e `update` exigem
+apenas essa permissão; `StoreUserRequest` e `UpdateUserRequest` aceitam qualquer
+papel existente no estabelecimento ativo; e `UserController::update` só impede
+que a pessoa desative o próprio acesso — não que altere os próprios papéis. Nada
+verifica se quem executa possui as permissões do papel atribuído.
+
+```
+manager
+↓
+manage-users
+↓
+atribui o papel admin a si mesmo
+↓
+passa a possuir permissões administrativas — inclusive create-role, e com ela X1
+```
+
+Também é possível criar uma segunda conta já com o papel `admin`.
+
+**E3 — Administração local de identidade global.** *Vulnerabilidade crítica.*
+Desde a F1.8, `User` é uma identidade global, com vínculos em vários
+estabelecimentos. Mas `manage-users`, permissão local de um estabelecimento,
+altera atributos globais de qualquer pessoa vinculada ao estabelecimento ativo:
+
+- **senha:** a redefinição exibe a senha temporária a quem executou;
+- **e-mail:** vale para o login em todos os estabelecimentos;
+- **`account_status`:** conta inativa fica bloqueada em todos os estabelecimentos;
+- **identidade existente:** cadastrar um e-mail que já existe reativa e renomeia
+  a pessoa globalmente.
+
+Assim, quem tem `manage-users` no Tenant A assume ou bloqueia a conta de uma
+pessoa que também tem vínculo no Tenant B, e herda os papéis dela em B. O seed
+torna o cenário concreto: o administrador de teste fixo é `admin` em todos os
+estabelecimentos. A UX definitiva de administração de identidade fica para a
+implementação; o requisito de segurança é:
+
+> Autoridade local de um tenant não pode, por consequência indireta, conceder
+> acesso ou comprometer os vínculos de uma identidade em outros tenants.
+
+**E7 — Policy avalia entidade e permissão em estabelecimentos diferentes.**
+
+- O vínculo é validado contra o estabelecimento **da entidade**
+  (`canAccessTenant($entidade->tenant_id)`), que pode ser o Tenant B;
+- a permissão é consultada no estabelecimento **ativo**, que pode ser o Tenant A;
+- no painel web, o `SubstituteBindings` do grupo `web` carrega o model da rota
+  antes de `auth.web` resolver o `TenantContext`, então o `TenantScope` ainda não
+  filtra;
+- nenhum controller web confere o `tenant_id` da entidade carregada.
+
+Com vínculo em A e B, uma pessoa privilegiada em A pode obter autorização para
+operar uma entidade de B usando as permissões de A. Afeta potencialmente os
+fluxos com route binding de Product, Category, Customer, Order, Automation,
+Company e Role. Em Role, a gravação usa o estabelecimento ativo e não concede
+nada em B, mas a autorização passa. A confirmação vem da leitura do código e da
+ordem de middleware do framework, sem teste.
+
+É obrigatório corrigir antes do SEC-01, porque o SEC-01 aplicará essas mesmas
+Policies à API.
+
+**Consequência.** X1, E3 e E7 atravessam a fronteira entre estabelecimentos — pela
+gestão de estabelecimentos, pela identidade compartilhada e pelas Policies. E1 e
+E2 levam qualquer papel com `update-role` ou `manage-users` a administrador e,
+pelo X1, a administrador de todos os estabelecimentos.
+
+#### Causa raiz
+
+1. **Sem separação entre autoridade de plataforma e de tenant.** O RBAC da F1.5
+   existe só dentro de um estabelecimento. A F3.4 criou uma operação de
+   plataforma — gerenciar estabelecimentos — sem criar esse nível.
+2. **`create-role` como marcador improvisado de administrador.** A `TenantPolicy`
+   registra a decisão como provisória ("até F3.6"), e as Policies seguintes
+   copiaram o padrão.
+3. **Delegação de permissões e papéis sem contenção.** Sincronizar permissões e
+   atribuir papéis só validam "pertence ao estabelecimento ativo", nunca "quem
+   executa pode delegar isso".
+4. **Identidade global administrada por permissão local.** A F1.8 tornou a pessoa
+   global; a F3.5 manteve `manage-users` com poder sobre credenciais e status
+   globais.
+5. **Vínculo e permissão avaliados em contextos de tenant diferentes.** As
+   Policies presumem que a entidade pertence ao estabelecimento ativo, garantia
+   que o `TenantScope` não oferece durante o route binding do painel.
+6. **Testes que cristalizam parte do comportamento incorreto.** As fixtures de
+   `TenantManagementTest` e `CompanyAndRolesManagementTest` tratam `create-role`
+   como sinônimo de admin, e nove testes de `TenantManagementTest` afirmam como
+   correta a gestão de estabelecimentos alheios.
+
+#### Decisão arquitetural — Platform Admin
+
+**Adotado no SEC-04: marcador explícito de Platform Admin na identidade global.**
+
+```
+User
+├── identidade global
+├── status
+└── marcador protegido de Platform Admin
+```
+
+O nome técnico do atributo será escolhido na implementação, seguindo as
+convenções do projeto. Requisitos:
+
+- não depende de tenant;
+- não usa papel de tenant nem `create-role`;
+- não é mass assignable;
+- não é alterável pelas telas normais de usuários;
+- não é concedido por meio de `manage-users`;
+- tem um único ponto de consulta no domínio/model;
+- é testado explicitamente;
+- somente Platform Admin executa operações de administração da plataforma, como
+  `/tenants`.
+
+É a solução atual, e foi escolhida por ser evolutiva.
+
+**Alternativas avaliadas.** Uma camada própria de RBAC de plataforma foi adiada
+(ver evolução futura). Tornar globais os papéis e permissões atuais foi
+descartado: quebraria o invariante abaixo e permitiria que uma permissão global
+satisfizesse checagens de estabelecimento — a mesma classe de defeito que o
+SEC-04 corrige.
+
+#### Evolução futura
+
+O marcador de Platform Admin não é necessariamente a arquitetura final. Quando a
+LucraOne precisar de perfis distintos de operação da plataforma — suporte,
+onboarding, financeiro, operações, administração de integrações, suporte fiscal,
+administração global —, o projeto deverá avaliar uma camada própria de RBAC de
+plataforma. Essa camada não faz parte do SEC-04, e os papéis e permissões atuais
+não serão transformados em globais. O invariante se mantém:
+
+> Roles e Permissions de negócio continuam pertencendo obrigatoriamente a um
+> tenant.
+
+#### Remoção do coringa `create-role`
+
+O SEC-04 remove `create-role` como bypass administrativo das Policies de domínio,
+do Gate `view-reports` e do comando `sales:summary`. Depois da correção:
+
+```
+manage-products     → gerencia produtos
+manage-inventory    → gerencia estoque
+manage-sales        → gerencia vendas
+manage-customers    → gerencia clientes
+manage-companies    → gerencia empresas
+manage-automations  → gerencia automações
+view-reports        → visualiza relatórios
+```
+
+`create-role` passa a significar somente a capacidade de criar papéis, caso essa
+funcionalidade venha a existir, e continua no catálogo de permissões. Antes de
+remover o coringa, os admins de estabelecimentos provisionados pelo painel
+precisam receber explicitamente as permissões de que dependiam dele.
+
+#### Contenção da delegação
+
+O SEC-04 deve impedir que uma pessoa conceda poder superior ao que possui:
+
+- `update-role` não pode conceder permissões que o ator não esteja autorizado a
+  delegar;
+- `manage-users` não pode ser usado para autoelevação;
+- `manage-users` não pode atribuir papel cujo poder exceda a autoridade delegável
+  do ator;
+- nenhum caminho de delegação pode levar a Platform Admin;
+- papéis administrativos relevantes devem ser protegidos;
+- considerar guarda contra lockout e contra a remoção do último administrador;
+- mudanças de autorização continuam tenant-aware.
+
+Não é necessário implementar hierarquia complexa de papéis.
+
+#### Proteção da identidade global
+
+Uma permissão local como `manage-users` não deve permitir que um administrador do
+Tenant A comprometa os acessos de uma identidade no Tenant B. A implementação
+deverá revisar:
+
+- redefinição de senha;
+- alteração de e-mail;
+- `account_status`;
+- associação de papéis;
+- associação a estabelecimento;
+- reutilização de e-mail existente.
+
+A regra definitiva deve preservar o modelo de identidade global da F1.8.
+
+#### Contexto de estabelecimento nas Policies
+
+Invariante esperado depois do SEC-04:
+
+```
+entidade autorizada
++
+tenant da entidade
++
+tenant usado para consultar permissões
+```
+
+devem representar o mesmo contexto de autorização, exceto em operações
+explicitamente classificadas como administração da plataforma. Uma pessoa com
+vínculo em A e B não pode usar
+
+```
+permissão privilegiada em A
++
+entidade pertencente a B
+```
+
+para autorizar operação em B.
+
+#### Critérios de aceite
+
+O SEC-04 só é `Resolvido` quando testes demonstrarem, no mínimo:
+
+**Platform Admin**
+
+- admin de tenant recebe 403 nas operações de `/tenants`;
+- Platform Admin executa as operações autorizadas de `/tenants`;
+- possuir apenas `create-role` não concede acesso de plataforma.
+
+**`create-role`**
+
+- usuário somente com `create-role` não usa como bypass as Policies de Products,
+  Categories, Inventory, Sales, Customers, Companies, Automation e Reports;
+- `sales:summary` não aceita `create-role` como substituto de `view-reports`.
+
+**E1**
+
+- `update-role` não permite adquirir permissões não delegáveis;
+- possuir `update-role` não basta para adquirir `create-role`.
+
+**E2**
+
+- `manage-users` não permite autoatribuição do papel admin;
+- `manage-users` não permite atribuir poder acima da autoridade delegável.
+
+**E3**
+
+- administração local não compromete credenciais nem status global de identidade
+  vinculada a outros tenants.
+
+**E7** — cenário obrigatório, cobrindo os módulos afetados:
+
+```
+Usuário:  admin no Tenant A, viewer no Tenant B, Tenant A ativo
+Entidade: pertence ao Tenant B
+```
+
+O usuário não pode visualizar nem alterar a entidade de B usando permissões que
+possui somente em A.
+
+**Regressão**
+
+- admins legítimos mantêm as funcionalidades de negócio que devem possuir;
+- admins provisionados pelo painel recebem explicitamente as permissões
+  necessárias;
+- o isolamento multi-tenant existente continua funcionando;
+- fixtures que dependiam de `create-role` como sinônimo de admin são corrigidas,
+  não contornadas.
+
+#### Relação com o SEC-01
+
+O SEC-04 vem primeiro porque, quando concluído, o SEC-01 poderá assumir:
+
+- Policies sem bypass por `create-role`;
+- contexto de tenant consistente entre entidade e permissão;
+- delegação administrativa protegida;
+- Platform Admin separado de admin de tenant;
+- testes de API com 403 representando o modelo correto.
+
+Assim o SEC-01 aplica as Policies aos 7 controllers e 34 rotas sem propagar o
+modelo vulnerável atual.
+
+**Por que bloqueia.** X1, E3 e E7 são falhas de isolamento entre
+estabelecimentos, da mesma classe que o SEC-01 e o SEC-03, e E1 e E2 levam até
+elas. O SEC-01 vai ligar essas Policies à API, e a F2.6 vai criar uma Policy para
 proteger credenciais de terceiros, que herdaria o padrão atual.
 
 ### SEC-05 — SendEmailAction
@@ -513,9 +805,10 @@ F2.6 — Integration APIs
 SEC-01 vai aplicar as Policies às 34 rotas da API que hoje não as usam, e o
 SEC-04 muda o significado e o alcance dessas Policies: hoje `create-role` é
 coringa em várias delas, a gestão de estabelecimentos quebra o isolamento entre
-clientes e `update-role` permite escalada de privilégio. Espalhar as Policies
-atuais pela API antes de corrigi-las levaria esses defeitos para a API e
-obrigaria a refazer o SEC-01 e os seus testes.
+clientes, `update-role` e `manage-users` permitem escalada de privilégio, e a
+permissão pode ser avaliada num estabelecimento diferente do da entidade.
+Espalhar as Policies atuais pela API antes de corrigi-las levaria esses defeitos
+para a API e obrigaria a refazer o SEC-01 e os seus testes.
 
 ```
 SEC-04  corrige o modelo de privilégios e o isolamento administrativo
@@ -560,6 +853,23 @@ encontrou três pontos em que o registro não corresponde ao código:
   `APP_KEY` já era versionado desde 2026-08-13; na época o repositório ainda não
   tinha remoto. → SEC-06
 
+**Auditoria pré-implementação do SEC-04 (2026-09-10).** Feita antes de iniciar a
+correção, só por leitura de código, testes e histórico. Ampliou o SEC-04 sem
+criar novo ID:
+
+- confirmou o coringa `create-role`, o X1 e o E1;
+- encontrou três vetores novos: E2 (escalada por `manage-users`), E3
+  (administração local de identidade global) e E7 (entidade e permissão avaliadas
+  em estabelecimentos diferentes);
+- corrigiu a afirmação anterior de que a gestão de estabelecimentos era "o único
+  ponto conhecido em que um cliente alcança dados e operações de outro": E3 e E7
+  também atravessam estabelecimentos;
+- constatou que estabelecimentos criados pelo painel dependem do coringa para
+  vendas, clientes, relatórios e automações;
+- registrou a decisão por um marcador explícito de Platform Admin;
+- confirmou que os fluxos de E2, E3 e E7 surgiram depois da F1.7, com a F1.8 e as
+  telas de 2026-08-16. A F1.7 permanece como está.
+
 ---
 
 ## Próxima sprint funcional — F2.6, Integration APIs
@@ -593,6 +903,18 @@ Não bloqueiam a F2.6 e não receberam ID.
 
 > O item "`.env.testing` com `APP_KEY` versionada", que ficava nesta tabela, virou
 > o SEC-06.
+
+### Achados da auditoria do SEC-04 fora do escopo
+
+Registrados em 2026-09-10 para tratamento posterior. Não são necessários para
+provar nem para corrigir o SEC-04, e não receberam ID.
+
+| Achado | Observação |
+|---|---|
+| Status `SUSPENDED`/`CANCELLED` do estabelecimento | Aparentemente sem efeito funcional completo: `Tenant::isActive()` não é chamado, e o resolver e o login não consultam o status |
+| Arquivamento de estabelecimento | Pode derrubar o acesso dos usuários sem aviso adequado: o estabelecimento some do seletor e do login, e sessões abertas passam a receber 404 |
+| `BranchPolicy` | Aparenta estar desconectada: não é registrada, usa permissões que não existem no seed e não há rotas de filiais |
+| Testes de integração vazios | Em `ApiIntegrationTest`, `test_rbac_admin_can_manage_roles`, `test_user_without_permission_gets_403` e `test_admin_workflow_manage_users_and_roles` só chamam `/up` e `assertTrue(true)` |
 
 ---
 
