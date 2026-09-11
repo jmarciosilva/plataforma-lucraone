@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Modules\Audit\Domain\Models\AuditLog;
+use App\Modules\Authorization\Application\UserAdministrationDenied;
+use App\Modules\Authorization\Application\UserAdministrationGuard;
 use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Identity\Domain\Models\TenantUser;
 use App\Modules\Identity\Domain\Models\User;
@@ -39,6 +41,10 @@ class UserController extends Controller
     private const IDENTIDADE_PROTEGIDA = 'os dados da conta desta pessoa não podem ser alterados por este estabelecimento.';
 
     private const CONTA_INDISPONIVEL = 'este e-mail pertence a uma conta que não pode ser vinculada por este estabelecimento.';
+
+    public function __construct(
+        private UserAdministrationGuard $administracao
+    ) {}
 
     public function index(Request $request, TenantContext $context)
     {
@@ -105,8 +111,9 @@ class UserController extends Controller
     public function store(StoreUserRequest $request, TenantContext $context)
     {
         $tenantId = $context->id();
+        $papeis = $request->validated('roles', []);
 
-        [$user, $identidadeNova] = DB::transaction(function () use ($request, $tenantId) {
+        $cadastrar = function () use ($request, $tenantId, $papeis) {
             $user = User::withTrashed()
                 ->where('email', $request->validated('email'))
                 ->first();
@@ -117,6 +124,10 @@ class UserController extends Controller
             if ($user && ($user->trashed() || ! $user->isActive())) {
                 throw ValidationException::withMessages(['email' => self::CONTA_INDISPONIVEL]);
             }
+
+            // E2: a autoridade sobre os papéis pedidos também é conferida antes
+            // de qualquer gravação, sem deixar identidade, vínculo ou papel parciais.
+            $this->administracao->garantirCadastro($request->user(), $tenantId, $papeis);
 
             $identidadeNova = $user === null;
 
@@ -135,10 +146,18 @@ class UserController extends Controller
             }
 
             $user->joinTenant($tenantId, $request->validated('status'));
-            $user->syncRoles($request->validated('roles', []), $tenantId);
+            $user->syncRoles($papeis, $tenantId);
 
             return [$user, $identidadeNova];
-        });
+        };
+
+        try {
+            [$user, $identidadeNova] = DB::transaction($cadastrar);
+        } catch (UserAdministrationDenied $recusa) {
+            return back()
+                ->withInput($request->except(['password', 'password_confirmation']))
+                ->with('erro', $recusa->getMessage());
+        }
 
         return redirect()
             ->route('users.show', $user)
@@ -197,7 +216,19 @@ class UserController extends Controller
 
         $this->recusarAlteracaoDaIdentidadeGlobal($user, $tenantId, $dados);
 
-        DB::transaction(function () use ($user, $tenantId, $dados) {
+        $papeis = $dados['roles'] ?? [];
+
+        // E2: autoridade sobre a pessoa e sobre os papéis pedidos, antes de
+        // qualquer gravação de dados, vínculo ou papéis.
+        try {
+            $this->administracao->garantirEdicao($request->user(), $user, $tenantId, $papeis);
+        } catch (UserAdministrationDenied $recusa) {
+            return back()
+                ->withInput($request->except(['password', 'password_confirmation']))
+                ->with('erro', $recusa->getMessage());
+        }
+
+        DB::transaction(function () use ($user, $tenantId, $dados, $papeis) {
             $payload = [
                 'name' => $dados['name'],
                 'email' => $dados['email'],
@@ -210,7 +241,7 @@ class UserController extends Controller
 
             $user->update($payload);
             $user->joinTenant($tenantId, $dados['status']);
-            $user->syncRoles($dados['roles'] ?? [], $tenantId);
+            $user->syncRoles($papeis, $tenantId);
         });
 
         return redirect()
@@ -227,6 +258,13 @@ class UserController extends Controller
 
         if ($request->user()->is($user)) {
             return back()->with('erro', 'não é possível arquivar seu próprio usuário.');
+        }
+
+        // E2: arquivar retira todos os papéis e o acesso da pessoa.
+        try {
+            $this->administracao->garantirAdministracao($request->user(), $user, $tenantId);
+        } catch (UserAdministrationDenied $recusa) {
+            return back()->with('erro', $recusa->getMessage());
         }
 
         DB::transaction(function () use ($user, $tenantId) {
@@ -265,12 +303,20 @@ class UserController extends Controller
             ->with('sucesso', 'usuário restaurado.');
     }
 
-    public function resetPassword(string $user, TenantContext $context)
+    public function resetPassword(Request $request, string $user, TenantContext $context)
     {
         $tenantId = $context->id();
         $user = $this->encontrarUsuarioNoTenant($user, $tenantId);
 
         Gate::authorize('manageGlobalIdentity', [$user, $tenantId]);
+
+        // E2: a senha temporária é exibida a quem redefine, então redefinir a
+        // senha de quem tem mais autoridade seria assumir essa autoridade.
+        try {
+            $this->administracao->garantirAdministracao($request->user(), $user, $tenantId);
+        } catch (UserAdministrationDenied $recusa) {
+            return back()->with('erro', $recusa->getMessage());
+        }
 
         $senhaTemporaria = Str::random(12);
         $user->update(['password' => $senhaTemporaria]);
