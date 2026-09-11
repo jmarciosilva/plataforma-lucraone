@@ -23,7 +23,8 @@ use Tests\TestCase;
  * A caracterização ampliada cobre também a retirada de poder, o lockout do
  * próprio papel e um papel privilegiado com nome qualquer, para que a correção
  * não dependa do nome admin. Os dois controles positivos — delegação legítima e
- * edição do manager pelo admin — precisam continuar verdes depois dela.
+ * edição que preserva permissão fora da autoridade do ator — precisam continuar
+ * verdes depois dela.
  */
 #[Group('sec-04')]
 #[Group('sec-04-e1')]
@@ -229,42 +230,42 @@ class RoleDelegationSecurityTest extends TestCase
     }
 
     /**
-     * Controle positivo sobre a matriz atual, que não é hierárquica: o admin não
-     * possui manage-assigned-branches, presente no manager. Essa matriz é
-     * decisão do E2 e não é resolvida aqui.
+     * Controle positivo: uma permissão preservada no papel alvo, fora da
+     * autoridade do ator, não bloqueia uma alteração legítima em outra.
      *
-     * O admin retira manage-companies do manager — alteração dentro da própria
-     * autoridade. Como a sincronização substitui o conjunto inteiro, o payload
-     * reenvia manage-assigned-branches sem alterá-la, e ela precisa continuar
-     * no papel.
+     * O papel personalizado tem manage-companies, que o admin possui, e
+     * manage-assigned-branches, que fica fora da matriz do admin. O admin retira
+     * manage-companies. Como a sincronização substitui o conjunto inteiro, o
+     * payload reenvia manage-assigned-branches sem alterá-la, e ela precisa
+     * continuar no papel.
      */
-    public function test_admin_edita_papel_manager_preservando_permissao_fora_da_sua_autoridade(): void
+    public function test_admin_edita_papel_personalizado_preservando_permissao_fora_da_sua_autoridade(): void
     {
         $admin = $this->membroComPapel($this->tenant, 'admin');
         $papelAdmin = $this->papel($this->tenant, 'admin');
-        $papelManager = $this->papel($this->tenant, 'manager');
-        $manageCompanies = $this->permissao($this->tenant, 'manage-companies');
+        $papelAlvo = $this->papelPersonalizado(
+            $this->tenant,
+            'coordenador-de-filiais',
+            ['manage-companies', 'manage-assigned-branches']
+        );
         $manageAssignedBranches = $this->permissao($this->tenant, 'manage-assigned-branches');
-        $antesDoManager = $this->permissoesDoPapel($papelManager);
+        $antesDoAlvo = $this->permissoesDoPapel($papelAlvo);
         $antesDoAdmin = $this->permissoesDoPapel($papelAdmin);
 
         // Pré-condições: sem elas o cenário não testa o que promete.
+        $this->assertTrue($admin->hasPermission('manage-companies', $this->tenant->id));
         $this->assertFalse($admin->hasPermission('manage-assigned-branches', $this->tenant->id));
-        $this->assertContains("{$manageAssignedBranches->id}@{$this->tenant->id}", $antesDoManager);
+        $this->assertContains("{$manageAssignedBranches->id}@{$this->tenant->id}", $antesDoAlvo);
 
         $resposta = $this->actingAs($admin)
-            ->post(route('roles.permissions.sync', $papelManager), [
-                'permissions' => $papelManager->permissionsForTenant()
-                    ->pluck('permissions.id')
-                    ->reject(fn (string $id) => $id === $manageCompanies->id)
-                    ->values()
-                    ->all(),
+            ->post(route('roles.permissions.sync', $papelAlvo), [
+                'permissions' => [$manageAssignedBranches->id],
             ]);
 
-        $resposta->assertRedirect(route('roles.show', $papelManager))->assertSessionHas('sucesso');
+        $resposta->assertRedirect(route('roles.show', $papelAlvo))->assertSessionHas('sucesso');
         $this->assertSame(
-            array_values(array_diff($antesDoManager, ["{$manageCompanies->id}@{$this->tenant->id}"])),
-            $this->permissoesDoPapel($papelManager),
+            ["{$manageAssignedBranches->id}@{$this->tenant->id}"],
+            $this->permissoesDoPapel($papelAlvo),
             'só manage-companies sai; manage-assigned-branches, fora da autoridade do admin, permanece'
         );
         $this->assertSame($antesDoAdmin, $this->permissoesDoPapel($papelAdmin));

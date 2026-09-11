@@ -107,7 +107,7 @@ class AuthorizationSeeder extends Seeder
             'view-reports',
             'view-automations',
             'manage-users', 'view-users',
-            'manage-assigned-branches', 'view-branches',
+            'view-branches',
         ];
 
         foreach ($managerPermissions as $permName) {
@@ -125,7 +125,6 @@ class AuthorizationSeeder extends Seeder
             'view-reports',
             'view-automations',
             'view-users',
-            'view-assigned-branches',
         ];
 
         foreach ($userPermissions as $permName) {
