@@ -18,7 +18,7 @@ O plano de execução está em **[ROADMAP.md](ROADMAP.md)**.
 | **Última sprint concluída** | F2.5 — Advanced Automation |
 | **Próxima sprint funcional** | F2.6 — Integration APIs |
 | **Status da F2.6** | 🔴 **Bloqueada temporariamente** pelo hardening de segurança pré-F2.6 |
-| **Testes** | 500 no total · 472 aprovados · 25 falhas SEC-04 esperadas · 2 risky e 1 falha de desempenho preexistentes |
+| **Testes** | 517 no total · 495 aprovados · 20 falhas SEC-04 esperadas · 2 risky preexistentes |
 | **Módulos** | 12 |
 | **Superfícies** | Painel web (sessão) + API REST `/api/v1` (Sanctum) |
 
@@ -34,12 +34,15 @@ O hardening está em andamento. No SEC-04, já foram corrigidos:
 - o uso de `create-role` como coringa nos módulos de negócio;
 - o papel `admin` do estabelecimento, que passou a ter uma matriz explícita de 26
   permissões — aplicada aos estabelecimentos novos, que antes recebiam 19, e, por
-  data fix, aos já existentes.
+  data fix, aos já existentes;
+- a identidade global administrada por autoridade local (E3): `manage-users` não
+  altera mais nome, e-mail, senha ou status da conta, nem arquiva ou restaura a
+  identidade, de quem também tem vínculo com outro estabelecimento ou é Platform
+  Admin. Vínculo e papéis continuam sendo geridos por cada estabelecimento.
 
 Continuam pendentes E1 (escalada por `update-role`), E2 (autoelevação por
-`manage-users`), E3 (identidade global administrada por autoridade local) e E7
-(entidade e permissão avaliadas em estabelecimentos diferentes). A F2.6
-permanece bloqueada.
+`manage-users`) e E7 (entidade e permissão avaliadas em estabelecimentos
+diferentes). O próximo é o E1. A F2.6 permanece bloqueada.
 
 O sistema é operável por uma pessoa desde a F3.2: há login em `/login`, e quem
 tem vínculo com vários estabelecimentos escolhe onde vai trabalhar e troca pelo
@@ -114,7 +117,9 @@ autoriza o acesso ao estabelecimento pedido.
 **Identidade separada de vínculo.** Uma pessoa tem uma conta e uma senha, e se
 associa a N estabelecimentos por `tenant_user`. Papéis e permissões são sempre
 relativos ao estabelecimento em uso: a mesma pessoa pode ser admin numa loja e
-somente-leitura em outra.
+somente-leitura em outra. Os dados da conta — nome, e-mail, senha e status — são
+globais: um estabelecimento só os altera quando a pessoa pertence exclusivamente
+a ele e não é Platform Admin.
 
 Detalhes em [`lucraone-backend/docs/architecture/`](lucraone-backend/docs/architecture/)
 e nos ADRs em [`lucraone-backend/docs/adr/`](lucraone-backend/docs/adr/).
@@ -144,7 +149,7 @@ e nos ADRs em [`lucraone-backend/docs/adr/`](lucraone-backend/docs/adr/).
 ## Desenvolvimento
 
 ```bash
-docker compose exec app php artisan test        # 500 testes; 25 falhas SEC-04 esperadas
+docker compose exec app php artisan test        # 517 testes; 20 falhas SEC-04 esperadas
 docker compose exec app ./vendor/bin/pint       # estilo
 docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=1G
 docker compose exec app php artisan tinker
@@ -170,7 +175,7 @@ correção e ordem recomendada estão em
 | SEC-01 | 7 dos 14 controllers da API não verificam permissão | Crítica | Sim |
 | SEC-02 | Login da API sem rate limiting; tokens sem expiração nem abilities | Crítica | Sim |
 | SEC-03 | `TenantResolver` aceita `X-Tenant-ID` sem usuário autenticado | Alta | Sim |
-| SEC-04 | Em andamento: Platform Admin/X1 e coringa `create-role` nos módulos corrigidos; vetores E1, E2, E3 e E7 ainda pendentes | Crítica | Sim |
+| SEC-04 | Em andamento: Platform Admin/X1, coringa `create-role` nos módulos e identidade global (E3) corrigidos; vetores E1, E2 e E7 ainda pendentes | Crítica | Sim |
 | SEC-05 | Automações enviam e-mail para qualquer destinatário | Média | Recomendado |
 | SEC-06 | `APP_KEY` versionada em `.env.testing` | Média | Recomendado |
 | COR-01 | Índices únicos ignoram soft delete (SKU, slug, e-mail) | Alta | Recomendado |

@@ -1,8 +1,7 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-09-10 · **SEC-04 em andamento** — 500 testes no total: 472
-PASS, 25 EXPECTED FAIL do SEC-04, 2 risky preexistentes e 1 falha preexistente de
-`PerformanceBaselineTest`
+**Atualizado:** 2026-09-10 · **SEC-04 em andamento** — 517 testes no total: 495
+PASS, 20 EXPECTED FAIL do SEC-04 e 2 risky preexistentes
 
 > 🔴 **A F2.6 está bloqueada.** Ela continua sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
@@ -318,15 +317,18 @@ E6 foram variantes descartadas ou absorvidas pelos demais.
 | Data fix dos admins existentes | ✅ Concluído | `6c770dc` |
 | E1 — Escalada por `update-role` | Pendente | — |
 | E2 — Escalada por `manage-users` | Pendente | — |
-| E3 — Administração local de identidade global | Pendente | — |
+| E3 — Administração local de identidade global | ✅ Concluído | `d6fdaac` |
 | E7 — Entidade e permissão avaliadas em estabelecimentos diferentes | Pendente | — |
 
-O SEC-04 continua **em andamento**: só passa a `Resolvido` quando E1, E2, E3 e E7
+O SEC-04 continua **em andamento**: só passa a `Resolvido` quando E1, E2 e E7
 também estiverem corrigidos e todos os [critérios de aceite](#critérios-de-aceite)
 estiverem verdes. Por isso a F2.6 permanece bloqueada e não iniciada.
 
-**Evidência atual.** O SEC-04 tem 83 testes: 58 PASS, 25 EXPECTED FAIL, 0 ERROR e
-231 assertions.
+**Próximo vetor técnico:** E1 — contenção da delegação de permissões. Depois, E2 e
+E7.
+
+**Evidência atual.** Após `d6fdaac`, o SEC-04 tem 100 testes: 80 PASS, 20 EXPECTED
+FAIL, 0 ERROR e 298 assertions.
 
 | Grupo | PASS | FAIL | Situação |
 |---|---|---|---|
@@ -334,18 +336,18 @@ estiverem verdes. Por isso a F2.6 permanece bloqueada e não iniciada.
 | `create-role` e admin explícito | 33 | 0 | Corrigido |
 | E1 | 0 | 3 | Pendente |
 | E2 | 0 | 3 | Pendente |
-| E3 | 1 | 5 | Pendente |
+| E3 | 23 | 0 | Corrigido |
 | E7 | 3 | 14 | Pendente |
-| **Total** | **58** | **25** | |
+| **Total** | **80** | **20** | |
 
-As 25 falhas são de caracterização, ainda esperadas enquanto E1, E2, E3 e E7
-permanecem pendentes — não são regressões.
+As 20 falhas são de caracterização, ainda esperadas enquanto E1, E2 e E7
+permanecem pendentes — não são regressões. A evidência de cada etapa anterior fica
+registrada na implementação correspondente, abaixo.
 
-A suíte completa tem 500 testes: 472 PASS, 25 EXPECTED FAIL do SEC-04, 2 risky
-preexistentes, 1 falha preexistente de `PerformanceBaselineTest`, 0 ERROR, 0
-SKIPPED e 1468 assertions. Não houve regressão funcional atribuível às correções:
-a falha de `test_performance_with_growing_data` foi reproduzida também no
-commit-base `6f932c8`, sem as alterações do `create-role` (ver
+A suíte completa tem 517 testes: 495 PASS, 20 EXPECTED FAIL do SEC-04, 2 risky
+preexistentes, 0 ERROR, 0 SKIPPED e 1535 assertions. Não houve regressão funcional.
+A instabilidade histórica de `test_performance_with_growing_data` não se reproduziu
+nesta execução, o que não indica que tenha sido corrigida (ver
 [Outras pendências de qualidade](#outras-pendências-de-qualidade)).
 
 **Commits de evidência.**
@@ -356,6 +358,9 @@ commit-base `6f932c8`, sem as alterações do `create-role` (ver
 | `faf3c4ed8769a612d3eec19d8a248175c300efcf` | fix(security): separar Platform Admin da autorização de tenant |
 | `6f932c841c6c0ef7e2a436a70ad48253fcf85549` | docs(security): sincronizar progresso do SEC-04 após Platform Admin e X1 |
 | `6c770dcd2ef90c3624d30d9b6950041e73bfb3ac` | fix(security): remover bypass create-role dos módulos de negócio |
+| `dd1100f82bf7156dd9c69b04dc2c7fe6cc94d64a` | docs(security): sincronizar SEC-04 após remoção do bypass create-role |
+| `df287dec95cab9f3aa111d85fbae0e68a9083c01` | test(security): ampliar caracterização do E3 no SEC-04 |
+| `d6fdaac3ed97df8d293d42b79a5991fdd4a4f0e9` | fix(security): proteger identidade global contra autoridade local |
 
 #### Implementação 1 — Platform Admin + X1
 
@@ -410,6 +415,38 @@ prova o acesso do admin pelas permissões explícitas e o data fix, e em
 testes de `CreateRoleBypassSecurityTest`, que caracterizavam o coringa, passaram a
 verde.
 
+**Evidência na publicação.** Com essa correção, o SEC-04 passou a ter 83 testes:
+58 PASS, 25 EXPECTED FAIL, 0 ERROR e 231 assertions — X1 com 21 PASS, `create-role`
+e admin explícito com 33 PASS, E1 com 3 FAIL, E2 com 3 FAIL, E3 com 1 PASS e 5 FAIL
+e E7 com 3 PASS e 14 FAIL. A suíte completa tinha 500 testes: 472 PASS, 25 falhas
+SEC-04 esperadas, 2 risky preexistentes, 1 falha preexistente de
+`PerformanceBaselineTest`, 0 ERROR, 0 SKIPPED e 1468 assertions. Não houve
+regressão funcional atribuível à correção: a falha de
+`test_performance_with_growing_data` foi reproduzida também no commit-base
+`6f932c8`, sem as alterações do `create-role`. Esse progresso foi sincronizado na
+documentação em `dd1100f82bf7156dd9c69b04dc2c7fe6cc94d64a`.
+
+#### Implementação 3 — identidade global (E3)
+
+Antes da correção, a caracterização do E3 foi ampliada em
+`df287dec95cab9f3aa111d85fbae0e68a9083c01`: `GlobalIdentitySecurityTest` passou de
+6 para 23 testes, com 7 PASS e 16 EXPECTED FAIL. Os casos novos cobrem o Platform
+Admin como alvo, senha e nome alterados pelo update comum, vínculo `INVITED`,
+`INACTIVE` e `SUSPENDED` em outro estabelecimento, cadastro com identidade inativa
+e arquivada, a proteção já existente de `is_platform_admin` contra payload e
+controles positivos para identidade exclusiva, vínculo e papéis locais. O SEC-04
+passou a ter 100 testes: 64 PASS, 36 EXPECTED FAIL, 0 ERROR e 268 assertions.
+
+A correção foi publicada em `d6fdaac3ed97df8d293d42b79a5991fdd4a4f0e9`, sem mudança
+de schema, migration, endpoint novo ou alteração de testes. A regra está descrita em
+[Proteção da identidade global](#proteção-da-identidade-global).
+
+**Evidência na publicação.** Os 23 testes de `GlobalIdentitySecurityTest` ficaram
+verdes, e `UserManagementTest` continuou verde. O SEC-04 passou a ter 100 testes:
+80 PASS, 20 EXPECTED FAIL, 0 ERROR e 298 assertions; E1, E2 e E7 não foram
+alterados. A suíte completa passou a ter 517 testes: 495 PASS, 20 falhas SEC-04
+esperadas, 2 risky preexistentes, 0 ERROR e 1535 assertions.
+
 #### Vetores confirmados
 
 | ID | Vetor | Registrado em | Evidência |
@@ -422,9 +459,9 @@ verde.
 | **E7** | **Policy avalia entidade e permissão em estabelecimentos diferentes** | 2026-09-10 | Código e ordem de middleware do framework |
 
 Na auditoria pré-implementação, nenhum dos vetores tinha teste que o demonstrasse
-ou o impedisse. O baseline executável passou a caracterizá-los. Após as duas
-correções, X1 e o coringa `create-role` estão corrigidos, com testes verdes; E1,
-E2, E3 e E7 continuam sem correção.
+ou o impedisse. O baseline executável passou a caracterizá-los. Após as três
+correções, X1, o coringa `create-role` e E3 estão corrigidos, com testes verdes;
+E1, E2 e E7 continuam sem correção.
 
 **Coringa `create-role` — achado histórico.** A permissão aparecia ao lado das
 permissões específicas em 10 Policies (`Product`, `Category`, `Inventory`,
@@ -505,6 +542,13 @@ implementação; o requisito de segurança é:
 > Autoridade local de um tenant não pode, por consequência indireta, conceder
 > acesso ou comprometer os vínculos de uma identidade em outros tenants.
 
+**Status atual do E3.** Corrigido em `d6fdaac`: `manage-users` só altera os dados
+da identidade global — e só redefine a senha, arquiva ou restaura a identidade —
+quando a pessoa pertence exclusivamente ao estabelecimento e não é Platform Admin.
+Vínculo e papéis continuam locais, e o cadastro com e-mail existente não renomeia,
+não reativa nem restaura a identidade. Detalhe em
+[Proteção da identidade global](#proteção-da-identidade-global).
+
 **E7 — Policy avalia entidade e permissão em estabelecimentos diferentes.**
 
 - O vínculo é validado contra o estabelecimento **da entidade**
@@ -527,11 +571,12 @@ até a correção do E7.
 É obrigatório corrigir antes do SEC-01, porque o SEC-01 aplicará essas mesmas
 Policies à API.
 
-**Consequência.** Antes da correção de X1, X1, E3 e E7 atravessavam a fronteira
-entre estabelecimentos — pela gestão de estabelecimentos, pela identidade
-compartilhada e pelas Policies. X1 está corrigido; E3 e E7 permanecem abertos.
-E1 e E2 ainda levam a poder administrativo indevido, mas não concedem mais
-administração da plataforma pelo X1.
+**Consequência.** Antes das correções, X1, E3 e E7 atravessavam a fronteira entre
+estabelecimentos — pela gestão de estabelecimentos, pela identidade compartilhada e
+pelas Policies. X1 e E3 estão corrigidos; E7 permanece aberto. E1 e E2 ainda levam
+a poder administrativo indevido dentro do estabelecimento, mas não concedem mais
+administração da plataforma, pelo X1, nem da identidade global de quem existe em
+outro estabelecimento, pelo E3.
 
 #### Causa raiz
 
@@ -547,7 +592,7 @@ administração da plataforma pelo X1.
    executa pode delegar isso".
 4. **Identidade global administrada por permissão local.** A F1.8 tornou a pessoa
    global; a F3.5 manteve `manage-users` com poder sobre credenciais e status
-   globais.
+   globais. Corrigido em `d6fdaac`.
 5. **Vínculo e permissão avaliados em contextos de tenant diferentes.** As
    Policies presumem que a entidade pertence ao estabelecimento ativo, garantia
    que o `TenantScope` não oferece durante o route binding do painel.
@@ -648,20 +693,58 @@ O SEC-04 deve impedir que uma pessoa conceda poder superior ao que possui:
 
 Não é necessário implementar hierarquia complexa de papéis.
 
+**Pré-requisito do E2 — matriz dos papéis padrão.** A auditoria de 2026-09-10
+constatou que a matriz atual não é hierárquica: o `admin`, com 26 permissões, não
+tem `manage-assigned-branches` nem `view-assigned-branches`, presentes em `manager`
+e `user`, e o `manager` não tem `view-assigned-branches`, presente em `user`. Essas
+permissões só são consultadas pela `BranchPolicy`, que não está registrada. Uma
+contenção por subconjunto de permissões impediria o admin de gerir managers e users,
+então essa matriz precisa ser decidida antes do E2. A decisão ainda não foi tomada,
+e o admin continua com as 26 permissões.
+
 #### Proteção da identidade global
 
-Uma permissão local como `manage-users` não deve permitir que um administrador do
-Tenant A comprometa os acessos de uma identidade no Tenant B. A implementação
-deverá revisar:
+**Implementado em `d6fdaac`.** Uma permissão local como `manage-users` não concede
+mais autoridade irrestrita sobre a identidade global. A correção separa o que
+pertence a cada lado:
 
-- redefinição de senha;
-- alteração de e-mail;
-- `account_status`;
-- associação de papéis;
-- associação a estabelecimento;
-- reutilização de e-mail existente.
+| Identidade global | Do estabelecimento |
+|---|---|
+| nome, e-mail, senha, status da conta, arquivamento e restauração da identidade | vínculo, status do vínculo e papéis |
 
-A regra definitiva deve preservar o modelo de identidade global da F1.8.
+A autoridade local continua administrando o vínculo, o status do vínculo e os papéis
+do seu estabelecimento. Os dados da identidade global só são alterados localmente
+quando a pessoa pertence **exclusivamente** àquele estabelecimento e não é Platform
+Admin:
+
+- **identidade compartilhada:** qualquer vínculo com outro estabelecimento protege a
+  identidade, seja qual for o status dele — `ACTIVE`, `INVITED`, `INACTIVE` ou
+  `SUSPENDED`. Alterar nome, e-mail, senha ou status da conta é recusado, e não
+  ignorado; reenviar o valor atual não conta como alteração, então editar só o
+  vínculo ou os papéis continua possível. A redefinição de senha é recusada, e
+  arquivar desativa apenas o vínculo atual;
+- **Platform Admin como alvo:** a autoridade local não altera nome, e-mail, senha ou
+  status da conta do Platform Admin, não redefine sua senha e não arquiva nem
+  restaura sua identidade — mesmo que ele tenha um único vínculo e nenhum papel no
+  estabelecimento;
+- **cadastro com e-mail:**
+  - identidade nova: criação normal;
+  - identidade ativa existente: é vinculada ao estabelecimento, e os dados globais
+    existentes são preservados;
+  - identidade inativa: a autoridade local não a reativa, e o cadastro é recusado
+    sem vínculo parcial;
+  - identidade arquivada: a autoridade local não a restaura, e o cadastro é recusado
+    sem vínculo parcial.
+
+A identidade exclusiva de um estabelecimento continua integralmente administrável
+por ele, inclusive a redefinição de senha. O modelo da F1.8 foi preservado, e
+`is_platform_admin` continua global, fora do mass assignment e fora do fluxo de
+`manage-users`. Quais papéis podem ser atribuídos é assunto do E2.
+
+**Fora do E3.** O self-service de identidade global ("Minha Conta" / "Meu Perfil"),
+com autoridade diferente de `manage-users`, fica como evolução futura. Até lá,
+`users.update` continua sendo um fluxo administrativo do estabelecimento, sem
+exceção para a própria pessoa. Não é bloqueador do SEC-04.
 
 #### Contexto de estabelecimento nas Policies
 
@@ -713,7 +796,7 @@ O SEC-04 só é `Resolvido` quando testes demonstrarem, no mínimo:
 - `manage-users` não permite autoatribuição do papel admin;
 - `manage-users` não permite atribuir poder acima da autoridade delegável.
 
-**E3**
+**E3** — ✅ atendido em `d6fdaac`
 
 - administração local não compromete credenciais nem status global de identidade
   vinculada a outros tenants.
@@ -751,9 +834,10 @@ Assim o SEC-01 aplica as Policies aos 7 controllers e 34 rotas sem propagar o
 modelo vulnerável atual.
 
 **Por que bloqueia.** X1, E3 e E7 são falhas de isolamento entre
-estabelecimentos, da mesma classe que o SEC-01 e o SEC-03, e E1 e E2 levam até
-elas. O SEC-01 vai ligar essas Policies à API, e a F2.6 vai criar uma Policy para
-proteger credenciais de terceiros, que herdaria o padrão atual.
+estabelecimentos — X1 e E3 já corrigidos —, da mesma classe que o SEC-01 e o
+SEC-03, e E1 e E2 levam até elas. O SEC-01 vai ligar essas Policies à API, e a
+F2.6 vai criar uma Policy para proteger credenciais de terceiros, que herdaria o
+padrão atual.
 
 ### SEC-05 — SendEmailAction
 
@@ -913,9 +997,9 @@ há medição de impacto que justifique segurar a F2.6.
 SEC-04 — create-role              🟡 EM ANDAMENTO
   ├─ Platform Admin / X1          ✅
   ├─ bypass create-role           ✅
-  ├─ E1                           pendente
+  ├─ E3                           ✅
+  ├─ E1                           pendente ← próximo
   ├─ E2                           pendente
-  ├─ E3                           pendente
   └─ E7                           pendente
         ↓
 SEC-01 — API Authorization        bloqueado pelo SEC-04
@@ -1040,7 +1124,7 @@ Não bloqueiam a F2.6 e não receberam ID.
 | PHPStan (nível 4) | 11 erros — tipos de retorno de View e acesso a `$id` em união de tipos |
 | Pint | 22 arquivos fora do padrão — imports não usados, ordenação |
 | Automation Rules Guide | Não escrito — único item não entregue da F2.5 |
-| `performance with growing data` | Intermitente sob carga: assertiva sensível a tempo, passa isolada. Reproduzida também no commit-base `6f932c8`, antes da remoção do coringa `create-role` — não é regressão do SEC-04 |
+| `performance with growing data` | Intermitente sob carga: assertiva sensível a tempo, passa isolada. Reproduzida também no commit-base `6f932c8`, antes da remoção do coringa `create-role` — não é regressão do SEC-04. Não se reproduziu na suíte completa após `d6fdaac`, o que não indica correção |
 
 > O item "`.env.testing` com `APP_KEY` versionada", que ficava nesta tabela, virou
 > o SEC-06.
@@ -1056,6 +1140,7 @@ provar nem para corrigir o SEC-04, e não receberam ID.
 | Arquivamento de estabelecimento | Pode derrubar o acesso dos usuários sem aviso adequado: o estabelecimento some do seletor e do login, e sessões abertas passam a receber 404 |
 | `BranchPolicy` | Aparenta estar desconectada: não é registrada, usa permissões que não existem no seed e não há rotas de filiais |
 | Testes de integração vazios | Em `ApiIntegrationTest`, `test_rbac_admin_can_manage_roles`, `test_user_without_permission_gets_403` e `test_admin_workflow_manage_users_and_roles` só chamam `/up` e `assertTrue(true)` |
+| Platform Admin depende de vínculo com estabelecimento | O login exige vínculo ativo, e `/tenants` passa por `auth.web`, que exige estabelecimento resolvido. O E3 protege a identidade global do Platform Admin, mas desativar o seu único vínculo ainda o tira do painel |
 
 ---
 
