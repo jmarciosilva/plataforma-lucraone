@@ -18,7 +18,7 @@ O plano de execução está em **[ROADMAP.md](ROADMAP.md)**.
 | **Última sprint concluída** | F2.5 — Advanced Automation |
 | **Próxima sprint funcional** | F2.6 — Integration APIs |
 | **Status da F2.6** | 🔴 **Bloqueada temporariamente** pelo hardening de segurança pré-F2.6 |
-| **Testes** | 517 no total · 495 aprovados · 20 falhas SEC-04 esperadas · 2 risky preexistentes |
+| **Testes** | 522 no total · 503 aprovados · 17 falhas SEC-04 esperadas · 2 risky preexistentes |
 | **Módulos** | 12 |
 | **Superfícies** | Painel web (sessão) + API REST `/api/v1` (Sanctum) |
 
@@ -38,11 +38,15 @@ O hardening está em andamento. No SEC-04, já foram corrigidos:
 - a identidade global administrada por autoridade local (E3): `manage-users` não
   altera mais nome, e-mail, senha ou status da conta, nem arquiva ou restaura a
   identidade, de quem também tem vínculo com outro estabelecimento ou é Platform
-  Admin. Vínculo e papéis continuam sendo geridos por cada estabelecimento.
+  Admin. Vínculo e papéis continuam sendo geridos por cada estabelecimento;
+- a delegação de permissões por `update-role` (E1): ninguém sincroniza as
+  permissões do próprio papel, nem adiciona ou retira de outro papel uma permissão
+  que não possui naquele estabelecimento. A proteção vem da autoridade de quem
+  executa, não do nome do papel.
 
-Continuam pendentes E1 (escalada por `update-role`), E2 (autoelevação por
-`manage-users`) e E7 (entidade e permissão avaliadas em estabelecimentos
-diferentes). O próximo é o E1. A F2.6 permanece bloqueada.
+Continuam pendentes E2 (autoelevação por `manage-users` e atribuição de papéis) e
+E7 (entidade e permissão avaliadas em estabelecimentos diferentes). O próximo é o
+E2. A F2.6 permanece bloqueada.
 
 O sistema é operável por uma pessoa desde a F3.2: há login em `/login`, e quem
 tem vínculo com vários estabelecimentos escolhe onde vai trabalhar e troca pelo
@@ -149,7 +153,7 @@ e nos ADRs em [`lucraone-backend/docs/adr/`](lucraone-backend/docs/adr/).
 ## Desenvolvimento
 
 ```bash
-docker compose exec app php artisan test        # 517 testes; 20 falhas SEC-04 esperadas
+docker compose exec app php artisan test        # 522 testes; 17 falhas SEC-04 esperadas
 docker compose exec app ./vendor/bin/pint       # estilo
 docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=1G
 docker compose exec app php artisan tinker
@@ -175,7 +179,7 @@ correção e ordem recomendada estão em
 | SEC-01 | 7 dos 14 controllers da API não verificam permissão | Crítica | Sim |
 | SEC-02 | Login da API sem rate limiting; tokens sem expiração nem abilities | Crítica | Sim |
 | SEC-03 | `TenantResolver` aceita `X-Tenant-ID` sem usuário autenticado | Alta | Sim |
-| SEC-04 | Em andamento: Platform Admin/X1, coringa `create-role` nos módulos e identidade global (E3) corrigidos; vetores E1, E2 e E7 ainda pendentes | Crítica | Sim |
+| SEC-04 | Em andamento: Platform Admin/X1, coringa `create-role` nos módulos, identidade global (E3) e delegação por `update-role` (E1) corrigidos; vetores E2 e E7 ainda pendentes | Crítica | Sim |
 | SEC-05 | Automações enviam e-mail para qualquer destinatário | Média | Recomendado |
 | SEC-06 | `APP_KEY` versionada em `.env.testing` | Média | Recomendado |
 | COR-01 | Índices únicos ignoram soft delete (SKU, slug, e-mail) | Alta | Recomendado |
