@@ -5,7 +5,6 @@ namespace App\Modules\Authorization\Application;
 use App\Modules\Authorization\Domain\Models\Permission;
 use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Identity\Domain\Models\User;
-use Illuminate\Support\Collection;
 
 /**
  * Contenção da delegação de permissões (SEC-04 · E1).
@@ -23,13 +22,17 @@ use Illuminate\Support\Collection;
  * permissão reenviada sem alteração não é delegada por ninguém.
  *
  * Tudo é avaliado no estabelecimento do papel, e não no TenantContext da
- * requisição.
+ * requisição. A autoridade do ator vem de TenantAuthority.
  */
 class PermissionDelegationService
 {
     public const PROPRIO_PAPEL = 'não é possível alterar as permissões do seu próprio papel.';
 
     public const FORA_DA_AUTORIDADE = 'você só pode conceder ou retirar permissões que possui. fora da sua autoridade: ';
+
+    public function __construct(
+        private TenantAuthority $autoridade
+    ) {}
 
     /**
      * @param  array<int, string>  $permissoesDesejadas  ids do conjunto completo que o papel deve ter
@@ -52,7 +55,7 @@ class PermissionDelegationService
 
         $foraDaAutoridade = $adicionadas
             ->merge($removidas)
-            ->diff($this->permissoesDoAtor($ator, $tenantId));
+            ->diff($this->autoridade->autoridadeDoAtor($ator, $tenantId));
 
         if ($foraDaAutoridade->isEmpty()) {
             return;
@@ -64,29 +67,5 @@ class PermissionDelegationService
             ->pluck('name');
 
         throw new PermissionDelegationDenied(self::FORA_DA_AUTORIDADE.$nomes->implode(', ').'.');
-    }
-
-    /**
-     * Permissões que o ator efetivamente possui no estabelecimento informado.
-     *
-     * Papel, vínculo do papel e linha de permissão precisam ser todos desse
-     * estabelecimento, para que nada gravado com outro contexto conte como
-     * autoridade aqui.
-     */
-    private function permissoesDoAtor(User $ator, string $tenantId): Collection
-    {
-        if (! $ator->canAccessTenant($tenantId)) {
-            return collect();
-        }
-
-        return $ator->rolesForTenant($tenantId)
-            ->where('roles.tenant_id', $tenantId)
-            ->with(['permissions' => fn ($query) => $query
-                ->wherePivot('tenant_id', $tenantId)
-                ->where('permissions.tenant_id', $tenantId)])
-            ->get()
-            ->flatMap(fn (Role $role) => $role->permissions->pluck('id'))
-            ->unique()
-            ->values();
     }
 }
