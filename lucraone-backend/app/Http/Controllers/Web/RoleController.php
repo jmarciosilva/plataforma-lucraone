@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SyncRolePermissionsRequest;
+use App\Modules\Authorization\Application\PermissionDelegationDenied;
+use App\Modules\Authorization\Application\PermissionDelegationService;
 use App\Modules\Authorization\Domain\Models\Permission;
 use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Tenancy\Application\TenantContext;
@@ -56,13 +58,27 @@ class RoleController extends Controller
         ]);
     }
 
-    public function syncPermissions(SyncRolePermissionsRequest $request, Role $role, TenantContext $context)
-    {
+    public function syncPermissions(
+        SyncRolePermissionsRequest $request,
+        Role $role,
+        TenantContext $context,
+        PermissionDelegationService $delegacao
+    ) {
         Gate::authorize('update', $role);
 
         $permissionIds = Permission::query()
             ->whereIn('id', $request->validated('permissions', []))
             ->pluck('id');
+
+        // A transformação inteira é validada antes de qualquer gravação: uma
+        // recusa não deixa detach nem attach parcial.
+        try {
+            $delegacao->garantirSincronizacao($request->user(), $role, $permissionIds->all());
+        } catch (PermissionDelegationDenied $recusa) {
+            return redirect()
+                ->route('roles.show', $role)
+                ->with('erro', $recusa->getMessage());
+        }
 
         DB::transaction(function () use ($role, $context, $permissionIds) {
             $role->permissions()

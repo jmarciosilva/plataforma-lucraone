@@ -226,6 +226,10 @@ class CompanyAndRolesManagementTest extends TestCase
         $permissionA = Permission::factory()->forTenant($this->tenantAtual->id)->create(['name' => 'permission-a']);
         $permissionB = Permission::factory()->forTenant($this->tenantAtual->id)->create(['name' => 'permission-b']);
 
+        // SEC-04 · E1: só se delega permissão que se possui.
+        $this->adminRole->grantPermission($permissionA);
+        $this->adminRole->grantPermission($permissionB);
+
         $this->actingAs($this->admin)
             ->post(route('roles.permissions.sync', $role), [
                 'permissions' => [$permissionA->id, $permissionB->id],
