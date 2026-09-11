@@ -74,10 +74,12 @@
             @else
                 <x-button variante="secundario" href="{{ route('users.edit', $user) }}" class="mt-4 w-full">editar dados</x-button>
 
-                <form method="POST" action="{{ route('users.reset-password', $user) }}" class="mt-2">
-                    @csrf
-                    <x-button variante="secundario" tipo="submit" class="w-full">resetar senha</x-button>
-                </form>
+                @can('manageGlobalIdentity', [$user, $tenantId])
+                    <form method="POST" action="{{ route('users.reset-password', $user) }}" class="mt-2">
+                        @csrf
+                        <x-button variante="secundario" tipo="submit" class="w-full">resetar senha</x-button>
+                    </form>
+                @endcan
 
                 <button
                     type="button"
@@ -90,7 +92,7 @@
 
                 <x-modal nome="arquivar-user" titulo="arquivar usuário">
                     <p class="text-sm text-aco">
-                        Se a pessoa só estiver neste tenant, a identidade será arquivada. Se estiver em outros, apenas o vínculo atual será desativado.
+                        Se a conta for administrada só por este tenant, a identidade será arquivada. Caso contrário, apenas o vínculo atual será desativado.
                     </p>
 
                     <x-slot:acoes>

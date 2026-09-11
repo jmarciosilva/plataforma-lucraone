@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -29,6 +30,15 @@ class UserController extends Controller
         User::STATUS_ACTIVE => 'active',
         User::STATUS_INACTIVE => 'inactive',
     ];
+
+    /**
+     * Recusas sobre a identidade global. Não dizem o motivo — outro vínculo,
+     * Platform Admin, conta inativa ou arquivada — para não revelar a este
+     * estabelecimento o estado da conta.
+     */
+    private const IDENTIDADE_PROTEGIDA = 'os dados da conta desta pessoa não podem ser alterados por este estabelecimento.';
+
+    private const CONTA_INDISPONIVEL = 'este e-mail pertence a uma conta que não pode ser vinculada por este estabelecimento.';
 
     public function index(Request $request, TenantContext $context)
     {
@@ -96,38 +106,43 @@ class UserController extends Controller
     {
         $tenantId = $context->id();
 
-        $user = DB::transaction(function () use ($request, $tenantId) {
+        [$user, $identidadeNova] = DB::transaction(function () use ($request, $tenantId) {
             $user = User::withTrashed()
                 ->where('email', $request->validated('email'))
                 ->first();
 
-            if ($user) {
-                if ($user->trashed()) {
-                    $user->restore();
-                }
-            } else {
+            // Conta existente só ganha vínculo e papéis aqui: nome e senha
+            // continuam os dela. Reativar ou restaurar é decisão sobre a
+            // identidade global, então a recusa vem antes de qualquer gravação.
+            if ($user && ($user->trashed() || ! $user->isActive())) {
+                throw ValidationException::withMessages(['email' => self::CONTA_INDISPONIVEL]);
+            }
+
+            $identidadeNova = $user === null;
+
+            if ($identidadeNova) {
                 $user = new User([
                     'id' => (string) Str::ulid(),
                     'email' => $request->validated('email'),
                     'password' => $request->validated('password'),
                     'email_verified_at' => now(),
                 ]);
-            }
 
-            $user->forceFill([
-                'name' => $request->validated('name'),
-                'status' => User::STATUS_ACTIVE,
-            ])->save();
+                $user->forceFill([
+                    'name' => $request->validated('name'),
+                    'status' => User::STATUS_ACTIVE,
+                ])->save();
+            }
 
             $user->joinTenant($tenantId, $request->validated('status'));
             $user->syncRoles($request->validated('roles', []), $tenantId);
 
-            return $user;
+            return [$user, $identidadeNova];
         });
 
         return redirect()
             ->route('users.show', $user)
-            ->with('sucesso', 'usuário criado.');
+            ->with('sucesso', $identidadeNova ? 'usuário criado.' : 'usuário vinculado. os dados da conta existente foram mantidos.');
     }
 
     public function show(string $user, TenantContext $context)
@@ -163,6 +178,7 @@ class UserController extends Controller
             'user' => $user,
             'membershipStatus' => $user->membershipFor($tenantId)?->status,
             'selectedRoles' => $user->rolesForTenant($tenantId)->pluck('roles.id')->all(),
+            'identidadeGlobalProtegida' => Gate::denies('manageGlobalIdentity', [$user, $tenantId]),
             'tenantNome' => $context->tenant()->name,
             'breadcrumbs' => [...$this->breadcrumbs(), ['label' => $user->name, 'url' => route('users.show', $user)], ['label' => 'editar']],
             ...$this->formOptions($tenantId),
@@ -178,6 +194,8 @@ class UserController extends Controller
         if ($this->atingeProprioAcesso($request, $user, $dados['account_status'], $dados['status'])) {
             return back()->withInput()->with('erro', 'não é possível remover seu próprio acesso administrativo.');
         }
+
+        $this->recusarAlteracaoDaIdentidadeGlobal($user, $tenantId, $dados);
 
         DB::transaction(function () use ($user, $tenantId, $dados) {
             $payload = [
@@ -214,9 +232,10 @@ class UserController extends Controller
         DB::transaction(function () use ($user, $tenantId) {
             $user->syncRoles([], $tenantId);
 
-            // Identidade global: se a pessoa também trabalha em outro tenant,
-            // remover só o vínculo atual evita derrubar acessos legítimos.
-            if ($user->memberships()->count() > 1) {
+            // Identidade global: se a pessoa também existe em outro tenant, ou
+            // é Platform Admin, remover só o vínculo atual evita derrubar
+            // acessos que este estabelecimento não administra.
+            if (! $user->pertenceExclusivamenteAo($tenantId)) {
                 $user->joinTenant($tenantId, TenantUser::STATUS_INACTIVE);
 
                 return;
@@ -236,6 +255,7 @@ class UserController extends Controller
         $user = $this->encontrarUsuarioNoTenant($user, $tenantId, onlyTrashed: true);
 
         Gate::authorize('restore', $user);
+        Gate::authorize('manageGlobalIdentity', [$user, $tenantId]);
 
         $user->restore();
         $user->joinTenant($tenantId, TenantUser::STATUS_ACTIVE);
@@ -250,7 +270,7 @@ class UserController extends Controller
         $tenantId = $context->id();
         $user = $this->encontrarUsuarioNoTenant($user, $tenantId);
 
-        Gate::authorize('update', $user);
+        Gate::authorize('manageGlobalIdentity', [$user, $tenantId]);
 
         $senhaTemporaria = Str::random(12);
         $user->update(['password' => $senhaTemporaria]);
@@ -293,6 +313,32 @@ class UserController extends Controller
                 $accountStatus !== User::STATUS_ACTIVE
                 || $membershipStatus !== TenantUser::STATUS_ACTIVE
             );
+    }
+
+    /**
+     * Nome, e-mail, status da conta e senha são da identidade global.
+     *
+     * O formulário sempre reenvia nome, e-mail e status: repetir o valor atual
+     * não é alteração, e a gestão de vínculo e papéis segue livre. Mudar um
+     * deles exige administrar a identidade, e a recusa é explícita para não
+     * parecer que a alteração foi salva.
+     */
+    private function recusarAlteracaoDaIdentidadeGlobal(User $user, string $tenantId, array $dados): void
+    {
+        $alterados = array_filter([
+            'name' => $dados['name'] !== $user->name,
+            'email' => $dados['email'] !== $user->email,
+            'account_status' => $dados['account_status'] !== $user->status,
+            'password' => ! empty($dados['password']),
+        ]);
+
+        if ($alterados === [] || Gate::allows('manageGlobalIdentity', [$user, $tenantId])) {
+            return;
+        }
+
+        throw ValidationException::withMessages(
+            array_map(fn () => self::IDENTIDADE_PROTEGIDA, $alterados)
+        );
     }
 
     private function breadcrumbs(): array

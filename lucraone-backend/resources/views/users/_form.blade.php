@@ -2,15 +2,26 @@
     $accountStatusOptions = $accountStatusOptions ?? [];
     $selectedRoles = $selectedRoles ?? [];
     $modo = $modo ?? 'create';
+
+    // Quem também existe em outro estabelecimento, ou é Platform Admin, tem os
+    // dados da conta só para leitura. O backend recusa a alteração; a tela só
+    // evita o erro.
+    $contaSomenteLeitura = $modo === 'edit' && ($identidadeGlobalProtegida ?? false);
 @endphp
+
+@if ($contaSomenteLeitura)
+    <x-alert tipo="atencao">
+        os dados da conta desta pessoa não podem ser alterados por este estabelecimento. o vínculo e os papéis continuam editáveis.
+    </x-alert>
+@endif
 
 <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
     <x-form-group nome="name" rotulo="nome" obrigatorio>
-        <x-input nome="name" :valor="$user->name" autocomplete="name" />
+        <x-input nome="name" :valor="$user->name" autocomplete="name" :readonly="$contaSomenteLeitura" />
     </x-form-group>
 
     <x-form-group nome="email" rotulo="email" obrigatorio>
-        <x-input tipo="email" nome="email" :valor="$user->email" autocomplete="email" />
+        <x-input tipo="email" nome="email" :valor="$user->email" autocomplete="email" :readonly="$contaSomenteLeitura" />
     </x-form-group>
 
     <x-form-group nome="status" rotulo="status no tenant" obrigatorio>
@@ -19,17 +30,23 @@
 
     @if ($modo === 'edit')
         <x-form-group nome="account_status" rotulo="status da conta" obrigatorio>
-            <x-select nome="account_status" :opcoes="$accountStatusOptions" :valor="$user->status" />
+            @if ($contaSomenteLeitura)
+                {{-- select desabilitado não é enviado; o valor atual segue pelo campo oculto --}}
+                <input type="hidden" name="account_status" value="{{ $user->status }}">
+            @endif
+            <x-select nome="account_status" :opcoes="$accountStatusOptions" :valor="$user->status" :disabled="$contaSomenteLeitura" />
         </x-form-group>
     @endif
 
-    <x-form-group nome="password" rotulo="{{ $modo === 'edit' ? 'nova senha' : 'senha' }}" :obrigatorio="$modo === 'create'" ajuda="{{ $modo === 'edit' ? 'deixe vazio para manter a senha atual' : null }}">
-        <x-input tipo="password" nome="password" autocomplete="new-password" />
-    </x-form-group>
+    @unless ($contaSomenteLeitura)
+        <x-form-group nome="password" rotulo="{{ $modo === 'edit' ? 'nova senha' : 'senha' }}" :obrigatorio="$modo === 'create'" ajuda="{{ $modo === 'edit' ? 'deixe vazio para manter a senha atual' : null }}">
+            <x-input tipo="password" nome="password" autocomplete="new-password" />
+        </x-form-group>
 
-    <x-form-group nome="password_confirmation" rotulo="confirmar senha" :obrigatorio="$modo === 'create'">
-        <x-input tipo="password" nome="password_confirmation" autocomplete="new-password" />
-    </x-form-group>
+        <x-form-group nome="password_confirmation" rotulo="confirmar senha" :obrigatorio="$modo === 'create'">
+            <x-input tipo="password" nome="password_confirmation" autocomplete="new-password" />
+        </x-form-group>
+    @endunless
 </div>
 
 <div class="mt-6">

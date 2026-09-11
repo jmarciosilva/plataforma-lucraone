@@ -111,6 +111,27 @@ class User extends Model implements AuthenticatableContract
     }
 
     /**
+     * A identidade global pertence só a este estabelecimento?
+     *
+     * Exige vínculo com ele e nenhum outro, em qualquer status: um vínculo
+     * convidado, inativo ou suspenso pode voltar a valer. O Platform Admin
+     * nunca pertence a um estabelecimento, mesmo com um único vínculo.
+     *
+     * É um fato sobre a identidade; quem pode agir sobre ela decide a UserPolicy.
+     */
+    public function pertenceExclusivamenteAo(string $tenantId): bool
+    {
+        if ($this->isPlatformAdmin()) {
+            return false;
+        }
+
+        $vinculos = $this->memberships()->pluck('tenant_id');
+
+        return $vinculos->isNotEmpty()
+            && $vinculos->every(fn (string $vinculo) => $vinculo === $tenantId);
+    }
+
+    /**
      * Associa a pessoa a um estabelecimento (ou atualiza o vínculo existente).
      */
     public function joinTenant(string $tenantId, string $status = TenantUser::STATUS_ACTIVE): TenantUser
