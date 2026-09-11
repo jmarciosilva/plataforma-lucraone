@@ -1,7 +1,7 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-09-11 · **SEC-04 em andamento** — 522 testes no total: 503
-PASS, 17 EXPECTED FAIL do SEC-04 e 2 risky preexistentes
+**Atualizado:** 2026-09-11 · **SEC-04 em andamento** — 568 testes no total: 552
+PASS, 14 EXPECTED FAIL do SEC-04 e 2 risky preexistentes
 
 > 🔴 **A F2.6 está bloqueada.** Ela continua sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
@@ -316,36 +316,45 @@ E6 foram variantes descartadas ou absorvidas pelos demais.
 | Provisionamento de novos estabelecimentos | ✅ Concluído | `6c770dc` |
 | Data fix dos admins existentes | ✅ Concluído | `6c770dc` |
 | E1 — Escalada por `update-role` | ✅ Concluído | `2f1f6ea` |
-| E2 — Escalada por `manage-users` | Pendente | — |
+| Matriz dos papéis padrão aninhada (pré-requisito do E2) | ✅ Concluído | `cbba727` |
+| Data fix da matriz nos estabelecimentos existentes | ✅ Concluído | `cbba727` |
+| Autoridade efetiva por estabelecimento (`TenantAuthority`) | ✅ Concluído | `4909137` |
+| E2 — Escalada por `manage-users` | ✅ Concluído | `2849c10` |
 | E3 — Administração local de identidade global | ✅ Concluído | `d6fdaac` |
 | E7 — Entidade e permissão avaliadas em estabelecimentos diferentes | Pendente | — |
 
-O SEC-04 continua **em andamento**: só passa a `Resolvido` quando E2 e E7 também
-estiverem corrigidos e todos os [critérios de aceite](#critérios-de-aceite)
-estiverem verdes. Por isso a F2.6 permanece bloqueada e não iniciada.
+O SEC-04 continua **em andamento**: só passa a `Resolvido` quando o E7 também
+estiver corrigido e todos os [critérios de aceite](#critérios-de-aceite) estiverem
+verdes. Por isso a F2.6 permanece bloqueada e não iniciada.
 
-**Próximo vetor técnico:** E2 — escalada por `manage-users` e atribuição de papéis.
-Depois, E7.
+**Próximo vetor técnico:** E7 — entidade e permissão avaliadas em estabelecimentos
+diferentes. O próximo passo é auditar e corrigir as divergências entre Policy,
+Request, `TenantContext` e route binding. `CrossTenantPolicyContextSecurityTest`
+tem 17 testes: 3 PASS e 14 EXPECTED FAIL.
 
-**Evidência atual.** Após `2f1f6ea`, o SEC-04 tem 105 testes: 88 PASS, 17 EXPECTED
-FAIL, 0 ERROR e 326 assertions.
+**Evidência atual.** Após `2849c10`, o SEC-04 tem 151 testes: 137 PASS, 14 EXPECTED
+FAIL, 0 ERROR e 577 assertions.
 
 | Grupo | PASS | FAIL | Situação |
 |---|---|---|---|
 | X1 | 21 | 0 | Corrigido |
 | `create-role` e admin explícito | 33 | 0 | Corrigido |
 | E1 | 8 | 0 | Corrigido |
-| E2 | 0 | 3 | Pendente |
+| Matriz padrão | 6 | 0 | Corrigido |
+| Data fix da matriz | 9 | 0 | Corrigido |
+| Autoridade efetiva (`TenantAuthority`) | 5 | 0 | Corrigido |
+| E2 | 29 | 0 | Corrigido |
 | E3 | 23 | 0 | Corrigido |
 | E7 | 3 | 14 | Pendente |
-| **Total** | **88** | **17** | |
+| **Total** | **137** | **14** | |
 
-As 17 falhas são de caracterização e pertencem somente a E2 e E7, ainda
-pendentes — não são regressões. A evidência de cada etapa anterior fica registrada
-na implementação correspondente, abaixo.
+As 14 falhas são de caracterização e pertencem somente ao E7, ainda pendente — não
+são regressões. A evidência de cada etapa anterior fica registrada na implementação
+correspondente, abaixo.
 
-A suíte completa tem 522 testes: 503 PASS, 17 EXPECTED FAIL do SEC-04, 2 risky
-preexistentes, 0 ERROR, 0 SKIPPED e 1563 assertions. Não houve regressão funcional.
+A suíte completa tem 568 testes: 552 PASS, 14 EXPECTED FAIL do SEC-04, 2 risky
+preexistentes de `SecurityAuditTest`, 0 ERROR, 0 SKIPPED e 1814 assertions. Não
+houve regressão funcional.
 A instabilidade histórica de `test_performance_with_growing_data` não se reproduziu
 nesta execução, o que não indica que tenha sido corrigida (ver
 [Outras pendências de qualidade](#outras-pendências-de-qualidade)).
@@ -364,6 +373,12 @@ nesta execução, o que não indica que tenha sido corrigida (ver
 | `f80d45768487715f59b1b1d846f6486caa188b59` | docs(security): sincronizar SEC-04 após correção do E3 |
 | `00aa07ed82fc3929203d5868b7944b982c36b917` | test(security): ampliar caracterização do E1 no SEC-04 |
 | `2f1f6ead57a0baa34b306136e6deb43970a4bdf2` | fix(security): conter delegação de permissões em update-role |
+| `1ffa02caa9ea11a3a65f2f666df90ca3bbf0d473` | docs(security): sincronizar SEC-04 após correção do E1 |
+| `badf1328ea249a5d09dcf67f299984c71523af66` | test(security): caracterizar matriz padrão necessária ao E2 |
+| `cbba7274e6fec4fc074e4f998086c15bf8916775` | fix(security): normalizar matriz padrão para contenção do E2 |
+| `540ea59a84d1ac79fbfe605c60392897bee6a49a` | test(security): ampliar caracterização do E2 no SEC-04 |
+| `4909137f6fb39cd914f392d3893ea621e4bb263f` | refactor(security): extrair autoridade efetiva por tenant |
+| `2849c1001b1293133e2d59f9ae77a35ddb85548a` | fix(security): conter administração de usuários por autoridade |
 
 #### Implementação 1 — Platform Admin + X1
 
@@ -474,7 +489,75 @@ verdes, com 30 assertions, e `CompanyAndRolesManagementTest` continuou verde. O
 SEC-04 passou a ter 105 testes: 88 PASS, 17 EXPECTED FAIL, 0 ERROR e 326
 assertions; E2 e E7 não foram alterados. A suíte completa passou a ter 522 testes:
 503 PASS, 17 falhas SEC-04 esperadas, 2 risky preexistentes, 0 ERROR e 1563
-assertions.
+assertions. Esse progresso foi sincronizado na documentação em
+`1ffa02caa9ea11a3a65f2f666df90ca3bbf0d473`.
+
+#### Implementação 5 — administração de usuários (E2)
+
+O E2 foi fechado em cinco commits: caracterização e correção da matriz dos papéis
+padrão, caracterização ampliada, extração da autoridade efetiva e contenção.
+
+**Pré-requisito — matriz dos papéis padrão.** A contenção por autoridade exige que
+quem atribui um papel domine as permissões dele, o que só permite os fluxos
+legítimos se os conjuntos dos papéis padrão forem aninhados. A propriedade foi
+caracterizada em `badf1328ea249a5d09dcf67f299984c71523af66`, em
+`StandardRoleMatrixSecurityTest`: `manager ⊆ admin`, `user ⊆ manager` e
+`user ⊆ admin` falhavam por `manage-assigned-branches` e `view-assigned-branches`;
+`viewer ⊆ manager`, `viewer ⊆ admin` e o admin igual às 26 permissões de
+`AdminPermissionMatrix` passavam. O SEC-04 passou a ter 111 testes: 91 PASS e 20
+EXPECTED FAIL.
+
+A correção da matriz foi publicada em `cbba7274e6fec4fc074e4f998086c15bf8916775`. O
+seed deixou de atribuir `manage-assigned-branches` ao `manager` e
+`view-assigned-branches` ao `user` — permissões consultadas só pela `BranchPolicy`,
+que não está registrada —, e as duas continuam no catálogo. A matriz ficou com
+admin 26, manager 15, user 8 e viewer 8, sem ranking por nome: a relação vem da
+contenção entre os conjuntos (`manager ⊆ admin`, `user ⊆ manager`, `user ⊆ admin`,
+`viewer ⊆ manager`, `viewer ⊆ admin`). A migration
+`2026_09_11_000000_remove_obsolete_assigned_branch_permissions_from_standard_roles`
+corrige os estabelecimentos existentes: remove só essas duas atribuições dos papéis
+padrão quando papel, permissão e linha de `role_permission` são do mesmo
+estabelecimento; é idempotente; não apaga permissões do catálogo; não toca `admin`,
+`viewer` nem papéis personalizados; e o `down()` não recria a matriz insegura. O
+controle positivo do E1 que dependia do `manager` passou a usar um papel
+personalizado, sem mudar a regra protegida. Evidência: matriz com 6 PASS e data fix
+com 9 PASS e 49 assertions; o SEC-04 passou a ter 120 testes, 103 PASS e 17
+EXPECTED FAIL.
+
+**Caracterização ampliada.** Em `540ea59a84d1ac79fbfe605c60392897bee6a49a`,
+`UserRoleEscalationSecurityTest` passou de 3 para 29 testes — 19 vetores negativos e
+10 controles positivos —, com 10 PASS e 19 EXPECTED FAIL. A auditoria que a
+precedeu encontrou um caminho de escalada ainda não registrado: como o E3 permite
+administrar identidade exclusiva do estabelecimento, `manage-users` redefinia a
+senha — exibida a quem executou — e trocava e-mail e senha de um admin exclusivo,
+tomando a conta dele. O SEC-04 passou a ter 146 testes: 113 PASS e 33 EXPECTED
+FAIL.
+
+| Frente | Vetores negativos |
+|---|---|
+| Tomada de conta | reset de senha de admin exclusivo, senha pelo update, troca de e-mail |
+| Retirada e sabotagem | retirada do papel admin, arquivamento, vínculo `SUSPENDED`, `INACTIVE` e `INVITED` |
+| Delegação indevida | papel admin, papel personalizado privilegiado |
+| Autoedição | autoelevação, remoção do próprio papel, adição de papel dominado |
+| Atomicidade | `viewer` + `admin` sem gravação parcial, cadastro recusado, identidade existente sem vínculo parcial, edição recusada sem gravação parcial |
+
+**Autoridade efetiva por estabelecimento.** Em
+`4909137f6fb39cd914f392d3893ea621e4bb263f`, o cálculo de autoridade foi extraído para
+`TenantAuthority`, com teste próprio (5 PASS, 12 assertions), e o
+`PermissionDelegationService` do E1 passou a reutilizá-lo, sem mudança de semântica
+(8 PASS). O SEC-04 passou a ter 151 testes: 118 PASS e 33 EXPECTED FAIL.
+
+**Contenção.** A correção foi publicada em
+`2849c1001b1293133e2d59f9ae77a35ddb85548a`, sem mudança de schema, migration,
+Policy, Request ou teste. A regra está descrita em
+[Administração de usuários por autoridade](#administração-de-usuários-por-autoridade).
+
+**Evidência na publicação.** Os 29 testes de `UserRoleEscalationSecurityTest` ficaram
+verdes, com 180 assertions e sem alteração dos testes; `UserManagementTest` (12
+PASS), E1 (8 PASS) e E3 (23 PASS) continuaram verdes. O SEC-04 passou a ter 151
+testes: 137 PASS, 14 EXPECTED FAIL — todas do E7 —, 0 ERROR e 577 assertions. A
+suíte completa passou a ter 568 testes: 552 PASS, 14 falhas SEC-04 esperadas, 2
+risky preexistentes, 0 ERROR e 1814 assertions.
 
 #### Vetores confirmados
 
@@ -488,9 +571,9 @@ assertions.
 | **E7** | **Policy avalia entidade e permissão em estabelecimentos diferentes** | 2026-09-10 | Código e ordem de middleware do framework |
 
 Na auditoria pré-implementação, nenhum dos vetores tinha teste que o demonstrasse
-ou o impedisse. O baseline executável passou a caracterizá-los. Após as quatro
-correções, X1, o coringa `create-role`, E3 e E1 estão corrigidos, com testes
-verdes; E2 e E7 continuam sem correção.
+ou o impedisse. O baseline executável passou a caracterizá-los. Após as correções,
+X1, o coringa `create-role`, E1, E2 e E3 estão corrigidos, com testes verdes; o E7
+continua sem correção.
 
 **Coringa `create-role` — achado histórico.** A permissão aparecia ao lado das
 permissões específicas em 10 Policies (`Product`, `Category`, `Inventory`,
@@ -540,10 +623,11 @@ regra de último administrador. Detalhe em
 
 **E2 — Escalada por `manage-users`.** *Vulnerabilidade crítica.* O papel padrão
 `manager` recebe `manage-users` no seed. `UserPolicy::create` e `update` exigem
-apenas essa permissão; `StoreUserRequest` e `UpdateUserRequest` aceitam qualquer
-papel existente no estabelecimento ativo; e `UserController::update` só impede
-que a pessoa desative o próprio acesso — não que altere os próprios papéis. Nada
-verifica se quem executa possui as permissões do papel atribuído.
+apenas essa permissão, e `StoreUserRequest` e `UpdateUserRequest` aceitam qualquer
+papel existente no estabelecimento ativo. Antes da correção, `UserController::update`
+só impedia que a pessoa desativasse o próprio acesso — não que alterasse os
+próprios papéis —, e nada verificava se quem executava possuía as permissões do
+papel atribuído.
 
 ```
 manager
@@ -556,7 +640,16 @@ passa a possuir permissões administrativas — inclusive create-role; após a
 correção de X1, isso não concede administração de plataforma
 ```
 
-Também é possível criar uma segunda conta já com o papel `admin`.
+Também era possível criar uma segunda conta já com o papel `admin`.
+
+**Status atual do E2.** Corrigido em `2849c10`: quem usa `manage-users` só administra
+uma pessoa se dominar a autoridade dela no estabelecimento — a atual e, ao atribuir
+papéis, a desejada — e não altera o próprio conjunto de papéis. Isso fecha também a
+tomada de conta de admin exclusivo pela senha ou pelo e-mail, encontrada na
+caracterização ampliada; a retirada, o arquivamento e a suspensão de quem tem mais
+autoridade; e a atribuição de papéis personalizados privilegiados. As regras do E3
+continuam valendo e se somam às do E2. Detalhe em
+[Administração de usuários por autoridade](#administração-de-usuários-por-autoridade).
 
 **E3 — Administração local de identidade global.** *Vulnerabilidade crítica.*
 Desde a F1.8, `User` é uma identidade global, com vínculos em vários
@@ -613,9 +706,8 @@ Policies à API.
 **Consequência.** Antes das correções, X1, E3 e E7 atravessavam a fronteira entre
 estabelecimentos — pela gestão de estabelecimentos, pela identidade compartilhada e
 pelas Policies. X1 e E3 estão corrigidos; E7 permanece aberto. E1 e E2 levavam a
-poder administrativo indevido dentro do estabelecimento. O E1 foi corrigido em
-`2f1f6ea`; o E2 ainda leva, mas não concede mais administração da plataforma, pelo
-X1, nem da identidade global de quem existe em outro estabelecimento, pelo E3.
+poder administrativo indevido dentro do estabelecimento e foram corrigidos em
+`2f1f6ea` e `2849c10`.
 
 #### Causa raiz
 
@@ -627,9 +719,10 @@ X1, nem da identidade global de quem existe em outro estabelecimento, pelo E3.
    copiaram o padrão. O padrão saiu da `TenantPolicy` em `faf3c4e` e das Policies
    de negócio em `6c770dc`.
 3. **Delegação de permissões e papéis sem contenção.** Sincronizar permissões e
-   atribuir papéis só validam "pertence ao estabelecimento ativo", nunca "quem
+   atribuir papéis só validavam "pertence ao estabelecimento ativo", nunca "quem
    executa pode delegar isso". A sincronização de permissões ganhou contenção em
-   `2f1f6ea`; a atribuição de papéis continua sem ela (E2).
+   `2f1f6ea`, e a administração de usuários e a atribuição de papéis, em
+   `2849c10`.
 4. **Identidade global administrada por permissão local.** A F1.8 tornou a pessoa
    global; a F3.5 manteve `manage-users` com poder sobre credenciais e status
    globais. Corrigido em `d6fdaac`.
@@ -723,9 +816,9 @@ O SEC-04 deve impedir que uma pessoa conceda poder superior ao que possui:
 
 - `update-role` não pode conceder permissões que o ator não esteja autorizado a
   delegar — ✅ atendido em `2f1f6ea`;
-- `manage-users` não pode ser usado para autoelevação;
+- `manage-users` não pode ser usado para autoelevação — ✅ atendido em `2849c10`;
 - `manage-users` não pode atribuir papel cujo poder exceda a autoridade delegável
-  do ator;
+  do ator — ✅ atendido em `2849c10`;
 - nenhum caminho de delegação pode levar a Platform Admin;
 - papéis administrativos relevantes devem ser protegidos;
 - considerar guarda contra lockout e contra a remoção do último administrador;
@@ -758,10 +851,11 @@ avalia só o que muda:
   `admin > manager > user` nem ranking de papéis.
 
 Continuam permitidos delegar a outro papel uma permissão que o ator possui e o
-admin editar o `manager` quando a mudança está dentro da sua autoridade. Uma
-permissão reenviada sem alteração não bloqueia a operação, mesmo fora da autoridade
-do ator — é o que permite ao admin editar o `manager` apesar de
-`manage-assigned-branches`, que ele não possui.
+admin editar um papel quando a mudança está dentro da sua autoridade. Uma permissão
+reenviada sem alteração não bloqueia a operação, mesmo fora da autoridade do ator —
+é o que permite ao admin editar um papel que tenha, por exemplo,
+`manage-assigned-branches`, que ele não possui. Até `cbba727` esse era o caso do
+`manager` padrão; desde então o controle positivo do E1 usa um papel personalizado.
 
 **Limites conhecidos.** A validação ocorre antes da transação que grava
 `role_permission`, então edições concorrentes do mesmo papel podem se intercalar —
@@ -769,18 +863,65 @@ registrado como dívida em [Outras pendências de qualidade](#outras-pendências
 O serviço avalia a autoridade no estabelecimento do papel, mas o controller ainda
 grava pelo estabelecimento ativo; essa divergência pertence ao E7.
 
-**Relação com o E2.** A abstração do E1 pode servir de base conceitual para conter a
-atribuição de papéis, mas o E2 ainda não a usa e continua sem correção.
+**Relação com o E2.** Desde `4909137`, a autoridade do ator no E1 vem de
+`TenantAuthority`, o mesmo cálculo usado pelo E2, sem mudança de semântica. As
+regras são diferentes: o E1 avalia o delta de permissões de um papel; o E2 avalia a
+dominância sobre a pessoa inteira.
 
 **Pré-requisito do E2 — matriz dos papéis padrão.** A auditoria de 2026-09-10
-constatou que a matriz atual não é hierárquica: o `admin`, com 26 permissões, não
-tem `manage-assigned-branches` nem `view-assigned-branches`, presentes em `manager`
-e `user`, e o `manager` não tem `view-assigned-branches`, presente em `user`. Essas
-permissões só são consultadas pela `BranchPolicy`, que não está registrada. Uma
-contenção por subconjunto de permissões impediria o admin de gerir managers e users,
-então essa matriz precisa ser decidida antes do E2. A decisão ainda não foi tomada,
-e o admin continua com as 26 permissões. No E1 a matriz não impede a edição, porque
-só as permissões alteradas são avaliadas; para o E2, a decisão continua pendente.
+constatou que a matriz não era hierárquica: o `admin`, com 26 permissões, não
+tinha `manage-assigned-branches` nem `view-assigned-branches`, presentes em
+`manager` e `user`, e o `manager` não tinha `view-assigned-branches`, presente em
+`user`. Essas permissões só são consultadas pela `BranchPolicy`, que não está
+registrada. Uma contenção por subconjunto de permissões impediria o admin de gerir
+managers e users, então a matriz precisava ser decidida antes do E2. Decidido e
+corrigido em `cbba727`: `manager` e `user` deixaram de receber essas duas
+permissões, que continuam no catálogo, e o admin manteve as 26. Detalhe na
+Implementação 5.
+
+#### Administração de usuários por autoridade
+
+**Implementado em `2849c10`.** A `UserPolicy` continua decidindo quem entra nos
+fluxos de `manage-users`. O `UserAdministrationGuard` decide se o ator pode exercer
+a operação sobre aquela pessoa, naquele estabelecimento. Dominar é conter: as
+permissões dos papéis envolvidos precisam estar todas entre as do ator, e autoridade
+vazia é sempre dominada.
+
+| Operação | Exigência |
+|---|---|
+| cadastrar | o ator domina a autoridade dos papéis pedidos |
+| editar outra pessoa | o ator domina a autoridade atual dela e a dos papéis pedidos |
+| editar a si mesmo | o conjunto de papéis só pode ser reenviado igual |
+| arquivar | o ator domina a autoridade atual da pessoa |
+| redefinir senha | o ator domina a autoridade atual da pessoa |
+
+- **autoridade atual inteira:** o mesmo endpoint altera credenciais, vínculo e
+  papéis, então um papel preservado que o ator não domina não é exceção — diferente
+  do E1, em que a permissão preservada não conta como delegação. Mudar só o status
+  do vínculo também exige dominar a pessoa;
+- **autoridade latente:** a autoridade do alvo considera os papéis em qualquer
+  status de vínculo; a do ator exige conta e vínculo ativos, e é a união das
+  permissões de todos os seus papéis no estabelecimento;
+- **indivisível:** um papel que não existe no estabelecimento, ou que o ator não
+  domina, recusa a operação inteira. A recusa acontece antes da primeira gravação —
+  no cadastro, dentro da transação e depois das regras do E3 —, sem identidade,
+  vínculo ou papel parciais;
+- **autoridade, não nome:** vale para o `admin` e para papéis personalizados, sem
+  ranking de papéis;
+- **E3 continua separado:** o E3 protege a identidade global e é avaliado antes; o
+  E2 protege a autoridade do alvo no estabelecimento. As duas verificações se somam.
+
+A recusa volta para a tela com uma mensagem genérica, que não revela a autoridade
+de ninguém. A autoridade vem de `TenantAuthority`, que calcula no estabelecimento
+informado explicitamente, sem `TenantContext`.
+
+**Fora do E2.** O `restore` não passou pela contenção: o arquivamento já retira os
+papéis, então a identidade restaurada pelo painel volta sem autoridade. Também
+ficaram fora o último administrador, o vínculo de Platform Admin sem papéis, o
+formulário que lista todos os papéis, a concorrência entre validação e gravação, o
+payload com papel repetido e cache (ver PERF-01). As dívidas estão em
+[Outras pendências de qualidade](#outras-pendências-de-qualidade) e nos achados fora
+do escopo.
 
 #### Proteção da identidade global
 
@@ -819,7 +960,8 @@ Admin:
 A identidade exclusiva de um estabelecimento continua integralmente administrável
 por ele, inclusive a redefinição de senha. O modelo da F1.8 foi preservado, e
 `is_platform_admin` continua global, fora do mass assignment e fora do fluxo de
-`manage-users`. Quais papéis podem ser atribuídos é assunto do E2.
+`manage-users`. Quais papéis podem ser atribuídos é assunto do E2, corrigido em
+`2849c10` — ver [Administração de usuários por autoridade](#administração-de-usuários-por-autoridade).
 
 **Fora do E3.** O self-service de identidade global ("Minha Conta" / "Meu Perfil"),
 com autoridade diferente de `manage-users`, fica como evolução futura. Até lá,
@@ -873,10 +1015,14 @@ O SEC-04 só é `Resolvido` quando testes demonstrarem, no mínimo:
 - `update-role` não permite retirar de outro papel permissões não delegáveis;
 - quem usa `update-role` não sincroniza as permissões do próprio papel.
 
-**E2**
+**E2** — ✅ atendido em `2849c10`
 
 - `manage-users` não permite autoatribuição do papel admin;
-- `manage-users` não permite atribuir poder acima da autoridade delegável.
+- `manage-users` não permite atribuir poder acima da autoridade delegável;
+- `manage-users` não retira, arquiva, suspende nem redefine a senha de quem tem
+  autoridade acima da do ator;
+- ninguém altera o próprio conjunto de papéis;
+- uma recusa não deixa identidade, vínculo ou papel parciais.
 
 **E3** — ✅ atendido em `d6fdaac`
 
@@ -917,7 +1063,7 @@ modelo vulnerável atual.
 
 **Por que bloqueia.** X1, E3 e E7 são falhas de isolamento entre
 estabelecimentos — X1 e E3 já corrigidos —, da mesma classe que o SEC-01 e o
-SEC-03, e E1 e E2 levam até elas — E1 já corrigido. O SEC-01 vai ligar essas
+SEC-03, e E1 e E2 levavam até elas — ambos já corrigidos. O SEC-01 vai ligar essas
 Policies à API, e a F2.6 vai criar uma Policy para proteger credenciais de
 terceiros, que herdaria o padrão atual.
 
@@ -1081,8 +1227,8 @@ SEC-04 — create-role              🟡 EM ANDAMENTO
   ├─ bypass create-role           ✅
   ├─ E3                           ✅
   ├─ E1                           ✅
-  ├─ E2                           pendente ← próximo
-  └─ E7                           pendente
+  ├─ E2                           ✅
+  └─ E7                           pendente ← próximo
         ↓
 SEC-01 — API Authorization        bloqueado pelo SEC-04
         ↓
@@ -1111,9 +1257,9 @@ F2.6 — Integration APIs
 SEC-01 vai aplicar as Policies às 34 rotas da API que hoje não as usam, e o
 SEC-04 muda o significado e o alcance dessas Policies: `create-role` era coringa
 em várias delas e a gestão de estabelecimentos quebrava o isolamento entre
-clientes — ambos já corrigidos —, enquanto `manage-users` ainda permite escalada
-de privilégio — a de `update-role` foi contida em `2f1f6ea` — e a permissão ainda
-pode ser avaliada num estabelecimento diferente do da entidade.
+clientes — ambos já corrigidos —, as escaladas por `update-role` e por
+`manage-users` foram contidas em `2f1f6ea` e `2849c10`, e a permissão ainda pode ser
+avaliada num estabelecimento diferente do da entidade.
 Espalhar as Policies atuais pela API antes de corrigi-las levaria esses defeitos
 para a API e obrigaria a refazer o SEC-01 e os seus testes.
 
@@ -1206,8 +1352,12 @@ Não bloqueiam a F2.6 e não receberam ID.
 | PHPStan (nível 4) | 11 erros — tipos de retorno de View e acesso a `$id` em união de tipos |
 | Pint | 22 arquivos fora do padrão — imports não usados, ordenação |
 | Automation Rules Guide | Não escrito — único item não entregue da F2.5 |
-| `performance with growing data` | Intermitente sob carga: assertiva sensível a tempo, passa isolada. Reproduzida também no commit-base `6f932c8`, antes da remoção do coringa `create-role` — não é regressão do SEC-04. Não se reproduziu na suíte completa após `d6fdaac` nem após `2f1f6ea`, o que não indica correção |
-| Concorrência na delegação do E1 | A validação da contenção de `update-role` ocorre antes da transação que grava `role_permission`: edições concorrentes do mesmo papel podem se intercalar. Registrada na publicação do E1 (`2f1f6ea`); não bloqueia o E1 e não foi corrigida |
+| `performance with growing data` | Intermitente sob carga: assertiva sensível a tempo, passa isolada. Reproduzida também no commit-base `6f932c8`, antes da remoção do coringa `create-role` — não é regressão do SEC-04. Não se reproduziu na suíte completa após `d6fdaac`, `2f1f6ea` nem `2849c10`, o que não indica correção |
+| Concorrência na contenção do E1 e do E2 | A validação da contenção de `update-role` e de `manage-users` ocorre antes da gravação, sem bloqueio: edições concorrentes podem se intercalar. Registrada nas publicações do E1 (`2f1f6ea`) e do E2 (`2849c10`); não bloqueia nenhum dos dois e não foi corrigida |
+| Último administrador | Um admin ainda pode retirar o papel ou arquivar outro admin, inclusive o último do estabelecimento. Fora do E2 |
+| Restauração de identidade arquivada fora do painel | O `restore` não passa pela contenção do E2. Pelo painel, o arquivamento já retira os papéis; uma identidade arquivada por outro caminho que ainda tenha papéis voltaria com essa autoridade |
+| Formulário de papéis | A tela de usuários lista todos os papéis do estabelecimento; o backend recusa os que o ator não domina. Melhoria de UX |
+| Papel repetido no payload | Um payload HTTP com o mesmo id de papel repetido chega ao `syncRoles` sem normalização de gravação e pode violar a unicidade de `user_role`. Comportamento anterior ao E2; a UI não gera repetição, e o guard só normaliza para decidir |
 
 > O item "`.env.testing` com `APP_KEY` versionada", que ficava nesta tabela, virou
 > o SEC-06.
@@ -1221,9 +1371,9 @@ provar nem para corrigir o SEC-04, e não receberam ID.
 |---|---|
 | Status `SUSPENDED`/`CANCELLED` do estabelecimento | Aparentemente sem efeito funcional completo: `Tenant::isActive()` não é chamado, e o resolver e o login não consultam o status |
 | Arquivamento de estabelecimento | Pode derrubar o acesso dos usuários sem aviso adequado: o estabelecimento some do seletor e do login, e sessões abertas passam a receber 404 |
-| `BranchPolicy` | Aparenta estar desconectada: não é registrada, usa permissões que não existem no seed e não há rotas de filiais |
+| `BranchPolicy` | Aparenta estar desconectada: não é registrada, usa permissões que não existem no seed e não há rotas de filiais. As permissões de filiais atribuídas que ela consulta saíram dos papéis padrão em `cbba727` e continuam no catálogo |
 | Testes de integração vazios | Em `ApiIntegrationTest`, `test_rbac_admin_can_manage_roles`, `test_user_without_permission_gets_403` e `test_admin_workflow_manage_users_and_roles` só chamam `/up` e `assertTrue(true)` |
-| Platform Admin depende de vínculo com estabelecimento | O login exige vínculo ativo, e `/tenants` passa por `auth.web`, que exige estabelecimento resolvido. O E3 protege a identidade global do Platform Admin, mas desativar o seu único vínculo ainda o tira do painel |
+| Platform Admin depende de vínculo com estabelecimento | O login exige vínculo ativo, e `/tenants` passa por `auth.web`, que exige estabelecimento resolvido. O E3 protege a identidade global do Platform Admin, mas desativar o seu único vínculo ainda o tira do painel. O E2 também não impede: sem papéis no estabelecimento, a autoridade dele é vazia e qualquer um com `manage-users` a domina |
 
 ---
 

@@ -18,7 +18,7 @@ O plano de execução está em **[ROADMAP.md](ROADMAP.md)**.
 | **Última sprint concluída** | F2.5 — Advanced Automation |
 | **Próxima sprint funcional** | F2.6 — Integration APIs |
 | **Status da F2.6** | 🔴 **Bloqueada temporariamente** pelo hardening de segurança pré-F2.6 |
-| **Testes** | 522 no total · 503 aprovados · 17 falhas SEC-04 esperadas · 2 risky preexistentes |
+| **Testes** | 568 no total · 552 aprovados · 14 falhas SEC-04 esperadas · 2 risky preexistentes |
 | **Módulos** | 12 |
 | **Superfícies** | Painel web (sessão) + API REST `/api/v1` (Sanctum) |
 
@@ -42,11 +42,18 @@ O hardening está em andamento. No SEC-04, já foram corrigidos:
 - a delegação de permissões por `update-role` (E1): ninguém sincroniza as
   permissões do próprio papel, nem adiciona ou retira de outro papel uma permissão
   que não possui naquele estabelecimento. A proteção vem da autoridade de quem
-  executa, não do nome do papel.
+  executa, não do nome do papel;
+- a administração de usuários por `manage-users` (E2): administrar uma pessoa
+  exige dominar a autoridade dela no estabelecimento — a atual e a dos papéis
+  pedidos —, e ninguém altera os próprios papéis. Isso fecha a atribuição indevida
+  de papéis, a retirada, o arquivamento e a suspensão de quem tem mais autoridade e
+  a tomada de conta pela senha ou pelo e-mail. As regras da identidade global (E3)
+  continuam valendo junto. Para isso, os papéis padrão `manager` e `user` deixaram
+  de receber duas permissões de filiais sem uso, e a matriz ficou aninhada:
+  `viewer` e `user` cabem no `manager`, que cabe no `admin`.
 
-Continuam pendentes E2 (autoelevação por `manage-users` e atribuição de papéis) e
-E7 (entidade e permissão avaliadas em estabelecimentos diferentes). O próximo é o
-E2. A F2.6 permanece bloqueada.
+Continua pendente o E7 (entidade e permissão avaliadas em estabelecimentos
+diferentes), que é o próximo. A F2.6 permanece bloqueada.
 
 O sistema é operável por uma pessoa desde a F3.2: há login em `/login`, e quem
 tem vínculo com vários estabelecimentos escolhe onde vai trabalhar e troca pelo
@@ -153,7 +160,7 @@ e nos ADRs em [`lucraone-backend/docs/adr/`](lucraone-backend/docs/adr/).
 ## Desenvolvimento
 
 ```bash
-docker compose exec app php artisan test        # 522 testes; 17 falhas SEC-04 esperadas
+docker compose exec app php artisan test        # 568 testes; 14 falhas SEC-04 esperadas
 docker compose exec app ./vendor/bin/pint       # estilo
 docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=1G
 docker compose exec app php artisan tinker
@@ -179,7 +186,7 @@ correção e ordem recomendada estão em
 | SEC-01 | 7 dos 14 controllers da API não verificam permissão | Crítica | Sim |
 | SEC-02 | Login da API sem rate limiting; tokens sem expiração nem abilities | Crítica | Sim |
 | SEC-03 | `TenantResolver` aceita `X-Tenant-ID` sem usuário autenticado | Alta | Sim |
-| SEC-04 | Em andamento: Platform Admin/X1, coringa `create-role` nos módulos, identidade global (E3) e delegação por `update-role` (E1) corrigidos; vetores E2 e E7 ainda pendentes | Crítica | Sim |
+| SEC-04 | Em andamento: Platform Admin/X1, coringa `create-role` nos módulos, identidade global (E3), delegação por `update-role` (E1) e administração de usuários por `manage-users` (E2) corrigidos; vetor E7 ainda pendente | Crítica | Sim |
 | SEC-05 | Automações enviam e-mail para qualquer destinatário | Média | Recomendado |
 | SEC-06 | `APP_KEY` versionada em `.env.testing` | Média | Recomendado |
 | COR-01 | Índices únicos ignoram soft delete (SKU, slug, e-mail) | Alta | Recomendado |
