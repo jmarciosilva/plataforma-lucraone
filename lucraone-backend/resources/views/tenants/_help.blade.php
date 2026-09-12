@@ -1,29 +1,15 @@
-<x-modal nome="help-tenants" titulo="ajuda de tenants">
-    <div class="space-y-4 text-sm leading-6 text-aco">
-        <p>
-            tenant é o espaço isolado de um cliente dentro do LUCRAONE. Tudo que
-            acontece no sistema fica separado por tenant: usuários, empresas,
-            permissões, produtos e operações.
-        </p>
-
-        <div>
-            <p class="font-semibold lowercase text-grafite">o que você pode fazer</p>
-            <ul class="mt-2 list-disc space-y-1 pl-5">
-                <li>listar tenants cadastrados e buscar por nome ou slug.</li>
-                <li>criar um novo estabelecimento com plano, timezone, locale e moeda.</li>
-                <li>editar dados cadastrais e status operacional.</li>
-                <li>abrir o detalhe para ver usuários, empresas e dados de criação.</li>
-                <li>arquivar um tenant sem apagar definitivamente, com opção de restaurar.</li>
-            </ul>
-        </div>
-
-        <div>
-            <p class="font-semibold lowercase text-grafite">atenção aos status</p>
-            <p class="mt-1">
-                trial e active deixam o tenant operacional. suspended e cancelled
-                indicam restrição ou encerramento. O arquivo usa exclusão lógica:
-                o registro sai da lista padrão, mas pode voltar.
-            </p>
-        </div>
-    </div>
-</x-modal>
+<x-help-modal
+    nome="help-tenants"
+    titulo="ajuda de tenants"
+    objetivo="Nesta área são consultados e administrados os estabelecimentos disponíveis para o seu acesso."
+    visual="lista"
+    :zonas="['filtros' => 1]"
+    :colunas="['estabelecimento' => 2, 'situação' => 3, 'ações' => 4]"
+    :itens="[
+        'busca e filtros' => 'localize um estabelecimento pelo nome ou pelo apelido curto usado no endereço.',
+        'dados do estabelecimento' => 'nome, plano contratado, fuso horário, idioma e moeda usados nas telas; tenant é o espaço isolado de cada cliente, com seus próprios usuários, produtos e pedidos.',
+        'situação' => 'indica se o estabelecimento está em teste, ativo, bloqueado ou encerrado.',
+        'ações' => 'abrir o detalhe, editar os dados e arquivar ou restaurar o cadastro.',
+    ]"
+    dica="Algumas ações administrativas aparecem apenas para usuários autorizados. Arquivar não apaga: o cadastro sai da lista e pode voltar depois."
+/>

@@ -1,22 +1,16 @@
-<x-modal nome="help-products" titulo="ajuda de produtos">
-    <div class="space-y-4 text-sm leading-6 text-aco">
-        <p>
-            produtos são os itens vendidos ou controlados no estoque. Eles pertencem ao tenant atual, podem estar ligados a uma empresa e podem ter categorias e preços.
-        </p>
-
-        <div>
-            <p class="font-semibold lowercase text-grafite">o que dá para fazer</p>
-            <ul class="mt-2 list-disc space-y-1 pl-5">
-                <li>listar produtos por SKU, nome, empresa, status e arquivo.</li>
-                <li>criar e editar produto, descrição, status e categorias.</li>
-                <li>arquivar/restaurar produtos sem perder histórico.</li>
-                <li>cadastrar preços de custo, venda e sugerido por moeda.</li>
-                <li>consultar margem e histórico de alterações de preço.</li>
-            </ul>
-        </div>
-
-        <p>
-            categorias organizam o catálogo e podem ter hierarquia. Preços ficam no detalhe do produto para facilitar conferência antes do módulo de estoque.
-        </p>
-    </div>
-</x-modal>
+<x-help-modal
+    nome="help-products"
+    titulo="ajuda de produtos"
+    objetivo="Nesta tela você consulta e administra os produtos cadastrados no estabelecimento, com suas categorias, preços e situação."
+    visual="lista"
+    :zonas="['filtros' => 1, 'novo' => 2, 'lista' => 3]"
+    :colunas="['produto' => null, 'categoria' => 4, 'ações' => 5]"
+    :itens="[
+        'busca e filtros' => 'localize pelo código ou nome e filtre por empresa, situação e arquivados.',
+        'novo produto' => 'cadastre código, nome, descrição, empresa e categorias.',
+        'listagem' => 'mostra o catálogo do estabelecimento atual.',
+        'categoria e situação' => 'organizam o catálogo e indicam se o produto está em uso.',
+        'ações' => 'abrir o detalhe, editar, cadastrar preços e arquivar ou restaurar.',
+    ]"
+    dica="Use os filtros para localizar um produto antes de criar um novo cadastro e evitar itens repetidos no catálogo."
+/>

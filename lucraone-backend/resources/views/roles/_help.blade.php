@@ -1,21 +1,14 @@
-<x-modal nome="help-roles" titulo="ajuda de permissões">
-    <div class="space-y-4 text-sm leading-6 text-aco">
-        <p>
-            papel é um conjunto de permissões. O usuário recebe um ou mais papéis no tenant atual, e cada papel libera ações específicas no sistema.
-        </p>
-
-        <div>
-            <p class="font-semibold lowercase text-grafite">o que dá para fazer</p>
-            <ul class="mt-2 list-disc space-y-1 pl-5">
-                <li>listar papéis existentes e ver quantos usuários usam cada um.</li>
-                <li>abrir um papel para ver permissões atribuídas e usuários vinculados.</li>
-                <li>marcar ou desmarcar permissões por papel usando a modal de atribuição.</li>
-                <li>consultar o catálogo técnico de permissões em uma tela separada.</li>
-            </ul>
-        </div>
-
-        <p>
-            permissões são técnicas e tenant-scoped. Alterar uma role afeta todos os usuários que possuem aquele papel neste estabelecimento.
-        </p>
-    </div>
-</x-modal>
+<x-help-modal
+    nome="help-roles"
+    titulo="ajuda de permissões"
+    objetivo="Papéis agrupam permissões e facilitam a definição do que cada pessoa pode fazer no estabelecimento."
+    visual="papeis"
+    :zonas="['lista' => 1, 'permissoes' => 2, 'detalhe' => 3, 'editar' => 4]"
+    :itens="[
+        'lista de papéis' => 'mostra os papéis do estabelecimento e quantas pessoas usam cada um.',
+        'permissões do papel' => 'o que aquele papel libera no painel, marcado item a item.',
+        'visualização' => 'abra um papel para ver as permissões e as pessoas vinculadas a ele.',
+        'edição' => 'marque ou desmarque permissões pela tela de atribuição do papel.',
+    ]"
+    dica="Alterações em um papel valem imediatamente para todas as pessoas que o utilizam neste estabelecimento."
+/>

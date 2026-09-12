@@ -1,21 +1,16 @@
-<x-modal nome="help-companies" titulo="ajuda de empresas">
-    <div class="space-y-4 text-sm leading-6 text-aco">
-        <p>
-            empresa é o CNPJ ou entidade jurídica dentro do tenant atual. Um tenant pode ter mais de uma empresa, por exemplo matriz e outra razão social.
-        </p>
-
-        <div>
-            <p class="font-semibold lowercase text-grafite">o que dá para fazer</p>
-            <ul class="mt-2 list-disc space-y-1 pl-5">
-                <li>listar empresas do estabelecimento em uso, com busca por nome ou CNPJ.</li>
-                <li>criar e editar dados cadastrais, inscrições, contato e status.</li>
-                <li>desativar empresa quando ela não deve mais operar, preservando histórico.</li>
-                <li>cadastrar e editar endereços vinculados à empresa.</li>
-            </ul>
-        </div>
-
-        <p>
-            status active indica empresa operacional; inactive mantém o cadastro guardado; suspended serve para bloqueio temporário.
-        </p>
-    </div>
-</x-modal>
+<x-help-modal
+    nome="help-companies"
+    titulo="ajuda de empresas"
+    objetivo="Nesta tela você consulta e administra as empresas do estabelecimento atual, com os dados cadastrais e os endereços de cada uma."
+    visual="lista"
+    :zonas="['filtros' => 1, 'novo' => 2, 'lista' => 3]"
+    :colunas="['empresa' => null, 'situação' => 4, 'ações' => 5]"
+    :itens="[
+        'busca e filtros' => 'localize uma empresa pelo nome ou pelo documento.',
+        'nova empresa' => 'cadastre razão social, nome fantasia, documento e contato.',
+        'listagem' => 'mostra as empresas cadastradas no estabelecimento em uso; empresa é o CNPJ ou a razão social que aparece nas vendas.',
+        'situação' => 'ativa, inativa ou bloqueada temporariamente.',
+        'ações' => 'abrir o detalhe, editar os dados e cadastrar os endereços da empresa.',
+    ]"
+    dica="Desativar uma empresa preserva o histórico: ela sai da operação, mas o cadastro e os registros ligados a ela continuam disponíveis."
+/>

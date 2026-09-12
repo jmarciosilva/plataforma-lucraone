@@ -1,30 +1,16 @@
-<x-modal nome="help-users" titulo="ajuda de usuários">
-    <div class="space-y-4 text-sm leading-6 text-aco">
-        <p>
-            usuário é uma pessoa com conta global no LUCRAONE. O acesso dela a
-            cada estabelecimento é controlado por um vínculo no tenant atual e
-            por papéis específicos daquele tenant.
-        </p>
-
-        <div>
-            <p class="font-semibold lowercase text-grafite">o que você pode fazer</p>
-            <ul class="mt-2 list-disc space-y-1 pl-5">
-                <li>listar somente usuários vinculados ao estabelecimento atual.</li>
-                <li>criar usuário com nome, e-mail, senha, status e papéis.</li>
-                <li>editar dados, trocar status no tenant e atualizar papéis.</li>
-                <li>alterar ou resetar senha quando alguém perder acesso.</li>
-                <li>arquivar usuário; se ele estiver em outros tenants, só o vínculo atual é desativado.</li>
-                <li>restaurar usuário arquivado quando for necessário liberar acesso novamente.</li>
-            </ul>
-        </div>
-
-        <div>
-            <p class="font-semibold lowercase text-grafite">status do vínculo</p>
-            <p class="mt-1">
-                active permite acesso. invited indica convite pendente. inactive
-                remove acesso local. suspended bloqueia temporariamente naquele
-                estabelecimento sem afetar outros vínculos da mesma pessoa.
-            </p>
-        </div>
-    </div>
-</x-modal>
+<x-help-modal
+    nome="help-users"
+    titulo="ajuda de usuários"
+    objetivo="Nesta tela você administra as pessoas que podem acessar o estabelecimento, com os dados básicos, a situação do acesso e os papéis de cada uma."
+    visual="lista"
+    :zonas="['filtros' => 1, 'novo' => 2, 'lista' => 3]"
+    :colunas="['usuário' => null, 'papel de acesso' => 4, 'ações' => 5]"
+    :itens="[
+        'filtros' => 'localize uma pessoa pelo nome ou e-mail e filtre por situação do acesso.',
+        'novo usuário' => 'cadastre nome, e-mail, senha inicial e os papéis de acesso.',
+        'listagem' => 'mostra apenas as pessoas vinculadas ao estabelecimento atual; usuário é uma pessoa com conta global no LUCRAONE e pode ter acesso a mais de um estabelecimento.',
+        'papel de acesso' => 'define quais áreas e ações a pessoa pode utilizar aqui.',
+        'ações' => 'abrir o detalhe, editar, redefinir a senha e arquivar ou restaurar o acesso.',
+    ]"
+    dica="Os papéis definem quais áreas e ações cada pessoa pode utilizar. Arquivar retira o acesso a este estabelecimento sem apagar a pessoa."
+/>

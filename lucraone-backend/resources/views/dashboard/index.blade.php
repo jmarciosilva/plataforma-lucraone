@@ -5,11 +5,14 @@
     </x-slot:subtitulo>
 
     <x-slot:acoes>
+        <x-button variante="secundario" x-data @click="$dispatch('abrir-modal', 'help-dashboard')">ajuda</x-button>
         <x-button variante="secundario" href="{{ route('dashboard') }}">atualizar</x-button>
         @if ($comercial)
             <x-button variante="secundario" href="{{ route('reports.index') }}">relatórios</x-button>
         @endif
     </x-slot:acoes>
+
+    @include('dashboard._help')
 
     @if ($comercial)
         <x-section-label>o negócio nos últimos 30 dias</x-section-label>

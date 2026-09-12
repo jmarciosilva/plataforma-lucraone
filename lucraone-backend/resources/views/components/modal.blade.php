@@ -1,6 +1,7 @@
 @props([
     'nome',
     'titulo' => null,
+    'largura' => 'max-w-lg',
 ])
 
 {{--
@@ -29,7 +30,7 @@
     ></div>
 
     <div
-        class="cartao relative w-full max-w-lg p-6"
+        class="cartao relative max-h-[85vh] w-full overflow-y-auto p-6 {{ $largura }}"
         x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0 scale-95"
         x-transition:leave="transition ease-in duration-150"
