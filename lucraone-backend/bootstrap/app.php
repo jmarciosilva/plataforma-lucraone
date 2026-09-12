@@ -12,6 +12,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
@@ -48,6 +49,13 @@ return Application::configure(basePath: dirname(__DIR__))
             // Uso correto: ['auth:sanctum', 'tenant'] — nessa ordem.
             'tenant' => ResolveTenantMiddleware::class,
         ]);
+
+        // SEC-04 E7: o contexto do estabelecimento precisa estar resolvido antes
+        // do route binding, para que o TenantScope filtre entidades de outros tenants.
+        $middleware->prependToPriorityList(
+            before: SubstituteBindings::class,
+            prepend: AutenticarWeb::class,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
