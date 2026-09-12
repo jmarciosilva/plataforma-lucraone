@@ -18,17 +18,18 @@ O plano de execução está em **[ROADMAP.md](ROADMAP.md)**.
 | **Última sprint concluída** | F2.5 — Advanced Automation |
 | **Próxima sprint funcional** | F2.6 — Integration APIs |
 | **Status da F2.6** | 🔴 **Bloqueada temporariamente** pelo hardening de segurança pré-F2.6 |
-| **Testes** | 568 no total · 552 aprovados · 14 falhas SEC-04 esperadas · 2 risky preexistentes |
+| **Testes** | 568 no total · 566 aprovados · 0 falhas · 2 risky preexistentes |
 | **Módulos** | 12 |
 | **Superfícies** | Painel web (sessão) + API REST `/api/v1` (Sanctum) |
 
 A F2.6 só começa quando os bloqueadores obrigatórios **SEC-01 a SEC-04** estiverem
-resolvidos. Essas pendências não são uma fase nova e não reabrem a F1.7: são
-correções identificadas depois que os módulos da FASE 02 cresceram. Lista em
-[Limitações conhecidas](#limitações-conhecidas); detalhe e critério de liberação
+resolvidos. O SEC-04 está resolvido; **SEC-01, SEC-02 e SEC-03 continuam pendentes
+e mantêm a F2.6 bloqueada.** Essas pendências não são uma fase nova e não reabrem a
+F1.7: são correções identificadas depois que os módulos da FASE 02 cresceram. Lista
+em [Limitações conhecidas](#limitações-conhecidas); detalhe e critério de liberação
 em [ROADMAP.md](ROADMAP.md#pendências-bloqueadoras-pré-f26).
 
-O hardening está em andamento. No SEC-04, já foram corrigidos:
+O SEC-04 foi concluído. Nele foram corrigidos:
 
 - Platform Admin explícito, separado do RBAC dos estabelecimentos, e o vetor X1;
 - o uso de `create-role` como coringa nos módulos de negócio;
@@ -50,10 +51,15 @@ O hardening está em andamento. No SEC-04, já foram corrigidos:
   a tomada de conta pela senha ou pelo e-mail. As regras da identidade global (E3)
   continuam valendo junto. Para isso, os papéis padrão `manager` e `user` deixaram
   de receber duas permissões de filiais sem uso, e a matriz ficou aninhada:
-  `viewer` e `user` cabem no `manager`, que cabe no `admin`.
+  `viewer` e `user` cabem no `manager`, que cabe no `admin`;
+- o contexto de estabelecimento nas Policies (E7): o route binding do painel
+  acontecia antes de o contexto ser resolvido, então o escopo de estabelecimento
+  não filtrava a entidade carregada. Agora a autenticação tem prioridade sobre o
+  binding, e uma entidade de outro estabelecimento simplesmente não é encontrada —
+  retorna 404 —, mesmo com permissão no estabelecimento ativo.
 
-Continua pendente o E7 (entidade e permissão avaliadas em estabelecimentos
-diferentes), que é o próximo. A F2.6 permanece bloqueada.
+Com o E7 fechado, o SEC-04 está **resolvido**: 151 testes do vetor, todos verdes. A
+F2.6 **permanece bloqueada** pelos SEC-01, SEC-02 e SEC-03.
 
 O sistema é operável por uma pessoa desde a F3.2: há login em `/login`, e quem
 tem vínculo com vários estabelecimentos escolhe onde vai trabalhar e troca pelo
@@ -160,7 +166,7 @@ e nos ADRs em [`lucraone-backend/docs/adr/`](lucraone-backend/docs/adr/).
 ## Desenvolvimento
 
 ```bash
-docker compose exec app php artisan test        # 568 testes; 14 falhas SEC-04 esperadas
+docker compose exec app php artisan test        # 568 testes; 566 PASS e 2 risky preexistentes
 docker compose exec app ./vendor/bin/pint       # estilo
 docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=1G
 docker compose exec app php artisan tinker
@@ -186,7 +192,7 @@ correção e ordem recomendada estão em
 | SEC-01 | 7 dos 14 controllers da API não verificam permissão | Crítica | Sim |
 | SEC-02 | Login da API sem rate limiting; tokens sem expiração nem abilities | Crítica | Sim |
 | SEC-03 | `TenantResolver` aceita `X-Tenant-ID` sem usuário autenticado | Alta | Sim |
-| SEC-04 | Em andamento: Platform Admin/X1, coringa `create-role` nos módulos, identidade global (E3), delegação por `update-role` (E1) e administração de usuários por `manage-users` (E2) corrigidos; vetor E7 ainda pendente | Crítica | Sim |
+| SEC-04 | ✅ Resolvido: Platform Admin/X1, coringa `create-role` nos módulos, identidade global (E3), delegação por `update-role` (E1), administração de usuários por `manage-users` (E2) e contexto de estabelecimento no route binding (E7) corrigidos | Crítica | Sim |
 | SEC-05 | Automações enviam e-mail para qualquer destinatário | Média | Recomendado |
 | SEC-06 | `APP_KEY` versionada em `.env.testing` | Média | Recomendado |
 | COR-01 | Índices únicos ignoram soft delete (SKU, slug, e-mail) | Alta | Recomendado |

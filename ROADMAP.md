@@ -1,12 +1,13 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-09-11 · **SEC-04 em andamento** — 568 testes no total: 552
-PASS, 14 EXPECTED FAIL do SEC-04 e 2 risky preexistentes
+**Atualizado:** 2026-09-12 · **SEC-04 resolvido** — 568 testes no total: 566
+PASS, 0 FAIL e 2 risky preexistentes
 
-> 🔴 **A F2.6 está bloqueada.** Ela continua sendo a próxima sprint funcional,
+> 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
 > [Pendências bloqueadoras pré-F2.6](#pendências-bloqueadoras-pré-f26) forem
-> resolvidos.
+> resolvidos. O SEC-04 está resolvido; **SEC-01, SEC-02 e SEC-03 continuam
+> pendentes e bloqueiam.**
 
 ---
 
@@ -143,7 +144,7 @@ Levantadas na auditoria de 2026-09-09 e conferidas contra o código em
 | SEC-01 | Segurança | API Authorization | Crítica | Pendente | **Sim** |
 | SEC-02 | Segurança | API Authentication | Crítica | Pendente | **Sim** |
 | SEC-03 | Segurança | TenantResolver | Alta | Pendente | **Sim** |
-| SEC-04 | Segurança | create-role | Crítica | Em andamento | **Sim** |
+| SEC-04 | Segurança | create-role | Crítica | Resolvido | **Sim** |
 | SEC-05 | Segurança | SendEmailAction | Média | Pendente | Recomendado |
 | SEC-06 | Segurança | Secrets / .env.testing | Média | Pendente | Recomendado |
 | COR-01 | Correção | Soft delete + unicidade | Alta | Pendente | Recomendado |
@@ -287,7 +288,7 @@ exatamente o cenário em que o resolver confia no header.
 
 ### SEC-04 — create-role
 
-**Crítica · Em andamento · Bloqueia F2.6: Sim** — Origem: identidade global da F1.8
+**Crítica · Resolvido · Bloqueia F2.6: Sim** — Origem: identidade global da F1.8
 (`c73b369`) e Policies e telas da F2.1b (`8fbc4c3`), F3.4 (`b8c19ae`), F3.5
 (`e1548e8`) e F3.6 (`a13fe95`), todas de 2026-08-16
 
@@ -321,19 +322,17 @@ E6 foram variantes descartadas ou absorvidas pelos demais.
 | Autoridade efetiva por estabelecimento (`TenantAuthority`) | ✅ Concluído | `4909137` |
 | E2 — Escalada por `manage-users` | ✅ Concluído | `2849c10` |
 | E3 — Administração local de identidade global | ✅ Concluído | `d6fdaac` |
-| E7 — Entidade e permissão avaliadas em estabelecimentos diferentes | Pendente | — |
+| E7 — Entidade e permissão avaliadas em estabelecimentos diferentes | ✅ Concluído | `7433c5b` |
 
-O SEC-04 continua **em andamento**: só passa a `Resolvido` quando o E7 também
-estiver corrigido e todos os [critérios de aceite](#critérios-de-aceite) estiverem
-verdes. Por isso a F2.6 permanece bloqueada e não iniciada.
+O SEC-04 está **resolvido**: todos os vetores estão corrigidos e os
+[critérios de aceite](#critérios-de-aceite) estão verdes. Isso **não libera a
+F2.6**, que permanece bloqueada e não iniciada — SEC-01, SEC-02 e SEC-03 seguem
+pendentes e são bloqueadores obrigatórios.
 
-**Próximo vetor técnico:** E7 — entidade e permissão avaliadas em estabelecimentos
-diferentes. O próximo passo é auditar e corrigir as divergências entre Policy,
-Request, `TenantContext` e route binding. `CrossTenantPolicyContextSecurityTest`
-tem 17 testes: 3 PASS e 14 EXPECTED FAIL.
+**Próximo bloqueador técnico:** SEC-01 — API Authorization, ainda não iniciado.
 
-**Evidência atual.** Após `2849c10`, o SEC-04 tem 151 testes: 137 PASS, 14 EXPECTED
-FAIL, 0 ERROR e 577 assertions.
+**Evidência atual.** Após `7433c5b`, o SEC-04 tem 151 testes: 151 PASS, 0 FAIL,
+0 ERROR e 583 assertions.
 
 | Grupo | PASS | FAIL | Situação |
 |---|---|---|---|
@@ -345,16 +344,17 @@ FAIL, 0 ERROR e 577 assertions.
 | Autoridade efetiva (`TenantAuthority`) | 5 | 0 | Corrigido |
 | E2 | 29 | 0 | Corrigido |
 | E3 | 23 | 0 | Corrigido |
-| E7 | 3 | 14 | Pendente |
-| **Total** | **137** | **14** | |
+| E7 | 17 | 0 | Corrigido |
+| **Total** | **151** | **0** | |
 
-As 14 falhas são de caracterização e pertencem somente ao E7, ainda pendente — não
-são regressões. A evidência de cada etapa anterior fica registrada na implementação
-correspondente, abaixo.
+Não restam falhas esperadas: as 14 que pertenciam ao E7 ficaram verdes com
+`7433c5b`, sem alteração de testes. A evidência de cada etapa anterior fica
+registrada na implementação correspondente, abaixo, com as baselines históricas
+preservadas.
 
-A suíte completa tem 568 testes: 552 PASS, 14 EXPECTED FAIL do SEC-04, 2 risky
-preexistentes de `SecurityAuditTest`, 0 ERROR, 0 SKIPPED e 1814 assertions. Não
-houve regressão funcional.
+A suíte completa tem 568 testes: 566 PASS, 0 FAIL, 2 risky preexistentes de
+`SecurityAuditTest`, 0 ERROR, 0 SKIPPED e 1820 assertions. Não houve regressão
+funcional.
 A instabilidade histórica de `test_performance_with_growing_data` não se reproduziu
 nesta execução, o que não indica que tenha sido corrigida (ver
 [Outras pendências de qualidade](#outras-pendências-de-qualidade)).
@@ -379,6 +379,8 @@ nesta execução, o que não indica que tenha sido corrigida (ver
 | `540ea59a84d1ac79fbfe605c60392897bee6a49a` | test(security): ampliar caracterização do E2 no SEC-04 |
 | `4909137f6fb39cd914f392d3893ea621e4bb263f` | refactor(security): extrair autoridade efetiva por tenant |
 | `2849c1001b1293133e2d59f9ae77a35ddb85548a` | fix(security): conter administração de usuários por autoridade |
+| `7ace0c46e9dfc9829e8636560365a5561b1d36b3` | docs(security): sincronizar SEC-04 após correção do E2 |
+| `7433c5bd9bc8d686d1322a59e00f5e570bcfac15` | fix(security): resolver estabelecimento antes do route binding no painel |
 
 #### Implementação 1 — Platform Admin + X1
 
@@ -559,6 +561,24 @@ testes: 137 PASS, 14 EXPECTED FAIL — todas do E7 —, 0 ERROR e 577 assertions
 suíte completa passou a ter 568 testes: 552 PASS, 14 falhas SEC-04 esperadas, 2
 risky preexistentes, 0 ERROR e 1814 assertions.
 
+#### Implementação 6 — contexto do estabelecimento no route binding (E7)
+
+A correção foi publicada em `7433c5bd9bc8d686d1322a59e00f5e570bcfac15`, em um único
+arquivo — `bootstrap/app.php`, +8 linhas —, sem mudança de Policy, Controller,
+Request, Model, migration, seeder ou teste.
+
+- **Causa raiz:** o route binding ocorria antes da resolução do `TenantContext`.
+- **Correção:** `AutenticarWeb` passou a ter prioridade antes de `SubstituteBindings`.
+- **Efeito:** o `TenantScope` filtra entidades de outro estabelecimento durante o
+  binding.
+- Entidade de outro estabelecimento retorna 404.
+- Os 14 vetores restantes foram fechados sem alteração de testes.
+
+**Evidência na publicação.** `CrossTenantPolicyContextSecurityTest` ficou verde: 17
+PASS, 0 FAIL e 75 assertions. O SEC-04 passou a ter 151 testes: 151 PASS, 0 FAIL, 0
+ERROR e 583 assertions. A suíte completa passou a ter 568 testes: 566 PASS, 0 FAIL,
+2 risky preexistentes, 0 ERROR e 1820 assertions.
+
 #### Vetores confirmados
 
 | ID | Vetor | Registrado em | Evidência |
@@ -572,8 +592,8 @@ risky preexistentes, 0 ERROR e 1814 assertions.
 
 Na auditoria pré-implementação, nenhum dos vetores tinha teste que o demonstrasse
 ou o impedisse. O baseline executável passou a caracterizá-los. Após as correções,
-X1, o coringa `create-role`, E1, E2 e E3 estão corrigidos, com testes verdes; o E7
-continua sem correção.
+todos os vetores — o coringa `create-role`, X1, E1, E2, E3 e E7 — estão corrigidos,
+com testes verdes.
 
 **Coringa `create-role` — achado histórico.** A permissão aparecia ao lado das
 permissões específicas em 10 Policies (`Product`, `Category`, `Inventory`,
@@ -698,14 +718,20 @@ caminho; ainda assim a Policy continua autorizando e o controller continua
 gravando as linhas com o estabelecimento ativo — essa divergência pertence ao E7.
 A confirmação inicial veio da leitura do código e da ordem de middleware do
 framework. O baseline executável do SEC-04 posteriormente reproduziu o vetor por
-testes HTTP reais, que permanecem vermelhos até a correção do E7.
+testes HTTP reais, que permaneceram vermelhos até a correção do E7.
 
-É obrigatório corrigir antes do SEC-01, porque o SEC-01 aplicará essas mesmas
+Era obrigatório corrigir antes do SEC-01, porque o SEC-01 aplicará essas mesmas
 Policies à API.
+
+**Status atual do E7.** Corrigido em `7433c5b`: `AutenticarWeb` passou a ter
+prioridade antes de `SubstituteBindings`, então o `TenantContext` já está resolvido
+quando o route binding carrega a entidade, e o `TenantScope` filtra pelo
+estabelecimento ativo. Entidade de outro estabelecimento retorna 404. Detalhe na
+Implementação 6, acima.
 
 **Consequência.** Antes das correções, X1, E3 e E7 atravessavam a fronteira entre
 estabelecimentos — pela gestão de estabelecimentos, pela identidade compartilhada e
-pelas Policies. X1 e E3 estão corrigidos; E7 permanece aberto. E1 e E2 levavam a
+pelas Policies. X1, E3 e E7 estão corrigidos — o E7 em `7433c5b`. E1 e E2 levavam a
 poder administrativo indevido dentro do estabelecimento e foram corrigidos em
 `2f1f6ea` e `2849c10`.
 
@@ -1029,7 +1055,7 @@ O SEC-04 só é `Resolvido` quando testes demonstrarem, no mínimo:
 - administração local não compromete credenciais nem status global de identidade
   vinculada a outros tenants.
 
-**E7** — cenário obrigatório, cobrindo os módulos afetados:
+**E7** — ✅ atendido em `7433c5b` — cenário obrigatório, cobrindo os módulos afetados:
 
 ```
 Usuário:  admin no Tenant A, viewer no Tenant B, Tenant A ativo
@@ -1037,7 +1063,8 @@ Entidade: pertence ao Tenant B
 ```
 
 O usuário não pode visualizar nem alterar a entidade de B usando permissões que
-possui somente em A.
+possui somente em A. Coberto por `CrossTenantPolicyContextSecurityTest`: 17 PASS e
+75 assertions, em Product, Category, Customer, Order, Automation, Company e Role.
 
 **Regressão**
 
@@ -1050,7 +1077,7 @@ possui somente em A.
 
 #### Relação com o SEC-01
 
-O SEC-04 vem primeiro porque, quando concluído, o SEC-01 poderá assumir:
+O SEC-04 vem primeiro e, agora concluído, o SEC-01 pode assumir:
 
 - Policies sem bypass por `create-role`;
 - contexto de tenant consistente entre entidade e permissão;
@@ -1062,7 +1089,7 @@ Assim o SEC-01 aplica as Policies aos 7 controllers e 34 rotas sem propagar o
 modelo vulnerável atual.
 
 **Por que bloqueia.** X1, E3 e E7 são falhas de isolamento entre
-estabelecimentos — X1 e E3 já corrigidos —, da mesma classe que o SEC-01 e o
+estabelecimentos — os três já corrigidos —, da mesma classe que o SEC-01 e o
 SEC-03, e E1 e E2 levavam até elas — ambos já corrigidos. O SEC-01 vai ligar essas
 Policies à API, e a F2.6 vai criar uma Policy para proteger credenciais de
 terceiros, que herdaria o padrão atual.
@@ -1222,15 +1249,15 @@ há medição de impacto que justifique segurar a F2.6.
 ### Ordem recomendada
 
 ```
-SEC-04 — create-role              🟡 EM ANDAMENTO
+SEC-04 — create-role              ✅ RESOLVIDO
   ├─ Platform Admin / X1          ✅
   ├─ bypass create-role           ✅
   ├─ E3                           ✅
   ├─ E1                           ✅
   ├─ E2                           ✅
-  └─ E7                           pendente ← próximo
+  └─ E7                           ✅
         ↓
-SEC-01 — API Authorization        bloqueado pelo SEC-04
+SEC-01 — API Authorization        🔴 próximo bloqueador
         ↓
 SEC-02 — API Authentication
         ↓
@@ -1258,8 +1285,8 @@ SEC-01 vai aplicar as Policies às 34 rotas da API que hoje não as usam, e o
 SEC-04 muda o significado e o alcance dessas Policies: `create-role` era coringa
 em várias delas e a gestão de estabelecimentos quebrava o isolamento entre
 clientes — ambos já corrigidos —, as escaladas por `update-role` e por
-`manage-users` foram contidas em `2f1f6ea` e `2849c10`, e a permissão ainda pode ser
-avaliada num estabelecimento diferente do da entidade.
+`manage-users` foram contidas em `2f1f6ea` e `2849c10`, e a avaliação da permissão
+num estabelecimento diferente do da entidade foi fechada em `7433c5b`.
 Espalhar as Policies atuais pela API antes de corrigi-las levaria esses defeitos
 para a API e obrigaria a refazer o SEC-01 e os seus testes.
 
@@ -1352,7 +1379,7 @@ Não bloqueiam a F2.6 e não receberam ID.
 | PHPStan (nível 4) | 11 erros — tipos de retorno de View e acesso a `$id` em união de tipos |
 | Pint | 22 arquivos fora do padrão — imports não usados, ordenação |
 | Automation Rules Guide | Não escrito — único item não entregue da F2.5 |
-| `performance with growing data` | Intermitente sob carga: assertiva sensível a tempo, passa isolada. Reproduzida também no commit-base `6f932c8`, antes da remoção do coringa `create-role` — não é regressão do SEC-04. Não se reproduziu na suíte completa após `d6fdaac`, `2f1f6ea` nem `2849c10`, o que não indica correção |
+| `performance with growing data` | Intermitente sob carga: assertiva sensível a tempo, passa isolada. Reproduzida também no commit-base `6f932c8`, antes da remoção do coringa `create-role` — não é regressão do SEC-04. Não se reproduziu na suíte completa após `d6fdaac`, `2f1f6ea`, `2849c10` nem `7433c5b`, o que não indica correção |
 | Concorrência na contenção do E1 e do E2 | A validação da contenção de `update-role` e de `manage-users` ocorre antes da gravação, sem bloqueio: edições concorrentes podem se intercalar. Registrada nas publicações do E1 (`2f1f6ea`) e do E2 (`2849c10`); não bloqueia nenhum dos dois e não foi corrigida |
 | Último administrador | Um admin ainda pode retirar o papel ou arquivar outro admin, inclusive o último do estabelecimento. Fora do E2 |
 | Restauração de identidade arquivada fora do painel | O `restore` não passa pela contenção do E2. Pelo painel, o arquivamento já retira os papéis; uma identidade arquivada por outro caminho que ainda tenha papéis voltaria com essa autoridade |
