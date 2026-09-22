@@ -1,6 +1,6 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-09-22 · **PM-02B concluído** — 627 testes no total: 625
+**Atualizado:** 2026-09-22 · **PM-03 concluído** — 642 testes no total: 640
 PASS, 0 FAIL e 2 risky preexistentes · SEC-04 resolvido em 2026-09-12
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
@@ -1401,7 +1401,7 @@ O que esta trilha é, e o que não é:
 | PM-01 | Código de barras e unidade base | Concluído | — |
 | PM-02A | Embalagens comerciais / Product Packages | Concluído | PM-01 |
 | PM-02B | Entrada de estoque por embalagem | Concluído | PM-02A |
-| PM-03 | Resolução exata por código de barras | Planejado | PM-02A |
+| PM-03 | Resolução exata por código de barras | Concluído | PM-02A |
 | PM-04 | Regras de quantidade para PDV | Planejado | PM-01 |
 | PM-05 | Dados fiscais do produto | Futuro · antes da NFC-e/NF-e | — |
 
@@ -1413,7 +1413,7 @@ PM-01 — barcode + unit                ✅ CONCLUÍDO
         ↓
 PM-02A — product_packages             ✅ CONCLUÍDO
         ├─ PM-02B — entrada por embalagem      ✅ CONCLUÍDO
-        └─ PM-03 — resolução exata de barcode  📋 PLANEJADO
+        └─ PM-03 — resolução exata de barcode  ✅ CONCLUÍDO
         ↓
 PM-04 — quantidade para PDV           📋 PLANEJADO · antes do PDV
         ↓
@@ -1671,19 +1671,106 @@ Continuam futuras a API de `ProductPackage` e a API de estoque por embalagem.
 
 ### PM-03 — Resolução exata por código de barras
 
-**Planejado** — Depende de: PM-02A (dependência satisfeita em `c4fafea`; etapa
-não iniciada)
+**Concluído** — `c846d8d2e84fc5770a3f99a1794bd81e1a65cd2c` (2026-09-22) —
+Depende de: PM-02A
 
-**Objetivo.** Preparar o futuro scanner. Fluxo previsto para um código de barras
-recebido:
+**Objetivo.** Preparar o futuro scanner: receber um código de barras e resolver
+o Product base e a quantidade na unidade base que aquele código representa.
 
-1. procurar em `Product.barcode` — se encontrar, quantidade 1;
-2. procurar em `ProductPackage.barcode` — se encontrar, quantidade = `factor`.
+Entregue, de forma aditiva:
 
-O resultado é sempre `product_id` + quantidade na unidade base.
+- `ProductBarcodeResolver` (`Products/Application`) — resolução exata por
+  código de barras, com o tenant recebido explicitamente e sem acoplamento a
+  HTTP;
+- `ResolvedProductBarcode` (`Products/Domain`) — resultado com o código lido, o
+  Product base, a quantidade, a origem (`product` ou `package`) e a embalagem,
+  quando houver;
+- `BarcodeConflictException` (`Products/Domain/Exceptions`) — colisão entre
+  produto e embalagem;
+- endpoint autenticado `GET /api/v1/products/resolve-barcode/{barcode}`,
+  protegido por `auth:sanctum` e pelo middleware `tenant`, como as demais rotas
+  de Products. Não há permissão nova, e o endpoint não resolve nem antecipa o
+  SEC-01.
 
-A busca atual por `LIKE` continua válida para a busca manual. A busca exata
-entra apenas antes do PDV.
+**Fluxo de resolução.** O código recebido é procurado, por igualdade exata e no
+tenant da requisição, em `Product.barcode` e em `ProductPackage.barcode`:
+
+| Encontrado em | `source` | `quantity` | Product retornado |
+|---|---|---|---|
+| `Product.barcode` | `product` | 1 | o próprio produto |
+| `ProductPackage.barcode` | `package` | `factor` da embalagem | o Product base |
+
+O resultado é sempre `product_id` + quantidade na unidade base + origem +
+unidade; a embalagem nunca é devolvida como produto separado.
+
+**Disponibilidade.** Resolve apenas produto operacional, o mesmo padrão dos
+seletores de estoque e de pedido do painel:
+
+| Product | Resolve |
+|---|---|
+| `active` | sim |
+| `inactive` | não |
+| `discontinued` | não |
+| arquivado (soft delete) | não |
+
+`ProductPackage` não tem status e herda a disponibilidade do Product base.
+
+**Produto KG.** Product `unit = KG` com código de barras comum resolve
+normalmente, com quantidade 1 e unidade `KG`. O PM-03 não interpreta código de
+balança, peso embutido nem GTIN de quantidade variável; esses cenários ficam
+para etapa futura.
+
+**Busca manual.** `/products/search/{query}` continua usando `LIKE` para busca
+manual e não foi substituída. O PM-03 é uma capacidade separada, específica para
+resolução de código de barras.
+
+**Respostas.**
+
+| Caso | HTTP |
+|---|---|
+| código resolvido | 200 |
+| código inexistente | 404 |
+| código de outro tenant | 404 |
+| produto indisponível | 404 |
+| código com mais de 14 caracteres | 422 |
+| colisão entre produto e embalagem | 409 |
+
+Os três casos de 404 usam a mesma mensagem — "código de barras não encontrado."
+—, sem revelar a existência de produto indisponível ou de outro tenant. Não foi
+introduzida validação de apenas dígitos, preservando a decisão do PM-01.
+
+**Colisão histórica.** Se o mesmo código existir em `products` e em
+`product_packages` do mesmo tenant, o resolver não escolhe um dos dois em
+silêncio: lança `BarcodeConflictException`, e a API responde 409. Isso torna
+visível uma inconsistência histórica ou de concorrência. A proteção detecta o
+problema na leitura, mas não elimina a janela teórica de concorrência
+documentada no PM-02A.
+
+**Desempenho.** Igualdade exata (`where barcode = ?`) com filtro de tenant, sem
+`LIKE`, sobre colunas que já têm índice único por tenant. Não foi criado cache.
+
+**Escopo preservado.** O PM-03 não alterou Inventory, Orders, Price, PDV,
+fiscal, migrations nem scanner físico. Não há movimentação de estoque, criação
+de pedido, alteração de preço nem interpretação de balança.
+
+**Evidência na publicação.** 15 testes novos em
+`ProductBarcodeResolutionApiTest`, cobrindo código de Product e de
+ProductPackage, quantidade 1 e quantidade igual ao fator, isolamento entre
+tenants, código parcial que não resolve, rota sem conflito com `show` e
+`search`, Product `inactive`, `discontinued` e arquivado, embalagem de Product
+indisponível, código inválido, Product `KG`, colisão com 409, autenticação e o
+resolver chamado diretamente, sem HTTP. Todo 404 esperado confere a mensagem do
+resolver. Testes específicos: 15 PASS, 0 FAIL e 78 assertions. A suíte completa
+passou a ter 642 testes: 640 PASS, 0 FAIL, 2 risky preexistentes de
+`SecurityAuditTest` e 2132 assertions.
+
+**Dívidas preservadas.** Continuam como registradas no PM-01, PM-02A e PM-02B:
+`StorePriceRequest` com UUID, SKU duplicado na API, ajuste absoluto sem zero,
+relatório somando `UN` e `KG`, Pint preexistente, janela de concorrência na
+unicidade de código de barras entre as duas tabelas, API de `ProductPackage` e
+API de estoque por embalagem. Observadas no PM-03 e também preservadas: o pedido
+pela API não confere o status do Product; EAN alternativo da mesma unidade
+(fator 1) e código de balança continuam futuros.
 
 ### PM-04 — Regras de quantidade para PDV
 
