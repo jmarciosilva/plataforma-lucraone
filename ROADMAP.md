@@ -1,6 +1,6 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-09-22 · **PM-01 concluído** — 591 testes no total: 589
+**Atualizado:** 2026-09-22 · **PM-02A concluído** — 612 testes no total: 610
 PASS, 0 FAIL e 2 risky preexistentes · SEC-04 resolvido em 2026-09-12
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
@@ -1399,7 +1399,7 @@ O que esta trilha é, e o que não é:
 | ID | Etapa | Status | Depende de |
 |---|---|---|---|
 | PM-01 | Código de barras e unidade base | Concluído | — |
-| PM-02A | Embalagens comerciais / Product Packages | Planejado · Próxima implementação | PM-01 |
+| PM-02A | Embalagens comerciais / Product Packages | Concluído | PM-01 |
 | PM-02B | Entrada de estoque por embalagem | Planejado | PM-02A |
 | PM-03 | Resolução exata por código de barras | Planejado | PM-02A |
 | PM-04 | Regras de quantidade para PDV | Planejado | PM-01 |
@@ -1411,13 +1411,13 @@ entrega.
 ```
 PM-01 — barcode + unit                ✅ CONCLUÍDO
         ↓
-PM-02A — product_packages             📋 próxima implementação
-        ├─ PM-02B — entrada por embalagem
-        └─ PM-03 — resolução exata de barcode
+PM-02A — product_packages             ✅ CONCLUÍDO
+        ├─ PM-02B — entrada por embalagem      📋 PLANEJADO
+        └─ PM-03 — resolução exata de barcode  📋 PLANEJADO
         ↓
-PM-04 — quantidade para PDV           📋 antes do PDV
+PM-04 — quantidade para PDV           📋 PLANEJADO · antes do PDV
         ↓
-PM-05 — dados fiscais do produto      📋 antes da NFC-e/NF-e
+PM-05 — dados fiscais do produto      📋 FUTURO · antes da NFC-e/NF-e
 ```
 
 ### Decisão arquitetural — Produto comercial x embalagem
@@ -1497,39 +1497,66 @@ PM-01 e deixadas fora da entrega:
 
 ### PM-02A — Embalagens comerciais / Product Packages
 
-**Planejado · Próxima implementação** — Depende de: PM-01
+**Concluído** — `c4fafea0b7212bd10d28675becc3982e53fbff08` (2026-09-22) —
+Depende de: PM-01
 
 **Objetivo.** Representar caixas, fardos e multipacks associados ao Product
-base.
+base, que continua sendo a unidade de estoque, venda, preço e pedido.
 
-**Modelo previsto.** Tabela `product_packages`, com os campos mínimos:
+Entregue, de forma aditiva:
 
-| Campo | Observação |
-|---|---|
-| `id` | ULID |
-| `tenant_id` | explícito, como nas demais tabelas filhas do projeto |
-| `product_id` | Product base |
-| `name` | "Caixa 24", "Fardo 6" |
-| `barcode` | opcional |
-| `factor` | quantidade de unidades base na embalagem |
-| `created_at`, `updated_at` | — |
+- tabela `product_packages`:
 
-**Regras previstas.**
+  | Campo | Observação |
+  |---|---|
+  | `id` | ULID |
+  | `tenant_id` | explícito, como nas demais tabelas filhas do projeto |
+  | `product_id` | Product base, com cascade na exclusão definitiva |
+  | `name` | "Caixa 24", "Fardo 6" |
+  | `barcode` | opcional, até 14 caracteres |
+  | `factor` | inteiro: unidades base contidas na embalagem |
+  | `created_at`, `updated_at` | — |
 
-- o Product continua sendo a unidade base de estoque e venda;
-- `ProductPackage` não é variante;
-- `factor` é inteiro e maior ou igual a 2;
-- inicialmente, somente para Product com `unit = UN`;
-- o código de barras da embalagem é opcional e único por tenant;
-- o código de barras de uma embalagem não pode colidir com o `barcode` de um
-  Product do mesmo tenant, e o de um Product não pode colidir com o de uma
-  embalagem;
-- sem preço próprio, sem custo próprio, sem status, sem soft delete e sem
-  `company_id`.
+  com índice único `(tenant_id, barcode)` e índice `(tenant_id, product_id)`;
+- model `ProductPackage` (`HasTenant`, `HasUlid`), `ProductPackageFactory` e a
+  relação `Product::packages()`;
+- bloco "embalagens" no detalhe do Product, com cadastro (nome, código de barras
+  e fator) e remoção física. Sem edição nesta primeira versão: um erro se
+  corrige removendo e cadastrando de novo;
+- autorização pela `ProductPolicy::update`, sem permissão nova. Produto ou
+  embalagem de outro tenant, ou embalagem de outro produto, retorna 404.
 
-**Interface prevista.** Bloco "embalagens" no detalhe do Product, com nome,
-código de barras e fator. Ações: cadastrar e remover. Sem edição nesta primeira
-versão.
+**Fator.** Inteiro, mínimo 2. Fator 1 ficou de fora porque representa outro
+conceito — código de barras alternativo da mesma unidade —, fora do PM-02A.
+
+**Unidade do produto.** Embalagem só pode ser cadastrada para Product com
+`unit = UN`. Produto `KG` continua sem embalagem comercial nesta etapa, e a
+unidade do produto nunca é alterada automaticamente.
+
+**Código de barras — `BarcodeAvailable`.** Regra de validação reutilizável, usada
+no cadastro de embalagem e nos quatro requests de Product (painel e API, criação
+e edição). O código de barras passa a ser único dentro do tenant considerando
+`products.barcode` **e** `product_packages.barcode`:
+
+| Novo código em | Já usado em | Resultado |
+|---|---|---|
+| Product | Product | recusado (na edição, o próprio produto é ignorado) |
+| Embalagem | Embalagem | recusado |
+| Embalagem | Product — inclusive o produto base | recusado |
+| Product | Embalagem | recusado |
+| qualquer um | registro de outro tenant | permitido |
+
+- o código de barras continua opcional, e vários registros sem código são
+  permitidos;
+- Product arquivado continua reservando o código, como no índice único;
+- cada tabela continua protegida pelo próprio índice único `(tenant_id,
+  barcode)`. Não existe constraint SQL única abrangendo as duas tabelas: essa
+  parte é garantida pela aplicação.
+
+**Limitação conhecida.** Como a unicidade entre `products` e `product_packages`
+é garantida pela aplicação, existe uma janela teórica de concorrência em dois
+cadastros simultâneos com o mesmo código. Risco aceito para o cadastro
+administrativo atual; não é bloqueador.
 
 | Product base | `unit` | Embalagem | `factor` |
 |---|---|---|---|
@@ -1537,12 +1564,27 @@ versão.
 | Refrigerante 2 L | `UN` | Fardo 6 | 6 |
 | Massa de Pastel 500 g | `UN` | Caixa 10 | 10 |
 
-**Fora do escopo.** Schemas de Inventory, Orders e Prices; fiscal; PDV; scanner
-físico; custo médio; fornecedor; compras.
+**Escopo preservado.** O PM-02A não alterou Inventory, Orders, Price, fiscal, PDV
+nem busca exata para scanner. Não houve API de embalagens, preço ou custo por
+embalagem, status, soft delete nem `company_id`.
+
+**Evidência na publicação.** 21 testes novos — 19 no painel e 2 de colisão de
+código de barras na API de produtos —, cobrindo criação, remoção, isolamento
+entre tenants, fator, Product `UN`/`KG`, colisão de código de barras entre as
+duas tabelas, vários nulos, índice único, cascade e autorização. Os testes
+específicos somam 94 testes: 94 PASS, 0 FAIL e 333 assertions. A suíte completa
+passou a ter 612 testes: 610 PASS, 0 FAIL, 2 risky preexistentes de
+`SecurityAuditTest` e 1991 assertions. No banco local, os 60 produtos foram
+preservados e `product_packages` começou vazia.
+
+**Dívidas preservadas.** As do PM-01 continuam como registradas acima, e a busca
+por código de barras segue por `LIKE` até o PM-03. A única observação nova é a
+janela de concorrência descrita em "Limitação conhecida".
 
 ### PM-02B — Entrada de estoque por embalagem
 
-**Planejado** — Depende de: PM-02A
+**Planejado** — Depende de: PM-02A (dependência satisfeita em `c4fafea`; etapa
+não iniciada)
 
 **Objetivo.** Permitir informar a quantidade em embalagens e convertê-la
 automaticamente para a unidade base do Product:
@@ -1562,7 +1604,8 @@ de Inventory nesta etapa.
 
 ### PM-03 — Resolução exata por código de barras
 
-**Planejado** — Depende de: PM-02A
+**Planejado** — Depende de: PM-02A (dependência satisfeita em `c4fafea`; etapa
+não iniciada)
 
 **Objetivo.** Preparar o futuro scanner. Fluxo previsto para um código de barras
 recebido:
