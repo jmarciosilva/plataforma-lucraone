@@ -1,7 +1,7 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-09-12 · **SEC-04 resolvido** — 568 testes no total: 566
-PASS, 0 FAIL e 2 risky preexistentes
+**Atualizado:** 2026-09-22 · **PM-01 concluído** — 591 testes no total: 589
+PASS, 0 FAIL e 2 risky preexistentes · SEC-04 resolvido em 2026-09-12
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
@@ -54,6 +54,11 @@ F2.6 — Integration APIs          📋 NÃO INICIADA
 
 As pendências pré-F2.6 não são uma fase nem uma sprint. São correções com IDs
 próprios (`SEC-*`, `COR-*`, `PERF-*`), acompanhadas numa seção dedicada abaixo.
+
+Em paralelo corre a trilha
+[Cadastro mestre de produtos — preparação para o PDV](#cadastro-mestre-de-produtos--preparação-para-o-pdv)
+(`PM-*`), aberta por necessidade de cliente. Ela evolui o cadastro de produtos e
+não altera o bloqueio da F2.6 nem a ordem das pendências.
 
 A FASE 03 entrou na frente da F2.2 de propósito: depois da F2.1 o backend já
 expunha APIs completas, mas **não havia como um humano entrar no sistema**.
@@ -1367,6 +1372,242 @@ Sete das oito pendências tocam diretamente o que a F2.6 constrói: API sensíve
 (SEC-01, SEC-04), clientes de máquina com token (SEC-02), webhooks recebidos sem
 usuário (SEC-03), destinos controlados pelo cliente (SEC-05), credenciais
 cifradas com a `APP_KEY` (SEC-06) e sincronização por SKU (COR-01).
+
+---
+
+## Cadastro mestre de produtos — preparação para o PDV
+
+Trilha funcional aberta em 2026-09-22 a partir da necessidade de um cliente real
+de varejo alimentício: massa de pastel, massa de macarrão, massas frescas
+vendidas a peso, refrigerantes e outros produtos embalados, vendidos por unidade
+ou por peso e comprados em caixa ou fardo. O cliente precisa começar a cadastrar
+agora, e o objetivo é que esse cadastro seja reaproveitado — sem recadastro —
+por estoque, vendas, PDV, scanner, embalagens e fiscal.
+
+O que esta trilha é, e o que não é:
+
+- **Não libera a F2.6.** É uma evolução funcional paralela. A F2.6 continua
+  bloqueada, e SEC-01, SEC-02 e SEC-03 mantêm o status e a prioridade das
+  [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26).
+- **Não é uma fase nem uma sprint.** Usa IDs próprios (`PM-*`), como as
+  pendências usam `SEC-*`, e o placar de fases não muda.
+- **Não antecipa PDV, fiscal nem scanner.** Prepara apenas o cadastro mestre
+  para eles; PDV, fiscal e sync continuam no [roadmap macro](<Roadmap Macro de Desenvolvimento — Plataforma SaaS Inteligente de Automação Comercial.md>).
+
+### Acompanhamento da trilha
+
+| ID | Etapa | Status | Depende de |
+|---|---|---|---|
+| PM-01 | Código de barras e unidade base | Concluído | — |
+| PM-02A | Embalagens comerciais / Product Packages | Planejado · Próxima implementação | PM-01 |
+| PM-02B | Entrada de estoque por embalagem | Planejado | PM-02A |
+| PM-03 | Resolução exata por código de barras | Planejado | PM-02A |
+| PM-04 | Regras de quantidade para PDV | Planejado | PM-01 |
+| PM-05 | Dados fiscais do produto | Futuro · antes da NFC-e/NF-e | — |
+
+Como nas pendências, uma etapa só passa a `Concluído` com testes que provem a
+entrega.
+
+```
+PM-01 — barcode + unit                ✅ CONCLUÍDO
+        ↓
+PM-02A — product_packages             📋 próxima implementação
+        ├─ PM-02B — entrada por embalagem
+        └─ PM-03 — resolução exata de barcode
+        ↓
+PM-04 — quantidade para PDV           📋 antes do PDV
+        ↓
+PM-05 — dados fiscais do produto      📋 antes da NFC-e/NF-e
+```
+
+### Decisão arquitetural — Produto comercial x embalagem
+
+**Cada apresentação efetivamente vendida é um Product distinto.** Refrigerante
+350 ml, 600 ml e 2 L são três Products, cada um com SKU, código de barras,
+preço e estoque próprios.
+
+**Caixa, fardo e multipack não são variantes.** São embalagens
+(`ProductPackage`) associadas ao Product base, que continua sendo a unidade de
+estoque e venda — a menor unidade efetivamente vendida.
+
+**Motivação.** Inventory, Prices, Orders e Reports já são estruturados em torno
+de `product_id`. Essa abordagem:
+
+- preserva a arquitetura atual;
+- evita refatorar Inventory e Orders;
+- evita mover preço e estoque para um `variant_id`;
+- permite evolução aditiva;
+- mantém o estoque na menor unidade vendida.
+
+**Alternativas avaliadas.** Product pai com variantes foi descartado: exigiria
+mover preço, estoque e item de pedido para a variante, redesenhando os módulos
+já entregues.
+
+Na primeira versão, `ProductPackage` só é permitido para Product com
+`unit = UN`.
+
+### PM-01 — Código de barras e unidade base
+
+**Concluído** — `588c6e4d3dca2e35822ee05980af50bb012d02ff` (2026-09-22)
+
+Entregue, de forma aditiva:
+
+- `products.barcode` — até 14 caracteres (GTIN), opcional, único por tenant;
+- `products.unit` — unidade base de venda e estoque, `UN` ou `KG`, default `UN`;
+- busca por código de barras no painel e na API, junto de SKU e nome;
+- campos no formulário, no detalhe e na listagem (unidade na listagem, código de
+  barras no detalhe);
+- compatibilidade retroativa da API: `unit` é opcional na API e assume `UN`; no
+  painel é obrigatória;
+- dados existentes preservados: os produtos já cadastrados ficaram com `unit =
+  UN` e código de barras nulo, sem backfill manual.
+
+Decisões:
+
+- o SKU continua sendo o código interno, e o código de barras não o substitui;
+- o código de barras é opcional — produto sem EAN usa só o SKU;
+- cada apresentação comercial vendida é um Product distinto;
+- produto embalado é `UN` mesmo quando o nome traz peso ou volume. `unit`
+  responde "o que significa quantidade = 1", e não o conteúdo da embalagem.
+
+| Apresentação | Cadastro | `unit` |
+|---|---|---|
+| Massa de Pastel 500 g | Product | `UN` |
+| Massa de Pastel 1 kg | outro Product | `UN` |
+| Refrigerante 350 ml | Product | `UN` |
+| Refrigerante 600 ml | outro Product | `UN` |
+| Refrigerante 2 L | outro Product | `UN` |
+| Massa fresca vendida por peso | Product | `KG` |
+
+**Evidência na publicação.** 23 testes novos (15 de API e 8 de painel). A suíte
+completa passou a ter 591 testes: 589 PASS, 0 FAIL, 2 risky preexistentes de
+`SecurityAuditTest` e 1912 assertions. No banco local, os 60 produtos existentes
+foram preservados, todos com código de barras nulo e `unit = UN`.
+
+**Dívidas observadas e preservadas.** Encontradas na auditoria que precedeu o
+PM-01 e deixadas fora da entrega:
+
+| Dívida | Observação |
+|---|---|
+| `StorePriceRequest` valida `product_id` como UUID | Os ids são ULID, então `POST /api/v1/prices` recusa todo produto |
+| SKU duplicado na API de produtos | Já registrado no [COR-01](#cor-01--soft-delete--unicidade) |
+| Ajuste absoluto de estoque não aceita zero | A validação exige quantidade mínima de 0,001 |
+| Relatório `itens_vendidos` soma `UN` e `KG` | Passa a importar quando houver venda a peso |
+| Pint em `Product::company()` e `inventory()` | Nomes de classe completos, anteriores ao PM-01 |
+
+### PM-02A — Embalagens comerciais / Product Packages
+
+**Planejado · Próxima implementação** — Depende de: PM-01
+
+**Objetivo.** Representar caixas, fardos e multipacks associados ao Product
+base.
+
+**Modelo previsto.** Tabela `product_packages`, com os campos mínimos:
+
+| Campo | Observação |
+|---|---|
+| `id` | ULID |
+| `tenant_id` | explícito, como nas demais tabelas filhas do projeto |
+| `product_id` | Product base |
+| `name` | "Caixa 24", "Fardo 6" |
+| `barcode` | opcional |
+| `factor` | quantidade de unidades base na embalagem |
+| `created_at`, `updated_at` | — |
+
+**Regras previstas.**
+
+- o Product continua sendo a unidade base de estoque e venda;
+- `ProductPackage` não é variante;
+- `factor` é inteiro e maior ou igual a 2;
+- inicialmente, somente para Product com `unit = UN`;
+- o código de barras da embalagem é opcional e único por tenant;
+- o código de barras de uma embalagem não pode colidir com o `barcode` de um
+  Product do mesmo tenant, e o de um Product não pode colidir com o de uma
+  embalagem;
+- sem preço próprio, sem custo próprio, sem status, sem soft delete e sem
+  `company_id`.
+
+**Interface prevista.** Bloco "embalagens" no detalhe do Product, com nome,
+código de barras e fator. Ações: cadastrar e remover. Sem edição nesta primeira
+versão.
+
+| Product base | `unit` | Embalagem | `factor` |
+|---|---|---|---|
+| Coca-Cola 350 ml | `UN` | Caixa 24 | 24 |
+| Refrigerante 2 L | `UN` | Fardo 6 | 6 |
+| Massa de Pastel 500 g | `UN` | Caixa 10 | 10 |
+
+**Fora do escopo.** Schemas de Inventory, Orders e Prices; fiscal; PDV; scanner
+físico; custo médio; fornecedor; compras.
+
+### PM-02B — Entrada de estoque por embalagem
+
+**Planejado** — Depende de: PM-02A
+
+**Objetivo.** Permitir informar a quantidade em embalagens e convertê-la
+automaticamente para a unidade base do Product:
+
+```
+Embalagem: Caixa 24
+Entrada:   2 caixas
+Conversão: 2 × 24 = 48 UN
+```
+
+O estoque continua armazenando `48`, e não "2 caixas". Inventory permanece
+controlado somente na unidade base do Product.
+
+A conversão vale para os tipos `in` e `out`; o `adjustment`, que define o saldo
+absoluto, continua informado na unidade base. Não se prevê alteração no schema
+de Inventory nesta etapa.
+
+### PM-03 — Resolução exata por código de barras
+
+**Planejado** — Depende de: PM-02A
+
+**Objetivo.** Preparar o futuro scanner. Fluxo previsto para um código de barras
+recebido:
+
+1. procurar em `Product.barcode` — se encontrar, quantidade 1;
+2. procurar em `ProductPackage.barcode` — se encontrar, quantidade = `factor`.
+
+O resultado é sempre `product_id` + quantidade na unidade base.
+
+A busca atual por `LIKE` continua válida para a busca manual. A busca exata
+entra apenas antes do PDV.
+
+### PM-04 — Regras de quantidade para PDV
+
+**Planejado** — Depende de: PM-01
+
+**Objetivo.** Aplicar comportamento coerente com `products.unit`:
+
+- Product `UN`: não aceitar quantidade fracionada;
+- Product `KG`: aceitar quantidade decimal.
+
+A revisar junto com esta etapa:
+
+- `OrderItem`;
+- snapshot de `unit` e de `barcode` no item;
+- linhas separadas no cupom, hoje somadas pela unicidade `(order_id,
+  product_id)`;
+- leitura de embalagem.
+
+### PM-05 — Dados fiscais do produto
+
+**Futuro · antes da NFC-e/NF-e**
+
+Itens previstos no cadastro do produto:
+
+- NCM;
+- CEST, quando aplicável;
+- origem;
+- unidade tributável;
+- GTIN tributável.
+
+**Decisão.** CFOP não deve ficar fixo no Product: depende da operação — venda
+dentro do estado, venda interestadual, entrada, devolução, transferência. CST,
+CSOSN e alíquotas também não devem ser atributos fixos simples do Product:
+dependem da regra da operação, do regime tributário e do contexto fiscal.
 
 ---
 
