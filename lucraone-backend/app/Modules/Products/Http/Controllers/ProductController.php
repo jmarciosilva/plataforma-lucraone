@@ -2,6 +2,8 @@
 
 namespace App\Modules\Products\Http\Controllers;
 
+use App\Modules\Products\Application\ProductBarcodeResolver;
+use App\Modules\Products\Domain\Exceptions\BarcodeConflictException;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Products\Http\Requests\StoreProductRequest;
 use App\Modules\Products\Http\Requests\UpdateProductRequest;
@@ -10,6 +12,7 @@ use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -121,6 +124,46 @@ class ProductController extends Controller
             ->paginate(20);
 
         return ProductResource::collection($products);
+    }
+
+    /**
+     * Resolve exact barcode → base product + base quantity (PM-03).
+     *
+     * Só resolve: não adiciona a pedido, não movimenta estoque, não decide preço.
+     */
+    public function resolveBarcode(string $barcode, ProductBarcodeResolver $resolver): JsonResponse
+    {
+        Validator::make(['barcode' => $barcode], [
+            'barcode' => ['required', 'string', 'max:14'],
+        ])->validate();
+
+        try {
+            $resolvido = $resolver->resolve($this->tenantContext->id(), $barcode);
+        } catch (BarcodeConflictException) {
+            return response()->json([
+                'message' => 'código de barras em conflito entre um produto e uma embalagem; corrija o cadastro.',
+            ], 409);
+        }
+
+        if (! $resolvido) {
+            return response()->json(['message' => 'código de barras não encontrado.'], 404);
+        }
+
+        return response()->json([
+            'data' => [
+                'barcode' => $resolvido->barcode,
+                'source' => $resolvido->source,
+                'quantity' => $resolvido->quantity,
+                'unit' => $resolvido->product->unit,
+                'product' => new ProductResource($resolvido->product),
+                'package' => $resolvido->package ? [
+                    'id' => (string) $resolvido->package->id,
+                    'name' => $resolvido->package->name,
+                    'barcode' => $resolvido->package->barcode,
+                    'factor' => $resolvido->package->factor,
+                ] : null,
+            ],
+        ]);
     }
 
     /**

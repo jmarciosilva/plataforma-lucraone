@@ -11,6 +11,7 @@ Route::middleware(['auth:sanctum', 'tenant'])->prefix('v1')->group(function () {
     // Products
     Route::get('products/search/{query}', [ProductController::class, 'search']);
     Route::get('products/status/{status}', [ProductController::class, 'byStatus']);
+    Route::get('products/resolve-barcode/{barcode}', [ProductController::class, 'resolveBarcode']);
     Route::apiResource('products', ProductController::class);
 
     // Categories
