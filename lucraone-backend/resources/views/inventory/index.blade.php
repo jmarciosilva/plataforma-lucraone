@@ -65,19 +65,65 @@
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <x-card>
             <p class="text-sm font-semibold lowercase text-grafite">movimentar estoque</p>
-            <form method="POST" action="{{ route('inventory.adjust') }}" class="mt-4 space-y-4">
+            {{--
+                Embalagem (PM-02B): o seletor só existe para produto com
+                embalagens e para entrada ou saída. Usa x-if, e não x-show,
+                para que o campo nem seja enviado fora desses casos. O resumo
+                da conversão é conveniência: o servidor revalida e converte.
+            --}}
+            <form method="POST" action="{{ route('inventory.adjust') }}" class="mt-4 space-y-4"
+                x-data="{
+                    produto: @js((string) old('product_id', '')),
+                    tipo: @js((string) old('type', 'in')),
+                    embalagem: @js((string) old('package_id', '')),
+                    quantidade: @js((string) old('quantity', '')),
+                    embalagens: @js($packageOptions),
+
+                    get opcoes() {
+                        return this.embalagens[this.produto] ?? [];
+                    },
+                    get aceitaEmbalagem() {
+                        return this.opcoes.length > 0 && ['in', 'out'].includes(this.tipo);
+                    },
+                    get selecionada() {
+                        return this.aceitaEmbalagem ? this.opcoes.find(p => p.id === this.embalagem) : null;
+                    },
+                }"
+                x-init="$watch('produto', () => embalagem = '')"
+            >
                 @csrf
                 <x-form-group nome="product_id" rotulo="produto" obrigatorio>
-                    <x-select nome="product_id" :opcoes="$productOptions" :valor="old('product_id')" vazio="selecione" />
+                    <x-select nome="product_id" :opcoes="$productOptions" :valor="old('product_id')" vazio="selecione" x-model="produto" />
                 </x-form-group>
                 <x-form-group nome="company_id" rotulo="empresa" obrigatorio>
                     <x-select nome="company_id" :opcoes="$companyOptions" :valor="old('company_id')" vazio="selecione" />
                 </x-form-group>
                 <x-form-group nome="type" rotulo="tipo" obrigatorio>
-                    <x-select nome="type" :opcoes="$movementTypes" :valor="old('type', 'in')" />
+                    <x-select nome="type" :opcoes="$movementTypes" :valor="old('type', 'in')" x-model="tipo" />
                 </x-form-group>
+                <template x-if="aceitaEmbalagem">
+                    <x-form-group nome="package_id" rotulo="embalagem" ajuda="Com embalagem, a quantidade é o número de caixas ou fardos; o estoque recebe o total em unidades.">
+                        <select name="package_id" id="package_id" x-model="embalagem"
+                            @class([
+                                'block w-full min-h-11 rounded-xl border bg-white px-3 text-sm text-grafite transition-colors focus:outline-none focus:ring-2 focus:ring-sol/30',
+                                'border-brasa focus:border-brasa' => $errors->has('package_id'),
+                                'border-linha focus:border-sol' => ! $errors->has('package_id'),
+                            ])>
+                            <option value="">unidade base — sem conversão</option>
+                            <template x-for="opcao in opcoes" :key="opcao.id">
+                                <option :value="opcao.id" :selected="opcao.id === embalagem" x-text="`${opcao.name} (${opcao.factor} UN)`"></option>
+                            </template>
+                        </select>
+                    </x-form-group>
+                </template>
+                @error('package_id')
+                    <p x-show="! aceitaEmbalagem" class="text-xs font-semibold text-brasa" role="alert">{{ $message }}</p>
+                @enderror
                 <x-form-group nome="quantity" rotulo="quantidade" obrigatorio>
-                    <x-input tipo="number" nome="quantity" step="0.001" min="0.001" />
+                    <x-input tipo="number" nome="quantity" step="0.001" min="0.001" x-model="quantidade"
+                        x-bind:step="selecionada ? 1 : 0.001" x-bind:min="selecionada ? 1 : 0.001" />
+                    <p x-show="selecionada" x-cloak class="text-xs font-semibold text-grafite"
+                        x-text="selecionada ? `quantidade de embalagens: ${quantidade || 0} × ${selecionada.name} = ${(parseInt(quantidade, 10) || 0) * selecionada.factor} UN` : ''"></p>
                 </x-form-group>
                 <x-form-group nome="reason" rotulo="motivo">
                     <x-input nome="reason" placeholder="compra, perda, inventário..." />

@@ -12,9 +12,11 @@ use App\Modules\Inventory\Domain\Models\InventoryMovement;
 use App\Modules\Inventory\Domain\Models\StockLevel;
 use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Domain\Models\ProductPackage;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class InventoryWebController extends Controller
@@ -68,6 +70,7 @@ class InventoryWebController extends Controller
             'companies' => $this->companies(),
             'categories' => Category::query()->orderBy('name')->get(),
             'products' => $this->products(),
+            'packageOptions' => $this->packageOptions(),
             'movementTypes' => self::MOVEMENT_TYPES,
             'statusOptions' => $this->statusOptions(),
             'summary' => $this->summary(),
@@ -98,14 +101,27 @@ class InventoryWebController extends Controller
     public function adjust(AdjustWebInventoryRequest $request)
     {
         $product = Product::query()->findOrFail($request->validated('product_id'));
+        $package = $request->filled('package_id')
+            ? ProductPackage::query()->findOrFail($request->validated('package_id'))
+            : null;
+
+        // O estoque só conhece a unidade base: a embalagem é convertida aqui,
+        // antes do serviço, e a conversão fica registrada no motivo.
+        $quantity = $package
+            ? (int) $request->validated('quantity') * $package->factor
+            : (float) $request->validated('quantity');
+
+        $reason = $package
+            ? $this->packageReason($request->validated('type'), (int) $request->validated('quantity'), $package, $product, $request->validated('reason'))
+            : $request->validated('reason');
 
         try {
             $inventory = $this->adjustments->adjust(
                 $product,
                 $request->validated('company_id'),
                 $request->validated('type'),
-                (float) $request->validated('quantity'),
-                $request->validated('reason'),
+                (float) $quantity,
+                $reason,
                 $request->user()?->id
             );
         } catch (InvalidArgumentException $exception) {
@@ -163,6 +179,41 @@ class InventoryWebController extends Controller
             ->active()
             ->orderBy('name')
             ->get();
+    }
+
+    /**
+     * Ex.: "entrada por embalagem: 2 × Caixa 24 = 48 UN · compra fornecedor".
+     * O motivo do usuário é preservado; o conjunto respeita as 255 posições da coluna.
+     */
+    private function packageReason(string $type, int $packages, ProductPackage $package, Product $product, ?string $reason): string
+    {
+        $operacao = $type === InventoryMovement::TYPE_OUT ? 'saída' : 'entrada';
+        $total = $packages * $package->factor;
+
+        $texto = "{$operacao} por embalagem: {$packages} × {$package->name} = {$total} {$product->unit}";
+
+        return Str::limit($reason ? "{$texto} · {$reason}" : $texto, 252);
+    }
+
+    /**
+     * Embalagens por produto, só de produtos UN, para o seletor do formulário.
+     */
+    private function packageOptions(): array
+    {
+        return ProductPackage::query()
+            ->whereHas('product', fn ($query) => $query->active()->where('unit', 'UN'))
+            ->orderBy('factor')
+            ->get(['id', 'product_id', 'name', 'factor'])
+            ->groupBy('product_id')
+            ->map(fn ($packages) => $packages
+                ->map(fn (ProductPackage $package) => [
+                    'id' => $package->id,
+                    'name' => $package->name,
+                    'factor' => $package->factor,
+                ])
+                ->values()
+                ->all())
+            ->all();
     }
 
     private function statusOptions(): array
