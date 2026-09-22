@@ -91,6 +91,7 @@ class ProductWebManagementTest extends TestCase
             'name' => 'Café Torrado',
             'description' => 'Pacote de café torrado.',
             'status' => 'active',
+            'unit' => 'UN',
             'category_ids' => [(string) $category->id],
         ]);
 
@@ -148,6 +149,7 @@ class ProductWebManagementTest extends TestCase
                 'name' => 'Nome Novo',
                 'description' => 'Descrição nova',
                 'status' => 'inactive',
+                'unit' => 'UN',
                 'category_ids' => [(string) $category->id],
             ])
             ->assertSessionHasNoErrors()
@@ -304,6 +306,171 @@ class ProductWebManagementTest extends TestCase
         $this->actingAs($usuario)
             ->get(route('catalog.categories.index'))
             ->assertForbidden();
+    }
+
+    public function test_formulario_exibe_barcode_e_unidade_com_un_pre_selecionada(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('catalog.products.create'))
+            ->assertOk()
+            ->assertSee('código de barras (EAN/GTIN)')
+            ->assertSee('Opcional. Informe o código da embalagem vendida.')
+            ->assertSee('UN — Unidade')
+            ->assertSee('KG — Quilograma')
+            ->assertSee('<option value="UN" selected', false);
+    }
+
+    public function test_criar_produto_persiste_barcode_e_unidade(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('catalog.products.store'), $this->dadosProduto([
+                'sku' => 'MAC-FRE-KG',
+                'name' => 'Massa de macarrão fresca',
+                'barcode' => '2000000000015',
+                'unit' => 'KG',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('products', [
+            'tenant_id' => $this->tenantAtual->id,
+            'sku' => 'MAC-FRE-KG',
+            'barcode' => '2000000000015',
+            'unit' => 'KG',
+        ]);
+    }
+
+    public function test_criar_produto_sem_barcode_grava_nulo(): void
+    {
+        $this->actingAs($this->admin)
+            ->post(route('catalog.products.store'), $this->dadosProduto(['sku' => 'ART-001', 'barcode' => '']))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('products', ['sku' => 'ART-001', 'barcode' => null, 'unit' => 'UN']);
+    }
+
+    public function test_unidade_obrigatoria_e_restrita_a_un_e_kg_no_painel(): void
+    {
+        foreach ([null, 'LT'] as $unidade) {
+            $this->actingAs($this->admin)
+                ->from(route('catalog.products.create'))
+                ->post(route('catalog.products.store'), $this->dadosProduto(['sku' => 'U-'.Str::random(4), 'unit' => $unidade]))
+                ->assertRedirect(route('catalog.products.create'))
+                ->assertSessionHasErrors('unit');
+        }
+    }
+
+    public function test_barcode_duplicado_no_mesmo_tenant_retorna_erro_mas_outro_tenant_nao_conflita(): void
+    {
+        Product::factory()->create([
+            'tenant_id' => $this->outroTenant->id,
+            'barcode' => '7890000000350',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('catalog.products.store'), $this->dadosProduto(['sku' => 'REF-350', 'barcode' => '7890000000350']))
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($this->admin)
+            ->from(route('catalog.products.create'))
+            ->post(route('catalog.products.store'), $this->dadosProduto(['sku' => 'REF-350-B', 'barcode' => '7890000000350']))
+            ->assertRedirect(route('catalog.products.create'))
+            ->assertSessionHasErrors('barcode');
+    }
+
+    public function test_editar_mantem_o_proprio_barcode_e_recusa_o_de_outro_produto(): void
+    {
+        Product::factory()->create([
+            'tenant_id' => $this->tenantAtual->id,
+            'company_id' => $this->company->id,
+            'barcode' => '7890000000600',
+        ]);
+        $product = Product::factory()->create([
+            'tenant_id' => $this->tenantAtual->id,
+            'company_id' => $this->company->id,
+            'barcode' => '7890000002000',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->put(route('catalog.products.update', $product), $this->dadosProduto([
+                'sku' => $product->sku,
+                'barcode' => '7890000002000',
+                'unit' => 'UN',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($this->admin)
+            ->from(route('catalog.products.edit', $product))
+            ->put(route('catalog.products.update', $product), $this->dadosProduto([
+                'sku' => $product->sku,
+                'barcode' => '7890000000600',
+            ]))
+            ->assertRedirect(route('catalog.products.edit', $product))
+            ->assertSessionHasErrors('barcode');
+
+        $this->assertSame('7890000002000', $product->fresh()->barcode);
+    }
+
+    public function test_busca_do_painel_encontra_por_barcode_e_listagem_mostra_unidade(): void
+    {
+        Product::factory()->create([
+            'tenant_id' => $this->tenantAtual->id,
+            'company_id' => $this->company->id,
+            'name' => 'Refrigerante cola 350 ml',
+            'barcode' => '7890000000350',
+            'unit' => 'UN',
+        ]);
+        Product::factory()->create([
+            'tenant_id' => $this->tenantAtual->id,
+            'company_id' => $this->company->id,
+            'name' => 'Massa de pastel 500 g',
+            'barcode' => '7890000000500',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('catalog.products.index', ['search' => '7890000000350']))
+            ->assertOk()
+            ->assertSee('Refrigerante cola 350 ml')
+            ->assertDontSee('Massa de pastel 500 g')
+            ->assertSee('unidade');
+    }
+
+    public function test_detalhe_mostra_barcode_e_unidade_ou_ausencia_de_codigo(): void
+    {
+        $comCodigo = Product::factory()->create([
+            'tenant_id' => $this->tenantAtual->id,
+            'company_id' => $this->company->id,
+            'barcode' => '7890000000350',
+            'unit' => 'UN',
+        ]);
+        $semCodigo = Product::factory()->create([
+            'tenant_id' => $this->tenantAtual->id,
+            'company_id' => $this->company->id,
+            'unit' => 'KG',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('catalog.products.show', $comCodigo))
+            ->assertOk()
+            ->assertSee('7890000000350')
+            ->assertSee('UN — Unidade');
+
+        $this->actingAs($this->admin)
+            ->get(route('catalog.products.show', $semCodigo))
+            ->assertOk()
+            ->assertSee('sem código de barras')
+            ->assertSee('KG — Quilograma');
+    }
+
+    private function dadosProduto(array $dados = []): array
+    {
+        return [
+            'company_id' => (string) $this->company->id,
+            'sku' => 'SKU-'.Str::random(6),
+            'name' => 'Produto',
+            'status' => 'active',
+            'unit' => 'UN',
+            ...$dados,
+        ];
     }
 
     private function tornarAdmin(User $user, Tenant $tenant): void

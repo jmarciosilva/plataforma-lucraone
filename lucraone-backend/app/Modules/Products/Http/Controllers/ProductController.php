@@ -39,6 +39,8 @@ class ProductController extends Controller
             'tenant_id' => $this->tenantContext->id(),
             'company_id' => $request->validated('company_id'),
             'sku' => $request->validated('sku'),
+            'barcode' => $request->validated('barcode'),
+            'unit' => $request->validated('unit', 'UN'),
             'name' => $request->validated('name'),
             'description' => $request->validated('description'),
             'status' => $request->validated('status'),
@@ -104,7 +106,7 @@ class ProductController extends Controller
     }
 
     /**
-     * Search products by SKU or name
+     * Search products by SKU, barcode or name
      */
     public function search(string $query): AnonymousResourceCollection
     {
@@ -112,6 +114,7 @@ class ProductController extends Controller
             ->where('tenant_id', $this->tenantContext->id())
             ->where(function ($q) use ($query) {
                 $q->where('sku', 'like', "%{$query}%")
+                    ->orWhere('barcode', 'like', "%{$query}%")
                     ->orWhere('name', 'like', "%{$query}%");
             })
             ->with(['categories', 'prices'])

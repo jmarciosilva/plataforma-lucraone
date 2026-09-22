@@ -36,6 +36,14 @@
                     <dt class="text-xs lowercase text-aco">empresa</dt>
                     <dd class="mt-1 text-sm text-grafite">{{ $product->company?->trade_name ?: $product->company?->legal_name ?: 'sem empresa' }}</dd>
                 </div>
+                <div>
+                    <dt class="text-xs lowercase text-aco">código de barras</dt>
+                    <dd class="mt-1 font-comanda text-sm text-grafite">{{ $product->barcode ?: 'sem código de barras' }}</dd>
+                </div>
+                <div>
+                    <dt class="text-xs lowercase text-aco">unidade de venda/estoque</dt>
+                    <dd class="mt-1 text-sm text-grafite">{{ $unitOptions[$product->unit] ?? $product->unit }}</dd>
+                </div>
                 <div class="sm:col-span-2">
                     <dt class="text-xs lowercase text-aco">descrição</dt>
                     <dd class="mt-1 text-sm text-grafite">{{ $product->description ?: 'não informada' }}</dd>

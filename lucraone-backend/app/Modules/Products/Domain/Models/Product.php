@@ -43,15 +43,29 @@ class Product extends Model
         return ProductFactory::new();
     }
 
+    /**
+     * Unidade base de venda e estoque: o que significa quantity = 1.
+     */
+    public const UNITS = [
+        'UN' => 'Unidade',
+        'KG' => 'Quilograma',
+    ];
+
     protected $table = 'products';
 
     protected $fillable = [
         'tenant_id',
         'company_id',
         'sku',
+        'barcode',
+        'unit',
         'name',
         'description',
         'status',
+    ];
+
+    protected $attributes = [
+        'unit' => 'UN',
     ];
 
     protected $casts = [

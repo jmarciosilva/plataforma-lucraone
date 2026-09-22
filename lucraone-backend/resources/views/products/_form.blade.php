@@ -19,6 +19,14 @@
         <x-input nome="sku" :valor="$product->sku" />
     </x-form-group>
 
+    <x-form-group nome="barcode" rotulo="código de barras (EAN/GTIN)" ajuda="Opcional. Informe o código da embalagem vendida. Produtos sem código de barras podem usar apenas o SKU.">
+        <x-input nome="barcode" :valor="$product->barcode" inputmode="numeric" maxlength="14" autocomplete="off" />
+    </x-form-group>
+
+    <x-form-group nome="unit" rotulo="unidade de venda/estoque" obrigatorio ajuda="Escolha como o estoque e a venda deste produto serão contabilizados. Use KG só para venda a peso (ex.: 0,350 kg); pacote de 1 kg ou garrafa de 2 L vendidos inteiros são UN.">
+        <x-select nome="unit" :opcoes="$unitOptions" :valor="$product->unit" />
+    </x-form-group>
+
     <x-form-group nome="name" rotulo="nome" obrigatorio>
         <x-input nome="name" :valor="$product->name" />
     </x-form-group>

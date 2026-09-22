@@ -33,6 +33,13 @@ class StoreWebProductRequest extends FormRequest
                 'max:100',
                 Rule::unique('products', 'sku')->where('tenant_id', $context->id()),
             ],
+            'barcode' => [
+                'nullable',
+                'string',
+                'max:14',
+                Rule::unique('products', 'barcode')->where('tenant_id', $context->id()),
+            ],
+            'unit' => ['required', 'string', Rule::in(array_keys(Product::UNITS))],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'status' => ['required', Rule::in(['active', 'inactive', 'discontinued'])],

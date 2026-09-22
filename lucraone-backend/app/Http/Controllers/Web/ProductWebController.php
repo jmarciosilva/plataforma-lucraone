@@ -43,6 +43,7 @@ class ProductWebController extends Controller
 
                 $query->where(function ($query) use ($search) {
                     $query->where('sku', 'like', "%{$search}%")
+                        ->orWhere('barcode', 'like', "%{$search}%")
                         ->orWhere('name', 'like', "%{$search}%");
                 });
             })
@@ -108,6 +109,7 @@ class ProductWebController extends Controller
         return view('products.show', [
             'product' => $product,
             'priceTypes' => self::PRICE_TYPES,
+            'unitOptions' => $this->unitOptions(),
             'priceHistory' => PriceHistory::query()
                 ->where('product_id', $product->id)
                 ->with('changedBy')
@@ -235,12 +237,20 @@ class ProductWebController extends Controller
     {
         return [
             'statusOptions' => self::STATUS,
+            'unitOptions' => $this->unitOptions(),
             'companies' => $this->companies(),
             'categories' => Category::query()
                 ->with('parent')
                 ->orderBy('name')
                 ->get(),
         ];
+    }
+
+    private function unitOptions(): array
+    {
+        return collect(Product::UNITS)
+            ->mapWithKeys(fn (string $rotulo, string $unidade) => [$unidade => "{$unidade} — {$rotulo}"])
+            ->all();
     }
 
     private function companies()
