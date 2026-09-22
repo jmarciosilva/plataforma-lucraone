@@ -1,6 +1,6 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-09-22 · **PM-02A concluído** — 612 testes no total: 610
+**Atualizado:** 2026-09-22 · **PM-02B concluído** — 627 testes no total: 625
 PASS, 0 FAIL e 2 risky preexistentes · SEC-04 resolvido em 2026-09-12
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
@@ -1400,7 +1400,7 @@ O que esta trilha é, e o que não é:
 |---|---|---|---|
 | PM-01 | Código de barras e unidade base | Concluído | — |
 | PM-02A | Embalagens comerciais / Product Packages | Concluído | PM-01 |
-| PM-02B | Entrada de estoque por embalagem | Planejado | PM-02A |
+| PM-02B | Entrada de estoque por embalagem | Concluído | PM-02A |
 | PM-03 | Resolução exata por código de barras | Planejado | PM-02A |
 | PM-04 | Regras de quantidade para PDV | Planejado | PM-01 |
 | PM-05 | Dados fiscais do produto | Futuro · antes da NFC-e/NF-e | — |
@@ -1412,7 +1412,7 @@ entrega.
 PM-01 — barcode + unit                ✅ CONCLUÍDO
         ↓
 PM-02A — product_packages             ✅ CONCLUÍDO
-        ├─ PM-02B — entrada por embalagem      📋 PLANEJADO
+        ├─ PM-02B — entrada por embalagem      ✅ CONCLUÍDO
         └─ PM-03 — resolução exata de barcode  📋 PLANEJADO
         ↓
 PM-04 — quantidade para PDV           📋 PLANEJADO · antes do PDV
@@ -1583,24 +1583,91 @@ janela de concorrência descrita em "Limitação conhecida".
 
 ### PM-02B — Entrada de estoque por embalagem
 
-**Planejado** — Depende de: PM-02A (dependência satisfeita em `c4fafea`; etapa
-não iniciada)
+**Concluído** — `da291b12adb77d2e9b2ca50c71315ab8a5e8e725` (2026-09-22) —
+Depende de: PM-02A
 
 **Objetivo.** Permitir informar a quantidade em embalagens e convertê-la
-automaticamente para a unidade base do Product:
+automaticamente para a unidade base do Product.
+
+Entregue no painel web:
+
+- movimentação de estoque com `package_id` opcional. A `ProductPackage` é usada
+  só como entrada para a conversão;
+- a conversão acontece em `InventoryWebController::adjust`, **antes** da chamada
+  ao `InventoryAdjustmentService`, que continua recebendo quantidade na unidade
+  base. Inventory não conhece `ProductPackage`, e nem o serviço nem o schema de
+  Inventory foram alterados.
 
 ```
-Embalagem: Caixa 24
-Entrada:   2 caixas
-Conversão: 2 × 24 = 48 UN
+quantidade informada × ProductPackage.factor = quantidade base enviada ao serviço
+2 × Caixa 24                                 = 48 UN
 ```
 
-O estoque continua armazenando `48`, e não "2 caixas". Inventory permanece
-controlado somente na unidade base do Product.
+**Tipos.** Embalagem vale para `in` e `out`. Não vale para `adjustment`, que
+representa saldo absoluto, nem para `reservation` e `release`.
 
-A conversão vale para os tipos `in` e `out`; o `adjustment`, que define o saldo
-absoluto, continua informado na unidade base. Não se prevê alteração no schema
-de Inventory nesta etapa.
+**Quantidade.** Com embalagem, `quantity` é o número de embalagens: inteiro e
+maior ou igual a 1. Sem embalagem, o comportamento anterior permanece:
+
+| Product | Quantidade informada | Estoque |
+|---|---|---|
+| `UN`, sem embalagem | 5 | 5 UN |
+| `KG`, sem embalagem | 0,350 | 0,350 KG |
+| `UN`, 2 × Caixa 24 | 2 | 48 UN |
+
+**Produto KG.** Embalagem não pode ser usada em Product com `unit = KG`,
+preservando a regra do PM-02A — inclusive quando a embalagem foi criada antes de
+a unidade do produto mudar. Produto `KG` continua aceitando quantidade decimal
+sem embalagem.
+
+**Movimentação e saldo.** `InventoryMovement.quantity` e o saldo continuam
+gravados na unidade base:
+
+| Operação | Movimento | Saldo |
+|---|---|---|
+| saldo inicial | — | 10 |
+| entrada de 2 × Caixa 24 | 48 | 58 |
+| saída de 1 × Caixa 24 | 24 | 34 |
+
+**Rastreabilidade no motivo.** Quando há embalagem, a conversão é incluída no
+`reason` e o motivo informado pelo usuário é preservado:
+
+```
+entrada por embalagem: 2 × Caixa 24 = 48 UN · compra fornecedor
+```
+
+Sem embalagem, o `reason` mantém o comportamento anterior. O texto composto
+respeita o limite de 255 caracteres da coluna.
+
+**Painel.** Seletor de embalagens no formulário de movimentação, com as
+embalagens apenas do Product escolhido, apenas para Product `UN` e apenas em
+entrada ou saída; opção "unidade base — sem conversão"; texto de ajuda; e resumo
+visual da conversão. O frontend só auxilia a UX: a conversão real é sempre
+refeita no backend. Sem JavaScript, o seletor não aparece e o fluxo tradicional,
+sem embalagem, continua funcionando.
+
+**API.** A movimentação de estoque por embalagem **não** foi implementada na API.
+Fica para o futuro, antes de integrações externas.
+
+**Escopo preservado.** O PM-02B não alterou o schema de Inventory, o
+`InventoryAdjustmentService`, a API, Orders, Price, Products, fiscal, PDV nem
+scanner.
+
+**Evidência na publicação.** 15 testes novos em `InventoryPackageEntryWebTest`,
+cobrindo entrada e saída sem embalagem, `KG` decimal sem embalagem,
+`adjustment` sem embalagem, entrada e saída por embalagem, fator, embalagem de
+outro tenant, embalagem de outro produto, Product `KG`, `adjustment`,
+`reservation` e `release` com embalagem, quantidade inválida, embalagem
+removida, formulário, `InventoryMovement` e saldo final. As recusas conferem a
+mensagem esperada. Testes específicos: 15 PASS, 0 FAIL e 63 assertions. A suíte
+completa passou a ter 627 testes: 625 PASS, 0 FAIL, 2 risky preexistentes de
+`SecurityAuditTest` e 2054 assertions.
+
+**Dívidas preservadas.** As do PM-01 e do PM-02A continuam como registradas
+acima — `StorePriceRequest` com UUID, SKU duplicado na API, ajuste absoluto sem
+zero, relatório somando `UN` e `KG`, Pint preexistente, busca por `LIKE` e a
+janela de concorrência na unicidade de código de barras entre as duas tabelas.
+Continuam futuras a API de `ProductPackage` e a API de estoque por embalagem.
 
 ### PM-03 — Resolução exata por código de barras
 
