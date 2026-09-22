@@ -111,6 +111,11 @@ class Product extends Model
         return $this->hasMany(Price::class);
     }
 
+    public function packages()
+    {
+        return $this->hasMany(ProductPackage::class);
+    }
+
     public function inventory()
     {
         return $this->hasOne(\App\Modules\Inventory\Domain\Models\Inventory::class);

@@ -5,6 +5,7 @@ namespace Tests\Feature\Products;
 use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Domain\Models\ProductPackage;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -180,6 +181,44 @@ class ProductMasterDataApiTest extends TestCase
             ->assertStatus(200)
             ->assertJsonPath('data.barcode', '7890000000001')
             ->assertJsonPath('data.unit', 'KG');
+    }
+
+    public function test_api_recusa_barcode_de_embalagem_do_tenant_na_criacao_e_na_edicao(): void
+    {
+        $lata = $this->produto(['barcode' => '7890000000350']);
+        ProductPackage::factory()->create([
+            'tenant_id' => $this->tenant->id,
+            'product_id' => $lata->id,
+            'barcode' => '17890000000357',
+        ]);
+
+        $this->criar(['sku' => 'OUTRO', 'barcode' => '17890000000357'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('barcode');
+
+        $this->atualizar($lata, ['barcode' => '17890000000357'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('barcode');
+
+        $this->atualizar($lata, ['barcode' => '7890000000350'])
+            ->assertStatus(200);
+    }
+
+    public function test_api_aceita_barcode_de_embalagem_de_outro_tenant(): void
+    {
+        [$outroTenant, $outraEmpresa] = $this->contexto();
+        $produtoAlheio = Product::factory()->create([
+            'tenant_id' => $outroTenant->id,
+            'company_id' => $outraEmpresa->id,
+        ]);
+        ProductPackage::factory()->create([
+            'tenant_id' => $outroTenant->id,
+            'product_id' => $produtoAlheio->id,
+            'barcode' => '17890000000357',
+        ]);
+
+        $this->criar(['sku' => 'REF-CX', 'barcode' => '17890000000357'])
+            ->assertStatus(201);
     }
 
     public function test_busca_por_barcode_encontra_o_produto(): void

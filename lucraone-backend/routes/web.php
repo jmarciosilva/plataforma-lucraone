@@ -85,6 +85,10 @@ Route::middleware('auth.web')->group(function () {
         ->name('catalog.products.prices.store');
     Route::delete('/products/{product}/prices/{price}', [ProductWebController::class, 'destroyPrice'])
         ->name('catalog.products.prices.destroy');
+    Route::post('/products/{product}/packages', [ProductWebController::class, 'storePackage'])
+        ->name('catalog.products.packages.store');
+    Route::delete('/products/{product}/packages/{package}', [ProductWebController::class, 'destroyPackage'])
+        ->name('catalog.products.packages.destroy');
     Route::resource('products', ProductWebController::class)
         ->names('catalog.products');
 

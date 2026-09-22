@@ -85,6 +85,61 @@
         </x-card>
     </div>
 
+    <x-section-label class="mt-8">embalagens</x-section-label>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        @if (! $product->trashed())
+            <x-card>
+                <p class="text-sm font-semibold lowercase text-grafite">nova embalagem</p>
+
+                @if ($product->unit === 'UN')
+                    <p class="mt-1 text-xs text-aco">caixa, fardo ou multipack deste produto. o estoque continua contado em {{ $product->unit }}.</p>
+
+                    <form method="POST" action="{{ route('catalog.products.packages.store', $product) }}" class="mt-4 space-y-4">
+                        @csrf
+                        <x-form-group nome="name" rotulo="nome" obrigatorio>
+                            <x-input nome="name" placeholder="caixa 24, fardo 6..." maxlength="100" />
+                        </x-form-group>
+                        <x-form-group nome="barcode" rotulo="código de barras" ajuda="Opcional. Código impresso na caixa ou no fardo, diferente do código da unidade.">
+                            <x-input nome="barcode" inputmode="numeric" maxlength="14" autocomplete="off" />
+                        </x-form-group>
+                        <x-form-group nome="factor" rotulo="fator" obrigatorio ajuda="Quantas unidades do produto a embalagem contém.">
+                            <x-input tipo="number" nome="factor" step="1" min="2" />
+                        </x-form-group>
+                        <x-button tipo="submit" class="w-full">salvar embalagem</x-button>
+                    </form>
+                @else
+                    <p class="mt-4 text-sm text-aco">Embalagens comerciais estão disponíveis inicialmente apenas para produtos com unidade UN.</p>
+                @endif
+            </x-card>
+        @endif
+
+        <div class="{{ $product->trashed() ? 'lg:col-span-3' : 'lg:col-span-2' }}">
+            <x-table :cabecalhos="['embalagem', 'código de barras', 'contém', '']">
+                @forelse ($product->packages as $package)
+                    <tr class="border-b border-linha last:border-0">
+                        <td class="px-5 py-4 font-semibold lowercase text-grafite">{{ $package->name }}</td>
+                        <td class="px-5 py-4 font-comanda text-sm text-aco">{{ $package->barcode ?: 'sem código' }}</td>
+                        <td class="px-5 py-4 font-comanda text-sm text-grafite">{{ $package->factor }} {{ $product->unit }}</td>
+                        <td class="px-5 py-4 text-right">
+                            @if (! $product->trashed())
+                                <form method="POST" action="{{ route('catalog.products.packages.destroy', [$product, $package]) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-button variante="fantasma" tipo="submit">remover</x-button>
+                                </form>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4" class="px-5 py-10 text-center text-sm text-aco">nenhuma embalagem cadastrada.</td>
+                    </tr>
+                @endforelse
+            </x-table>
+        </div>
+    </div>
+
     <x-section-label class="mt-8">preços</x-section-label>
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">

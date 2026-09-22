@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreWebPriceRequest;
+use App\Http\Requests\StoreWebProductPackageRequest;
 use App\Http\Requests\StoreWebProductRequest;
 use App\Http\Requests\UpdateWebProductRequest;
 use App\Modules\Companies\Domain\Models\Company;
@@ -11,6 +12,7 @@ use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Products\Domain\Models\Price;
 use App\Modules\Products\Domain\Models\PriceHistory;
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Domain\Models\ProductPackage;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -104,7 +106,7 @@ class ProductWebController extends Controller
 
         Gate::authorize('view', $product);
 
-        $product->load(['company', 'categories', 'prices']);
+        $product->load(['company', 'categories', 'prices', 'packages']);
 
         return view('products.show', [
             'product' => $product,
@@ -223,6 +225,32 @@ class ProductWebController extends Controller
         return redirect()
             ->route('catalog.products.show', $product)
             ->with('sucesso', 'preço removido.');
+    }
+
+    public function storePackage(StoreWebProductPackageRequest $request, Product $product, TenantContext $context)
+    {
+        ProductPackage::create([
+            ...$request->validated(),
+            'tenant_id' => $context->id(),
+            'product_id' => $product->id,
+        ]);
+
+        return redirect()
+            ->route('catalog.products.show', $product)
+            ->with('sucesso', 'embalagem cadastrada.');
+    }
+
+    public function destroyPackage(Product $product, ProductPackage $package)
+    {
+        Gate::authorize('update', $product);
+
+        abort_unless($package->product_id === $product->id, 404);
+
+        $package->delete();
+
+        return redirect()
+            ->route('catalog.products.show', $product)
+            ->with('sucesso', 'embalagem removida.');
     }
 
     private function breadcrumbs(): array

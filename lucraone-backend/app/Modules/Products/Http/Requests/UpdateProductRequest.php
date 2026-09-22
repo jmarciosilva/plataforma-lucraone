@@ -3,6 +3,7 @@
 namespace App\Modules\Products\Http\Requests;
 
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Http\Rules\BarcodeAvailable;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -22,9 +23,7 @@ class UpdateProductRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:14',
-                Rule::unique('products', 'barcode')
-                    ->where('tenant_id', $context->id())
-                    ->ignore($this->route('product')),
+                new BarcodeAvailable($context->id(), $this->route('product')),
             ],
             'unit' => ['sometimes', 'string', Rule::in(array_keys(Product::UNITS))],
             'name' => ['sometimes', 'string', 'max:255'],
