@@ -1,7 +1,8 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-09-22 · **PM-03 concluído** — 642 testes no total: 640
-PASS, 0 FAIL e 2 risky preexistentes · SEC-04 resolvido em 2026-09-12
+**Atualizado:** 2026-09-23 · **PM-04 dividido em PM-04A/PM-04B/PM-04C — PM-04A
+planejado** — 642 testes no total: 640 PASS, 0 FAIL e 2 risky preexistentes ·
+SEC-04 resolvido em 2026-09-12
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
@@ -1402,7 +1403,9 @@ O que esta trilha é, e o que não é:
 | PM-02A | Embalagens comerciais / Product Packages | Concluído | PM-01 |
 | PM-02B | Entrada de estoque por embalagem | Concluído | PM-02A |
 | PM-03 | Resolução exata por código de barras | Concluído | PM-02A |
-| PM-04 | Regras de quantidade para PDV | Planejado | PM-01 |
+| PM-04A | Quantidade coerente com a unidade | Planejado | PM-01 |
+| PM-04B | Snapshot histórico do item | Planejado | PM-04A |
+| PM-04C | Semântica de linhas para o futuro PDV | Planejado | PM-04B + desenho do PDV |
 | PM-05 | Dados fiscais do produto | Futuro · antes da NFC-e/NF-e | — |
 
 Como nas pendências, uma etapa só passa a `Concluído` com testes que provem a
@@ -1415,7 +1418,11 @@ PM-02A — product_packages             ✅ CONCLUÍDO
         ├─ PM-02B — entrada por embalagem      ✅ CONCLUÍDO
         └─ PM-03 — resolução exata de barcode  ✅ CONCLUÍDO
         ↓
-PM-04 — quantidade para PDV           📋 PLANEJADO · antes do PDV
+PM-04A — quantidade coerente com a unidade   📋 PLANEJADO
+        ↓
+PM-04B — snapshot histórico do item          📋 PLANEJADO
+        ↓
+PM-04C — semântica de linhas para o PDV      📋 PLANEJADO · + desenho do PDV
         ↓
 PM-05 — dados fiscais do produto      📋 FUTURO · antes da NFC-e/NF-e
 ```
@@ -1772,22 +1779,182 @@ API de estoque por embalagem. Observadas no PM-03 e também preservadas: o pedid
 pela API não confere o status do Product; EAN alternativo da mesma unidade
 (fator 1) e código de balança continuam futuros.
 
-### PM-04 — Regras de quantidade para PDV
+### PM-04 — Regras de quantidade para PDV (dividido)
+
+Planejado originalmente como etapa única, dependente do PM-01. A auditoria
+pré-implementação (2026-09-23, sobre `9f955ba`) encontrou três
+responsabilidades diferentes:
+
+1. regra de quantidade conforme `Product.unit`;
+2. snapshot histórico do `OrderItem`;
+3. semântica de linhas para o futuro PDV.
+
+Por isso o PM-04 foi dividido em PM-04A, PM-04B e PM-04C, na mesma trilha. Não
+é uma fase nova, e a trilha F2.x não muda. O PM-05 continua independente desta
+divisão.
+
+**Estado atual encontrado na auditoria.**
+
+- `order_items.quantity` é `decimal(14,3)`; `unit_price` e `total` são
+  `decimal(14,2)`;
+- `OrderItem` guarda snapshot só de `sku` e `name`. Não há `unit` nem `barcode`;
+- API (`StoreOrderRequest`) e painel (`StoreWebOrderItemRequest`) validam
+  `quantity` só como `numeric|min:0.001`: Product `UN` aceita 1,5 hoje;
+- `OrderService::addItem` é o caminho comum de API e painel. Ele converte para
+  `float`, soma com a linha existente do mesmo Product e grava por
+  `updateOrCreate`, apoiado no índice único `(order_id, product_id)`;
+- Sales passa `quantity` direto para `InventoryAdjustmentService`, em
+  `reservation`, `release` e `out`, sem conversão nem arredondamento;
+- o total da linha é `round(quantity × unit_price, 2)` em `float`. 0,350 ×
+  R$ 20,00 resulta corretamente em R$ 7,00;
+- não havia teste de quantidade decimal, Product `KG` em pedido, duas linhas do
+  mesmo Product nem snapshot histórico.
+
+#### PM-04A — Quantidade coerente com a unidade
 
 **Planejado** — Depende de: PM-01
 
-**Objetivo.** Aplicar comportamento coerente com `products.unit`:
+**Objetivo.** Garantir que a quantidade usada em pedidos seja coerente com
+`products.unit`.
 
-- Product `UN`: não aceitar quantidade fracionada;
-- Product `KG`: aceitar quantidade decimal.
+| `Product.unit` | Regra |
+|---|---|
+| `UN` | inteira, mínimo 1; quantidade fracionada recusada |
+| `KG` | decimal, maior que zero, no máximo 3 casas decimais |
 
-A revisar junto com esta etapa:
+**Onde a regra mora.**
 
-- `OrderItem`;
-- snapshot de `unit` e de `barcode` no item;
-- linhas separadas no cupom, hoje somadas pela unicidade `(order_id,
-  product_id)`;
-- leitura de embalagem.
+- API e painel compartilham a mesma regra;
+- `OrderService` continua como guarda autoritativo, porque é o caminho comum de
+  API, painel e futuro PDV;
+- a validação HTTP reutiliza uma regra compartilhada, para a mensagem sair no
+  campo certo;
+- o frontend só melhora a UX (por exemplo, `step` conforme a unidade);
+- a regra não fica apenas no Model.
+
+**Precisão.** A auditoria confirmou um risco real em Inventory: a comparação de
+reservas usa `float`, e em PHP `0.1 + 0.2 > 0.3` resulta verdadeiro. Isso pode
+recusar uma reserva válida de Product `KG` — por exemplo, saldo 0,300, reserva
+existente 0,100 e novo pedido de 0,200. **O PM-04A só pode ser considerado
+concluído se a reserva de estoque for compatível com a precisão decimal usada
+por `quantity`.**
+
+O PM-04A também deve:
+
+- limitar `quantity` à escala de `decimal(14,3)`;
+- recusar mais de 3 casas decimais;
+- evitar overflow de `decimal(14,3)`;
+- recusar notação científica (`1e3` passa em `numeric` hoje);
+- preservar o comportamento correto de 0,350 `KG`.
+
+**Fora do PM-04A:** migration de `order_items`, snapshot de `unit`, snapshot de
+`barcode`, código de barras lido, `product_package_id`, remoção da unicidade
+`(order_id, product_id)`, linhas repetidas, scanner, PDV e fiscal.
+
+#### PM-04B — Snapshot histórico do item
+
+**Planejado** — Depende de: PM-04A
+
+**Objetivo.** Preservar no `OrderItem` o significado histórico de `quantity`.
+
+**Decisão.** `order_items.unit` deverá ser avaliado e implementado como snapshot
+da unidade vigente no momento da venda. `quantity` sozinha não diz se 0,350 é
+`KG` ou se 2 é `UN`.
+
+- `OrderItem` já guarda snapshot de `sku` e `name`;
+- `unit` ainda não existe;
+- ler `Product.unit` depois da venda tornaria o histórico mutável, porque a
+  unidade do Product pode ser editada;
+- relatórios e o futuro fiscal precisam da unidade histórica.
+
+**Migration.** Provavelmente exigirá `order_items.unit`, com backfill dos
+registros existentes a partir do `Product.unit` atual. Limitação conhecida: para
+pedidos antigos, o backfill assume que a unidade do Product não mudou desde a
+venda.
+
+**Código de barras — decisão adiada.** Não está decidido que `barcode` entra no
+PM-04B. São dois conceitos diferentes, não necessariamente iguais:
+
+- `Product.barcode` — o código do Product base;
+- código de barras efetivamente lido.
+
+| Registro | Código |
+|---|---|
+| `Product.barcode` | 789AAA |
+| `ProductPackage.barcode` | 789BOX |
+| lido pelo scanner | 789BOX |
+
+O PM-03 resolve os dois códigos para o mesmo Product base. A estratégia de
+snapshot de código de barras será decidida junto com a semântica do futuro PDV,
+no PM-04C ou em etapa equivalente.
+
+#### PM-04C — Semântica de linhas para o futuro PDV
+
+**Planejado** — Depende de: PM-04B e do desenho funcional do PDV
+
+**Objetivo.** Definir como cada leitura ou adição aparece como linha de venda.
+
+**Problemas atuais.**
+
+- índice único `(order_id, product_id)`;
+- `OrderService` consolida itens por `product_id`;
+- `updateOrCreate` soma a quantidade;
+- adicionar de novo o mesmo Product pode reprecificar a linha inteira com o novo
+  preço unitário;
+- a origem por embalagem é perdida.
+
+**Exemplo.**
+
+```
+1 Coca-Cola 350 ml avulsa
++ 1 Caixa 24 Coca-Cola 350 ml
+
+hoje        → 25 UN em uma única linha
+futuro PDV  → pode exigir linhas distintas para preservar origem e apresentação
+```
+
+Esse não é necessariamente o desenho final: é uma questão a responder no
+PM-04C.
+
+**A avaliar:**
+
+- remover a unicidade `(order_id, product_id)`;
+- permitir linhas repetidas do mesmo Product;
+- preservar o código de barras efetivamente lido;
+- armazenar `product_package_id` quando fizer sentido;
+- snapshot de `package_name`;
+- snapshot de `factor`;
+- cancelamento de uma linha específica;
+- linhas separadas no cupom;
+- comportamento da entrada manual versus scanner.
+
+**ProductPackage.** Não é necessária no `OrderItem` para estoque, porque
+Inventory trabalha na unidade base. Pode ser útil para cupom, auditoria, UX,
+rastreabilidade e preço por embalagem. A decisão fica no PM-04C.
+
+**PM-03 → Orders.** O PM-03 já fornece o Product base, `source`, `quantity`,
+`unit` e a embalagem opcional, e o `OrderService` atual já consegue receber a
+quantidade base. Hoje, porém, `source`, embalagem e código lido se perdem, e o
+item é consolidado por `product_id`. Essas limitações pertencem ao PM-04C.
+
+#### PM-04 — Dívidas e riscos preservados
+
+**Relatórios.** A dívida já registrada no PM-01 continua: `SalesReportService`
+soma `UN` e `KG` em `itens_vendidos`, e a tela e o e-mail exibem a quantidade
+com 0 casas decimais e rótulo "un". Ela passa a ser funcionalmente relevante
+quando o PM-04A permitir venda `KG` oficialmente. Não será corrigida agora.
+
+Outros achados da auditoria, preservados sem correção:
+
+| Achado | Observação |
+|---|---|
+| `quantity` com mais de 3 casas | Validação aceita; o MySQL arredonda ao gravar, e o total é calculado com o valor sem arredondar |
+| `quantity` sem `max` | Overflow de `decimal(14,3)` pode gerar 500 em vez de 422 |
+| Preço com mais de 2 casas | O total é calculado com o valor informado e pode divergir do `unit_price` persistido |
+| `addItem` sem lock | Duas adições simultâneas do mesmo Product podem colidir no índice único ou perder uma soma |
+| Product arquivado | `moveStock` depende do Product atual; arquivar um Product pode travar envio ou cancelamento de pedido confirmado |
+| FK `order_items.product_id` com `CASCADE` | Um `forceDelete` futuro de Product apagaria linhas de pedidos históricos |
+| `OrderItemFactory` | Gera quantidade fracionada para Product `UN` |
 
 ### PM-05 — Dados fiscais do produto
 
