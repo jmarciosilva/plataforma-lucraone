@@ -1,8 +1,10 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-09-23 · **PM-04 dividido em PM-04A/PM-04B/PM-04C — PM-04A
-planejado** — 642 testes no total: 640 PASS, 0 FAIL e 2 risky preexistentes ·
-SEC-04 resolvido em 2026-09-12
+**Atualizado:** 2026-10-03 · **ONB-01 aberto como trilha nova — ONB-01A é a
+prioridade operacional atual · PM-04A segue planejado e não iniciado** — 642
+testes no total: 640 PASS, 0 FAIL e 2 risky preexistentes · SEC-04 resolvido em
+2026-09-12 · infraestrutura VPS/HTTPS concluída em 2026-10-03 (`be44a0e`),
+ambiente staging disponível em https://lucraone.jmfsystem.tech
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
@@ -60,6 +62,36 @@ Em paralelo corre a trilha
 [Cadastro mestre de produtos — preparação para o PDV](#cadastro-mestre-de-produtos--preparação-para-o-pdv)
 (`PM-*`), aberta por necessidade de cliente. Ela evolui o cadastro de produtos e
 não altera o bloqueio da F2.6 nem a ordem das pendências.
+
+Desde 2026-10-03 corre também, **em paralelo à PM e independente dela**, a
+trilha [ONB — Onboarding e Experiência Inicial](#onb--onboarding-e-experiência-inicial)
+(`ONB-*`), aberta depois que o ambiente staging entrou no ar e o cadastro do
+primeiro cliente real passou a ser necessário.
+
+### Prioridade operacional atual
+
+A ordem abaixo é **prioridade de execução**, não dependência arquitetural. ONB e
+PM são trilhas paralelas: nenhuma etapa de ONB bloqueia tecnicamente uma etapa de
+PM, nem o contrário.
+
+```
+ONB-01A  →  PM-04A  →  PM-04B  →  Cliente Teste  →  ONB-01B  →  PM-04C  →  PM-05
+```
+
+| Ordem | Etapa | Trilha | Status |
+|---|---|---|---|
+| 1 | ONB-01A — Fundação administrativa do onboarding | ONB | Planejado · **prioridade atual** |
+| 2 | PM-04A — Quantidade coerente com a unidade | PM | Planejado · não iniciado |
+| 3 | PM-04B — Snapshot histórico do item | PM | Planejado |
+| 4 | Criação e teste manual de **Cliente Teste** pelo painel | ONB (validação) | Planejado |
+| 5 | ONB-01B — Experiência guiada de onboarding | ONB | Planejado · depende de ONB-01A |
+| 6 | PM-04C — Semântica de linhas para o futuro PDV | PM | Planejado |
+| 7 | PM-05 — Dados fiscais do produto | PM | Futuro · antes da NFC-e/NF-e |
+
+> ONB-01A vem primeiro por uma razão operacional, não técnica: hoje não existe
+> caminho pelo painel para cadastrar um cliente do LucraOne, e o PM evolui o
+> cadastro de produtos **dentro** de um estabelecimento que já existe. A ordem
+> pode ser trocada sem quebrar nada.
 
 A FASE 03 entrou na frente da F2.2 de propósito: depois da F2.1 o backend já
 expunha APIs completas, mas **não havia como um humano entrar no sistema**.
@@ -1972,6 +2004,292 @@ Itens previstos no cadastro do produto:
 dentro do estado, venda interestadual, entrada, devolução, transferência. CST,
 CSOSN e alíquotas também não devem ser atributos fixos simples do Product:
 dependem da regra da operação, do regime tributário e do contexto fiscal.
+
+---
+
+## ONB — Onboarding e Experiência Inicial
+
+Trilha aberta em 2026-10-03, depois que a infraestrutura VPS/HTTPS foi concluída
+(`be44a0e`) e o ambiente staging entrou no ar em https://lucraone.jmfsystem.tech.
+Com o ambiente de pé, o cadastro do primeiro cliente real passou a ser a próxima
+necessidade concreta — e a auditoria do fluxo administrativo mostrou que ele não
+existe de ponta a ponta pelo painel.
+
+**Objetivo da trilha.** Transformar a criação, a ativação e os primeiros passos
+de um cliente do LucraOne em uma experiência:
+
+- intuitiva;
+- didática;
+- segura;
+- previsível;
+- adequada a usuários leigos;
+- sem exigir conhecimento de conceitos técnicos como *tenant*, *role* ou
+  *permission*.
+
+O que esta trilha é, e o que não é:
+
+- **É paralela à trilha PM.** Não substitui nem absorve PM-04A, PM-04B, PM-04C
+  ou PM-05, que mantêm escopo, status e ordem próprios.
+- **Não libera a F2.6.** SEC-01, SEC-02 e SEC-03 continuam pendentes e
+  bloqueando, com a prioridade que já tinham nas
+  [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26).
+- **Não é uma fase nem uma sprint.** Usa IDs próprios (`ONB-*`), como `PM-*`,
+  `SEC-*`, `COR-*` e `PERF-*`. O placar de fases não muda.
+- **Não antecipa PDV nem fiscal.** Trata do cadastro e da ativação do cliente,
+  não da operação de venda.
+
+### Acompanhamento da trilha ONB
+
+| ID | Etapa | Status | Depende de |
+|---|---|---|---|
+| ONB-01A | Fundação administrativa do onboarding | Planejado · **prioridade atual** | — |
+| ONB-01B | Experiência guiada de onboarding | Planejado | ONB-01A |
+
+Como nas demais trilhas, uma etapa só passa a `Concluído` com testes que provem
+a entrega.
+
+```
+ONB:                              PM:
+
+ONB-01A — fundação                PM-01 — barcode + unit                ✅
+📋 PLANEJADO · PRIORIDADE ATUAL           ↓
+        ↓                         PM-02A — product_packages             ✅
+ONB-01B — experiência guiada              ├─ PM-02B                     ✅
+📋 PLANEJADO · depende de ONB-01A         └─ PM-03                      ✅
+                                          ↓
+                                  PM-04A — quantidade coerente    📋 PLANEJADO
+                                          ↓
+                                  PM-04B — snapshot do item       📋 PLANEJADO
+                                          ↓
+                                  PM-04C — semântica de linhas    📋 PLANEJADO
+                                          ↓
+                                  PM-05 — dados fiscais     📋 FUTURO
+```
+
+As duas colunas não se cruzam: **não há dependência técnica entre ONB e PM.** A
+ordem de execução combinada está em
+[Prioridade operacional atual](#prioridade-operacional-atual).
+
+### Vocabulário do onboarding
+
+Três conceitos distintos do código que a interface atual não distingue com
+clareza, e que esta trilha precisa separar:
+
+| Termo do negócio | Entidade no código | O que é |
+|---|---|---|
+| **Cliente do LucraOne** | `Tenant` | O estabelecimento que assina e usa o SaaS |
+| **Cliente do estabelecimento** | `Customer` | O comprador final, cliente comercial daquele tenant |
+| **Empresa** | `Company` | Entidade fiscal/jurídica (CNPJ) pertencente ao tenant |
+
+**Decisão de interface.** O termo técnico *tenant* não deve ser exposto a usuário
+leigo. Na UX futura, o cliente do LucraOne é apresentado como **"Clientes do
+LucraOne"** ou **"Estabelecimentos"**. "Clientes" no menu do estabelecimento
+continua significando `Customer`, e "Empresas" continua significando `Company` —
+a separação visual entre nível de plataforma e nível de estabelecimento faz parte
+do escopo de ONB-01A.
+
+### ONB-01 — Onboarding guiado de clientes
+
+**Planejado**
+
+Permitir que o operador da plataforma LucraOne crie e ative um novo
+cliente/estabelecimento com clareza, segurança e consistência, e que o
+administrador desse estabelecimento saiba exatamente quais são os próximos passos
+para começar a operar.
+
+Dividida em duas etapas: `ONB-01A` destrava e torna consistente o fluxo
+administrativo; `ONB-01B` transforma esse fluxo em experiência guiada.
+
+#### ONB-01A — Fundação administrativa do onboarding
+
+**Planejado · prioridade atual**
+
+**Objetivo.** Destravar e tornar consistente o fluxo administrativo necessário
+para criar clientes do LucraOne pelo painel.
+
+**Escopo.**
+
+1. **Mecanismo controlado de promoção de Platform Admin.** Preferência
+   arquitetural registrada: um comando Artisan
+
+   ```
+   plataforma:promover {email}
+   ```
+
+   O objetivo é eliminar a dependência de Tinker ou SQL para o bootstrap do
+   Platform Admin, e deixar a promoção com rastro na aplicação em vez de ocorrer
+   apenas por acesso de infraestrutura.
+
+2. **Promoção da conta operacional da plataforma** para
+   `is_platform_admin = true`. A role `admin` de um estabelecimento **não** deve
+   ser transformada em Platform Admin.
+
+   > **Platform Admin ≠ Tenant Admin.** São autoridades de níveis diferentes, e
+   > permanecem separadas conforme a
+   > [decisão arquitetural do SEC-04](#decisão-arquitetural--platform-admin).
+
+3. **Correção dos atalhos quebrados do dashboard.** O bloco de atalhos referencia
+   nomes de rota que não existem:
+
+   | Referência atual | Rota real |
+   |---|---|
+   | `tenants` | `tenants.index` |
+   | `usuarios` | `users.index` |
+   | `empresas` | `companies.index` |
+
+   Como `Route::has()` falha, os três atalhos são renderizados desabilitados e
+   exibem textos obsoletos — *"cadastro chega no F3.4"*, *"cadastro chega no
+   F3.5"* e *"gestão chega no F3.6"* — para funcionalidades **já implementadas**
+   na F3.4 (`b8c19ae`), F3.5 (`e1548e8`) e F3.6 (`a13fe95`). Os textos devem ser
+   removidos e os atalhos passar a apontar para as rotas reais.
+
+4. **Nomenclatura administrativa.** Preferir "Clientes do LucraOne" ou
+   "Estabelecimentos" a expor apenas "Tenants", conforme
+   [Vocabulário do onboarding](#vocabulário-do-onboarding).
+
+5. **Unificação do provisionamento de autorização de um novo tenant.** Hoje
+   existem dois comportamentos divergentes para a mesma intenção:
+
+   | Caminho | Roles | Permissions |
+   |---|---|---|
+   | `AuthorizationSeeder` | 4 (`admin`, `manager`, `user`, `viewer`) | 28 |
+   | `TenantController::provisionarAutorizacaoPadrao()` | 1 (`admin`) | 26 |
+
+   ONB-01A deve eliminar essa divergência.
+
+6. **Fonte única de provisionamento.** Nome conceitual sugerido:
+   `ProvisionarEstabelecimento`, ou equivalente coerente com a arquitetura
+   modular do projeto. Esse serviço deve ser consumido por:
+
+   - `TenantController`;
+   - `AuthorizationSeeder`;
+   - o wizard de `ONB-01B`.
+
+7. **Estado esperado de um tenant novo após o provisionamento:**
+
+   - roles: `admin`, `manager`, `user`, `viewer`;
+   - permissions: 28 registradas, conforme o modelo atual;
+   - `admin`: as 26 permissões do `AdminPermissionMatrix`.
+
+   As duas permissões órfãs atuais (`manage-assigned-branches` e
+   `view-assigned-branches`, criadas e não concedidas a nenhuma role) devem ser
+   **preservadas como estão**, sem correção oportunista, a menos que uma etapa
+   futura trate explicitamente do assunto.
+
+8. **Critério de pronto.** Ser possível criar manualmente um **Cliente Teste**
+   pelo painel, sem Tinker nem SQL para a criação do tenant.
+
+**Fora do escopo de ONB-01A.** Registrado explicitamente para não haver
+ampliação silenciosa:
+
+- wizard completo;
+- criação automática do primeiro usuário do cliente;
+- convite por e-mail;
+- token de definição de senha;
+- checklist de onboarding;
+- tour guiado;
+- modal de primeiro acesso (*first-run*);
+- tabela `onboarding_progress`;
+- qualquer migration;
+- CRUD completo de Platform Admin;
+- RBAC de plataforma;
+- PDV;
+- fiscal;
+- PM-04A, PM-04B e PM-04C.
+
+#### ONB-01B — Experiência guiada de onboarding
+
+**Planejado · depende de ONB-01A**
+
+**Objetivo.** Transformar o processo administrativo de ONB-01A em uma experiência
+guiada para usuários leigos.
+
+**Wizard de criação de cliente — desenho planejado.**
+
+| Passo | Conteúdo |
+|---|---|
+| **1 — Estabelecimento** | nome; slug; plano; status; timezone; locale; moeda |
+| **2 — Administrador do cliente** | nome; e-mail; senha inicial (ou, no futuro, convite); reaproveitamento de identidade global já existente |
+| **3 — Configuração** | `Company` opcional, com dados fiscais básicos; decisão explícita sobre manter ou não o acesso do Platform Admin ao tenant |
+| **4 — Revisão** | resumo; validação; confirmação |
+
+Após a conclusão, tela **"Cliente criado com sucesso"**, com atalhos para:
+
+- entrar no estabelecimento;
+- configurar empresa;
+- cadastrar produtos;
+- cadastrar equipe;
+- voltar para clientes do LucraOne.
+
+**Checklist do cliente no dashboard.**
+
+```
+✅ Estabelecimento criado
+⬜ Cadastrar empresa
+⬜ Criar primeira categoria
+⬜ Cadastrar primeiro produto
+⬜ Definir preço
+⬜ Informar estoque inicial
+⬜ Convidar equipe
+```
+
+O progresso deve ser **derivado do banco**, preferencialmente sem nova tabela de
+progresso nem flag de primeiro acesso — estado derivado não diverge da realidade.
+Exemplos de derivação: `Company::exists()`, `Category::exists()`,
+`Product::exists()`, preço de venda (`Price` do tipo `SALE`) existente,
+`Inventory` existente e `activeUsers() > 1`.
+
+**Ajuda contextual.** Reaproveitar o componente `x-help-modal`, já em uso em 8
+telas (dashboard, tenants, users, companies, roles, products, orders, customers).
+Não criar um segundo sistema de ajuda em paralelo sem necessidade — o objetivo é
+manter o padrão visual e pedagógico existente.
+
+**Evolução de rotas planejada.** Grupo `/plataforma/*`, servido com
+`auth.web:sem-tenant` mais um middleware específico de Platform Admin, para que a
+administração da plataforma não dependa de um estabelecimento resolvido na
+sessão. **Não implementar agora.**
+
+#### ONB — Invariantes de segurança
+
+Valem para toda a trilha e não podem ser relaxados por conveniência de UX:
+
+- **Tenant Admin não cria novos tenants.**
+- Somente **Platform Admin** administra clientes do LucraOne.
+- `is_platform_admin` continua separado das roles de tenant, não é mass
+  assignable e não é concedido por `manage-users`.
+- A `TenantPolicy` continua sendo a proteção da entidade `Tenant`.
+- `ONB-01B` deverá operar **fora do `TenantContext`** quando estiver
+  administrando a plataforma, passando `tenant_id` explicitamente em tudo que
+  cria.
+- Nenhum `tenant_id` vindo do navegador deve ser confiado sem validação de
+  vínculo — o padrão correto já existe em `EstabelecimentoController::definir`.
+- O isolamento entre estabelecimentos deve permanecer intacto.
+
+#### ONB — Company antes do primeiro produto
+
+Observação de ordem que condiciona o desenho do onboarding: **`Company` é
+obrigatória antes do primeiro `Product`**, porque o cadastro de produto exige
+`company_id` existente no estabelecimento. Sem nenhuma empresa cadastrada não há
+como cadastrar produto, e sem produto não há estoque nem venda.
+
+Por isso: a `Company` **pode ser opcional durante a criação do cliente** — o CNPJ
+pode não estar à mão no momento da contratação —, mas deve ser o **primeiro passo
+obrigatório do onboarding do estabelecimento** caso ainda não exista.
+
+#### ONB — Etapas futuras, fora do ONB-01A/B mínimo
+
+Registradas para não se perderem, sem ID próprio e sem previsão:
+
+- convite por e-mail;
+- token temporário de convite;
+- definição da própria senha pelo usuário convidado;
+- aceite do vínculo;
+- expiração de convite;
+- reenvio de convite.
+
+**Motivação.** Evitar que administradores precisem conhecer e transmitir a senha
+dos usuários que cadastram. Hoje a senha é digitada pelo administrador no
+formulário e comunicada por fora do sistema. **Não implementar.**
 
 ---
 
