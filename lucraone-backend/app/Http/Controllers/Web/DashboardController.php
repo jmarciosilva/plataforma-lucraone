@@ -7,6 +7,7 @@ use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Reporting\Application\DashboardSummaryService;
 use App\Modules\Reporting\Domain\ReportPeriod;
+use App\Modules\Tenancy\Application\ChecklistInicial;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -17,12 +18,13 @@ class DashboardController extends Controller
         private DashboardSummaryService $resumo
     ) {}
 
-    public function __invoke(Request $request, TenantContext $context)
+    public function __invoke(Request $request, TenantContext $context, ChecklistInicial $checklist)
     {
         $tenant = $context->tenant();
         $usuario = $request->user();
 
         return view('dashboard.index', [
+            'onboardingChecklist' => $checklist->itens($context),
             // Quem não pode ver relatório também não vê a faixa comercial.
             'comercial' => Gate::allows('view-reports')
                 ? $this->resumo->resumo(ReportPeriod::fromInput(

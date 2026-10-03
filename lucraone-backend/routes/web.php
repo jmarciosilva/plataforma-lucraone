@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\EstabelecimentoController;
 use App\Http\Controllers\Web\InventoryWebController;
 use App\Http\Controllers\Web\NotificationWebController;
+use App\Http\Controllers\Web\OnboardingController;
 use App\Http\Controllers\Web\OrderWebController;
 use App\Http\Controllers\Web\PermissionController;
 use App\Http\Controllers\Web\ProductWebController;
@@ -54,6 +55,13 @@ Route::middleware('auth.web:sem-tenant')->group(function () {
 // Painel: exige estabelecimento em uso
 Route::middleware('auth.web')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+    Route::get('/tenants/onboarding/administrator', [OnboardingController::class, 'administrator'])
+        ->middleware('throttle:30,1')->name('tenants.onboarding.administrator');
+    Route::post('/tenants/onboarding', [OnboardingController::class, 'store'])
+        ->name('tenants.onboarding.store');
+    Route::get('/tenants/{tenant}/onboarding', [OnboardingController::class, 'success'])
+        ->name('tenants.onboarding.success');
 
     Route::post('/tenants/{tenant}/restore', [TenantController::class, 'restore'])
         ->name('tenants.restore');

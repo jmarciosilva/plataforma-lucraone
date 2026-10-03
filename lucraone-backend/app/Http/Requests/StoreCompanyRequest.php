@@ -19,6 +19,12 @@ class StoreCompanyRequest extends FormRequest
 
     public function rules(TenantContext $context): array
     {
+        return self::rulesForTenant($context->id());
+    }
+
+    /** Reutilizada na criação de uma empresa dentro de um cliente novo. */
+    public static function rulesForTenant(?string $tenantId): array
+    {
         return [
             'legal_name' => ['required', 'string', 'max:255'],
             'trade_name' => ['nullable', 'string', 'max:255'],
@@ -26,7 +32,7 @@ class StoreCompanyRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:32',
-                Rule::unique('companies', 'document')->where('tenant_id', $context->id()),
+                Rule::unique('companies', 'document')->where('tenant_id', $tenantId),
             ],
             'state_registration' => ['nullable', 'string', 'max:64'],
             'municipal_registration' => ['nullable', 'string', 'max:64'],

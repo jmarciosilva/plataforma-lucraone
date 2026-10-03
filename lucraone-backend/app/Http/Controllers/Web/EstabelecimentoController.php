@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Modules\Tenancy\Application\TenantResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -40,6 +41,10 @@ class EstabelecimentoController
     {
         $dados = $request->validate([
             'tenant_id' => ['required', 'string'],
+            'destino' => ['sometimes', Rule::in([
+                'dashboard', 'companies.create', 'catalog.categories.create',
+                'catalog.products.create', 'users.create',
+            ])],
         ]);
 
         // O vínculo é quem autoriza — nunca o valor que veio do formulário.
@@ -50,7 +55,7 @@ class EstabelecimentoController
         $request->session()->put(TenantResolver::SESSAO_TENANT, $dados['tenant_id']);
 
         return redirect()
-            ->route('dashboard')
+            ->route($dados['destino'] ?? 'dashboard')
             ->with('sucesso', 'estabelecimento alterado.');
     }
 }

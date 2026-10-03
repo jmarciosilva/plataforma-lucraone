@@ -13,6 +13,7 @@
     </x-slot:acoes>
 
     @include('dashboard._help')
+    @include('dashboard._onboarding-checklist')
 
     @if ($comercial)
         <x-section-label>o negócio nos últimos 30 dias</x-section-label>
