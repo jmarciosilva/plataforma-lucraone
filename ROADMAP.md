@@ -1,11 +1,12 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-10-03 · **ONB-01A concluído (`6aa8d62`) — PM-04A passa a
-ser a próxima prioridade operacional e continua não iniciado** — 702 testes no
+**Atualizado:** 2026-10-03 · **ONB-01A concluído (`6aa8d62`) — ONB-01B passa a
+ser a próxima prioridade operacional: Planejado · não iniciado; PM-04A continua
+Planejado · não iniciado, sem ser a prioridade atual** — 702 testes no
 total: 700 PASS, 0 FAIL, 0 ERROR, 2 risky preexistentes, 0 skipped e 2449
 assertions · SEC-04 resolvido em 2026-09-12 · infraestrutura VPS/HTTPS concluída
 em 2026-10-03 (`be44a0e`), ambiente staging disponível em
-https://lucraone.jmfsystem.tech · ONB-01B e o Cliente Teste seguem planejados
+https://lucraone.jmfsystem.tech · Cliente Teste segue Planejado · não criado
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
@@ -76,27 +77,31 @@ PM são trilhas paralelas: nenhuma etapa de ONB bloqueia tecnicamente uma etapa 
 PM, nem o contrário.
 
 ```
-ONB-01A ✅  →  PM-04A ⬅ PRÓXIMA  →  PM-04B  →  Cliente Teste  →  ONB-01B  →  PM-04C  →  PM-05
+ONB-01A ✅  →  ONB-01B ⬅ PRÓXIMA  →  PM-04A  →  PM-04B  →  Cliente Teste  →  PM-04C  →  PM-05
 ```
 
 | Ordem | Etapa | Trilha | Status |
 |---|---|---|---|
 | 1 | ONB-01A — Fundação administrativa do onboarding | ONB | **Concluído ✅** (`6aa8d62`) |
-| 2 | PM-04A — Quantidade coerente com a unidade | PM | Planejado · **próxima prioridade** · não iniciado |
-| 3 | PM-04B — Snapshot histórico do item | PM | Planejado |
-| 4 | Criação e teste manual de **Cliente Teste** pelo painel | ONB (validação) | Planejado · não criado |
-| 5 | ONB-01B — Experiência guiada de onboarding | ONB | Planejado · dependência de ONB-01A **satisfeita ✅**, não iniciado |
+| 2 | ONB-01B — Experiência guiada de onboarding | ONB | Planejado · **próxima prioridade** · não iniciado · dependência de ONB-01A **satisfeita ✅** |
+| 3 | PM-04A — Quantidade coerente com a unidade | PM | Planejado · não iniciado |
+| 4 | PM-04B — Snapshot histórico do item | PM | Planejado |
+| 5 | Criação e teste manual de **Cliente Teste** pelo painel | ONB (validação) | Planejado · não criado |
 | 6 | PM-04C — Semântica de linhas para o futuro PDV | PM | Planejado |
 | 7 | PM-05 — Dados fiscais do produto | PM | Futuro · antes da NFC-e/NF-e |
 
 > A ordem continua sendo **prioridade operacional, não dependência técnica**
-> entre ONB e PM. Com o ONB-01A entregue, já existe caminho pelo painel para
-> cadastrar um cliente do LucraOne, então a vez é do PM-04A, que evolui o
-> cadastro de produtos **dentro** de um estabelecimento que já existe.
+> entre ONB e PM. O ONB-01A já destravou o fluxo administrativo pelo painel.
+> Agora a prioridade é transformar esse fluxo em uma experiência guiada para
+> o primeiro cliente real, de modo que um usuário leigo entenda o que está
+> criando, quem será o administrador, quais configurações iniciais são
+> importantes e quais são os próximos passos.
 >
-> A dependência do ONB-01B está satisfeita, mas ele **não** assume a prioridade:
-> entra depois do Cliente Teste, que é justamente o que mostra onde o fluxo
-> guiado precisa ajudar. A ordem pode ser trocada sem quebrar nada.
+> PM-04A continua importante como regra operacional de pedido/quantidade UN/KG.
+> Não existe dependência técnica entre ONB-01B e PM-04A: a ordem foi alterada
+> por prioridade de produto/UX, não por arquitetura. Ambos continuam planejados
+> e não iniciados. ONB-01B e PM-04A não liberam a F2.6, que continua bloqueada
+> por SEC-01, SEC-02 e SEC-03.
 
 A FASE 03 entrou na frente da F2.2 de propósito: depois da F2.1 o backend já
 expunha APIs completas, mas **não havia como um humano entrar no sistema**.
@@ -2048,7 +2053,7 @@ O que esta trilha é, e o que não é:
 | ID | Etapa | Status | Depende de |
 |---|---|---|---|
 | ONB-01A | Fundação administrativa do onboarding | **Concluído ✅** · `6aa8d625cbb0a41269bc6eeb9b3ca377929fc816` | — |
-| ONB-01B | Experiência guiada de onboarding | Planejado · não iniciado | ONB-01A ✅ satisfeita |
+| ONB-01B | Experiência guiada de onboarding | Planejado · próxima prioridade · não iniciado | ONB-01A ✅ satisfeita |
 
 Como nas demais trilhas, uma etapa só passa a `Concluído` com testes que provem
 a entrega. O ONB-01A passou com 60 testes novos; os detalhes estão em
@@ -2061,9 +2066,9 @@ ONB-01A — fundação                PM-01 — barcode + unit                �
 ✅ CONCLUÍDO · 6aa8d62                    ↓
         ↓                         PM-02A — product_packages             ✅
 ONB-01B — experiência guiada              ├─ PM-02B                     ✅
-📋 PLANEJADO · dependência ✅             └─ PM-03                      ✅
+📋 PRÓXIMA · dependência ✅               └─ PM-03                      ✅
                                           ↓
-                                  PM-04A — quantidade coerente    📋 PRÓXIMA
+                                  PM-04A — quantidade coerente    📋 PLANEJADO
                                           ↓
                                   PM-04B — snapshot do item       📋 PLANEJADO
                                           ↓
@@ -2365,7 +2370,7 @@ transformada em autoridade de plataforma.
 
 #### ONB-01B — Experiência guiada de onboarding
 
-**Planejado · não iniciado · dependência de ONB-01A satisfeita ✅ (`6aa8d62`)**
+**Planejado · próxima prioridade operacional · não iniciado · dependência de ONB-01A satisfeita ✅ (`6aa8d62`)**
 
 Nada do que está descrito abaixo foi implementado: wizard, primeiro
 administrador do cliente, configuração inicial, checklist, tela de sucesso,
