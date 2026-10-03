@@ -31,6 +31,22 @@ return Application::configure(basePath: dirname(__DIR__))
         SendSalesSummaryCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
+        // Quem termina o TLS é o nginx de fora (o do host, na VPS), que repassa
+        // em http para o nginx deste compose, que fala com o php-fpm pela rede
+        // do Docker. Sem confiar nesses saltos o Laravel ignora
+        // X-Forwarded-Proto, se julga em http e devolve redirect de login e URL
+        // de asset com esquema errado — o navegador recusa como mixed content.
+        //
+        // Faixas privadas em vez de '*': o serviço app não publica porta no
+        // host, então só um container da própria rede do compose alcança este
+        // php-fpm. Nada vindo da Internet consegue forjar estes cabeçalhos.
+        $middleware->trustProxies(at: [
+            '127.0.0.1',
+            '10.0.0.0/8',
+            '172.16.0.0/12',
+            '192.168.0.0/16',
+        ]);
+
         // ApiAuthenticationMiddleware converte AuthenticationException em JSON 401.
         // Fica restrito ao grupo api: no navegador queremos redirect para /login,
         // não um corpo JSON.

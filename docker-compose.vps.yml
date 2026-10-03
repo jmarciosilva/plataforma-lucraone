@@ -1,0 +1,154 @@
+# =============================================================================
+# LUCRAONE — sobreposição para a VPS srv1887158 (HOMOLOGAÇÃO / DEV REMOTO)
+#
+#   docker compose -f docker-compose.yml -f docker-compose.vps.yml up -d
+#
+# Esta VPS é COMPARTILHADA. Já rodam nela, em produção:
+#
+#   nginx do host      80, 443   — 6 domínios, único dono dessas portas
+#   feira-web          9000      — Feira Esquerda Livre produção
+#   homolog-web        9001      — Feira Esquerda Livre homologação
+#   arls-web          :9002      — ARLS Ferraz produção
+#   mysqld do host    :3306      — jmfsystem.tech / customer-intelligence
+#   redis do host     :6379      — cache da Feira
+#
+# Faixa reservada ao LucraOne: 9010-9019.
+#
+# O que este arquivo muda em relação ao docker-compose.yml (que é o ambiente
+# Windows do desenvolvedor e permanece intacto):
+#
+#   1. tudo que publica porta passa a publicar SÓ em 127.0.0.1 — quem expõe
+#      para a Internet é o nginx do host, com TLS, como nos outros projetos;
+#   2. mysql e redis deixam de publicar porta: o default do base é 3306 e 6379,
+#      que colidem com os serviços do host e fariam o `up` abortar;
+#   3. o Vite sai do ar: na VPS os assets são compilados uma vez com
+#      `npm run build`, não servidos por um watcher;
+#   4. teto de memória por container — a VPS tem 2 vCPU, ~5 GB livres e
+#      NENHUM SWAP. Sem teto, um pico no LucraOne faria o OOM killer escolher
+#      a vítima, e o maior processo do host hoje é o mysqld da jmfsystem.tech.
+#
+# NÃO usar docker-compose.prod.yml aqui: o default de APP_PORT dele é 80.
+# =============================================================================
+
+services:
+
+  # --- borda ---------------------------------------------------------------
+  nginx:
+    # !override porque o base publica "${APP_PORT:-8000}:80", ou seja em
+    # 0.0.0.0. Acrescentar não resolveria: a porta precisa TROCAR de bind.
+    ports: !override
+      - "127.0.0.1:${APP_PORT:-9010}:80"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # --- aplicação -----------------------------------------------------------
+  #
+  # php-vps.ini desliga display_errors, que o php-dev.ini da imagem liga. O
+  # nome zzz- importa: o PHP varre conf.d em ordem alfabética, e o Dockerfile
+  # já deixou o php-dev.ini como zz-dev.ini — só um nome depois dele sobrepõe.
+  #
+  # Os três serviços recebem o mesmo arquivo. O queue e o scheduler não atendem
+  # HTTP, mas compartilham o php.ini da imagem, e um erro fatal num job também
+  # imprime caminho de arquivo onde não deve.
+  app:
+    environment:
+      # O base fixa "true". Aqui fica controlável pelo .env da raiz: na
+      # primeira subida o banco está vazio e migrar é o que se quer, mas
+      # AUTO_MIGRATE=false permite subir o app sem tocar no schema.
+      AUTO_MIGRATE: "${AUTO_MIGRATE:-true}"
+    volumes:
+      - ./lucraone-backend/docker/php/php-vps.ini:/usr/local/etc/php/conf.d/zzz-vps.ini:ro
+    deploy:
+      resources:
+        limits:
+          # php.ini: memory_limit 512M por requisição + opcache 256M
+          # compartilhado. Abaixo de 1G o opcache sozinho já aperta.
+          memory: 1G
+
+  queue:
+    volumes:
+      - ./lucraone-backend/docker/php/php-vps.ini:/usr/local/etc/php/conf.d/zzz-vps.ini:ro
+    # O default do Docker é 10s entre SIGTERM e SIGKILL. O queue:work encerra
+    # no fim do job corrente ao receber SIGTERM, mas um job que já passou de
+    # 10s seria morto no meio — e com --tries=3 ele voltaria do zero, podendo
+    # repetir efeito externo (e-mail enviado, webhook disparado).
+    #
+    # 130s cobre o max_execution_time de 120s do php.ini com folga, e é o mesmo
+    # valor que o feira-queue usa nesta VPS.
+    stop_grace_period: 130s
+    deploy:
+      resources:
+        limits:
+          # CLI, sem opcache (opcache.enable_cli=0), mas um job pode chegar
+          # ao memory_limit de 512M do php.ini.
+          memory: 768M
+
+  scheduler:
+    volumes:
+      - ./lucraone-backend/docker/php/php-vps.ini:/usr/local/etc/php/conf.d/zzz-vps.ini:ro
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # --- assets --------------------------------------------------------------
+  node:
+    # Fora do conjunto padrão: `up` não sobe este container. Continua
+    # declarado e utilizável sob demanda para compilar os assets:
+    #
+    #   docker compose -f docker-compose.yml -f docker-compose.vps.yml \
+    #     run --rm node
+    #
+    # (`run` liga o profile do serviço automaticamente; o command abaixo faz
+    # npm ci na primeira vez e depois `npm run build`, gravando em
+    # lucraone-backend/public/build pelo bind mount — de onde o nginx serve.)
+    profiles: ["assets"]
+    # One-shot: sem isto o container reiniciaria em laço ao terminar o build.
+    restart: "no"
+    ports: !override []
+    environment:
+      # Polling existe por causa do inotify que não propaga em bind mount do
+      # Windows. Aqui o filesystem é nativo e polling só queimaria CPU dos
+      # 2 vCPU que os outros projetos também usam.
+      VITE_USE_POLLING: "false"
+    command: !override
+      - sh
+      - -c
+      - '[ -f node_modules/.package-lock.json ] || npm ci --ignore-scripts; exec npm run build'
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # --- infraestrutura ------------------------------------------------------
+  mysql:
+    # Banco próprio do LucraOne, só na rede do projeto. O base publicaria
+    # 3306, que é do mysqld do host — o bind falharia e o `up` abortaria.
+    # app/queue/scheduler alcançam por DNS do Compose: mysql:3306.
+    ports: !override []
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  redis:
+    # Mesma situação: o base publicaria 6379, do redis do host (que é o cache
+    # da Feira). Interno, alcançado como redis:6379.
+    ports: !override []
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  mailpit:
+    # SMTP (1025) deixa de ser publicado: só app/queue falam com ele, pela
+    # rede interna. A interface web fica em loopback, para túnel SSH:
+    #   ssh -L 9011:127.0.0.1:9011 root@srv1887158
+    ports: !override
+      - "127.0.0.1:${MAILPIT_UI_PORT:-9011}:8025"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
