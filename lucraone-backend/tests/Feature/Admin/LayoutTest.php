@@ -60,16 +60,19 @@ class LayoutTest extends TestCase
             // Marca e tenant ativo na sidebar
             ->assertSee('LUCRA', escape: false)
             ->assertSee('Casa Alta')
-            // Itens de menu decididos com os sócios
+            // Itens de menu decididos com os sócios.
+            // "tenants" saiu da lista no ONB-01A: a sidebar só oferece a área
+            // de plataforma a Platform Admin, e esta pessoa não é uma.
             ->assertSee('dashboard')
-            ->assertSee('tenants')
             ->assertSee('usuários', escape: false)
             ->assertSee('empresas')
             ->assertSee('permissões', escape: false)
             ->assertSee('produtos')
             // Usuário logado e saída
             ->assertSee('Maria Operadora')
-            ->assertSee('sair');
+            ->assertSee('sair')
+            // Área de plataforma ausente para quem não a administra
+            ->assertDontSee('clientes do LucraOne', escape: false);
     }
 
     public function test_componentes_do_design_system_renderizam(): void

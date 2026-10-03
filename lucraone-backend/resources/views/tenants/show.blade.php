@@ -1,4 +1,4 @@
-<x-layouts.app title="tenants" :tenantNome="$tenantNome" :breadcrumbs="$breadcrumbs">
+<x-layouts.app title="clientes do LucraOne" :tenantNome="$tenantNome" :breadcrumbs="$breadcrumbs">
     <x-slot:subtitulo>
         <span class="h-2 w-2 rounded-full {{ $tenant->trashed() ? 'bg-brasa' : ($tenant->isActive() ? 'bg-ok' : 'bg-alerta') }}"></span>
         {{ $tenant->trashed() ? 'estabelecimento arquivado' : 'detalhe do estabelecimento' }}
@@ -61,7 +61,7 @@
             @if ($tenant->trashed())
                 <form method="POST" action="{{ route('tenants.restore', $tenant->id) }}" class="mt-4">
                     @csrf
-                    <x-button tipo="submit" class="w-full">restaurar tenant</x-button>
+                    <x-button tipo="submit" class="w-full">restaurar estabelecimento</x-button>
                 </form>
             @else
                 <x-button variante="secundario" href="{{ route('tenants.edit', $tenant) }}" class="mt-4 w-full">editar dados</x-button>
@@ -72,12 +72,12 @@
                     @click="$dispatch('abrir-modal', 'arquivar-tenant')"
                     class="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brasa px-4 text-sm font-semibold lowercase text-white transition-opacity hover:opacity-90"
                 >
-                    arquivar tenant
+                    arquivar estabelecimento
                 </button>
 
-                <x-modal nome="arquivar-tenant" titulo="arquivar tenant">
+                <x-modal nome="arquivar-tenant" titulo="arquivar estabelecimento">
                     <p class="text-sm text-aco">
-                        O tenant será removido das listagens padrão e poderá ser restaurado depois.
+                        O estabelecimento será removido das listagens padrão e poderá ser restaurado depois.
                     </p>
 
                     <x-slot:acoes>

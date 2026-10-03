@@ -4,6 +4,7 @@ use App\Http\Middleware\AutenticarWeb;
 use App\Http\Middleware\RedirecionarSeAutenticado;
 use App\Modules\Automation\Infrastructure\Console\PruneAutomationLogsCommand;
 use App\Modules\Identity\Http\Middleware\ApiAuthenticationMiddleware;
+use App\Modules\Identity\Infrastructure\Console\PromoverPlatformAdminCommand;
 use App\Modules\Reporting\Infrastructure\Console\SendSalesSummaryCommand;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenantMiddleware;
 use App\Modules\Tenancy\TenancyServiceProvider;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
     // A descoberta automática só varre app/Console/Commands; os comandos vivem
     // dentro dos módulos, então precisam ser registrados à mão.
     ->withCommands([
+        PromoverPlatformAdminCommand::class,
         PruneAutomationLogsCommand::class,
         SendSalesSummaryCommand::class,
     ])

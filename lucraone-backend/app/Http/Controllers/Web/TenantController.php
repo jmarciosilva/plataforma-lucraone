@@ -5,10 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTenantRequest;
 use App\Http\Requests\UpdateTenantRequest;
-use App\Modules\Authorization\Domain\AdminPermissionMatrix;
-use App\Modules\Authorization\Domain\Models\Permission;
-use App\Modules\Authorization\Domain\Models\Role;
-use App\Modules\Identity\Domain\Models\TenantUser;
+use App\Modules\Tenancy\Application\ProvisionarEstabelecimento;
 use App\Modules\Tenancy\Application\TenantContext;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Http\Request;
@@ -47,6 +44,10 @@ class TenantController extends Controller
         'BRL' => 'BRL',
         'USD' => 'USD',
     ];
+
+    public function __construct(
+        private ProvisionarEstabelecimento $provisionamento
+    ) {}
 
     public function index(Request $request, TenantContext $context)
     {
@@ -120,8 +121,10 @@ class TenantController extends Controller
                 'active' => $this->activeFromStatus($request->validated('status')),
             ]);
 
-            $request->user()->joinTenant($tenant->id, TenantUser::STATUS_ACTIVE);
-            $this->provisionarAutorizacaoPadrao($tenant, $request->user());
+            // Matriz antes do vínculo: atribuirAdministrador exige o papel
+            // admin já existente, e falhar aqui desfaz a transação inteira.
+            $this->provisionamento->provisionarMatriz($tenant);
+            $this->provisionamento->atribuirAdministrador($tenant, $request->user());
 
             return $tenant;
         });
@@ -208,7 +211,7 @@ class TenantController extends Controller
     {
         return [
             ['label' => 'dashboard', 'url' => route('dashboard')],
-            ['label' => 'tenants', 'url' => route('tenants.index')],
+            ['label' => 'clientes do LucraOne', 'url' => route('tenants.index')],
         ];
     }
 
@@ -226,28 +229,5 @@ class TenantController extends Controller
     private function activeFromStatus(string $status): bool
     {
         return in_array($status, ['TRIAL', 'ACTIVE'], true);
-    }
-
-    private function provisionarAutorizacaoPadrao(Tenant $tenant, $usuario): void
-    {
-        $permissions = collect(AdminPermissionMatrix::NAMES)->mapWithKeys(function (string $name) use ($tenant) {
-            $permission = Permission::withoutGlobalScopes()->firstOrCreate(
-                ['tenant_id' => $tenant->id, 'name' => $name],
-                ['id' => (string) Str::ulid(), 'description' => $name]
-            );
-
-            return [$name => $permission];
-        });
-
-        $admin = Role::withoutGlobalScopes()->firstOrCreate(
-            ['tenant_id' => $tenant->id, 'name' => 'admin'],
-            ['id' => (string) Str::ulid(), 'description' => 'Administrator role with full access']
-        );
-
-        foreach ($permissions as $permission) {
-            $admin->grantPermission($permission);
-        }
-
-        $usuario->assignRole($admin, $tenant->id);
     }
 }

@@ -1,4 +1,4 @@
-<x-layouts.app title="tenants" :tenantNome="$tenantNome" :breadcrumbs="$breadcrumbs">
+<x-layouts.app title="clientes do LucraOne" :tenantNome="$tenantNome" :breadcrumbs="$breadcrumbs">
     <x-slot:subtitulo>
         <span class="h-2 w-2 rounded-full bg-alerta"></span>
         editar estabelecimento

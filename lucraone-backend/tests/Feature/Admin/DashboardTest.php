@@ -76,7 +76,7 @@ class DashboardTest extends TestCase
         $resposta = $this->actingAs($this->usuario)->get('/dashboard');
 
         $resposta->assertOk()
-            ->assertSeeInOrder(['tenants', '1'])
+            ->assertSeeInOrder(['estabelecimentos', '1'])
             ->assertSeeInOrder(['usuários', '3'], false)
             ->assertSeeInOrder(['empresas', '1'])
             ->assertSeeInOrder(['produtos', '2']);
@@ -95,7 +95,7 @@ class DashboardTest extends TestCase
         $this
             ->get('/dashboard')
             ->assertOk()
-            ->assertSeeInOrder(['tenants', '2']);
+            ->assertSeeInOrder(['estabelecimentos', '2']);
     }
 
     public function test_ultimo_acesso_aparece_formatado_no_timezone_do_tenant(): void
@@ -107,18 +107,27 @@ class DashboardTest extends TestCase
             ->assertSee('16/08/2026 12:30');
     }
 
+    /**
+     * ONB-01A: a assertiva de "tenants" e a de `aria-disabled` saíram daqui.
+     *
+     * Ambas descreviam o defeito, não o menu. "tenants" nunca foi item de menu
+     * para quem não é Platform Admin — a sidebar sempre o escondeu, e a
+     * palavra vinha do cartão de atalho quebrado. E `aria-disabled` vinha
+     * desses mesmos cartões apontando para rotas inexistentes.
+     */
     public function test_menu_renderiza_itens_e_estado_ativo(): void
     {
         $this->actingAs($this->usuario)
             ->get('/dashboard')
             ->assertOk()
             ->assertSee('aria-current="page"', false)
-            ->assertSee('tenants')
             ->assertSee('usuários', false)
             ->assertSee('empresas')
             ->assertSee('permissões', false)
             ->assertSee('produtos')
-            ->assertSee('aria-disabled="true"', false);
+            // Quem não administra a plataforma não recebe o caminho dela.
+            ->assertDontSee('clientes do LucraOne', false)
+            ->assertDontSee('aria-disabled="true"', false);
     }
 
     public function test_layout_tem_controles_responsivos_mobile(): void

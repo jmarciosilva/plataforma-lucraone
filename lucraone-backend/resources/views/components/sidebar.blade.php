@@ -62,8 +62,13 @@
             </svg>
         </x-nav-item>
 
+        {{--
+            Administração da plataforma. O rótulo evita o termo técnico: quem
+            opera o LucraOne pensa em "clientes", não em tenants. A visibilidade
+            segue a TenantPolicy — quem não é Platform Admin receberia 403.
+        --}}
         @if (auth()->user()->isPlatformAdmin())
-            <x-nav-item rota="tenants.index" rotulo="tenants">
+            <x-nav-item rota="tenants.index" rotulo="clientes do LucraOne">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
                     <path d="M3 21h18" />
                     <path d="M5 21V7l7-4 7 4v14" />

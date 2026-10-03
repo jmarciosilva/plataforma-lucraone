@@ -1,6 +1,6 @@
 <x-help-modal
     nome="help-tenants"
-    titulo="ajuda de tenants"
+    titulo="ajuda de clientes do LucraOne"
     objetivo="Nesta área são consultados e administrados os estabelecimentos disponíveis para o seu acesso."
     visual="lista"
     :zonas="['filtros' => 1]"

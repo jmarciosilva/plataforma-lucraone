@@ -1,4 +1,4 @@
-<x-layouts.app title="tenants" :tenantNome="$tenantNome" :breadcrumbs="$breadcrumbs">
+<x-layouts.app title="clientes do LucraOne" :tenantNome="$tenantNome" :breadcrumbs="$breadcrumbs">
     <x-slot:subtitulo>
         <span class="h-2 w-2 rounded-full bg-ok"></span>
         estabelecimentos da plataforma
@@ -6,7 +6,7 @@
 
     <x-slot:acoes>
         <x-button variante="secundario" x-data @click="$dispatch('abrir-modal', 'help-tenants')">ajuda</x-button>
-        <x-button href="{{ route('tenants.create') }}">novo tenant</x-button>
+        <x-button href="{{ route('tenants.create') }}">novo cliente</x-button>
     </x-slot:acoes>
 
     @include('tenants._help')

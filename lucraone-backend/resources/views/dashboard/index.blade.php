@@ -56,10 +56,10 @@
     <x-section-label class="{{ $comercial ? 'mt-8' : '' }}">o painel até agora</x-section-label>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <x-kpi rotulo="tenants" :valor="$metricas['tenants']" nota="estabelecimentos acessíveis" />
-        <x-kpi rotulo="usuários" :valor="$metricas['usuarios']" nota="vínculos ativos neste tenant" />
+        <x-kpi rotulo="estabelecimentos" :valor="$metricas['tenants']" nota="disponíveis para o seu acesso" />
+        <x-kpi rotulo="usuários" :valor="$metricas['usuarios']" nota="vínculos ativos neste estabelecimento" />
         <x-kpi rotulo="empresas" :valor="$metricas['empresas']" nota="empresas cadastradas" />
-        <x-kpi rotulo="produtos" :valor="$metricas['produtos']" nota="produtos do tenant atual" />
+        <x-kpi rotulo="produtos" :valor="$metricas['produtos']" nota="produtos deste estabelecimento" />
     </div>
 
     <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -73,8 +73,8 @@
             </div>
 
             <p class="mt-4 text-sm text-aco">
-                O dashboard usa o estabelecimento resolvido na sessão. As contagens
-                de empresas e produtos vêm do escopo automático de tenant.
+                Os números desta página consideram apenas o estabelecimento em
+                uso. Para ver outro, troque o estabelecimento no menu.
             </p>
         </x-card>
 
@@ -89,25 +89,51 @@
 
     <x-section-label class="mt-8">atalhos</x-section-label>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        @php
-            $atalhos = [
-                ['rota' => 'dashboard', 'titulo' => 'dashboard', 'texto' => 'voltar para a visão geral'],
-                ['rota' => 'tenants', 'titulo' => 'tenants', 'texto' => 'cadastro chega no F3.4'],
-                ['rota' => 'usuarios', 'titulo' => 'usuários', 'texto' => 'cadastro chega no F3.5'],
-                ['rota' => 'empresas', 'titulo' => 'empresas', 'texto' => 'gestão chega no F3.6'],
+    @php
+        /*
+        | Só destinos já entregues.
+        |
+        | Até o ONB-01A este bloco citava os nomes `tenants`, `usuarios` e
+        | `empresas`, que nunca existiram como nomes de rota. O `Route::has()`
+        | falhava, os três cartões viravam `href="#"` desabilitados e anunciavam
+        | como futuras as telas de cadastro que a F3.4, a F3.5 e a F3.6 já
+        | tinham entregue. Agora as rotas são citadas pelo nome real, e
+        | DashboardAtalhosTest confere que cada uma existe.
+        */
+        $atalhos = [
+            [
+                'rota' => 'users.index',
+                'titulo' => 'usuários',
+                'texto' => 'cadastre e administre a equipe deste estabelecimento',
+            ],
+            [
+                'rota' => 'companies.index',
+                'titulo' => 'empresas',
+                'texto' => 'dados fiscais do negócio — necessários antes do primeiro produto',
+            ],
+            [
+                'rota' => 'catalog.products.index',
+                'titulo' => 'produtos',
+                'texto' => 'catálogo, preços e embalagens',
+            ],
+        ];
+
+        // Administração da plataforma só para quem a TenantPolicy autoriza:
+        // oferecer o caminho a quem receberia 403 é desorientar.
+        if (auth()->user()->isPlatformAdmin()) {
+            $atalhos[] = [
+                'rota' => 'tenants.index',
+                'titulo' => 'clientes do LucraOne',
+                'texto' => 'cadastre e administre os estabelecimentos que usam a plataforma',
             ];
-        @endphp
+        }
+    @endphp
 
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         @foreach ($atalhos as $atalho)
-            @php
-                $existe = \Illuminate\Support\Facades\Route::has($atalho['rota']);
-            @endphp
-
             <a
-                href="{{ $existe ? route($atalho['rota']) : '#' }}"
-                @unless ($existe) aria-disabled="true" @endunless
-                class="cartao p-5 transition-colors {{ $existe ? 'hover:bg-nevoa' : 'cursor-not-allowed opacity-60' }}"
+                href="{{ route($atalho['rota']) }}"
+                class="cartao p-5 transition-colors hover:bg-nevoa"
             >
                 <p class="text-sm font-semibold lowercase text-grafite">{{ $atalho['titulo'] }}</p>
                 <p class="mt-2 text-sm text-aco">{{ $atalho['texto'] }}</p>
