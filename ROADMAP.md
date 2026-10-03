@@ -1,10 +1,11 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-10-03 · **ONB-01 aberto como trilha nova — ONB-01A é a
-prioridade operacional atual · PM-04A segue planejado e não iniciado** — 642
-testes no total: 640 PASS, 0 FAIL e 2 risky preexistentes · SEC-04 resolvido em
-2026-09-12 · infraestrutura VPS/HTTPS concluída em 2026-10-03 (`be44a0e`),
-ambiente staging disponível em https://lucraone.jmfsystem.tech
+**Atualizado:** 2026-10-03 · **ONB-01A concluído (`6aa8d62`) — PM-04A passa a
+ser a próxima prioridade operacional e continua não iniciado** — 702 testes no
+total: 700 PASS, 0 FAIL, 0 ERROR, 2 risky preexistentes, 0 skipped e 2449
+assertions · SEC-04 resolvido em 2026-09-12 · infraestrutura VPS/HTTPS concluída
+em 2026-10-03 (`be44a0e`), ambiente staging disponível em
+https://lucraone.jmfsystem.tech · ONB-01B e o Cliente Teste seguem planejados
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
@@ -75,23 +76,27 @@ PM são trilhas paralelas: nenhuma etapa de ONB bloqueia tecnicamente uma etapa 
 PM, nem o contrário.
 
 ```
-ONB-01A  →  PM-04A  →  PM-04B  →  Cliente Teste  →  ONB-01B  →  PM-04C  →  PM-05
+ONB-01A ✅  →  PM-04A ⬅ PRÓXIMA  →  PM-04B  →  Cliente Teste  →  ONB-01B  →  PM-04C  →  PM-05
 ```
 
 | Ordem | Etapa | Trilha | Status |
 |---|---|---|---|
-| 1 | ONB-01A — Fundação administrativa do onboarding | ONB | Planejado · **prioridade atual** |
-| 2 | PM-04A — Quantidade coerente com a unidade | PM | Planejado · não iniciado |
+| 1 | ONB-01A — Fundação administrativa do onboarding | ONB | **Concluído ✅** (`6aa8d62`) |
+| 2 | PM-04A — Quantidade coerente com a unidade | PM | Planejado · **próxima prioridade** · não iniciado |
 | 3 | PM-04B — Snapshot histórico do item | PM | Planejado |
-| 4 | Criação e teste manual de **Cliente Teste** pelo painel | ONB (validação) | Planejado |
-| 5 | ONB-01B — Experiência guiada de onboarding | ONB | Planejado · depende de ONB-01A |
+| 4 | Criação e teste manual de **Cliente Teste** pelo painel | ONB (validação) | Planejado · não criado |
+| 5 | ONB-01B — Experiência guiada de onboarding | ONB | Planejado · dependência de ONB-01A **satisfeita ✅**, não iniciado |
 | 6 | PM-04C — Semântica de linhas para o futuro PDV | PM | Planejado |
 | 7 | PM-05 — Dados fiscais do produto | PM | Futuro · antes da NFC-e/NF-e |
 
-> ONB-01A vem primeiro por uma razão operacional, não técnica: hoje não existe
-> caminho pelo painel para cadastrar um cliente do LucraOne, e o PM evolui o
-> cadastro de produtos **dentro** de um estabelecimento que já existe. A ordem
-> pode ser trocada sem quebrar nada.
+> A ordem continua sendo **prioridade operacional, não dependência técnica**
+> entre ONB e PM. Com o ONB-01A entregue, já existe caminho pelo painel para
+> cadastrar um cliente do LucraOne, então a vez é do PM-04A, que evolui o
+> cadastro de produtos **dentro** de um estabelecimento que já existe.
+>
+> A dependência do ONB-01B está satisfeita, mas ele **não** assume a prioridade:
+> entra depois do Cliente Teste, que é justamente o que mostra onde o fluxo
+> guiado precisa ajudar. A ordem pode ser trocada sem quebrar nada.
 
 A FASE 03 entrou na frente da F2.2 de propósito: depois da F2.1 o backend já
 expunha APIs completas, mas **não havia como um humano entrar no sistema**.
@@ -2042,22 +2047,23 @@ O que esta trilha é, e o que não é:
 
 | ID | Etapa | Status | Depende de |
 |---|---|---|---|
-| ONB-01A | Fundação administrativa do onboarding | Planejado · **prioridade atual** | — |
-| ONB-01B | Experiência guiada de onboarding | Planejado | ONB-01A |
+| ONB-01A | Fundação administrativa do onboarding | **Concluído ✅** · `6aa8d625cbb0a41269bc6eeb9b3ca377929fc816` | — |
+| ONB-01B | Experiência guiada de onboarding | Planejado · não iniciado | ONB-01A ✅ satisfeita |
 
 Como nas demais trilhas, uma etapa só passa a `Concluído` com testes que provem
-a entrega.
+a entrega. O ONB-01A passou com 60 testes novos; os detalhes estão em
+[Implementação concluída](#implementação-concluída).
 
 ```
 ONB:                              PM:
 
 ONB-01A — fundação                PM-01 — barcode + unit                ✅
-📋 PLANEJADO · PRIORIDADE ATUAL           ↓
+✅ CONCLUÍDO · 6aa8d62                    ↓
         ↓                         PM-02A — product_packages             ✅
 ONB-01B — experiência guiada              ├─ PM-02B                     ✅
-📋 PLANEJADO · depende de ONB-01A         └─ PM-03                      ✅
+📋 PLANEJADO · dependência ✅             └─ PM-03                      ✅
                                           ↓
-                                  PM-04A — quantidade coerente    📋 PLANEJADO
+                                  PM-04A — quantidade coerente    📋 PRÓXIMA
                                           ↓
                                   PM-04B — snapshot do item       📋 PLANEJADO
                                           ↓
@@ -2102,7 +2108,7 @@ administrativo; `ONB-01B` transforma esse fluxo em experiência guiada.
 
 #### ONB-01A — Fundação administrativa do onboarding
 
-**Planejado · prioridade atual**
+**Concluído ✅ · 2026-10-03 · `6aa8d625cbb0a41269bc6eeb9b3ca377929fc816`**
 
 **Objetivo.** Destravar e tornar consistente o fluxo administrativo necessário
 para criar clientes do LucraOne pelo painel.
@@ -2197,9 +2203,173 @@ ampliação silenciosa:
 - fiscal;
 - PM-04A, PM-04B e PM-04C.
 
+##### Implementação concluída
+
+**Data:** 2026-10-03
+**Commit funcional:** `6aa8d625cbb0a41269bc6eeb9b3ca377929fc816`
+**Título:** *feat(onboarding): implementar fundação administrativa ONB-01A*
+
+19 arquivos, 1644 inserções e 209 remoções. Nenhuma migration.
+
+**Critério de pronto atendido.** Já é possível criar um estabelecimento pelo
+painel, sem Tinker e sem SQL. O **Cliente Teste** em si ainda **não foi
+criado**: segue planejado, para depois do PM-04A e do PM-04B, conforme a
+[prioridade operacional atual](#prioridade-operacional-atual).
+
+**1 · Comando controlado de Platform Admin.**
+
+```
+plataforma:promover {email} [--force]
+```
+
+Registrado em `bootstrap/app.php`, porque a descoberta automática só varre
+`app/Console/Commands` e os comandos do projeto vivem nos módulos. Características
+entregues:
+
+- confirmação interativa por padrão, exibindo nome e e-mail da identidade e o
+  aviso de que a autoridade é global e nenhuma tela do painel a desfaz;
+- confirmação com **padrão negativo** — um Enter distraído não concede nada;
+- `--force` para uso explicitamente não interativo, em provisionamento;
+- recusar a confirmação não grava, não altera `updated_at` e não gera log;
+- idempotente: já sendo Platform Admin, informa e não toca o banco;
+- identidade inexistente **não é criada** — o comando recusa e explica que o
+  cadastro é operação do painel;
+- identidade arquivada é recusada, com mensagem própria;
+- log mínimo (`user_id`, `origem`, `comando`), sem e-mail, nome, senha, hash,
+  token ou sessão;
+- não aceita `--tenant`, `--role`, `--password` nem `--create-user`.
+
+**2 · Conta operacional da plataforma promovida.** A conta operacional recebeu
+`is_platform_admin = true` pelo comando oficial, sem Tinker e sem SQL. A
+promoção não alterou senha, status, e-mail, vínculo nem papel de
+estabelecimento.
+
+**3 · Dashboard corrigido.** Os atalhos passaram a citar nomes de rota que
+existem — `users.index`, `companies.index`, `catalog.products.index` e, para
+Platform Admin, `tenants.index`. O atalho de plataforma só aparece para quem a
+`TenantPolicy` autoriza, em vez de levar a um 403. Os textos que anunciavam como
+futuras as telas de cadastro já entregues pela F3.4, F3.5 e F3.6 foram removidos,
+assim como a guarda `Route::has()`/`href="#"` que os produzia.
+
+**4 · UX administrativa.** O rótulo da área de plataforma passou a ser
+**"clientes do LucraOne"** na sidebar, no atalho do dashboard e nas telas de
+`/tenants`; **"estabelecimento"** é usado onde descreve a entidade de dentro do
+painel, incluindo as ações de arquivar e restaurar — "cliente" ali colidiria com
+o `Customer`, que já usa esse rótulo na própria tela. O indicador do dashboard
+deixou de se chamar "tenants". `Tenant` e `tenant_id` seguem como termos
+técnicos no código, e o texto didático da ajuda continua ensinando o conceito:
+ali o termo é conteúdo, não rótulo.
+
+**5 · Fonte única de autorização padrão.** `StandardRoleMatrix`, em
+`app/Modules/Authorization/Domain/`, com o catálogo de permissões e os quatro
+papéis. O `admin` não é redeclarado: continua vindo de `AdminPermissionMatrix`.
+
+**6 · Service `ProvisionarEstabelecimento`**, em
+`app/Modules/Tenancy/Application/`, com duas responsabilidades separadas —
+`provisionarMatriz(Tenant)` e `atribuirAdministrador(Tenant, User)`. A separação
+é necessária: o seeder provisiona vários estabelecimentos e não tem um usuário a
+quem dar admin. Opera com `tenant_id` explícito e `withoutGlobalScopes()`, **sem
+depender do `TenantContext`**, porque o provisionamento acontece fora de um
+contexto resolvido.
+
+**7 · `TenantController` delegando ao Service.** O método privado
+`provisionarAutorizacaoPadrao()` foi removido. Criação de tenant, provisionamento
+e atribuição do administrador seguem na mesma transação; redirects, flashes,
+ULID, `active` e autorização pela `TenantPolicy` preservados.
+
+**8 · `AuthorizationSeeder` consumindo a mesma fonte**, reduzido de 155 para 31
+linhas. Como o concern de testes `MontaCenariosDeAutorizacao` já delegava ao
+seeder, a fonte única se propagou para toda a suíte de segurança sem tocar
+naqueles arquivos.
+
+**9 · Divergência eliminada.** Criação pelo painel e `AuthorizationSeeder`
+produzem agora a **mesma** matriz, verificado por teste que compara as duas.
+
+###### Matriz final
+
+| | quantidade |
+|---|---|
+| permissions no catálogo | **28** |
+| `admin` | **26** (idêntica a `AdminPermissionMatrix::NAMES`) |
+| `manager` | **15** |
+| `user` | **8** |
+| `viewer` | **8** |
+
+`manage-assigned-branches` e `view-assigned-branches` continuam **presentes no
+catálogo e não atribuídas a nenhum papel padrão**. Não é defeito novo: é a
+decisão preservada do SEC-04, implementada pela migration
+`2026_09_11_000000_remove_obsolete_assigned_branch_permissions_from_standard_roles`.
+A contenção do SEC-04 · E2 segue valendo — user ⊆ manager ⊆ admin e
+viewer ⊆ manager.
+
+###### Testes
+
+**60 testes novos:**
+
+| arquivo | casos |
+|---|---|
+| `tests/Feature/Platform/PromoverPlatformAdminCommandTest.php` | 27 |
+| `tests/Feature/Tenancy/ProvisionamentoDeAutorizacaoTest.php` | 21 |
+| `tests/Feature/Admin/DashboardAtalhosTest.php` | 12 |
+
+**Baseline após o ONB-01A:** 702 testes no total — 700 PASS, 0 FAIL, 0 ERROR,
+2 risky preexistentes, 0 skipped e 2449 assertions. A baseline anterior era de
+642 testes, 640 PASS e 2132 assertions.
+
+As matrizes esperadas são escritas à mão nos testes, de propósito: se lessem a
+mesma constante que a implementação usa, provariam apenas que a classe é igual a
+si mesma. Nenhum teste antigo foi removido. Cinco assertivas de três testes
+existentes foram ajustadas e três delas ficaram **mais fortes** — passaram a
+afirmar que quem não administra a plataforma não recebe o caminho dela, onde
+antes afirmavam, por acidente, um sintoma do defeito dos atalhos.
+
+###### Segurança confirmada
+
+- Platform Admin continua separado de Tenant Admin;
+- Tenant Admin continua **sem** criar estabelecimentos (403 mantido);
+- Platform Admin administra os clientes do LucraOne;
+- a `TenantPolicy` **não** foi alterada;
+- `is_platform_admin` **não** virou mass assignable;
+- `TenantScope` e o isolamento multi-tenant **não** foram alterados;
+- o ONB-01A **não** implementou RBAC global de plataforma;
+- o ONB-01A **não** criou o grupo `/plataforma/*` nem middleware próprio.
+
+O ONB-01A **operacionalizou o bootstrap** do Platform Admin e não alterou o
+modelo de segurança: a [decisão arquitetural do SEC-04](#decisão-arquitetural--platform-admin)
+segue valendo integralmente, e a role `admin` de um estabelecimento não foi
+transformada em autoridade de plataforma.
+
+###### Dívidas e observações preservadas
+
+- quem cria um estabelecimento pelo fluxo atual continua recebendo vínculo nele,
+  comportamento anterior ao ONB-01A e caracterizado em teste;
+- com múltiplos vínculos ativos, o Platform Admin passa a usar o seletor de
+  estabelecimento a cada login, e `HasRole::tenantDeReferencia()` deixa de
+  resolver sozinho fora de requisição;
+- a decisão de manter ou não esse acesso será tomada no passo 3 do wizard do
+  ONB-01B;
+- a sidebar ainda não filtra por permissão todos os seus itens — só o de
+  plataforma;
+- convite por e-mail continua futuro;
+- CRUD de papéis continua fora de escopo: um estabelecimento novo nasce com os
+  quatro papéis, mas o cliente ainda não cria papéis próprios;
+- os 2 risky preexistentes do `SecurityAuditTest` continuam;
+- as 22 pendências de Pint continuam — nenhuma delas em arquivo do ONB-01A.
+
+###### Commits da trilha
+
+| Commit | O que é |
+|---|---|
+| `2ff1ada695960a40104a43c102646b39ec42f412` | *docs(roadmap): registrar trilha de onboarding ONB-01* — abertura documental da trilha |
+| `6aa8d625cbb0a41269bc6eeb9b3ca377929fc816` | *feat(onboarding): implementar fundação administrativa ONB-01A* — entrega funcional |
+
 #### ONB-01B — Experiência guiada de onboarding
 
-**Planejado · depende de ONB-01A**
+**Planejado · não iniciado · dependência de ONB-01A satisfeita ✅ (`6aa8d62`)**
+
+Nada do que está descrito abaixo foi implementado: wizard, primeiro
+administrador do cliente, configuração inicial, checklist, tela de sucesso,
+próximos passos e ajuda contextual seguem sendo desenho planejado.
 
 **Objetivo.** Transformar o processo administrativo de ONB-01A em uma experiência
 guiada para usuários leigos.
