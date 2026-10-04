@@ -9,7 +9,6 @@ use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Inventory\Domain\Models\Inventory;
 use App\Modules\Inventory\Domain\Models\InventoryMovement;
 use App\Modules\Inventory\Domain\Models\StockLevel;
-use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -74,8 +73,8 @@ class InventoryWebManagementTest extends TestCase
             ->assertOk()
             ->assertSee('estoque')
             ->assertSee('ajuda de estoque')
-            ->assertSee('Arroz Casa')
-            ->assertDontSee('Produto Outro Tenant');
+            ->assertSee('ARROZ CASA')
+            ->assertDontSee('PRODUTO OUTRO TENANT');
     }
 
     public function test_ajuste_de_estoque_cria_saldo_e_movimento(): void
@@ -162,7 +161,7 @@ class InventoryWebManagementTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('inventory.show', $inventory))
             ->assertOk()
-            ->assertSee('Feijão Histórico')
+            ->assertSee('FEIJÃO HISTÓRICO')
             ->assertSee('inventário físico')
             ->assertSee('Ana Admin');
     }
@@ -187,7 +186,7 @@ class InventoryWebManagementTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('inventory.index', ['status' => 'low']))
             ->assertOk()
-            ->assertSee('Baixo Estoque')
+            ->assertSee('BAIXO ESTOQUE')
             ->assertSee($inventory->product->sku);
     }
 

@@ -3,9 +3,10 @@
 namespace App\Modules\Automation\Application\Actions;
 
 use App\Modules\Automation\Domain\Models\AutomationRule;
+use App\Modules\Products\Application\RegistrarPreco;
 use App\Modules\Products\Domain\Models\Price;
-use App\Modules\Products\Domain\Models\PriceHistory;
-use Illuminate\Support\Facades\DB;
+use App\Modules\Products\Domain\Services\CalculoMargem;
+use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 
@@ -34,7 +35,7 @@ class UpdatePriceAction implements ActionHandler
      * Teto de variação por execução. Uma regra que tentasse -90% seria recusada
      * antes de tocar no preço.
      */
-    public const VARIACAO_MAXIMA_PERCENTUAL = 50.0;
+    public const VARIACAO_MAXIMA_PERCENTUAL = CalculoMargem::VARIACAO_MAXIMA_PERCENTUAL;
 
     public static function rotulo(): string
     {
@@ -60,70 +61,9 @@ class UpdatePriceAction implements ActionHandler
 
         $tipo = (string) ($regra->action_config['price_type'] ?? Price::TYPE_SALE);
         $operacao = (string) ($regra->action_config['operation'] ?? self::OPERACAO_PERCENTUAL);
-        $valor = (float) ($regra->action_config['amount'] ?? 0);
+        $valor = $regra->action_config['amount'] ?? 0;
 
-        return DB::transaction(function () use ($regra, $produtoId, $tipo, $operacao, $valor) {
-            /*
-            | O lock vai dentro de um tap: encadear ->lockForUpdate() direto
-            | devolve o query builder cru, e o registro deixaria de ser
-            | hidratado como Price. O bloqueio da linha é o mesmo.
-            */
-            $preco = Price::query()
-                ->where('product_id', $produtoId)
-                ->where('type', $tipo)
-                ->tap(fn ($query) => $query->lockForUpdate())
-                ->first();
-
-            if (! $preco) {
-                throw new InvalidArgumentException("o produto não tem preço de {$tipo} cadastrado.");
-            }
-
-            $anterior = (float) $preco->amount;
-            $novo = $this->calcular($anterior, $operacao, $valor);
-
-            if ($novo === $anterior) {
-                return ['product_id' => $produtoId, 'price_type' => $tipo, 'unchanged' => true];
-            }
-
-            $preco->forceFill(['amount' => $novo])->save();
-
-            PriceHistory::create([
-                'tenant_id' => $regra->tenant_id,
-                'price_id' => $preco->id,
-                'product_id' => $produtoId,
-                'old_amount' => $anterior,
-                'new_amount' => $novo,
-                'currency' => $preco->currency,
-                'changed_by' => null,
-                'reason' => "automação: {$regra->name}",
-                'changed_at' => now(),
-            ]);
-
-            return [
-                'product_id' => $produtoId,
-                'price_type' => $tipo,
-                'old_amount' => $anterior,
-                'new_amount' => $novo,
-            ];
-        });
-    }
-
-    private function calcular(float $anterior, string $operacao, float $valor): float
-    {
-        if ($operacao === self::OPERACAO_DEFINIR) {
-            if ($valor < 0) {
-                throw new InvalidArgumentException('preço não pode ser negativo.');
-            }
-
-            return round($valor, 2);
-        }
-
-        if (abs($valor) > self::VARIACAO_MAXIMA_PERCENTUAL) {
-            throw new InvalidArgumentException(
-                'variação de '.$valor.'% acima do limite de '.self::VARIACAO_MAXIMA_PERCENTUAL.'% por execução.'
-            );
-        }
-
-        return round(max(0.0, $anterior * (1 + ($valor / 100))), 2);
+        return app(TenantContext::class)->withTenant($regra->tenant_id, fn () => app(RegistrarPreco::class)->automatizar($produtoId, $tipo, $operacao, $valor, "automação: {$regra->name}")
+        );
     }
 }

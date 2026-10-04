@@ -4,9 +4,15 @@
     ])->all();
 
     $selectedCategories = old('category_ids', $selectedCategories ?? []);
+    $skuInicial = [
+        'nome' => old('name', $product->name ?? ''),
+        'sku' => old('sku', $product->sku ?? ''),
+        'editando' => $product->exists,
+        'automatico' => (bool) old('sku_automatico', !filled(old('sku', $product->sku))),
+    ];
 @endphp
 
-<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-2" x-data="skuProduto(@js($skuInicial))">
     <x-form-group nome="company_id" rotulo="empresa" obrigatorio>
         <x-select nome="company_id" :opcoes="$companyOptions" :valor="$product->company_id" vazio="selecione" />
     </x-form-group>
@@ -15,20 +21,26 @@
         <x-select nome="status" :opcoes="$statusOptions" :valor="$product->status" />
     </x-form-group>
 
-    <x-form-group nome="sku" rotulo="sku" obrigatorio>
-        <x-input nome="sku" :valor="$product->sku" />
+    <x-form-group nome="name" rotulo="nome" obrigatorio>
+        <x-input class="uppercase" nome="name" :valor="$product->name" x-model="nome" @input="nome = $event.target.value; nomeAlterado()" />
     </x-form-group>
 
-    <x-form-group nome="barcode" rotulo="código de barras (EAN/GTIN)" ajuda="Opcional. Informe o código da embalagem vendida. Produtos sem código de barras podem usar apenas o SKU.">
+    <x-form-group nome="sku" rotulo="SKU — código interno" :obrigatorio="$product->exists"
+        ajuda="Usamos este código para identificar o produto dentro do LucraOne. Se você não informar um código próprio, podemos gerar um para você. Não é o código de barras da embalagem.">
+        <x-input nome="sku" :valor="$product->sku" x-model="sku" @input="sku = $event.target.value; codigoAlterado()" maxlength="100" placeholder="LEITE-ITALAC-1L" />
+        @if (! $product->exists)
+            <input type="hidden" name="sku_automatico" value="{{ old('sku_automatico', '0') }}" :value="automatico ? '1' : '0'">
+        @endif
+        <x-button variante="secundario" class="mt-2" @click="gerar()">Gerar código</x-button>
+        <p class="mt-2 text-xs text-aco">Na criação, o sistema ajusta o código gerado se ele já estiver em uso. Seu código próprio é mantido.</p>
+    </x-form-group>
+
+    <x-form-group nome="barcode" rotulo="código de barras (EAN/GTIN)" ajuda="Digite ou escaneie o número impresso abaixo do código de barras da embalagem. Este campo é opcional e não substitui o código interno.">
         <x-input nome="barcode" :valor="$product->barcode" inputmode="numeric" maxlength="14" autocomplete="off" />
     </x-form-group>
 
     <x-form-group nome="unit" rotulo="unidade de venda/estoque" obrigatorio ajuda="Escolha como o estoque e a venda deste produto serão contabilizados. Use KG só para venda a peso (ex.: 0,350 kg); pacote de 1 kg ou garrafa de 2 L vendidos inteiros são UN.">
         <x-select nome="unit" :opcoes="$unitOptions" :valor="$product->unit" />
-    </x-form-group>
-
-    <x-form-group nome="name" rotulo="nome" obrigatorio>
-        <x-input nome="name" :valor="$product->name" />
     </x-form-group>
 
     <x-form-group nome="description" rotulo="descrição" class="lg:col-span-2">

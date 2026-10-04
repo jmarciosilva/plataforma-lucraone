@@ -94,6 +94,16 @@ class TenantController extends Controller
         ]);
     }
 
+    public function onboardingHelp(TenantContext $context)
+    {
+        Gate::authorize('create', Tenant::class);
+
+        return view('tenants.onboarding-help', [
+            'tenantNome' => $context->tenant()->name,
+            'breadcrumbs' => [...$this->breadcrumbs(), ['label' => 'como cadastrar um cliente']],
+        ]);
+    }
+
     public function create(TenantContext $context)
     {
         Gate::authorize('create', Tenant::class);

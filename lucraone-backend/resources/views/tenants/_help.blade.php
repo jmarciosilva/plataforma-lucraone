@@ -7,7 +7,7 @@
     :colunas="['estabelecimento' => 2, 'situação' => 3, 'ações' => 4]"
     :itens="[
         'busca e filtros' => 'localize um estabelecimento pelo nome ou pelo apelido curto usado no endereço.',
-        'dados do estabelecimento' => 'nome, plano contratado, fuso horário, idioma e moeda usados nas telas; tenant é o espaço isolado de cada cliente, com seus próprios usuários, produtos e pedidos.',
+        'dados do estabelecimento' => 'nome, plano contratado, fuso horário, idioma e moeda usados nas telas; cada cliente tem seu próprio espaço, com seus próprios usuários, produtos e pedidos.',
         'situação' => 'indica se o estabelecimento está em teste, ativo, bloqueado ou encerrado.',
         'ações' => 'abrir o detalhe, editar os dados e arquivar ou restaurar o cadastro.',
     ]"

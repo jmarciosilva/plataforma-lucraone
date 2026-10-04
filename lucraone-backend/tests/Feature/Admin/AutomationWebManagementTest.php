@@ -201,7 +201,7 @@ class AutomationWebManagementTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('notifications.index'))
             ->assertOk()
-            ->assertSee('produto novo: Vinho Verde');
+            ->assertSee('produto novo: VINHO VERDE');
 
         $this->actingAs($this->admin)->post(route('notifications.read', $aviso));
         $this->assertNotNull($aviso->fresh()->read_at);

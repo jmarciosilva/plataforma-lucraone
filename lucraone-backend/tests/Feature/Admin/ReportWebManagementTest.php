@@ -92,7 +92,7 @@ class ReportWebManagementTest extends TestCase
             ->assertSee('relatórios')
             ->assertSee('ajuda de relatórios')
             ->assertSee('1.250,00')
-            ->assertSee('Vinho Relatório')
+            ->assertSee('VINHO RELATÓRIO')
             ->assertSee('Bar do Zé');
     }
 
@@ -136,7 +136,7 @@ class ReportWebManagementTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('reports.inventory'))
             ->assertOk()
-            ->assertSee('Vinho Relatório')
+            ->assertSee('VINHO RELATÓRIO')
             // 10 unidades a 20,00 de custo
             ->assertSee('200,00');
     }
@@ -203,7 +203,7 @@ class ReportWebManagementTest extends TestCase
             ->streamedContent();
 
         $this->assertStringContainsString('REL-100', $conteudo);
-        $this->assertStringContainsString('Vinho Relatório', $conteudo);
+        $this->assertStringContainsString('VINHO RELATÓRIO', $conteudo);
     }
 
     public function test_tipo_de_exportacao_invalido_da_404(): void

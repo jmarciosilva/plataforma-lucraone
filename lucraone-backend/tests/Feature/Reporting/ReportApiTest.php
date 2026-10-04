@@ -205,9 +205,9 @@ class ReportApiTest extends TestCase
             ->assertOk()
             ->json('data.top_produtos');
 
-        $this->assertSame('Chá Segundo', $top[0]['nome']);
+        $this->assertSame('CHÁ SEGUNDO', $top[0]['nome']);
         $this->assertEquals(300.0, $top[0]['receita']);
-        $this->assertSame('Café Relatório', $top[1]['nome']);
+        $this->assertSame('CAFÉ RELATÓRIO', $top[1]['nome']);
     }
 
     public function test_inventory_report_calculates_value_at_cost_and_sale(): void

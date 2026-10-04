@@ -6,8 +6,6 @@ use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Tenancy\Domain\Models\Tenant;
-use Database\Factories\CategoryFactory;
-use Database\Factories\ProductFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,6 +14,7 @@ class ProductTest extends TestCase
     use RefreshDatabase;
 
     protected Tenant $tenant;
+
     protected Company $company;
 
     protected function setUp(): void
@@ -44,7 +43,7 @@ class ProductTest extends TestCase
             'id' => $product->id,
             'tenant_id' => $this->tenant->id,
             'sku' => 'TEST-001',
-            'name' => 'Test Product',
+            'name' => 'TEST PRODUCT',
         ]);
     }
 

@@ -6,7 +6,6 @@ use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Tenancy\Domain\Models\Tenant;
-use Database\Factories\ProductFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,8 +14,11 @@ class ProductApiTest extends TestCase
     use RefreshDatabase;
 
     protected Tenant $tenant;
+
     protected Company $company;
+
     protected User $user;
+
     protected string $token;
 
     protected function setUp(): void
@@ -45,8 +47,8 @@ class ProductApiTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonStructure([
                 'data' => [
-                    '*' => ['id', 'sku', 'name', 'status', 'company_id']
-                ]
+                    '*' => ['id', 'sku', 'name', 'status', 'company_id'],
+                ],
             ]);
     }
 
@@ -67,11 +69,11 @@ class ProductApiTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonPath('data.sku', 'TEST-001')
-            ->assertJsonPath('data.name', 'Test Product');
+            ->assertJsonPath('data.name', 'TEST PRODUCT');
 
         $this->assertDatabaseHas('products', [
             'sku' => 'TEST-001',
-            'name' => 'Test Product',
+            'name' => 'TEST PRODUCT',
         ]);
     }
 
@@ -106,7 +108,7 @@ class ProductApiTest extends TestCase
             ]);
 
         $response->assertStatus(200)
-            ->assertJsonPath('data.name', 'Updated Product')
+            ->assertJsonPath('data.name', 'UPDATED PRODUCT')
             ->assertJsonPath('data.status', 'inactive');
     }
 

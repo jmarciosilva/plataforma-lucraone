@@ -6,6 +6,7 @@
 
     <x-slot:acoes>
         <x-button variante="secundario" x-data @click="$dispatch('abrir-modal', 'help-tenants')">ajuda</x-button>
+        <x-button variante="secundario" href="{{ route('tenants.onboarding.help') }}">Como cadastrar um cliente</x-button>
         <x-button href="{{ route('tenants.create') }}">novo cliente</x-button>
     </x-slot:acoes>
 
@@ -16,7 +17,7 @@
     <x-card class="mb-6">
         <form method="GET" action="{{ route('tenants.index') }}" class="grid grid-cols-1 gap-4 lg:grid-cols-5">
             <x-form-group nome="search" rotulo="busca" class="lg:col-span-2">
-                <x-input nome="search" :valor="request('search')" placeholder="nome ou slug" />
+                <x-input nome="search" :valor="request('search')" placeholder="nome ou identificador" />
             </x-form-group>
 
             <x-form-group nome="status" rotulo="status">
@@ -68,7 +69,7 @@
         @empty
             <tr>
                 <td colspan="7" class="px-5 py-10 text-center text-sm text-aco">
-                    nenhum tenant encontrado.
+                    nenhum estabelecimento encontrado.
                 </td>
             </tr>
         @endforelse

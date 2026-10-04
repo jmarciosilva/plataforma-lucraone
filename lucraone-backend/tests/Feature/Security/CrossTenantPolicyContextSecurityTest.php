@@ -111,7 +111,7 @@ class CrossTenantPolicyContextSecurityTest extends TestCase
             'id' => $produtoB->id,
             'tenant_id' => $this->tenantB->id,
             'company_id' => $this->empresaB->id,
-            'name' => 'Produto Original B',
+            'name' => 'PRODUTO ORIGINAL B',
         ]);
         $this->assertNegadoPorIsolamento($resposta, 'alterar produto de B');
     }

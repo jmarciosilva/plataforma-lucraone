@@ -28,6 +28,7 @@
     </x-form-group>
 
     <x-form-group nome="phone" rotulo="telefone">
-        <x-input nome="phone" :valor="$company->phone" />
+        <x-input tipo="tel" nome="phone" :valor="$company->phone" x-data="telefoneCompany" @input="formatar()"
+            placeholder="(00) 00000-0000" inputmode="numeric" autocomplete="tel" maxlength="15" />
     </x-form-group>
 </div>

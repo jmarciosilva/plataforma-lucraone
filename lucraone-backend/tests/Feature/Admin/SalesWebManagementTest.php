@@ -226,7 +226,7 @@ class SalesWebManagementTest extends TestCase
             ->get(route('sales.orders.show', $order))
             ->assertOk()
             ->assertSee($order->order_number)
-            ->assertSee('Vinho Tinto')
+            ->assertSee('VINHO TINTO')
             ->assertSee('Bar do Zé')
             ->assertSee('80,00');
     }

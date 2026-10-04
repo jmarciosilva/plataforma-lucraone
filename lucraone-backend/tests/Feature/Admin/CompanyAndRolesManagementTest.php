@@ -83,6 +83,9 @@ class CompanyAndRolesManagementTest extends TestCase
             'id' => $company->id,
             'tenant_id' => $this->tenantAtual->id,
             'legal_name' => 'Nova Empresa Ltda',
+            'phone' => '(11) 99999-0000',
+            'trade_name' => 'Nova Empresa',
+            'email' => 'financeiro@nova.test',
             'status' => 'ACTIVE',
         ]);
     }
@@ -124,7 +127,46 @@ class CompanyAndRolesManagementTest extends TestCase
             'legal_name' => 'Nome Novo Ltda',
             'status' => 'SUSPENDED',
             'email' => 'contato@novo.test',
+            'phone' => '11988887777',
         ]);
+    }
+
+    public function test_create_e_edit_usam_campo_telefone_mascarado(): void
+    {
+        $company = Company::factory()->forCurrentTenant($this->tenantAtual->id)->create(['phone' => '11987654321']);
+        foreach ([route('companies.create'), route('companies.edit', $company)] as $url) {
+            $this->actingAs($this->admin)->get($url)->assertOk()
+                ->assertSee('x-data="telefoneCompany"', false)
+                ->assertSee('placeholder="(00) 00000-0000"', false)
+                ->assertSee('inputmode="numeric"', false)
+                ->assertSee('autocomplete="tel"', false);
+        }
+    }
+
+    public function test_update_aceita_telefone_formatado_sem_alterar_outros_dados(): void
+    {
+        $company = Company::factory()->forCurrentTenant($this->tenantAtual->id)->create();
+        $this->actingAs($this->admin)->put(route('companies.update', $company), [
+            'legal_name' => $company->legal_name,
+            'status' => $company->status,
+            'phone' => '(11) 98765-4321',
+        ])->assertSessionHasNoErrors()->assertRedirect(route('companies.show', $company));
+        $this->assertDatabaseHas('companies', [
+            'id' => $company->id,
+            'tenant_id' => $this->tenantAtual->id,
+            'legal_name' => $company->legal_name,
+            'document' => $company->document,
+            'email' => $company->email,
+            'phone' => '(11) 98765-4321',
+        ]);
+    }
+
+    public function test_limite_existente_de_telefone_continua_validado(): void
+    {
+        $this->actingAs($this->admin)->post(route('companies.store'), [
+            'legal_name' => 'Empresa', 'status' => 'ACTIVE', 'phone' => str_repeat('1', 33),
+        ])->assertSessionHasErrors('phone');
+        $this->assertDatabaseMissing('companies', ['legal_name' => 'Empresa']);
     }
 
     public function test_deletar_empresa_desativa_sem_apagar_registro(): void

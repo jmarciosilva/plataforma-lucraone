@@ -73,8 +73,8 @@ class ProductWebManagementTest extends TestCase
             ->assertOk()
             ->assertSee('produtos')
             ->assertSee('ajuda de produtos')
-            ->assertSee('Café Especial')
-            ->assertDontSee('Produto Outro Tenant');
+            ->assertSee('CAFÉ ESPECIAL')
+            ->assertDontSee('PRODUTO OUTRO TENANT');
     }
 
     public function test_criar_produto_salva_no_tenant_atual_com_categorias(): void
@@ -105,7 +105,7 @@ class ProductWebManagementTest extends TestCase
             'id' => $product->id,
             'tenant_id' => $this->tenantAtual->id,
             'company_id' => $this->company->id,
-            'name' => 'Café Torrado',
+            'name' => 'CAFÉ TORRADO',
         ]);
         $this->assertDatabaseHas('product_categories', [
             'product_id' => $product->id,
@@ -157,7 +157,7 @@ class ProductWebManagementTest extends TestCase
 
         $this->assertDatabaseHas('products', [
             'id' => $product->id,
-            'name' => 'Nome Novo',
+            'name' => 'NOME NOVO',
             'status' => 'inactive',
         ]);
         $this->assertDatabaseHas('product_categories', [
@@ -292,7 +292,13 @@ class ProductWebManagementTest extends TestCase
             'new_amount' => '24.90',
             'reason' => 'reajuste',
         ]);
-        $this->assertSame(1, PriceHistory::where('product_id', $product->id)->count());
+        $events = PriceHistory::where('product_id', $product->id);
+        $initial = (clone $events)->where('event_type', 'initial')->sole();
+        $this->assertNull($initial->old_amount);
+        $this->assertSame('19.90', $initial->new_amount);
+        $this->assertSame('sale', $initial->price_type);
+        $this->assertSame('amount_changed', (clone $events)->where('old_amount', '19.90')->sole()->event_type);
+        $this->assertSame(2, $events->count());
     }
 
     public function test_usuario_sem_permissao_recebe_403_no_catalogo(): void
@@ -314,7 +320,7 @@ class ProductWebManagementTest extends TestCase
             ->get(route('catalog.products.create'))
             ->assertOk()
             ->assertSee('código de barras (EAN/GTIN)')
-            ->assertSee('Opcional. Informe o código da embalagem vendida.')
+            ->assertSee('impresso abaixo do código de barras')
             ->assertSee('UN — Unidade')
             ->assertSee('KG — Quilograma')
             ->assertSee('<option value="UN" selected', false);
@@ -429,8 +435,8 @@ class ProductWebManagementTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('catalog.products.index', ['search' => '7890000000350']))
             ->assertOk()
-            ->assertSee('Refrigerante cola 350 ml')
-            ->assertDontSee('Massa de pastel 500 g')
+            ->assertSee('REFRIGERANTE COLA 350 ML')
+            ->assertDontSee('MASSA DE PASTEL 500 G')
             ->assertSee('unidade');
     }
 

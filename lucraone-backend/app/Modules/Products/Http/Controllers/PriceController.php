@@ -2,13 +2,16 @@
 
 namespace App\Modules\Products\Http\Controllers;
 
+use App\Modules\Products\Application\RegistrarPreco;
 use App\Modules\Products\Domain\Models\Price;
 use App\Modules\Products\Domain\Models\PriceHistory;
+use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Products\Http\Requests\StorePriceRequest;
 use App\Modules\Products\Http\Resources\PriceResource;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Routing\Controller;
 
 class PriceController extends Controller
@@ -35,17 +38,8 @@ class PriceController extends Controller
      */
     public function store(StorePriceRequest $request): JsonResponse
     {
-        $price = Price::updateOrCreate(
-            [
-                'tenant_id' => $this->tenantContext->id(),
-                'product_id' => $request->validated('product_id'),
-                'currency' => $request->validated('currency'),
-                'type' => $request->validated('type'),
-            ],
-            [
-                'amount' => $request->validated('amount'),
-            ]
-        );
+        $product = Product::where('tenant_id', $this->tenantContext->id())->findOrFail($request->validated('product_id'));
+        $price = app(RegistrarPreco::class)->salvar($product, $request->safe()->only(['currency', 'amount', 'type']), $request->user()?->id, 'alteração pela API');
 
         return (new PriceResource($price))
             ->response()
@@ -60,20 +54,26 @@ class PriceController extends Controller
         $history = PriceHistory::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->where('product_id', $productId)
-            ->orderByDesc('changed_at')
+            ->orderByDesc('changed_at')->orderByDesc('id')
             ->paginate(50);
 
-        return $history->through(fn ($item) => [
+        return JsonResource::collection($history->through(fn ($item) => [
             'id' => $item->id,
             'product_id' => $item->product_id,
+            'price_type' => $item->price_type,
+            'event_type' => $item->event_type,
+            'old_reference_cost_amount' => $item->old_reference_cost_amount,
+            'new_reference_cost_amount' => $item->new_reference_cost_amount,
+            'old_effective_margin_percentage' => $item->old_effective_margin_percentage,
+            'new_effective_margin_percentage' => $item->new_effective_margin_percentage,
             'currency' => $item->currency,
-            'old_amount' => (float) $item->old_amount,
-            'new_amount' => (float) $item->new_amount,
-            'percentage_change' => $item->percentage_change,
+            'old_amount' => $item->old_amount === null ? null : (float) $item->old_amount,
+            'new_amount' => $item->new_amount === null ? null : (float) $item->new_amount,
+            'percentage_change' => $item->percentage_change === null ? null : (float) $item->percentage_change,
             'reason' => $item->reason,
             'changed_by' => $item->changedBy?->name,
             'changed_at' => $item->changed_at,
-        ])->collect();
+        ]));
     }
 
     /**
@@ -87,7 +87,7 @@ class PriceController extends Controller
             ->where('type', Price::TYPE_SALE)
             ->first();
 
-        if (!$price) {
+        if (! $price) {
             return response()->json(['message' => 'Sale price not found'], 404);
         }
 
@@ -105,7 +105,7 @@ class PriceController extends Controller
             ->where('type', Price::TYPE_COST)
             ->first();
 
-        if (!$price) {
+        if (! $price) {
             return response()->json(['message' => 'Cost price not found'], 404);
         }
 
@@ -121,7 +121,7 @@ class PriceController extends Controller
             ->where('tenant_id', $this->tenantContext->id())
             ->findOrFail($priceId);
 
-        $price->delete();
+        app(RegistrarPreco::class)->remover($price, request()->user()?->id, 'remoção pela API');
 
         return response()->json(['message' => 'Price deleted successfully']);
     }

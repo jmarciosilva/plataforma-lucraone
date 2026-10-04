@@ -40,12 +40,11 @@ class TenantManagementTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('tenants.index'))
             ->assertOk()
-            // ONB-01A · D: os rótulos da área de plataforma deixaram de expor
-            // o termo técnico. O texto didático da ajuda continua ensinando o
-            // que é um tenant — ali o termo é conteúdo, não rótulo.
+            // A orientação explica o espaço do cliente sem exigir vocabulário técnico.
             ->assertSee('clientes do LucraOne')
             ->assertSee('ajuda de clientes do LucraOne')
-            ->assertSee('tenant é o espaço isolado', false)
+            ->assertSee('cada cliente tem seu próprio espaço', false)
+            ->assertDontSee('tenant é o espaço isolado', false)
             ->assertSee('novo cliente')
             ->assertSee('Casa Alta')
             ->assertSee('Padaria Central');

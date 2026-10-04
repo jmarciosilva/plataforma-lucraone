@@ -52,7 +52,7 @@ class ProductBarcodeResolutionApiTest extends TestCase
         $this->resolver('7890000000350')
             ->assertOk()
             ->assertJsonPath('data.product.id', (string) $this->lata->id)
-            ->assertJsonPath('data.product.name', 'Coca-Cola 350 ml')
+            ->assertJsonPath('data.product.name', 'COCA-COLA 350 ML')
             ->assertJsonPath('data.barcode', '7890000000350')
             ->assertJsonPath('data.source', 'product')
             ->assertJsonPath('data.quantity', 1)

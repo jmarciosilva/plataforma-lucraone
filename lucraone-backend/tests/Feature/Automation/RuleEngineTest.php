@@ -73,7 +73,7 @@ class RuleEngineTest extends TestCase
         $aviso = Notification::withoutGlobalScopes()->firstOrFail();
 
         // Os placeholders foram trocados pelos dados do gatilho
-        $this->assertSame('produto novo: Café Novo', $aviso->title);
+        $this->assertSame('produto novo: CAFÉ NOVO', $aviso->title);
         $this->assertSame('sku AUT-001 foi cadastrado.', $aviso->message);
 
         $this->assertDatabaseHas('automation_logs', [
@@ -215,7 +215,7 @@ class RuleEngineTest extends TestCase
         ]);
 
         Mail::assertQueued(AutomationAlertMail::class, function (AutomationAlertMail $mail) {
-            return $mail->assunto === 'novo produto: Queijo Curado'
+            return $mail->assunto === 'novo produto: QUEIJO CURADO'
                 && $mail->hasTo('compras@casa.test')
                 && $mail->hasTo('gerencia@casa.test');
         });

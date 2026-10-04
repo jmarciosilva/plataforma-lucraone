@@ -123,6 +123,56 @@ class OnboardingChecklistTest extends TestCase
         $this->assertFalse($this->estados()['estoque']);
     }
 
+    public function test_sete_etapas_numeradas_mantem_ordem_status_e_links(): void
+    {
+        $itens = $this->itensRenderizados();
+        $rotulos = ['Estabelecimento criado', 'Cadastrar empresa', 'Criar primeira categoria',
+            'Cadastrar primeiro produto', 'Definir preço', 'Informar estoque inicial', 'Cadastrar equipe'];
+        $rotas = [null, 'companies.create', 'catalog.categories.create', 'catalog.products.create',
+            'catalog.products.index', 'inventory.index', 'users.create'];
+        foreach ($rotulos as $indice => $rotulo) {
+            $item = $itens->item($indice);
+            $texto = preg_replace('/\s+/u', ' ', trim($item->textContent));
+            $this->assertStringContainsString(($indice + 1).'. '.$rotulo, $texto);
+            $this->assertSame(1, preg_match_all('/\b[1-7]\. /u', $texto));
+            $this->assertSame($indice === 0 ? 'Concluído' : 'Pendente', $item->getElementsByTagName('span')->item(0)->getAttribute('aria-label'));
+            $links = $item->getElementsByTagName('a');
+            if ($rotas[$indice]) {
+                $this->assertSame(1, $links->length);
+                $this->assertSame(route($rotas[$indice]), $links->item(0)->getAttribute('href'));
+            } else {
+                $this->assertSame(0, $links->length);
+            }
+        }
+    }
+
+    public function test_empresa_concluida_mantem_numero_dois_e_pendentes_nao_sao_renumerados(): void
+    {
+        Company::factory()->forCurrentTenant($this->tenant->id)->create();
+        $itens = $this->itensRenderizados();
+        $empresa = $itens->item(1);
+        $this->assertStringContainsString('2. Cadastrar empresa', $empresa->textContent);
+        $this->assertSame('Concluído', $empresa->getElementsByTagName('span')->item(0)->getAttribute('aria-label'));
+        $this->assertSame(0, $empresa->getElementsByTagName('a')->length);
+        $categoria = $itens->item(2);
+        $this->assertStringContainsString('3. Criar primeira categoria', $categoria->textContent);
+        $this->assertSame('Pendente', $categoria->getElementsByTagName('span')->item(0)->getAttribute('aria-label'));
+        $this->assertSame(route('catalog.categories.create'), $categoria->getElementsByTagName('a')->item(0)->getAttribute('href'));
+        $this->assertStringContainsString('7. Cadastrar equipe', $itens->item(6)->textContent);
+    }
+
+    private function itensRenderizados(): \DOMNodeList
+    {
+        $resposta = $this->get(route('dashboard'))->assertOk();
+        $dom = new \DOMDocument;
+        @$dom->loadHTML('<?xml encoding="utf-8" ?>'.$resposta->getContent());
+        $xpath = new \DOMXPath($dom);
+        $itens = $xpath->query('//ol[@aria-label="Etapas de configuração do estabelecimento"]/li');
+        $this->assertCount(7, $itens);
+
+        return $itens;
+    }
+
     private function estados(): array
     {
         $resposta = $this->get(route('dashboard'))->assertOk();

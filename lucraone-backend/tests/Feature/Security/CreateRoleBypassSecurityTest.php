@@ -134,7 +134,7 @@ class CreateRoleBypassSecurityTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->assertDatabaseHas('products', ['id' => $produto->id, 'name' => 'Produto Original']);
+        $this->assertDatabaseHas('products', ['id' => $produto->id, 'name' => 'PRODUTO ORIGINAL']);
         $resposta->assertForbidden();
     }
 

@@ -29,13 +29,17 @@ class Price extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'reference_cost_amount' => 'decimal:2',
+        'effective_margin_percentage' => 'decimal:4',
     ];
 
     /**
      * Price types: sale, cost, suggested_retail
      */
     const TYPE_COST = 'cost';
+
     const TYPE_SALE = 'sale';
+
     const TYPE_SUGGESTED_RETAIL = 'suggested_retail';
 
     /**
@@ -72,11 +76,6 @@ class Price extends Model
      */
     public function getMarginPercentageAttribute()
     {
-        $costPrice = $this->product->prices()->cost()->first();
-        if (!$costPrice || $costPrice->amount == 0) {
-            return null;
-        }
-
-        return (($this->amount - $costPrice->amount) / $costPrice->amount) * 100;
+        return $this->effective_margin_percentage;
     }
 }

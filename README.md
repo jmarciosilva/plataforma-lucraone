@@ -18,7 +18,7 @@ O plano de execução está em **[ROADMAP.md](ROADMAP.md)**.
 | **Última sprint concluída** | F2.5 — Advanced Automation |
 | **Próxima sprint funcional** | F2.6 — Integration APIs |
 | **Status da F2.6** | 🔴 **Bloqueada temporariamente** pelo hardening de segurança pré-F2.6 |
-| **Testes** | 568 no total · 566 aprovados · 0 falhas · 2 risky preexistentes |
+| **Testes** | 849 no total · 847 PASS · 0 FAIL/ERROR · 2 risky preexistentes · 0 skipped · 3248 assertions |
 | **Módulos** | 12 |
 | **Superfícies** | Painel web (sessão) + API REST `/api/v1` (Sanctum) |
 
@@ -28,6 +28,19 @@ e mantêm a F2.6 bloqueada.** Essas pendências não são uma fase nova e não r
 F1.7: são correções identificadas depois que os módulos da FASE 02 cresceram. Lista
 em [Limitações conhecidas](#limitações-conhecidas); detalhe e critério de liberação
 em [ROADMAP.md](ROADMAP.md#pendências-bloqueadoras-pré-f26).
+
+ONB-01B está concluído: criação guiada em quatro passos, ajuda permanente para
+Platform Admin, atalhos de cadastro e checklist inicial numerado. O próximo item
+de produto é **PM-04A**, planejado e não iniciado; ONB e PM são trilhas paralelas.
+
+A rodada de 2026-10-04 também entregou máscara de telefone, SKU assistido no Web,
+nomes de produtos em maiúsculas e cadastro de preços com moeda selecionável,
+entrada brasileira e sugestão de venda pela margem desejada no CUSTO. A sugestão
+não salva VENDA automaticamente. Margem efetiva e custo de referência são
+persistidos com histórico decimal, pela fórmula sobre custo, usando o mesmo
+serviço em Web/API/automação. Histórico permanece após remoção de Price; não há
+reconstrução fictícia de margens antigas. Relatórios completos continuam futuros.
+Detalhes e estado do staging em [ROADMAP.md](ROADMAP.md).
 
 O SEC-04 foi concluído. Nele foram corrigidos:
 

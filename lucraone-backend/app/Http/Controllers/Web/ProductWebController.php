@@ -8,6 +8,8 @@ use App\Http\Requests\StoreWebProductPackageRequest;
 use App\Http\Requests\StoreWebProductRequest;
 use App\Http\Requests\UpdateWebProductRequest;
 use App\Modules\Companies\Domain\Models\Company;
+use App\Modules\Products\Application\CriarProdutoComSku;
+use App\Modules\Products\Application\RegistrarPreco;
 use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Products\Domain\Models\Price;
 use App\Modules\Products\Domain\Models\PriceHistory;
@@ -84,12 +86,12 @@ class ProductWebController extends Controller
         ]);
     }
 
-    public function store(StoreWebProductRequest $request, TenantContext $context)
+    public function store(StoreWebProductRequest $request, TenantContext $context, CriarProdutoComSku $gerador)
     {
-        $product = Product::create([
-            ...$request->safe()->except('category_ids'),
-            'tenant_id' => $context->id(),
-        ]);
+        $dados = $request->safe()->except(['category_ids', 'sku_automatico']);
+        $product = blank($dados['sku'] ?? null)
+            ? $gerador->criar($dados, $context)
+            : Product::create([...$dados, 'tenant_id' => $context->id()]);
 
         $product->categories()->sync($request->input('category_ids', []));
 
@@ -115,7 +117,7 @@ class ProductWebController extends Controller
             'priceHistory' => PriceHistory::query()
                 ->where('product_id', $product->id)
                 ->with('changedBy')
-                ->latest('changed_at')
+                ->latest('changed_at')->latest('id')
                 ->limit(10)
                 ->get(),
             'tenantNome' => $context->tenant()->name,
@@ -172,55 +174,21 @@ class ProductWebController extends Controller
             ->with('sucesso', 'produto restaurado.');
     }
 
-    public function storePrice(StoreWebPriceRequest $request, Product $product, TenantContext $context)
+    public function storePrice(StoreWebPriceRequest $request, Product $product, TenantContext $context, RegistrarPreco $prices)
     {
         Gate::authorize('update', $product);
+        $prices->salvar($product, $request->safe()->only(['currency', 'amount', 'type']), $request->user()?->id, $request->validated('reason') ?: 'alteração pelo painel');
 
-        $price = Price::query()
-            ->where('tenant_id', $context->id())
-            ->where('product_id', $product->id)
-            ->where('currency', strtoupper($request->validated('currency')))
-            ->where('type', $request->validated('type'))
-            ->first();
-
-        $oldAmount = $price?->amount;
-
-        $price = Price::updateOrCreate(
-            [
-                'tenant_id' => $context->id(),
-                'product_id' => $product->id,
-                'currency' => strtoupper($request->validated('currency')),
-                'type' => $request->validated('type'),
-            ],
-            ['amount' => $request->validated('amount')]
-        );
-
-        if ($oldAmount !== null && (float) $oldAmount !== (float) $price->amount) {
-            PriceHistory::create([
-                'tenant_id' => $context->id(),
-                'price_id' => $price->id,
-                'product_id' => $product->id,
-                'old_amount' => $oldAmount,
-                'new_amount' => $price->amount,
-                'currency' => $price->currency,
-                'changed_by' => $request->user()?->id,
-                'reason' => $request->validated('reason') ?: 'alteração pelo painel',
-                'changed_at' => now(),
-            ]);
-        }
-
-        return redirect()
-            ->route('catalog.products.show', $product)
-            ->with('sucesso', 'preço salvo.');
+        return redirect()->route('catalog.products.show', $product)->with('sucesso', 'preço salvo.');
     }
 
-    public function destroyPrice(Product $product, Price $price)
+    public function destroyPrice(Product $product, Price $price, RegistrarPreco $prices)
     {
         Gate::authorize('update', $product);
 
         abort_unless($price->product_id === $product->id, 404);
 
-        $price->delete();
+        $prices->remover($price, request()->user()?->id, 'remoção pelo painel');
 
         return redirect()
             ->route('catalog.products.show', $product)

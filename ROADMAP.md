@@ -1,12 +1,13 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-10-03 · **ONB-01A concluído (`6aa8d62`) — ONB-01B passa a
-ser a próxima prioridade operacional: Planejado · não iniciado; PM-04A continua
-Planejado · não iniciado, sem ser a prioridade atual** — 702 testes no
-total: 700 PASS, 0 FAIL, 0 ERROR, 2 risky preexistentes, 0 skipped e 2449
-assertions · SEC-04 resolvido em 2026-09-12 · infraestrutura VPS/HTTPS concluída
-em 2026-10-03 (`be44a0e`), ambiente staging disponível em
-https://lucraone.jmfsystem.tech · Cliente Teste segue Planejado · não criado
+**Atualizado:** 2026-10-04 · **ONB-01A e ONB-01B concluídos** — wizard
+ONB-01B publicado em `aee736db22a4f626fea6010d3e67278670606134`; ajuda permanente,
+checklist numerado e melhorias de empresa/produto/preço concluídos nesta rodada.
+**PM-04A é a próxima prioridade operacional: Planejado · não iniciado.**
+Baseline atual: 849 testes — 847 PASS, 0 FAIL, 0 ERROR, 2 risky preexistentes,
+0 skipped e 3248 assertions. SEC-04 resolvido; SEC-01/02/03 pendentes.
+Staging disponível em https://lucraone.jmfsystem.tech; Cliente Teste segue
+Planejado · não criado.
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
@@ -77,31 +78,26 @@ PM são trilhas paralelas: nenhuma etapa de ONB bloqueia tecnicamente uma etapa 
 PM, nem o contrário.
 
 ```
-ONB-01A ✅  →  ONB-01B ⬅ PRÓXIMA  →  PM-04A  →  PM-04B  →  Cliente Teste  →  PM-04C  →  PM-05
+ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ⬅ PRÓXIMA  →  PM-04B  →  Cliente Teste  →  PM-04C  →  PM-05
 ```
 
 | Ordem | Etapa | Trilha | Status |
 |---|---|---|---|
 | 1 | ONB-01A — Fundação administrativa do onboarding | ONB | **Concluído ✅** (`6aa8d62`) |
-| 2 | ONB-01B — Experiência guiada de onboarding | ONB | Planejado · **próxima prioridade** · não iniciado · dependência de ONB-01A **satisfeita ✅** |
-| 3 | PM-04A — Quantidade coerente com a unidade | PM | Planejado · não iniciado |
+| 2 | ONB-01B — Experiência guiada de onboarding | ONB | **Concluído ✅** · wizard `aee736d`; ajuda e checklist concluídos |
+| 3 | PM-04A — Quantidade coerente com a unidade | PM | Planejado · **próxima prioridade** · não iniciado |
 | 4 | PM-04B — Snapshot histórico do item | PM | Planejado |
 | 5 | Criação e teste manual de **Cliente Teste** pelo painel | ONB (validação) | Planejado · não criado |
 | 6 | PM-04C — Semântica de linhas para o futuro PDV | PM | Planejado |
 | 7 | PM-05 — Dados fiscais do produto | PM | Futuro · antes da NFC-e/NF-e |
 
-> A ordem continua sendo **prioridade operacional, não dependência técnica**
-> entre ONB e PM. O ONB-01A já destravou o fluxo administrativo pelo painel.
-> Agora a prioridade é transformar esse fluxo em uma experiência guiada para
-> o primeiro cliente real, de modo que um usuário leigo entenda o que está
-> criando, quem será o administrador, quais configurações iniciais são
-> importantes e quais são os próximos passos.
->
-> PM-04A continua importante como regra operacional de pedido/quantidade UN/KG.
-> Não existe dependência técnica entre ONB-01B e PM-04A: a ordem foi alterada
-> por prioridade de produto/UX, não por arquitetura. Ambos continuam planejados
-> e não iniciados. ONB-01B e PM-04A não liberam a F2.6, que continua bloqueada
-> por SEC-01, SEC-02 e SEC-03.
+> A ordem continua sendo **prioridade operacional, não dependência técnica**.
+> ONB-01A destravou o fluxo administrativo; ONB-01B entregou o wizard guiado,
+> administrador definido pelo operador, configuração inicial, revisão e próximos
+> passos. A ajuda permanente e o checklist numerado facilitam o primeiro uso.
+> PM-04A é o próximo item de produto para quantidade UN/KG e não foi iniciado.
+> Não há dependência técnica entre ONB e PM. F2.6 continua bloqueada por
+> SEC-01, SEC-02 e SEC-03.
 
 A FASE 03 entrou na frente da F2.2 de propósito: depois da F2.1 o backend já
 expunha APIs completas, mas **não havia como um humano entrar no sistema**.
@@ -2053,7 +2049,7 @@ O que esta trilha é, e o que não é:
 | ID | Etapa | Status | Depende de |
 |---|---|---|---|
 | ONB-01A | Fundação administrativa do onboarding | **Concluído ✅** · `6aa8d625cbb0a41269bc6eeb9b3ca377929fc816` | — |
-| ONB-01B | Experiência guiada de onboarding | Planejado · próxima prioridade · não iniciado | ONB-01A ✅ satisfeita |
+| ONB-01B | Experiência guiada de onboarding | **Concluído ✅** · `aee736d`; ajuda concluída nesta rodada | ONB-01A ✅ satisfeita |
 
 Como nas demais trilhas, uma etapa só passa a `Concluído` com testes que provem
 a entrega. O ONB-01A passou com 60 testes novos; os detalhes estão em
@@ -2066,7 +2062,7 @@ ONB-01A — fundação                PM-01 — barcode + unit                �
 ✅ CONCLUÍDO · 6aa8d62                    ↓
         ↓                         PM-02A — product_packages             ✅
 ONB-01B — experiência guiada              ├─ PM-02B                     ✅
-📋 PRÓXIMA · dependência ✅               └─ PM-03                      ✅
+✅ CONCLUÍDO · aee736d               └─ PM-03                      ✅
                                           ↓
                                   PM-04A — quantidade coerente    📋 PLANEJADO
                                           ↓
@@ -2370,16 +2366,25 @@ transformada em autoridade de plataforma.
 
 #### ONB-01B — Experiência guiada de onboarding
 
-**Planejado · próxima prioridade operacional · não iniciado · dependência de ONB-01A satisfeita ✅ (`6aa8d62`)**
+**Concluído ✅** — entrega funcional publicada em
+`aee736db22a4f626fea6010d3e67278670606134`, com 47 testes ONB-01B aprovados.
 
-Nada do que está descrito abaixo foi implementado: wizard, primeiro
-administrador do cliente, configuração inicial, checklist, tela de sucesso,
-próximos passos e ajuda contextual seguem sendo desenho planejado.
+Wizard de quatro passos com confirmação transacional única, administrador novo
+ou existente sem alteração silenciosa da identidade global, Company opcional,
+escolha explícita de acesso do operador (default Não), revisão sem senha e tela
+de sucesso com próximos passos. Checklist derivado do banco, isolado por
+estabelecimento; o administrador inicial sozinho e o suporte da plataforma não
+concluem equipe. Nesta rodada, ajuda permanente exclusiva de Platform Admin em
+`/tenants/ajuda/cadastro`, CTAs no dashboard/lista/wizard e etapas fixas 1–7.
+
+Observações futuras preservadas: sucesso depende de flash de sessão,
+concorrência do mesmo e-mail, situação do estabelecimento no resolver,
+teste específico de credenciais em logs de exception e browser E2E completo.
 
 **Objetivo.** Transformar o processo administrativo de ONB-01A em uma experiência
 guiada para usuários leigos.
 
-**Wizard de criação de cliente — desenho planejado.**
+**Wizard de criação de cliente — implementado.**
 
 | Passo | Conteúdo |
 |---|---|
@@ -2399,25 +2404,24 @@ Após a conclusão, tela **"Cliente criado com sucesso"**, com atalhos para:
 **Checklist do cliente no dashboard.**
 
 ```
-✅ Estabelecimento criado
-⬜ Cadastrar empresa
-⬜ Criar primeira categoria
-⬜ Cadastrar primeiro produto
-⬜ Definir preço
-⬜ Informar estoque inicial
-⬜ Convidar equipe
+✅ 1. Estabelecimento criado
+⬜ 2. Cadastrar empresa
+⬜ 3. Criar primeira categoria
+⬜ 4. Cadastrar primeiro produto
+⬜ 5. Definir preço
+⬜ 6. Informar estoque inicial
+⬜ 7. Cadastrar equipe
 ```
 
-O progresso deve ser **derivado do banco**, preferencialmente sem nova tabela de
-progresso nem flag de primeiro acesso — estado derivado não diverge da realidade.
+O progresso é **derivado do banco**, sem nova tabela de progresso nem flag de
+primeiro acesso — estado derivado não diverge da realidade.
 Exemplos de derivação: `Company::exists()`, `Category::exists()`,
 `Product::exists()`, preço de venda (`Price` do tipo `SALE`) existente,
 `Inventory` existente e `activeUsers() > 1`.
 
-**Ajuda contextual.** Reaproveitar o componente `x-help-modal`, já em uso em 8
-telas (dashboard, tenants, users, companies, roles, products, orders, customers).
-Não criar um segundo sistema de ajuda em paralelo sem necessidade — o objetivo é
-manter o padrão visual e pedagógico existente.
+**Ajuda contextual.** O padrão `x-help-modal` foi preservado. A orientação
+permanente de cadastro de clientes complementa a ajuda existente e pode ser
+reaberta pelo dashboard, lista de clientes e wizard.
 
 **Evolução de rotas planejada.** Grupo `/plataforma/*`, servido com
 `auth.web:sem-tenant` mais um middleware específico de Platform Admin, para que a
@@ -2465,6 +2469,35 @@ Registradas para não se perderem, sem ID próprio e sem previsão:
 **Motivação.** Evitar que administradores precisem conhecer e transmitir a senha
 dos usuários que cadastram. Hoje a senha é digitada pelo administrador no
 formulário e comunicada por fora do sistema. **Não implementar.**
+
+---
+
+## Melhorias de cadastro e preços — concluídas em 2026-10-04
+
+- Company: máscara brasileira de celular compartilhada entre create/edit, sem
+  dependência nova; formato persistido e validação existentes preservados.
+- Produto: SKU interno assistido no Web, geração autoritativa com unicidade por
+  estabelecimento e tratamento de colisões; API mantém SKU obrigatório. SKU não
+  é EAN/GTIN. Edição não regenera silenciosamente o código.
+- Nome do produto normalizado em maiúsculas no model, inclusive UTF-8, Web/API;
+  sem backfill de nomes antigos.
+- Preços: entrada brasileira com vírgula, seletor de moeda e margem desejada
+  opcional apenas em CUSTO. Sugestão usa custo × (1 + margem/100), com duas casas;
+  usar sugestão apenas preenche VENDA, sem gravação automática. O custo precisa
+  estar salvo para compor a margem efetiva; venda sem custo continua permitida.
+- Margem efetiva: fórmula oficial sobre custo, `((venda - custo) / custo) × 100`,
+  decimal assinado com quatro casas. `RegistrarPreco` centraliza Web/API/automação,
+  com custo de referência da mesma moeda/produto/estabelecimento e transação.
+- Histórico: eventos `initial`, `amount_changed`, `reference_cost_changed` e
+  `price_removed`, snapshots old/new e identidade por tenant/product/tipo/moeda.
+  Remoção de Price mantém eventos (`price_id` SET NULL); tenant/product RESTRICT.
+  Margem desconhecida é NULL; valores antigos não são inventados nem recalculados.
+- Migration `2026_10_04_100000_add_historical_margin_snapshots` aplicada somente
+  no staging, com backup prévio. Teste manual de custo 2,19 + 30% → sugestão 2,85
+  e salvamento de CUSTO/VENDA sem 500 concluído pelo operador.
+
+Relatórios de lucratividade e meta histórica de margem desejada continuam
+futuros. PM-04A/B/C, fiscal e PDV não foram implementados nesta rodada.
 
 ---
 

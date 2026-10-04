@@ -2,11 +2,12 @@
 
 namespace Tests\Feature\Products;
 
+use App\Modules\Products\Application\RegistrarPreco;
 use App\Modules\Products\Domain\Models\Price;
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Tenancy\Application\TenantContext;
 use App\Modules\Tenancy\Domain\Models\Tenant;
-use Database\Factories\PriceFactory;
-use Database\Factories\ProductFactory;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,6 +16,7 @@ class PriceTest extends TestCase
     use RefreshDatabase;
 
     protected Tenant $tenant;
+
     protected Product $product;
 
     protected function setUp(): void
@@ -59,7 +61,7 @@ class PriceTest extends TestCase
         ]);
 
         // Attempting to create duplicate should fail
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
 
         Price::factory()->create([
             'tenant_id' => $this->tenant->id,
@@ -135,17 +137,13 @@ class PriceTest extends TestCase
             'amount' => 50.00,
         ]);
 
-        $salePrice = Price::factory()->create([
-            'tenant_id' => $this->tenant->id,
-            'product_id' => $this->product->id,
-            'type' => Price::TYPE_SALE,
-            'amount' => 100.00,
+        app(TenantContext::class)->set($this->tenant->id);
+        $salePrice = app(RegistrarPreco::class)->salvar($this->product, [
+            'type' => Price::TYPE_SALE, 'currency' => 'BRL', 'amount' => '100.00',
         ]);
-
-        // Margin = (100 - 50) / 50 * 100 = 100%
-        $margin = $salePrice->margin_percentage;
-
-        $this->assertEquals(100.0, $margin);
+        $this->assertSame('100.0000', $salePrice->margin_percentage);
+        $costPrice->update(['amount' => '75.00']);
+        $this->assertSame('100.0000', $salePrice->fresh()->margin_percentage);
     }
 
     /**

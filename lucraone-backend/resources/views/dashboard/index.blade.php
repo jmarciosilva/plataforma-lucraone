@@ -13,6 +13,20 @@
     </x-slot:acoes>
 
     @include('dashboard._help')
+    @if (auth()->user()->isPlatformAdmin())
+        <section class="mb-6" aria-label="Administração do LucraOne">
+            <x-section-label>Administração do LucraOne</x-section-label>
+            <x-card>
+                <h2 class="text-lg font-semibold text-grafite">Novos clientes</h2>
+                <p class="mt-2 text-sm leading-6 text-aco">Cadastre um novo estabelecimento no LucraOne, defina quem será o administrador e escolha a configuração inicial em quatro passos.</p>
+                <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                    <x-button href="{{ route('tenants.create') }}">Cadastrar novo cliente</x-button>
+                    <x-button variante="secundario" href="{{ route('tenants.onboarding.help') }}">Como cadastrar um cliente</x-button>
+                </div>
+            </x-card>
+        </section>
+    @endif
+
     @include('dashboard._onboarding-checklist')
 
     @if ($comercial)

@@ -185,7 +185,7 @@ class OrderApiTest extends TestCase
         // O segundo pedido não pode reservar o que já está comprometido
         $this->mudarStatus($segundo, Order::STATUS_CONFIRMED)
             ->assertStatus(422)
-            ->assertJsonPath('message', 'Café Torrado: reserva maior que o saldo disponível.');
+            ->assertJsonPath('message', 'CAFÉ TORRADO: reserva maior que o saldo disponível.');
 
         $this->assertDatabaseHas('inventories', [
             'product_id' => $this->product->id,

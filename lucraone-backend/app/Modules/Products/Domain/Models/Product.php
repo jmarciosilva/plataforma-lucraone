@@ -4,9 +4,12 @@ namespace App\Modules\Products\Domain\Models;
 
 use App\Modules\Automation\Domain\Events\AutomationTriggered;
 use App\Modules\Automation\Domain\TriggerCatalog;
+use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Core\Domain\Traits\HasUlid;
+use App\Modules\Inventory\Domain\Models\Inventory;
 use App\Modules\Tenancy\Domain\Models\HasTenant;
 use Database\Factories\ProductFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -72,6 +75,13 @@ class Product extends Model
         'status' => 'string',
     ];
 
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => $value === null ? null : mb_strtoupper($value, 'UTF-8'),
+        );
+    }
+
     /**
      * Scope: Only active products
      */
@@ -93,7 +103,7 @@ class Product extends Model
      */
     public function company()
     {
-        return $this->belongsTo(\App\Modules\Companies\Domain\Models\Company::class);
+        return $this->belongsTo(Company::class);
     }
 
     public function categories()
@@ -118,6 +128,6 @@ class Product extends Model
 
     public function inventory()
     {
-        return $this->hasOne(\App\Modules\Inventory\Domain\Models\Inventory::class);
+        return $this->hasOne(Inventory::class);
     }
 }

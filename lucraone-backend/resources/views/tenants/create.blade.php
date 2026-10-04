@@ -4,6 +4,7 @@
         criação guiada de um cliente do LucraOne
     </x-slot:subtitulo>
     <x-slot:acoes>
+        <x-button variante="secundario" href="{{ route('tenants.onboarding.help') }}" target="_blank" rel="noopener">Precisa de ajuda? (abre em outra aba)</x-button>
         <x-button variante="secundario" href="{{ route('tenants.index') }}">voltar para clientes</x-button>
     </x-slot:acoes>
 

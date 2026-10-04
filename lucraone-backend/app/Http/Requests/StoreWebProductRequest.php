@@ -28,8 +28,9 @@ class StoreWebProductRequest extends FormRequest
                 'string',
                 Rule::exists(Company::class, 'id')->where('tenant_id', $context->id()),
             ],
+            'sku_automatico' => ['sometimes', 'boolean'],
             'sku' => [
-                'required',
+                $this->boolean('sku_automatico') ? 'exclude' : 'nullable',
                 'string',
                 'max:100',
                 Rule::unique('products', 'sku')->where('tenant_id', $context->id()),

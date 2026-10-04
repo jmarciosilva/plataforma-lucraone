@@ -49,7 +49,7 @@
         @forelse ($products as $product)
             <tr class="border-b border-linha last:border-0">
                 <td class="px-5 py-4">
-                    <a href="{{ route('catalog.products.show', $product) }}" class="font-semibold lowercase text-grafite transition-colors hover:text-sol">
+                    <a href="{{ route('catalog.products.show', $product) }}" class="font-semibold text-grafite transition-colors hover:text-sol">
                         {{ $product->name }}
                     </a>
                     <p class="font-comanda text-[0.65rem] uppercase tracking-wider text-aco">{{ $product->sku }}</p>

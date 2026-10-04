@@ -56,6 +56,9 @@ Route::middleware('auth.web:sem-tenant')->group(function () {
 Route::middleware('auth.web')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
+    Route::get('/tenants/ajuda/cadastro', [TenantController::class, 'onboardingHelp'])
+        ->name('tenants.onboarding.help');
+
     Route::get('/tenants/onboarding/administrator', [OnboardingController::class, 'administrator'])
         ->middleware('throttle:30,1')->name('tenants.onboarding.administrator');
     Route::post('/tenants/onboarding', [OnboardingController::class, 'store'])

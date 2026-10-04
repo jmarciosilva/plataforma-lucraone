@@ -146,22 +146,7 @@
         @if (! $product->trashed())
             <x-card>
                 <p class="text-sm font-semibold lowercase text-grafite">novo preço</p>
-                <form method="POST" action="{{ route('catalog.products.prices.store', $product) }}" class="mt-4 space-y-4">
-                    @csrf
-                    <x-form-group nome="type" rotulo="tipo" obrigatorio>
-                        <x-select nome="type" :opcoes="$priceTypes" :valor="old('type', 'sale')" />
-                    </x-form-group>
-                    <x-form-group nome="currency" rotulo="moeda" obrigatorio>
-                        <x-input nome="currency" valor="BRL" maxlength="3" />
-                    </x-form-group>
-                    <x-form-group nome="amount" rotulo="valor" obrigatorio>
-                        <x-input tipo="number" nome="amount" step="0.01" min="0" />
-                    </x-form-group>
-                    <x-form-group nome="reason" rotulo="motivo">
-                        <x-input nome="reason" placeholder="promoção, reajuste, correção..." />
-                    </x-form-group>
-                    <x-button tipo="submit" class="w-full">salvar preço</x-button>
-                </form>
+                @include('products._price-form')
             </x-card>
         @endif
 
@@ -173,7 +158,7 @@
                         <td class="px-5 py-4 font-comanda text-sm text-aco">{{ $price->currency }}</td>
                         <td class="px-5 py-4 font-comanda text-sm text-grafite">R$ {{ number_format((float) $price->amount, 2, ',', '.') }}</td>
                         <td class="px-5 py-4 text-sm text-aco">
-                            {{ $price->margin_percentage !== null ? number_format($price->margin_percentage, 1, ',', '.').'%' : 'n/a' }}
+                            {{ $price->effective_margin_percentage !== null ? \App\Modules\Products\Domain\Services\CalculoMargem::exibir($price->effective_margin_percentage).'%' : 'n/a' }}
                         </td>
                         <td class="px-5 py-4 text-right">
                             <form method="POST" action="{{ route('catalog.products.prices.destroy', [$product, $price]) }}">
@@ -194,22 +179,26 @@
 
     <x-section-label class="mt-8">histórico de preços</x-section-label>
 
-    <x-table :cabecalhos="['tipo', 'alteração', 'motivo', 'usuário', 'quando']">
+    <x-table :cabecalhos="['tipo', 'evento', 'moeda', 'alteração', 'custo de referência', 'margem', 'motivo', 'usuário', 'quando']">
         @forelse ($priceHistory as $history)
             <tr class="border-b border-linha last:border-0">
+                <td class="px-5 py-4 text-sm text-aco">{{ $priceTypes[$history->price_type] ?? 'não informado' }}</td>
+                <td class="px-5 py-4 text-sm text-aco">{{ \App\Modules\Products\Domain\Models\PriceHistory::EVENT_LABELS[$history->event_type] ?? 'evento antigo' }}</td>
                 <td class="px-5 py-4 font-comanda text-sm text-aco">{{ $history->currency }}</td>
                 <td class="px-5 py-4 text-sm text-grafite">
-                    R$ {{ number_format((float) $history->old_amount, 2, ',', '.') }}
+                    {{ \App\Modules\Products\Domain\Services\CalculoMargem::exibir($history->old_amount) }}
                     &rarr;
-                    R$ {{ number_format((float) $history->new_amount, 2, ',', '.') }}
+                    {{ \App\Modules\Products\Domain\Services\CalculoMargem::exibir($history->new_amount) }}
                 </td>
+                <td class="px-5 py-4 text-sm text-aco">{{ \App\Modules\Products\Domain\Services\CalculoMargem::exibir($history->old_reference_cost_amount) }} → {{ \App\Modules\Products\Domain\Services\CalculoMargem::exibir($history->new_reference_cost_amount) }}</td>
+                <td class="px-5 py-4 text-sm text-aco">{{ $history->old_effective_margin_percentage !== null ? \App\Modules\Products\Domain\Services\CalculoMargem::exibir($history->old_effective_margin_percentage).'%' : '—' }} → {{ $history->new_effective_margin_percentage !== null ? \App\Modules\Products\Domain\Services\CalculoMargem::exibir($history->new_effective_margin_percentage).'%' : '—' }}</td>
                 <td class="px-5 py-4 text-sm text-aco">{{ $history->reason ?: 'sem motivo' }}</td>
                 <td class="px-5 py-4 text-sm text-aco">{{ $history->changedBy?->name ?: 'sistema' }}</td>
                 <td class="px-5 py-4 text-sm text-aco">{{ $history->changed_at->format('d/m/Y H:i') }}</td>
             </tr>
         @empty
             <tr>
-                <td colspan="5" class="px-5 py-10 text-center text-sm text-aco">nenhuma alteração de preço registrada.</td>
+                <td colspan="9" class="px-5 py-10 text-center text-sm text-aco">nenhuma alteração de preço registrada.</td>
             </tr>
         @endforelse
     </x-table>
