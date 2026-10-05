@@ -85,6 +85,43 @@
         </x-card>
     </div>
 
+    <x-section-label class="mt-8">preços</x-section-label>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        @if (! $product->trashed())
+            <x-card>
+                <p class="text-sm font-semibold lowercase text-grafite">novo preço</p>
+                @include('products._price-form')
+            </x-card>
+        @endif
+
+        <div class="{{ $product->trashed() ? 'lg:col-span-3' : 'lg:col-span-2' }}">
+            <x-table :cabecalhos="['tipo', 'moeda', 'valor', 'margem', '']">
+                @forelse ($product->prices as $price)
+                    <tr class="border-b border-linha last:border-0">
+                        <td class="px-5 py-4 font-semibold lowercase text-grafite">{{ $priceTypes[$price->type] ?? $price->type }}</td>
+                        <td class="px-5 py-4 font-comanda text-sm text-aco">{{ $price->currency }}</td>
+                        <td class="px-5 py-4 font-comanda text-sm text-grafite">R$ {{ number_format((float) $price->amount, 2, ',', '.') }}</td>
+                        <td class="px-5 py-4 text-sm text-aco">
+                            {{ $price->effective_margin_percentage !== null ? \App\Modules\Products\Domain\Services\CalculoMargem::exibir($price->effective_margin_percentage).'%' : 'n/a' }}
+                        </td>
+                        <td class="px-5 py-4 text-right">
+                            <form method="POST" action="{{ route('catalog.products.prices.destroy', [$product, $price]) }}">
+                                @csrf
+                                @method('DELETE')
+                                <x-button variante="fantasma" tipo="submit">remover</x-button>
+                            </form>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="px-5 py-10 text-center text-sm text-aco">nenhum preço cadastrado.</td>
+                    </tr>
+                @endforelse
+            </x-table>
+        </div>
+    </div>
+
     <x-section-label class="mt-8">embalagens</x-section-label>
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -134,43 +171,6 @@
                 @empty
                     <tr>
                         <td colspan="4" class="px-5 py-10 text-center text-sm text-aco">nenhuma embalagem cadastrada.</td>
-                    </tr>
-                @endforelse
-            </x-table>
-        </div>
-    </div>
-
-    <x-section-label class="mt-8">preços</x-section-label>
-
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        @if (! $product->trashed())
-            <x-card>
-                <p class="text-sm font-semibold lowercase text-grafite">novo preço</p>
-                @include('products._price-form')
-            </x-card>
-        @endif
-
-        <div class="{{ $product->trashed() ? 'lg:col-span-3' : 'lg:col-span-2' }}">
-            <x-table :cabecalhos="['tipo', 'moeda', 'valor', 'margem', '']">
-                @forelse ($product->prices as $price)
-                    <tr class="border-b border-linha last:border-0">
-                        <td class="px-5 py-4 font-semibold lowercase text-grafite">{{ $priceTypes[$price->type] ?? $price->type }}</td>
-                        <td class="px-5 py-4 font-comanda text-sm text-aco">{{ $price->currency }}</td>
-                        <td class="px-5 py-4 font-comanda text-sm text-grafite">R$ {{ number_format((float) $price->amount, 2, ',', '.') }}</td>
-                        <td class="px-5 py-4 text-sm text-aco">
-                            {{ $price->effective_margin_percentage !== null ? \App\Modules\Products\Domain\Services\CalculoMargem::exibir($price->effective_margin_percentage).'%' : 'n/a' }}
-                        </td>
-                        <td class="px-5 py-4 text-right">
-                            <form method="POST" action="{{ route('catalog.products.prices.destroy', [$product, $price]) }}">
-                                @csrf
-                                @method('DELETE')
-                                <x-button variante="fantasma" tipo="submit">remover</x-button>
-                            </form>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="px-5 py-10 text-center text-sm text-aco">nenhum preço cadastrado.</td>
                     </tr>
                 @endforelse
             </x-table>

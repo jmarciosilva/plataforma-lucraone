@@ -92,14 +92,7 @@
             </svg>
         </x-nav-item>
 
-        <x-nav-item rota="roles.index" rotulo="permissões">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
-                <rect x="4" y="10" width="16" height="11" rx="2" />
-                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-            </svg>
-        </x-nav-item>
-
-        <x-nav-item rota="catalog.products.index" rotulo="produtos">
+        <x-nav-item rota="catalog.products.index" rotulo="produtos e categorias">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
                 <path d="M21 8l-9-5-9 5 9 5 9-5z" />
                 <path d="M3 8v8l9 5 9-5V8" />
@@ -128,6 +121,13 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
+            </svg>
+        </x-nav-item>
+
+        <x-nav-item rota="roles.index" rotulo="permissões">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                <rect x="4" y="10" width="16" height="11" rx="2" />
+                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
             </svg>
         </x-nav-item>
 

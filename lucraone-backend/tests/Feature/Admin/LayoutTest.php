@@ -67,12 +67,36 @@ class LayoutTest extends TestCase
             ->assertSee('usuários', escape: false)
             ->assertSee('empresas')
             ->assertSee('permissões', escape: false)
-            ->assertSee('produtos')
+            ->assertSee('produtos e categorias')
             // Usuário logado e saída
             ->assertSee('Maria Operadora')
             ->assertSee('sair')
             // Área de plataforma ausente para quem não a administra
             ->assertDontSee('clientes do LucraOne', escape: false);
+    }
+
+    public function test_sidebar_preserva_links_e_aproxima_clientes_e_permissoes(): void
+    {
+        $resposta = $this->actingAs($this->user)->get('/dashboard')->assertOk();
+        $documento = new \DOMDocument;
+        @$documento->loadHTML('<?xml encoding="UTF-8">'.$resposta->getContent());
+        $xpath = new \DOMXPath($documento);
+        $links = $xpath->query('//nav[@aria-label="navegação principal"]/a');
+        $itens = [];
+
+        foreach ($links as $link) {
+            $rotulo = preg_replace('/\s+/u', ' ', trim($link->textContent));
+            $itens[$rotulo] = $link->getAttribute('href');
+        }
+
+        $rotulos = array_keys($itens);
+        $clientes = array_search('clientes', $rotulos, true);
+        $this->assertNotFalse($clientes);
+        $this->assertSame('permissões', $rotulos[$clientes + 1]);
+        $this->assertSame(route('sales.customers.index'), $itens['clientes']);
+        $this->assertSame(route('roles.index'), $itens['permissões']);
+        $this->assertSame(route('catalog.products.index'), $itens['produtos e categorias']);
+        $this->assertArrayNotHasKey('produtos', $itens);
     }
 
     public function test_componentes_do_design_system_renderizam(): void

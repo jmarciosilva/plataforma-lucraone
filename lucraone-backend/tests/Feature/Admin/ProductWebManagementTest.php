@@ -467,6 +467,33 @@ class ProductWebManagementTest extends TestCase
             ->assertSee('KG — Quilograma');
     }
 
+    public function test_detalhe_exibe_precos_antes_de_embalagens_preservando_rotas(): void
+    {
+        $product = Product::factory()->create([
+            'tenant_id' => $this->tenantAtual->id,
+            'company_id' => $this->company->id,
+            'unit' => 'UN',
+        ]);
+
+        $resposta = $this->actingAs($this->admin)
+            ->get(route('catalog.products.show', $product))
+            ->assertOk();
+        $documento = new \DOMDocument;
+        @$documento->loadHTML('<?xml encoding="UTF-8">'.$resposta->getContent());
+        $xpath = new \DOMXPath($documento);
+        $secoes = [];
+
+        foreach ($xpath->query('//p[contains(concat(" ", normalize-space(@class), " "), " rotulo-secao ")]') as $secao) {
+            $secoes[] = trim($secao->textContent);
+        }
+
+        $this->assertSame(['resumo', 'dados', 'preços', 'embalagens', 'histórico de preços'], $secoes);
+        $resposta->assertSee('href="'.route('catalog.products.index').'"', false)
+            ->assertSee('href="'.route('catalog.products.edit', $product).'"', false)
+            ->assertSee('action="'.route('catalog.products.prices.store', $product).'"', false)
+            ->assertSee('action="'.route('catalog.products.packages.store', $product).'"', false);
+    }
+
     private function dadosProduto(array $dados = []): array
     {
         return [
