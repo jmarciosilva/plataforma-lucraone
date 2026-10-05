@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Http\Concerns\PreservesQuantityInput;
+use App\Modules\Products\Http\Rules\ProductQuantityRule;
 use App\Modules\Sales\Domain\Models\Order;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,6 +13,8 @@ use Illuminate\Validation\Rule;
 
 class StoreWebOrderItemRequest extends FormRequest
 {
+    use PreservesQuantityInput;
+
     public function authorize(): bool
     {
         $order = $this->route('order');
@@ -28,7 +32,7 @@ class StoreWebOrderItemRequest extends FormRequest
                 'string',
                 Rule::exists(Product::class, 'id')->where('tenant_id', $context->id()),
             ],
-            'quantity' => ['required', 'numeric', 'min:0.001'],
+            'quantity' => ['required', new ProductQuantityRule],
             'unit_price' => ['nullable', 'numeric', 'min:0'],
         ];
     }
@@ -37,7 +41,6 @@ class StoreWebOrderItemRequest extends FormRequest
     {
         return [
             'product_id.required' => 'selecione o produto.',
-            'quantity.min' => 'a quantidade precisa ser maior que zero.',
         ];
     }
 }

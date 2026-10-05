@@ -7,7 +7,9 @@ use App\Modules\Automation\Domain\TriggerCatalog;
 use App\Modules\Inventory\Domain\Models\Inventory;
 use App\Modules\Inventory\Domain\Models\InventoryMovement;
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Domain\Services\ProductQuantity;
 use App\Modules\Tenancy\Application\TenantContext;
+use Brick\Math\BigDecimal;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -17,8 +19,10 @@ class InventoryAdjustmentService
         private TenantContext $context
     ) {}
 
-    public function adjust(Product $product, string $companyId, string $type, float $quantity, ?string $reason, ?string $userId = null): Inventory
+    public function adjust(Product $product, string $companyId, string $type, mixed $quantity, ?string $reason, ?string $userId = null): Inventory
     {
+        $quantity = ProductQuantity::normalize($product->unit, $quantity);
+
         return DB::transaction(function () use ($product, $companyId, $type, $quantity, $reason, $userId) {
             $inventory = Inventory::query()
                 ->where('tenant_id', $this->context->id())
@@ -37,14 +41,17 @@ class InventoryAdjustmentService
                 ]);
             }
 
-            $before = (float) $inventory->quantity_on_hand;
-            $reservedBefore = (float) $inventory->reserved;
-            $after = $this->quantityAfter($type, $before, $quantity);
-            $reservedAfter = $this->reservedAfter($type, $reservedBefore, $quantity, $after);
+            $before = BigDecimal::of($inventory->quantity_on_hand);
+            $reservedBefore = BigDecimal::of($inventory->reserved);
+            $after = $this->quantityAfter($type, $before, BigDecimal::of($quantity));
+            $reservedAfter = $this->reservedAfter($type, $reservedBefore, BigDecimal::of($quantity), $after);
+
+            ProductQuantity::ensureFits($after);
+            ProductQuantity::ensureFits($reservedAfter);
 
             $inventory->forceFill([
-                'quantity_on_hand' => $after,
-                'reserved' => $reservedAfter,
+                'quantity_on_hand' => (string) $after,
+                'reserved' => (string) $reservedAfter,
             ])->save();
 
             InventoryMovement::create([
@@ -55,8 +62,8 @@ class InventoryAdjustmentService
                 'user_id' => $userId,
                 'type' => $type,
                 'quantity' => $quantity,
-                'quantity_before' => $before,
-                'quantity_after' => $after,
+                'quantity_before' => (string) $before,
+                'quantity_after' => (string) $after,
                 'reason' => $reason ?: 'ajuste de estoque',
                 'moved_at' => now(),
             ]);
@@ -76,7 +83,7 @@ class InventoryAdjustmentService
      * Anunciar a cada movimento enquanto o saldo já está baixo encheria a caixa
      * de entrada do operador e faria ele desligar a regra.
      */
-    private function anunciarEstoqueBaixo(Inventory $inventory, float $antes, float $depois): void
+    private function anunciarEstoqueBaixo(Inventory $inventory, BigDecimal $antes, BigDecimal $depois): void
     {
         $nivel = $inventory->stockLevel;
 
@@ -84,9 +91,9 @@ class InventoryAdjustmentService
             return;
         }
 
-        $ponto = (float) $nivel->reorder_point;
+        $ponto = BigDecimal::of($nivel->reorder_point);
 
-        if (! ($depois <= $ponto && $antes > $ponto)) {
+        if (! ($depois->compareTo($ponto) <= 0 && $antes->compareTo($ponto) > 0)) {
             return;
         }
 
@@ -94,44 +101,44 @@ class InventoryAdjustmentService
             'product_id' => $inventory->product_id,
             'produto' => $inventory->product?->name,
             'sku' => $inventory->product?->sku,
-            'quantidade' => $depois,
-            'ponto_reposicao' => $ponto,
+            'quantidade' => $depois->toFloat(),
+            'ponto_reposicao' => $ponto->toFloat(),
             'company_id' => $inventory->company_id,
         ]);
     }
 
-    private function quantityAfter(string $type, float $before, float $quantity): float
+    private function quantityAfter(string $type, BigDecimal $before, BigDecimal $quantity): BigDecimal
     {
         return match ($type) {
-            InventoryMovement::TYPE_IN => $before + $quantity,
-            InventoryMovement::TYPE_OUT => $this->ensureNotNegative($before - $quantity, 'saída maior que o saldo em mãos.'),
+            InventoryMovement::TYPE_IN => $before->plus($quantity),
+            InventoryMovement::TYPE_OUT => $this->ensureNotNegative($before->minus($quantity), 'saída maior que o saldo em mãos.'),
             InventoryMovement::TYPE_ADJUSTMENT => $quantity,
             InventoryMovement::TYPE_RESERVATION, InventoryMovement::TYPE_RELEASE => $before,
             default => throw new InvalidArgumentException('tipo de movimentação inválido.'),
         };
     }
 
-    private function reservedAfter(string $type, float $reservedBefore, float $quantity, float $quantityOnHand): float
+    private function reservedAfter(string $type, BigDecimal $reservedBefore, BigDecimal $quantity, BigDecimal $quantityOnHand): BigDecimal
     {
         return match ($type) {
-            InventoryMovement::TYPE_RESERVATION => $this->ensureAvailableReservation($reservedBefore + $quantity, $quantityOnHand),
-            InventoryMovement::TYPE_RELEASE => $this->ensureNotNegative($reservedBefore - $quantity, 'liberação maior que a quantidade reservada.'),
-            default => min($reservedBefore, $quantityOnHand),
+            InventoryMovement::TYPE_RESERVATION => $this->ensureAvailableReservation($reservedBefore->plus($quantity), $quantityOnHand),
+            InventoryMovement::TYPE_RELEASE => $this->ensureNotNegative($reservedBefore->minus($quantity), 'liberação maior que a quantidade reservada.'),
+            default => $reservedBefore->compareTo($quantityOnHand) <= 0 ? $reservedBefore : $quantityOnHand,
         };
     }
 
-    private function ensureAvailableReservation(float $reserved, float $quantityOnHand): float
+    private function ensureAvailableReservation(BigDecimal $reserved, BigDecimal $quantityOnHand): BigDecimal
     {
-        if ($reserved > $quantityOnHand) {
+        if ($reserved->compareTo($quantityOnHand) > 0) {
             throw new InvalidArgumentException('reserva maior que o saldo disponível.');
         }
 
         return $reserved;
     }
 
-    private function ensureNotNegative(float $value, string $message): float
+    private function ensureNotNegative(BigDecimal $value, string $message): BigDecimal
     {
-        if ($value < 0) {
+        if ($value->compareTo('0') < 0) {
             throw new InvalidArgumentException($message);
         }
 

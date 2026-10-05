@@ -6,7 +6,6 @@ use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Inventory\Domain\Models\Inventory;
 use App\Modules\Inventory\Domain\Models\InventoryMovement;
-use App\Modules\Inventory\Domain\Models\StockLevel;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -39,6 +38,7 @@ class InventoryApiTest extends TestCase
             'tenant_id' => $this->tenant->id,
             'company_id' => $this->company->id,
             'sku' => 'INV-001',
+            'unit' => 'KG',
         ]);
         $this->user = User::factory()->forTenant($this->tenant)->create();
         $this->token = $this->user->createToken('test')->plainTextToken;

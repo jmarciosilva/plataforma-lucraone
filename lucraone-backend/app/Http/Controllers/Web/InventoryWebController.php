@@ -14,6 +14,7 @@ use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Products\Domain\Models\ProductPackage;
 use App\Modules\Tenancy\Application\TenantContext;
+use Brick\Math\BigDecimal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -109,7 +110,7 @@ class InventoryWebController extends Controller
         // antes do serviço, e a conversão fica registrada no motivo.
         $quantity = $package
             ? (int) $request->validated('quantity') * $package->factor
-            : (float) $request->validated('quantity');
+            : $request->validated('quantity');
 
         $reason = $package
             ? $this->packageReason($request->validated('type'), (int) $request->validated('quantity'), $package, $product, $request->validated('reason'))
@@ -120,7 +121,7 @@ class InventoryWebController extends Controller
                 $product,
                 $request->validated('company_id'),
                 $request->validated('type'),
-                (float) $quantity,
+                $quantity,
                 $reason,
                 $request->user()?->id
             );
@@ -229,13 +230,15 @@ class InventoryWebController extends Controller
     private function summary(): array
     {
         $items = Inventory::query()->with('stockLevel')->get();
+        $onHand = $items->reduce(fn (BigDecimal $sum, Inventory $item) => $sum->plus($item->quantity_on_hand), BigDecimal::of('0'));
+        $available = $items->reduce(fn (BigDecimal $sum, Inventory $item) => $sum->plus($item->available), BigDecimal::of('0'));
 
         return [
             'items' => $items->count(),
-            'on_hand' => number_format($items->sum(fn (Inventory $item) => (float) $item->quantity_on_hand), 3, ',', '.'),
-            'available' => number_format($items->sum(fn (Inventory $item) => (float) $item->available), 3, ',', '.'),
-            'low' => $items->filter(fn (Inventory $item) => $item->stockLevel && (float) $item->quantity_on_hand <= (float) $item->stockLevel->reorder_point)->count(),
-            'over' => $items->filter(fn (Inventory $item) => $item->stockLevel?->max_qty !== null && (float) $item->quantity_on_hand > (float) $item->stockLevel->max_qty)->count(),
+            'on_hand' => number_format($onHand->toFloat(), 3, ',', '.'),
+            'available' => number_format($available->toFloat(), 3, ',', '.'),
+            'low' => $items->filter(fn (Inventory $item) => $item->stockLevel && BigDecimal::of($item->quantity_on_hand)->compareTo($item->stockLevel->reorder_point) <= 0)->count(),
+            'over' => $items->filter(fn (Inventory $item) => $item->stockLevel?->max_qty !== null && BigDecimal::of($item->quantity_on_hand)->compareTo($item->stockLevel->max_qty) > 0)->count(),
         ];
     }
 }

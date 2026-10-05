@@ -8,10 +8,12 @@ use App\Modules\Inventory\Application\InventoryAdjustmentService;
 use App\Modules\Inventory\Domain\Models\InventoryMovement;
 use App\Modules\Products\Domain\Models\Price;
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Domain\Services\ProductQuantity;
 use App\Modules\Sales\Domain\Models\Customer;
 use App\Modules\Sales\Domain\Models\Order;
 use App\Modules\Sales\Domain\Models\OrderItem;
 use App\Modules\Tenancy\Application\TenantContext;
+use Brick\Math\BigDecimal;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -69,7 +71,7 @@ class OrderService
                 $this->addItem(
                     $order,
                     $product,
-                    (float) $item['quantity'],
+                    $item['quantity'],
                     isset($item['unit_price']) ? (float) $item['unit_price'] : null
                 );
             }
@@ -86,13 +88,11 @@ class OrderService
      *
      * @throws InvalidArgumentException
      */
-    public function addItem(Order $order, Product $product, float $quantity, ?float $unitPrice = null): OrderItem
+    public function addItem(Order $order, Product $product, mixed $quantity, ?float $unitPrice = null): OrderItem
     {
         $this->ensureEditable($order);
 
-        if ($quantity <= 0) {
-            throw new InvalidArgumentException('a quantidade precisa ser maior que zero.');
-        }
+        $quantity = ProductQuantity::normalize($product->unit, $quantity);
 
         if ($product->company_id !== $order->company_id) {
             throw new InvalidArgumentException('o produto não pertence à empresa do pedido.');
@@ -107,7 +107,10 @@ class OrderService
         return DB::transaction(function () use ($order, $product, $quantity, $preco) {
             $item = $order->items()->where('product_id', $product->id)->first();
 
-            $novaQuantidade = $quantity + (float) ($item?->quantity ?? 0);
+            $novaQuantidade = ProductQuantity::normalize(
+                $product->unit,
+                (string) BigDecimal::of($quantity)->plus($item?->quantity ?? '0')
+            );
 
             $item = OrderItem::updateOrCreate(
                 [
@@ -120,7 +123,7 @@ class OrderService
                     'name' => $product->name,
                     'quantity' => $novaQuantidade,
                     'unit_price' => $preco,
-                    'total' => round($novaQuantidade * $preco, 2),
+                    'total' => round((float) $novaQuantidade * $preco, 2),
                 ]
             );
 
@@ -251,7 +254,7 @@ class OrderService
                 $item->product,
                 $order->company_id,
                 $tipo,
-                (float) $item->quantity,
+                $item->quantity,
                 $motivo,
                 $userId
             );

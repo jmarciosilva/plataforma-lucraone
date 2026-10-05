@@ -1,4 +1,5 @@
 @php
+    $quantityStep = $products->firstWhere('id', old('product_id'))?->unit === 'KG' ? '0.001' : '1';
     $productOptions = $products->mapWithKeys(function ($product) {
         $preco = $product->prices->firstWhere('type', 'sale');
 
@@ -111,13 +112,15 @@
             <p class="text-sm font-semibold lowercase text-grafite">adicionar item</p>
 
             @if ($order->isEditable())
-                <form method="POST" action="{{ route('sales.orders.items.store', $order) }}" class="mt-4 space-y-4">
+                <form method="POST" action="{{ route('sales.orders.items.store', $order) }}" class="mt-4 space-y-4"
+                    x-data="{ produto: @js((string) old('product_id', '')), unidades: @js($products->pluck('unit', 'id')->all()) }">
                     @csrf
                     <x-form-group nome="product_id" rotulo="produto" obrigatorio>
-                        <x-select nome="product_id" :opcoes="$productOptions" :valor="old('product_id')" vazio="selecione" />
+                        <x-select nome="product_id" :opcoes="$productOptions" :valor="old('product_id')" vazio="selecione" x-model="produto" />
                     </x-form-group>
                     <x-form-group nome="quantity" rotulo="quantidade" obrigatorio>
-                        <x-input tipo="number" nome="quantity" step="0.001" min="0.001" :valor="old('quantity')" />
+                        <x-input tipo="number" nome="quantity" step="{{ $quantityStep }}" min="{{ $quantityStep }}" :valor="old('quantity')"
+                            x-bind:step="unidades[produto] === 'KG' ? '0.001' : '1'" x-bind:min="unidades[produto] === 'KG' ? '0.001' : '1'" />
                     </x-form-group>
                     <x-form-group nome="unit_price" rotulo="valor unitário" ajuda="em branco usa o preço de venda do produto">
                         <x-input tipo="number" nome="unit_price" step="0.01" min="0" :valor="old('unit_price')" />

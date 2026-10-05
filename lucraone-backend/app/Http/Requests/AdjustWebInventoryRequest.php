@@ -7,6 +7,8 @@ use App\Modules\Inventory\Domain\Models\Inventory;
 use App\Modules\Inventory\Domain\Models\InventoryMovement;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Products\Domain\Models\ProductPackage;
+use App\Modules\Products\Http\Concerns\PreservesQuantityInput;
+use App\Modules\Products\Http\Rules\ProductQuantityRule;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
@@ -14,6 +16,8 @@ use Illuminate\Validation\Rule;
 
 class AdjustWebInventoryRequest extends FormRequest
 {
+    use PreservesQuantityInput;
+
     public function authorize(): bool
     {
         return $this->user()
@@ -47,7 +51,7 @@ class AdjustWebInventoryRequest extends FormRequest
             // Com embalagem, quantity é o número de embalagens, e não a quantidade base.
             'quantity' => $this->filled('package_id')
                 ? ['required', 'integer', 'min:1', 'max:100000']
-                : ['required', 'numeric', 'min:0.001'],
+                : ['required', new ProductQuantityRule],
             'reason' => ['nullable', 'string', 'max:255'],
             'package_id' => [
                 'nullable',

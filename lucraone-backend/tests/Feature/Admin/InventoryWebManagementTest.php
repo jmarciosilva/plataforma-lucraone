@@ -83,6 +83,7 @@ class InventoryWebManagementTest extends TestCase
             'tenant_id' => $this->tenantAtual->id,
             'company_id' => $this->company->id,
             'name' => 'Café Estoque',
+            'unit' => 'KG',
         ]);
 
         $resposta = $this->actingAs($this->admin)->post(route('inventory.adjust'), [

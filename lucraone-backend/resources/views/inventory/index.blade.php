@@ -1,4 +1,5 @@
 @php
+    $quantityStep = ! old('package_id') && $products->firstWhere('id', old('product_id'))?->unit === 'KG' ? '0.001' : '1';
     $companyOptions = $companies->mapWithKeys(fn ($company) => [
         $company->id => $company->trade_name ?: $company->legal_name,
     ])->all();
@@ -78,6 +79,7 @@
                     embalagem: @js((string) old('package_id', '')),
                     quantidade: @js((string) old('quantity', '')),
                     embalagens: @js($packageOptions),
+                    unidades: @js($products->pluck('unit', 'id')->all()),
 
                     get opcoes() {
                         return this.embalagens[this.produto] ?? [];
@@ -120,8 +122,8 @@
                     <p x-show="! aceitaEmbalagem" class="text-xs font-semibold text-brasa" role="alert">{{ $message }}</p>
                 @enderror
                 <x-form-group nome="quantity" rotulo="quantidade" obrigatorio>
-                    <x-input tipo="number" nome="quantity" step="0.001" min="0.001" x-model="quantidade"
-                        x-bind:step="selecionada ? 1 : 0.001" x-bind:min="selecionada ? 1 : 0.001" />
+                    <x-input tipo="number" nome="quantity" step="{{ $quantityStep }}" min="{{ $quantityStep }}" x-model="quantidade"
+                        x-bind:step="! selecionada && unidades[produto] === 'KG' ? '0.001' : '1'" x-bind:min="! selecionada && unidades[produto] === 'KG' ? '0.001' : '1'" />
                     <p x-show="selecionada" x-cloak class="text-xs font-semibold text-grafite"
                         x-text="selecionada ? `quantidade de embalagens: ${quantidade || 0} × ${selecionada.name} = ${(parseInt(quantidade, 10) || 0) * selecionada.factor} UN` : ''"></p>
                 </x-form-group>
@@ -163,8 +165,8 @@
             <x-table :cabecalhos="['produto', 'empresa', 'em mãos', 'reservado', 'disponível', 'situação', '']" :paginacao="$inventory">
                 @forelse ($inventory as $item)
                     @php
-                        $low = $item->stockLevel && (float) $item->quantity_on_hand <= (float) $item->stockLevel->reorder_point;
-                        $over = $item->stockLevel?->max_qty !== null && (float) $item->quantity_on_hand > (float) $item->stockLevel->max_qty;
+                        $low = $item->stockLevel && \Brick\Math\BigDecimal::of($item->quantity_on_hand)->compareTo($item->stockLevel->reorder_point) <= 0;
+                        $over = $item->stockLevel?->max_qty !== null && \Brick\Math\BigDecimal::of($item->quantity_on_hand)->compareTo($item->stockLevel->max_qty) > 0;
                     @endphp
                     <tr class="border-b border-linha last:border-0">
                         <td class="px-5 py-4">

@@ -7,6 +7,7 @@ use App\Http\Requests\StoreWebOrderItemRequest;
 use App\Http\Requests\StoreWebOrderRequest;
 use App\Http\Requests\UpdateWebOrderStatusRequest;
 use App\Modules\Companies\Domain\Models\Company;
+use App\Modules\Products\Domain\Exceptions\InvalidProductQuantity;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Sales\Application\OrderService;
 use App\Modules\Sales\Domain\Models\Customer;
@@ -114,9 +115,11 @@ class OrderWebController extends Controller
             $this->orders->addItem(
                 $order,
                 $product,
-                (float) $request->validated('quantity'),
+                $request->validated('quantity'),
                 $request->filled('unit_price') ? (float) $request->validated('unit_price') : null
             );
+        } catch (InvalidProductQuantity $exception) {
+            return back()->withErrors(['quantity' => $exception->getMessage()])->withInput();
         } catch (InvalidArgumentException $exception) {
             return back()->withErrors(['product_id' => $exception->getMessage()])->withInput();
         }

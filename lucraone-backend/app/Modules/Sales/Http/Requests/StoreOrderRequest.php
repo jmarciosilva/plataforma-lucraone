@@ -4,6 +4,8 @@ namespace App\Modules\Sales\Http\Requests;
 
 use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Http\Concerns\PreservesQuantityInput;
+use App\Modules\Products\Http\Rules\ProductQuantityRule;
 use App\Modules\Sales\Domain\Models\Customer;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
@@ -11,6 +13,8 @@ use Illuminate\Validation\Rule;
 
 class StoreOrderRequest extends FormRequest
 {
+    use PreservesQuantityInput;
+
     public function authorize(): bool
     {
         return true;
@@ -41,7 +45,7 @@ class StoreOrderRequest extends FormRequest
                 'string',
                 Rule::exists(Product::class, 'id')->where('tenant_id', $context->id()),
             ],
-            'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
+            'items.*.quantity' => ['required', new ProductQuantityRule],
             'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
         ];
     }
@@ -50,7 +54,6 @@ class StoreOrderRequest extends FormRequest
     {
         return [
             'company_id.required' => 'a empresa do pedido é obrigatória.',
-            'items.*.quantity.min' => 'a quantidade do item precisa ser maior que zero.',
         ];
     }
 }

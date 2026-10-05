@@ -6,6 +6,7 @@ use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Core\Domain\Traits\HasUlid;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Tenancy\Domain\Models\HasTenant;
+use Brick\Math\BigDecimal;
 use Database\Factories\InventoryFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -54,6 +55,6 @@ class Inventory extends Model
 
     public function getAvailableAttribute(): string
     {
-        return number_format((float) $this->quantity_on_hand - (float) $this->reserved, 3, '.', '');
+        return (string) BigDecimal::of($this->quantity_on_hand)->minus($this->reserved)->toScale(3);
     }
 }

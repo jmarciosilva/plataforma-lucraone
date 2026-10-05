@@ -45,7 +45,7 @@ class InventoryController extends Controller
                 $product,
                 $request->validated('company_id'),
                 $request->validated('type'),
-                (float) $request->validated('quantity'),
+                $request->validated('quantity'),
                 $request->validated('reason'),
                 $request->user()?->id
             );

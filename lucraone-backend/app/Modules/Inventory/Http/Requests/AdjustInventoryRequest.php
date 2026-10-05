@@ -5,12 +5,16 @@ namespace App\Modules\Inventory\Http\Requests;
 use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Inventory\Domain\Models\InventoryMovement;
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Http\Concerns\PreservesQuantityInput;
+use App\Modules\Products\Http\Rules\ProductQuantityRule;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class AdjustInventoryRequest extends FormRequest
 {
+    use PreservesQuantityInput;
+
     public function rules(TenantContext $context): array
     {
         return [
@@ -29,7 +33,7 @@ class AdjustInventoryRequest extends FormRequest
                     InventoryMovement::TYPE_RELEASE,
                 ]),
             ],
-            'quantity' => ['required', 'numeric', 'min:0.001'],
+            'quantity' => ['required', new ProductQuantityRule($this->route('product_id'))],
             'reason' => ['nullable', 'string', 'max:255'],
         ];
     }
