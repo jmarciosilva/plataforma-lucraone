@@ -1,11 +1,17 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-10-04 · **ONB-01A e ONB-01B concluídos** — wizard
+**Atualizado:** 2026-10-05 · **ONB-01A e ONB-01B concluídos** — wizard
 ONB-01B publicado em `aee736db22a4f626fea6010d3e67278670606134`; ajuda permanente,
-checklist numerado e melhorias de empresa/produto/preço concluídos nesta rodada.
-**PM-04A é a próxima prioridade operacional: Planejado · não iniciado.**
-Baseline atual: 849 testes — 847 PASS, 0 FAIL, 0 ERROR, 2 risky preexistentes,
-0 skipped e 3248 assertions. SEC-04 resolvido; SEC-01/02/03 pendentes.
+checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-04.
+**PM-04A concluído ✅ e publicado** em
+`d0ae879de8e4c389e6584b9c9f576450d37fcc74` —
+`feat(sales): validar quantidade conforme unidade do produto`.
+**Próxima prioridade operacional: PM-04B — Snapshot histórico do item**
+(Planejado · não iniciado).
+Baseline atual: 949 testes — 947 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 3627 assertions. Os RISKY continuam sendo
+`test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
+foram corrigidos. SEC-04 resolvido; SEC-01/02/03 pendentes.
 Staging disponível em https://lucraone.jmfsystem.tech; Cliente Teste segue
 Planejado · não criado.
 
@@ -78,15 +84,15 @@ PM são trilhas paralelas: nenhuma etapa de ONB bloqueia tecnicamente uma etapa 
 PM, nem o contrário.
 
 ```
-ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ⬅ PRÓXIMA  →  PM-04B  →  Cliente Teste  →  PM-04C  →  PM-05
+ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ⬅ PRÓXIMA  →  Cliente Teste  →  PM-04C  →  PM-05
 ```
 
 | Ordem | Etapa | Trilha | Status |
 |---|---|---|---|
 | 1 | ONB-01A — Fundação administrativa do onboarding | ONB | **Concluído ✅** (`6aa8d62`) |
 | 2 | ONB-01B — Experiência guiada de onboarding | ONB | **Concluído ✅** · wizard `aee736d`; ajuda e checklist concluídos |
-| 3 | PM-04A — Quantidade coerente com a unidade | PM | Planejado · **próxima prioridade** · não iniciado |
-| 4 | PM-04B — Snapshot histórico do item | PM | Planejado |
+| 3 | PM-04A — Quantidade coerente com a unidade | PM | **Concluído ✅** · `d0ae879` |
+| 4 | PM-04B — Snapshot histórico do item | PM | Planejado · **próxima prioridade** |
 | 5 | Criação e teste manual de **Cliente Teste** pelo painel | ONB (validação) | Planejado · não criado |
 | 6 | PM-04C — Semântica de linhas para o futuro PDV | PM | Planejado |
 | 7 | PM-05 — Dados fiscais do produto | PM | Futuro · antes da NFC-e/NF-e |
@@ -95,7 +101,8 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ⬅ PRÓXIMA  →  PM-04B  →  Clien
 > ONB-01A destravou o fluxo administrativo; ONB-01B entregou o wizard guiado,
 > administrador definido pelo operador, configuração inicial, revisão e próximos
 > passos. A ajuda permanente e o checklist numerado facilitam o primeiro uso.
-> PM-04A é o próximo item de produto para quantidade UN/KG e não foi iniciado.
+> PM-04A foi concluído e publicado; PM-04B passa a ser o próximo item da trilha
+> de produtos, ainda planejado e não iniciado.
 > Não há dependência técnica entre ONB e PM. F2.6 continua bloqueada por
 > SEC-01, SEC-02 e SEC-03.
 
@@ -1441,8 +1448,8 @@ O que esta trilha é, e o que não é:
 | PM-02A | Embalagens comerciais / Product Packages | Concluído | PM-01 |
 | PM-02B | Entrada de estoque por embalagem | Concluído | PM-02A |
 | PM-03 | Resolução exata por código de barras | Concluído | PM-02A |
-| PM-04A | Quantidade coerente com a unidade | Planejado | PM-01 |
-| PM-04B | Snapshot histórico do item | Planejado | PM-04A |
+| PM-04A | Quantidade coerente com a unidade | **Concluído ✅** · `d0ae879` | PM-01 |
+| PM-04B | Snapshot histórico do item | Planejado · **próxima prioridade** | PM-04A ✅ |
 | PM-04C | Semântica de linhas para o futuro PDV | Planejado | PM-04B + desenho do PDV |
 | PM-05 | Dados fiscais do produto | Futuro · antes da NFC-e/NF-e | — |
 
@@ -1456,9 +1463,9 @@ PM-02A — product_packages             ✅ CONCLUÍDO
         ├─ PM-02B — entrada por embalagem      ✅ CONCLUÍDO
         └─ PM-03 — resolução exata de barcode  ✅ CONCLUÍDO
         ↓
-PM-04A — quantidade coerente com a unidade   📋 PLANEJADO
+PM-04A — quantidade coerente com a unidade   ✅ CONCLUÍDO · d0ae879
         ↓
-PM-04B — snapshot histórico do item          📋 PLANEJADO
+PM-04B — snapshot histórico do item          📋 PLANEJADO · ⬅ PRÓXIMA
         ↓
 PM-04C — semântica de linhas para o PDV      📋 PLANEJADO · + desenho do PDV
         ↓
@@ -1831,13 +1838,13 @@ Por isso o PM-04 foi dividido em PM-04A, PM-04B e PM-04C, na mesma trilha. Não
 é uma fase nova, e a trilha F2.x não muda. O PM-05 continua independente desta
 divisão.
 
-**Estado atual encontrado na auditoria.**
+**Estado encontrado na auditoria de 2026-09-23 (histórico, antes do PM-04A).**
 
 - `order_items.quantity` é `decimal(14,3)`; `unit_price` e `total` são
   `decimal(14,2)`;
 - `OrderItem` guarda snapshot só de `sku` e `name`. Não há `unit` nem `barcode`;
 - API (`StoreOrderRequest`) e painel (`StoreWebOrderItemRequest`) validam
-  `quantity` só como `numeric|min:0.001`: Product `UN` aceita 1,5 hoje;
+  `quantity` só como `numeric|min:0.001`: Product `UN` aceitava 1,5 à época;
 - `OrderService::addItem` é o caminho comum de API e painel. Ele converte para
   `float`, soma com a linha existente do mesmo Product e grava por
   `updateOrCreate`, apoiado no índice único `(order_id, product_id)`;
@@ -1850,48 +1857,65 @@ divisão.
 
 #### PM-04A — Quantidade coerente com a unidade
 
-**Planejado** — Depende de: PM-01
+**Concluído ✅ e publicado em 2026-10-05** — Depende de: PM-01 ✅
 
-**Objetivo.** Garantir que a quantidade usada em pedidos seja coerente com
-`products.unit`.
+**Commit funcional:** `d0ae879de8e4c389e6584b9c9f576450d37fcc74` —
+`feat(sales): validar quantidade conforme unidade do produto`.
 
-| `Product.unit` | Regra |
+**Entrega.** Quantidade coerente com `Product.unit` em pedidos e estoque:
+
+| `Product.unit` | Regra entregue | `min` / `step` dos inputs existentes |
+|---|---|---|
+| `UN` | apenas inteira positiva, mínimo 1; frações reais rejeitadas | `1` / `1` |
+| `KG` | positiva, mínimo `0.001`, até 3 casas decimais | `0.001` / `0.001` |
+
+Para `UN`, `2`, `2.0`, `2.00` e `2.000` são equivalentes e persistem como
+`2.000`. Para `KG`, `1`, `1.0`, `1.00` e `1.000` são aceitos. O contrato HTTP
+continua usando ponto decimal, sem nova normalização de vírgula.
+
+**Validação e precisão.** A regra central `ProductQuantity` usa `BigDecimal`
+para validar e normalizar quantidades; float não é autoridade para quantidade.
+Rejeita zero, negativos, notação científica, NaN/INF quando aplicável, frações
+reais em `UN`, mais de 3 casas em `KG` e overflow antes do banco. O limite é
+`99999999999.999`, compatível com os 11 dígitos inteiros e 3 decimais do schema.
+A proteção também cobre somas de itens e entradas de estoque. Literais numéricos
+JSON são preservados para não perder notação ou escala na decodificação, sem
+alterar as normalizações dos demais campos HTTP.
+
+**Integração.** Web, API, `OrderService` e Inventory reutilizam a mesma regra.
+O backend permanece autoritativo, inclusive em chamadas diretas que não passam
+por FormRequest. Erros têm feedback controlado, com HTTP 422 na API e erro de
+validação no Web; as transações existentes evitam persistência parcial.
+O frontend apenas acompanha a unidade selecionada com os atributos acima.
+
+**Estoque.** Operações críticas, reservas, liberações, saldo disponível e
+comparações relevantes passaram a usar precisão decimal. Exemplos validados
+com assertions em strings:
+
+| Operação | Resultado |
 |---|---|
-| `UN` | inteira, mínimo 1; quantidade fracionada recusada |
-| `KG` | decimal, maior que zero, no máximo 3 casas decimais |
+| `0.100 + 0.200` | `0.300` |
+| `0.300 - 0.100` | `0.200` |
+| `0.200 - 0.200` | `0.000` |
+| `0.300 - 0.301` | rejeitada por saldo insuficiente |
 
-**Onde a regra mora.**
+**Schema.** Nenhuma migration necessária: `order_items.quantity`, saldos,
+reservas e quantidades das movimentações já usavam `DECIMAL(14,3)`.
 
-- API e painel compartilham a mesma regra;
-- `OrderService` continua como guarda autoritativo, porque é o caminho comum de
-  API, painel e futuro PDV;
-- a validação HTTP reutiliza uma regra compartilhada, para a mensagem sair no
-  campo certo;
-- o frontend só melhora a UX (por exemplo, `step` conforme a unidade);
-- a regra não fica apenas no Model.
+**Evidência da entrega (2026-10-05).** Suíte completa: 949 testes — 947 PASS,
+0 FAIL, 0 ERROR, 2 RISKY preexistentes, 0 SKIPPED e 3627 assertions. Os dois
+RISKY conhecidos não foram corrigidos. Testes focados: 152 PASS, 0 FAIL,
+583 assertions. Frontend, build, Pint dos arquivos PHP alterados/criados e
+`git diff --check` passaram.
 
-**Precisão.** A auditoria confirmou um risco real em Inventory: a comparação de
-reservas usa `float`, e em PHP `0.1 + 0.2 > 0.3` resulta verdadeiro. Isso pode
-recusar uma reserva válida de Product `KG` — por exemplo, saldo 0,300, reserva
-existente 0,100 e novo pedido de 0,200. **O PM-04A só pode ser considerado
-concluído se a reserva de estoque for compatível com a precisão decimal usada
-por `quantity`.**
-
-O PM-04A também deve:
-
-- limitar `quantity` à escala de `decimal(14,3)`;
-- recusar mais de 3 casas decimais;
-- evitar overflow de `decimal(14,3)`;
-- recusar notação científica (`1e3` passa em `numeric` hoje);
-- preservar o comportamento correto de 0,350 `KG`.
-
-**Fora do PM-04A:** migration de `order_items`, snapshot de `unit`, snapshot de
-`barcode`, código de barras lido, `product_package_id`, remoção da unicidade
-`(order_id, product_id)`, linhas repetidas, scanner, PDV e fiscal.
+**Fora do PM-04A:** snapshot de unidade no `OrderItem` / PM-04B, snapshot de
+`barcode`, código de barras lido, `product_package_id`, ProductPackage adicional,
+remoção da unicidade `(order_id, product_id)`, linhas repetidas e semântica de
+linhas do PDV / PM-04C, scanner, PDV, fiscal, preço, margem, relatórios e SEC.
 
 #### PM-04B — Snapshot histórico do item
 
-**Planejado** — Depende de: PM-04A
+**Planejado · PRÓXIMA PRIORIDADE · não iniciado** — Depende de: PM-04A ✅
 
 **Objetivo.** Preservar no `OrderItem` o significado histórico de `quantity`.
 
@@ -1980,14 +2004,14 @@ item é consolidado por `product_id`. Essas limitações pertencem ao PM-04C.
 **Relatórios.** A dívida já registrada no PM-01 continua: `SalesReportService`
 soma `UN` e `KG` em `itens_vendidos`, e a tela e o e-mail exibem a quantidade
 com 0 casas decimais e rótulo "un". Ela passa a ser funcionalmente relevante
-quando o PM-04A permitir venda `KG` oficialmente. Não será corrigida agora.
+com a venda `KG` validada pelo PM-04A. Não foi corrigida nessa entrega.
 
-Outros achados da auditoria, preservados sem correção:
+Situação dos demais achados da auditoria após a entrega do PM-04A:
 
 | Achado | Observação |
 |---|---|
-| `quantity` com mais de 3 casas | Validação aceita; o MySQL arredonda ao gravar, e o total é calculado com o valor sem arredondar |
-| `quantity` sem `max` | Overflow de `decimal(14,3)` pode gerar 500 em vez de 422 |
+| `quantity` com mais de 3 casas | Corrigido no PM-04A: `KG` acima de 3 casas e frações reais em `UN` são rejeitados antes da persistência |
+| `quantity` sem `max` | Corrigido no PM-04A: limite de `DECIMAL(14,3)` validado antes do banco, inclusive nas somas |
 | Preço com mais de 2 casas | O total é calculado com o valor informado e pode divergir do `unit_price` persistido |
 | `addItem` sem lock | Duas adições simultâneas do mesmo Product podem colidir no índice único ou perder uma soma |
 | Product arquivado | `moveStock` depende do Product atual; arquivar um Product pode travar envio ou cancelamento de pedido confirmado |
@@ -2064,9 +2088,9 @@ ONB-01A — fundação                PM-01 — barcode + unit                �
 ONB-01B — experiência guiada              ├─ PM-02B                     ✅
 ✅ CONCLUÍDO · aee736d               └─ PM-03                      ✅
                                           ↓
-                                  PM-04A — quantidade coerente    📋 PLANEJADO
+                                  PM-04A — quantidade coerente    ✅ CONCLUÍDO · d0ae879
                                           ↓
-                                  PM-04B — snapshot do item       📋 PLANEJADO
+                                  PM-04B — snapshot do item       📋 PLANEJADO · ⬅ PRÓXIMA
                                           ↓
                                   PM-04C — semântica de linhas    📋 PLANEJADO
                                           ↓
@@ -2497,7 +2521,9 @@ formulário e comunicada por fora do sistema. **Não implementar.**
   e salvamento de CUSTO/VENDA sem 500 concluído pelo operador.
 
 Relatórios de lucratividade e meta histórica de margem desejada continuam
-futuros. PM-04A/B/C, fiscal e PDV não foram implementados nesta rodada.
+futuros. Na rodada de 2026-10-04, PM-04A/B/C, fiscal e PDV não faziam parte
+daquela entrega. O PM-04A foi concluído posteriormente em 2026-10-05, no commit
+`d0ae879`; PM-04B e PM-04C continuam planejados.
 
 ---
 
@@ -2538,7 +2564,7 @@ provar nem para corrigir o SEC-04, e não receberam ID.
 ## Cobertura de testes por área — fotografia da auditoria
 
 417 testes, contados por diretório de `tests/` na auditoria anterior. O estado
-atual da suíte está registrado na evidência do SEC-04 acima.
+atual da suíte está registrado no cabeçalho e na evidência da entrega do PM-04A.
 
 | Área | Testes | Área | Testes |
 |---|---|---|---|
