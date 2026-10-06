@@ -3,6 +3,7 @@
 namespace App\Modules\Products\Http\Requests;
 
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Http\Concerns\ValidatesFiscalClassification;
 use App\Modules\Products\Http\Rules\BarcodeAvailable;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
@@ -10,6 +11,8 @@ use Illuminate\Validation\Rule;
 
 class StoreProductRequest extends FormRequest
 {
+    use ValidatesFiscalClassification;
+
     public function authorize(): bool
     {
         return true;
@@ -30,6 +33,7 @@ class StoreProductRequest extends FormRequest
             'unit' => ['sometimes', 'string', Rule::in(array_keys(Product::UNITS))],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
+            ...$this->fiscalClassificationRules(),
             'status' => ['required', 'in:active,inactive,discontinued'],
             'category_ids' => ['nullable', 'array'],
             'category_ids.*' => ['string'],
@@ -39,6 +43,7 @@ class StoreProductRequest extends FormRequest
     public function messages(): array
     {
         return [
+            ...$this->fiscalClassificationMessages(),
             'sku.required' => 'SKU é obrigatório',
             'sku.unique' => 'SKU já existe',
             'name.required' => 'Nome do produto é obrigatório',

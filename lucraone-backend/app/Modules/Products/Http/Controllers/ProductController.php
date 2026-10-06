@@ -46,6 +46,9 @@ class ProductController extends Controller
             'unit' => $request->validated('unit', 'UN'),
             'name' => $request->validated('name'),
             'description' => $request->validated('description'),
+            'ncm_code' => $request->validated('ncm_code'),
+            'cest_code' => $request->validated('cest_code'),
+            'default_origin_code' => $request->validated('default_origin_code'),
             'status' => $request->validated('status'),
         ]);
 

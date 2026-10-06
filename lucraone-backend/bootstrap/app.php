@@ -33,6 +33,10 @@ return Application::configure(basePath: dirname(__DIR__))
         SendSalesSummaryCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
+        // PM-05: códigos classificatórios inválidos não são corrigidos por trim.
+        // Campo vazio ainda vira NULL pelo ConvertEmptyStringsToNull existente.
+        $middleware->trimStrings(except: ['ncm_code', 'cest_code', 'default_origin_code']);
+
         // Quem termina o TLS é o nginx de fora (o do host, na VPS), que repassa
         // em http para o nginx deste compose, que fala com o php-fpm pela rede
         // do Docker. Sem confiar nesses saltos o Laravel ignora

@@ -8,6 +8,7 @@
     :itens="[
         'busca e filtros' => 'localize pelo código ou nome e filtre por empresa, situação e arquivados.',
         'novo produto' => 'cadastre código, nome, descrição, empresa e categorias.',
+        'dados fiscais' => 'NCM é a classificação fiscal do produto; CEST é opcional quando aplicável. Origem padrão é uma referência para avaliação futura. Esses dados não são exigidos para usar estoque e pedidos e o formato não comprova validade fiscal.',
         'listagem' => 'mostra o catálogo do estabelecimento atual.',
         'categoria e situação' => 'organizam o catálogo e indicam se o produto está em uso.',
         'ações' => 'abrir o detalhe, editar, cadastrar preços e arquivar ou restaurar.',

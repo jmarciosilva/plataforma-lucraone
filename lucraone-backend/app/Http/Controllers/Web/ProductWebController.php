@@ -114,6 +114,7 @@ class ProductWebController extends Controller
             'product' => $product,
             'priceTypes' => self::PRICE_TYPES,
             'unitOptions' => $this->unitOptions(),
+            'defaultOriginOptions' => Product::DEFAULT_ORIGINS,
             'priceHistory' => PriceHistory::query()
                 ->where('product_id', $product->id)
                 ->with('changedBy')
@@ -234,6 +235,7 @@ class ProductWebController extends Controller
         return [
             'statusOptions' => self::STATUS,
             'unitOptions' => $this->unitOptions(),
+            'defaultOriginOptions' => Product::DEFAULT_ORIGINS,
             'companies' => $this->companies(),
             'categories' => Category::query()
                 ->with('parent')

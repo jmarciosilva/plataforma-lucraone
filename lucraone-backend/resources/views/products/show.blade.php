@@ -85,6 +85,26 @@
         </x-card>
     </div>
 
+    <x-section-label class="mt-8">Dados fiscais</x-section-label>
+
+    <x-card>
+        <dl class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+                <dt class="text-xs text-aco">NCM</dt>
+                <dd class="mt-1 font-comanda text-sm text-grafite">{{ $product->ncm_code ?? 'Não informado' }}</dd>
+            </div>
+            <div>
+                <dt class="text-xs text-aco">CEST</dt>
+                <dd class="mt-1 font-comanda text-sm text-grafite">{{ $product->cest_code ?? 'Não informado' }}</dd>
+            </div>
+            <div>
+                <dt class="text-xs text-aco">Origem padrão</dt>
+                <dd class="mt-1 text-sm text-grafite">{{ $defaultOriginOptions[$product->default_origin_code] ?? 'Não informado' }}</dd>
+            </div>
+        </dl>
+        <p class="mt-3 text-xs text-aco">Classificação cadastral. A origem efetiva da futura emissão fiscal depende do contexto da operação.</p>
+    </x-card>
+
     <x-section-label class="mt-8">preços</x-section-label>
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">

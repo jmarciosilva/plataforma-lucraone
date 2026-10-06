@@ -72,3 +72,19 @@
         @endforelse
     </div>
 </div>
+
+<fieldset class="mt-6">
+    <legend class="text-sm font-semibold text-grafite">Dados fiscais</legend>
+    <p class="mt-1 text-xs text-aco">Opcionais para o cadastro comercial. O formato informado não confirma o enquadramento fiscal.</p>
+    <div class="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <x-form-group nome="ncm_code" rotulo="NCM" ajuda="Classificação fiscal do produto. Informe 8 dígitos, sem pontuação. A validade oficial não é verificada nesta etapa.">
+            <x-input nome="ncm_code" :valor="$product->ncm_code" inputmode="numeric" maxlength="8" autocomplete="off" />
+        </x-form-group>
+        <x-form-group nome="cest_code" rotulo="CEST" ajuda="Opcional, quando aplicável ao produto. Informe 7 dígitos, sem pontuação. O preenchimento não determina a tributação automaticamente.">
+            <x-input nome="cest_code" :valor="$product->cest_code" inputmode="numeric" maxlength="7" autocomplete="off" />
+        </x-form-group>
+        <x-form-group nome="default_origin_code" rotulo="Origem padrão" ajuda="Origem de referência cadastrada para o produto. A informação efetiva usada futuramente na emissão fiscal poderá depender do contexto da operação.">
+            <x-select nome="default_origin_code" :opcoes="$defaultOriginOptions" :valor="$product->default_origin_code" vazio="Não informada" />
+        </x-form-group>
+    </div>
+</fieldset>

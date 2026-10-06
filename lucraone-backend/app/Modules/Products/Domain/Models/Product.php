@@ -54,6 +54,22 @@ class Product extends Model
         'KG' => 'Quilograma',
     ];
 
+    /**
+     * Origem cadastral de referência, não a origem efetiva de uma emissão.
+     * Labels técnicos: descrições normativas dependem de validação futura.
+     */
+    public const DEFAULT_ORIGINS = [
+        '0' => 'Código 0',
+        '1' => 'Código 1',
+        '2' => 'Código 2',
+        '3' => 'Código 3',
+        '4' => 'Código 4',
+        '5' => 'Código 5',
+        '6' => 'Código 6',
+        '7' => 'Código 7',
+        '8' => 'Código 8',
+    ];
+
     protected $table = 'products';
 
     protected $fillable = [
@@ -64,6 +80,9 @@ class Product extends Model
         'unit',
         'name',
         'description',
+        'ncm_code',
+        'cest_code',
+        'default_origin_code',
         'status',
     ];
 

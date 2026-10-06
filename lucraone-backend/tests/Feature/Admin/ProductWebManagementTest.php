@@ -487,7 +487,7 @@ class ProductWebManagementTest extends TestCase
             $secoes[] = trim($secao->textContent);
         }
 
-        $this->assertSame(['resumo', 'dados', 'preços', 'embalagens', 'histórico de preços'], $secoes);
+        $this->assertSame(['resumo', 'dados', 'Dados fiscais', 'preços', 'embalagens', 'histórico de preços'], $secoes);
         $resposta->assertSee('href="'.route('catalog.products.index').'"', false)
             ->assertSee('href="'.route('catalog.products.edit', $product).'"', false)
             ->assertSee('action="'.route('catalog.products.prices.store', $product).'"', false)
