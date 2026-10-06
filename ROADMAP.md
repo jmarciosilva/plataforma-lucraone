@@ -13,10 +13,13 @@ checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-
 **PM-04C concluído ✅ e publicado** em
 `9cbca4840d53353ef8244e1854508f1bf38938c4` —
 `feat(sales): adicionar semântica de apresentação às linhas do pedido`.
-**Próxima prioridade operacional: PM-05 — Dados fiscais do produto**
-(Planejado · não iniciado).
-Baseline atual: 1007 testes — 1005 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
-0 SKIPPED e 3880 assertions. Os RISKY continuam sendo
+**PM-05 concluído ✅ e publicado** em
+`d958a50ddf52ee509eb02ea5cb14c881c01cbeaa` —
+`feat(products): adicionar classificação fiscal básica`.
+**Próxima prioridade operacional:** será reavaliada após o fechamento
+documental do PM-05; nenhuma nova implementação iniciada nesta rodada.
+Baseline atual: 1050 testes — 1048 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 4334 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
 foram corrigidos. SEC-04 resolvido; SEC-01/02/03 pendentes.
 Staging disponível em https://lucraone.jmfsystem.tech; marco Cliente Teste
@@ -91,7 +94,7 @@ PM são trilhas paralelas: nenhuma etapa de ONB bloqueia tecnicamente uma etapa 
 PM, nem o contrário.
 
 ```
-ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Teste ✅  →  PM-04C ✅  →  PM-05 ⬅ PRÓXIMA
+ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Teste ✅  →  PM-04C ✅  →  PM-05 ✅
 ```
 
 | Ordem | Etapa | Trilha | Status |
@@ -102,7 +105,7 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 | 4 | PM-04B — Snapshot histórico do item | PM | **Concluído ✅** · `dc23e56` |
 | 5 | Criação e teste manual de **Cliente Teste** pelo painel | ONB (validação) | **Concluído ✅** |
 | 6 | PM-04C — Semântica de linhas para o futuro PDV | PM | **Concluído ✅** · `9cbca48` |
-| 7 | PM-05 — Dados fiscais do produto | PM | Planejado · **próxima prioridade** |
+| 7 | PM-05 — Dados fiscais do produto | PM | **Concluído ✅** · `d958a50` |
 
 > A ordem continua sendo **prioridade operacional, não dependência técnica**.
 > ONB-01A destravou o fluxo administrativo; ONB-01B entregou o wizard guiado,
@@ -110,8 +113,8 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 > passos. A ajuda permanente e o checklist numerado facilitam o primeiro uso.
 > PM-04A e PM-04B foram concluídos e publicados. O marco separado Cliente
 > Teste está concluído: cliente criado e validação manual realizada. PM-04C
-> foi concluído e publicado. PM-05 passa a ser a próxima prioridade operacional,
-> planejado e não iniciado.
+> foi concluído e publicado, assim como PM-05. A próxima prioridade operacional
+> será reavaliada após o fechamento documental do PM-05.
 > Não há dependência técnica entre ONB e PM. F2.6 continua bloqueada por
 > SEC-01, SEC-02 e SEC-03.
 
@@ -1460,7 +1463,7 @@ O que esta trilha é, e o que não é:
 | PM-04A | Quantidade coerente com a unidade | **Concluído ✅** · `d0ae879` | PM-01 |
 | PM-04B | Snapshot histórico do item | **Concluído ✅** · `dc23e56` | PM-04A ✅ |
 | PM-04C | Semântica de linhas para o futuro PDV | **Concluído ✅** · `9cbca48` | PM-04B ✅ |
-| PM-05 | Dados fiscais do produto | Planejado · **próxima prioridade** | — |
+| PM-05 | Dados fiscais do produto | **Concluído ✅** · `d958a50` | — |
 
 Como nas pendências, uma etapa só passa a `Concluído` com testes que provem a
 entrega.
@@ -1478,7 +1481,7 @@ PM-04B — snapshot histórico do item          ✅ CONCLUÍDO · dc23e56
         ↓
 PM-04C — semântica de linhas para o PDV      ✅ CONCLUÍDO · 9cbca48
         ↓
-PM-05 — dados fiscais do produto      📋 PLANEJADO · ⬅ PRÓXIMA
+PM-05 — dados fiscais do produto      ✅ CONCLUÍDO · d958a50
 ```
 
 ### Decisão arquitetural — Produto comercial x embalagem
@@ -1969,8 +1972,8 @@ revisão futura. Essa dívida não bloqueia o encerramento do PM-04B.
 
 **Fora desta entrega.** PM-04C, PDV, fiscal, Reporting, SEC, ONB e staging.
 Na conclusão do PM-04B, Cliente Teste passou a ser a próxima prioridade
-operacional. Cliente Teste e PM-04C estão agora concluídos; PM-05 passa a ser
-a próxima prioridade, ainda planejado.
+operacional. Cliente Teste, PM-04C e PM-05 estão agora concluídos; a próxima
+prioridade operacional será reavaliada após o fechamento documental do PM-05.
 
 **Código de barras — decisão adiada.** `barcode` não entrou no PM-04B.
 São dois conceitos diferentes, não necessariamente iguais:
@@ -2054,7 +2057,9 @@ base no contrato monetário atual ficam para evolução futura, sem arredondamen
 silencioso. Reporting permanece com mistura UN/KG, ranking por Product sem
 separação por unidade/apresentação e labels fixos. Essas dívidas não bloqueiam
 o encerramento do PM-04C. PDV operacional, fiscal, SEC, ONB e staging ficaram
-fora desta entrega. PM-05 é a próxima prioridade operacional, ainda planejado.
+fora desta entrega. Após essa publicação, PM-05 foi concluído em 2026-10-06
+(`d958a50`). A próxima prioridade operacional será reavaliada após seu fechamento
+documental.
 
 #### PM-04 — Dívidas e riscos preservados
 
@@ -2078,20 +2083,76 @@ Situação histórica dos demais achados da auditoria após a entrega do PM-04A
 
 ### PM-05 — Dados fiscais do produto
 
-**Planejado · próxima prioridade operacional · não iniciado** — antes da NFC-e/NF-e
+**Concluído ✅ e publicado em 2026-10-06**
 
-Itens previstos no cadastro do produto:
+**Commit funcional:** `d958a50ddf52ee509eb02ea5cb14c881c01cbeaa` —
+`feat(products): adicionar classificação fiscal básica`.
 
-- NCM;
-- CEST, quando aplicável;
-- origem;
-- unidade tributável;
-- GTIN tributável.
+**Entrega.** Classificação cadastral mínima no Product, com regras tributárias
+separadas para a fase fiscal futura:
 
-**Decisão.** CFOP não deve ficar fixo no Product: depende da operação — venda
-dentro do estado, venda interestadual, entrada, devolução, transferência. CST,
-CSOSN e alíquotas também não devem ser atributos fixos simples do Product:
-dependem da regra da operação, do regime tributário e do contexto fiscal.
+| Campo | Tipo | Validação estrutural |
+|---|---|---|
+| `ncm_code` | `VARCHAR(8) NULL` | string com exatamente 8 dígitos ASCII |
+| `cest_code` | `VARCHAR(7) NULL` | string com exatamente 7 dígitos ASCII, opcional quando aplicável |
+| `default_origin_code` | `VARCHAR(1) NULL` | string de 1 caractere no domínio controlado aprovado |
+
+- os três campos são opcionais, sem default de negócio, backfill, índice,
+  unique ou FK novos; produtos existentes permanecem NULL e a criação comercial
+  continua possível sem dados fiscais;
+- zeros à esquerda são preservados; origem `"0"` permanece valor válido,
+  diferente de NULL;
+- Store aceita ausência; update parcial preserva campos omitidos e NULL explícito
+  limpa somente o campo enviado;
+- API expõe os três campos de forma aditiva como strings ou NULL; Web ganhou
+  seção simples **"Dados fiscais"**, com ajuda contextual e ausência explícita;
+- validação compartilhada entre Web/API; TrimStrings exclui somente os três
+  nomes de campos para não corrigir espaços inválidos silenciosamente;
+- rollback remove somente as três colunas. Schema validado no SQLite de testes
+  e SQL compilado para MySQL 8.4; migration não aplicada ao banco operacional
+  nem ao staging nesta rodada.
+
+**Origem referencial.** `default_origin_code` representa a origem padrão do
+cadastro, não a verdade fiscal definitiva da operação. O futuro motor fiscal
+precisará resolver a origem efetiva conforme o contexto. Labels atuais são
+somente técnicos ("Código 0" a "Código 8"), sem descrições legais presumidas.
+
+**Validação normativa.** PM-05 valida estrutura, sem confirmação oficial de
+existência, vigência, enquadramento ou regras tributárias. Os produtos não foram
+considerados "fiscalmente validados". CEST não é derivado por NCM e sua presença
+não determina automaticamente ST.
+
+**Fronteiras preservadas.** ProductPackage permanece apresentação
+comercial/logística, sem duplicação fiscal. OrderItem continua linha comercial,
+sem novos dados fiscais; a futura verdade fiscal histórica deverá ficar em
+entidade fiscal própria. Nenhuma alteração em Inventory, Pricing, Reporting,
+Company, Branch ou regime. Nenhum Fiscal Engine criado e nenhuma emissão
+NF-e/NFC-e implementada. Regime/CRT continua para configuração futura do emitente.
+
+**Evidência da entrega (2026-10-06).** Suíte completa: 1050 testes — 1048 PASS,
+0 FAIL, 0 ERROR, 2 RISKY preexistentes, 0 SKIPPED e 4334 assertions. Os RISKY
+`test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`
+continuam sem correção. Regressão focada: 491 testes, 491 PASS, 0 FAIL, 0 ERROR
+e 2218 assertions. Testes focados de Product/migration/Web/API: 85 PASS,
+651 assertions; 43 testes novos no PM-05. Frontend: 5 arquivos aprovados.
+Pint dos 15 arquivos PHP alterados/criados e `git diff --check` passaram.
+
+**Evolução fiscal adiada.** CFOP, CST, CSOSN, ICMS, PIS, COFINS, IPI, FCP,
+MVA, bases, alíquotas, benefícios, regime/CRT, unidade e GTIN tributáveis,
+catálogos oficiais NCM/CEST, Fiscal Engine, FiscalDocument/FiscalDocumentItem,
+NF-e/NFC-e, integração SEFAZ e validação normativa oficial permanecem futuros.
+O escopo originalmente previsto incluía unidade e GTIN tributáveis; ambos foram
+adiados para a fase fiscal. CFOP e demais decisões tributárias não ficam fixos
+no Product: dependem da operação, emitente, regime e contexto fiscal.
+
+**Dívidas preservadas.** Reporting ainda mistura UN/KG, mantém ranking por
+Product e apresentações/labels sem revisão. Pricing por package não foi
+implementado. SQLite não comprova concorrência real entre processos. Validação
+normativa, catálogos fiscais e regime/CRT permanecem futuros. F2.6 continua
+bloqueada: SEC-01/02/03 pendentes, SEC-04 resolvido.
+
+**Próximo passo.** A próxima prioridade operacional será reavaliada após o
+fechamento documental do PM-05. Nenhuma nova implementação iniciada nesta rodada.
 
 ---
 
@@ -2152,7 +2213,7 @@ ONB-01B — experiência guiada              ├─ PM-02B                     �
                                           ↓
                                   PM-04C — semântica de linhas    ✅ CONCLUÍDO · 9cbca48
                                           ↓
-                                  PM-05 — dados fiscais     📋 PLANEJADO · ⬅ PRÓXIMA
+                                  PM-05 — dados fiscais     ✅ CONCLUÍDO · d958a50
 ```
 
 As duas colunas não se cruzam: **não há dependência técnica entre ONB e PM.** A
@@ -2299,8 +2360,8 @@ painel, sem Tinker e sem SQL. Na entrega do ONB-01A, o marco separado
 **Cliente Teste** ainda estava planejado para depois do PM-04A e do PM-04B.
 
 **Estado atual do marco Cliente Teste: Concluído ✅.** Cliente Teste criado e
-validação manual realizada. O próximo passo operacional é PM-05, após a
-conclusão do PM-04C, conforme a
+validação manual realizada. PM-04C e PM-05 também estão concluídos; a próxima
+prioridade será reavaliada após o fechamento documental do PM-05, conforme a
 [prioridade operacional atual](#prioridade-operacional-atual).
 
 **1 · Comando controlado de Platform Admin.**
@@ -2586,8 +2647,9 @@ Relatórios de lucratividade e meta histórica de margem desejada continuam
 futuros. Na rodada de 2026-10-04, PM-04A/B/C, fiscal e PDV não faziam parte
 daquela entrega. O PM-04A foi concluído posteriormente em 2026-10-05, no commit
 `d0ae879`; PM-04B foi concluído em 2026-10-06 (`dc23e56`). PM-04C foi concluído e
-publicado em 2026-10-06 (`9cbca48`), após Cliente Teste. PM-05 é a próxima
-prioridade operacional, ainda planejado.
+publicado em 2026-10-06 (`9cbca48`), após Cliente Teste. PM-05 foi concluído e
+publicado em 2026-10-06 (`d958a50`). A próxima prioridade operacional será
+reavaliada após seu fechamento documental.
 
 ---
 
@@ -2628,7 +2690,7 @@ provar nem para corrigir o SEC-04, e não receberam ID.
 ## Cobertura de testes por área — fotografia da auditoria
 
 417 testes, contados por diretório de `tests/` na auditoria anterior. O estado
-atual da suíte está registrado no cabeçalho e na evidência da entrega do PM-04C.
+atual da suíte está registrado no cabeçalho e na evidência da entrega do PM-05.
 
 | Área | Testes | Área | Testes |
 |---|---|---|---|
