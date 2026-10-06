@@ -6,14 +6,16 @@ use App\Modules\Automation\Domain\Events\AutomationTriggered;
 use App\Modules\Automation\Domain\TriggerCatalog;
 use App\Modules\Inventory\Application\InventoryAdjustmentService;
 use App\Modules\Inventory\Domain\Models\InventoryMovement;
-use App\Modules\Products\Domain\Models\Price;
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Domain\Models\ProductPackage;
 use App\Modules\Products\Domain\Services\ProductQuantity;
 use App\Modules\Sales\Domain\Models\Customer;
 use App\Modules\Sales\Domain\Models\Order;
 use App\Modules\Sales\Domain\Models\OrderItem;
 use App\Modules\Tenancy\Application\TenantContext;
 use Brick\Math\BigDecimal;
+use Brick\Math\Exception\RoundingNecessaryException;
+use Brick\Math\RoundingMode;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -69,78 +71,125 @@ class OrderService
             foreach ($data['items'] ?? [] as $item) {
                 $product = Product::query()->findOrFail($item['product_id']);
 
-                $this->addItem(
-                    $order,
-                    $product,
-                    $item['quantity'],
-                    isset($item['unit_price']) ? (float) $item['unit_price'] : null
-                );
+                $price = isset($item['unit_price']) ? (float) $item['unit_price'] : null;
+                if (! empty($item['package_id'])) {
+                    $package = ProductPackage::query()->findOrFail($item['package_id']);
+                    $this->addPackageItem($order, $product, $package, $item['quantity'], $price);
+                } else {
+                    $this->addItem($order, $product, $item['quantity'], $price);
+                }
             }
 
             return $order->fresh(['customer', 'items']);
         });
     }
 
-    /**
-     * Adiciona (ou soma) um item ao pedido.
-     *
-     * Sem preço informado, busca o preço de venda cadastrado no módulo de
-     * produtos — é a "automatic pricing from price table" da sprint.
-     *
-     * @throws InvalidArgumentException
-     */
+    /** Adiciona quantidade na unidade base; preserva chamadas existentes. */
     public function addItem(Order $order, Product $product, mixed $quantity, ?float $unitPrice = null): OrderItem
     {
-        $this->ensureEditable($order);
+        return $this->addPresentation($order, $product, $quantity, $unitPrice, null);
+    }
 
-        if ($product->company_id !== $order->company_id) {
-            throw new InvalidArgumentException('o produto não pertence à empresa do pedido.');
-        }
+    /** Quantidade é número de embalagens; preço continua por unidade base. */
+    public function addPackageItem(Order $order, Product $product, ProductPackage $package, mixed $quantity, ?float $unitPrice = null): OrderItem
+    {
+        return $this->addPresentation($order, $product, $quantity, $unitPrice, $package);
+    }
 
-        $preco = $unitPrice ?? $this->salePrice($product, $order->currency);
+    private function addPresentation(Order $order, Product $product, mixed $quantity, ?float $unitPrice, ?ProductPackage $package): OrderItem
+    {
+        return DB::transaction(function () use ($order, $product, $quantity, $unitPrice, $package) {
+            // Todas as mutações seguem Order → OrderItem → Inventory.
+            $this->lockOrder($order);
+            $this->ensureEditable($order);
+            $product = Product::query()->find($product->id);
+            if (! $product || $product->tenant_id !== $order->tenant_id || $product->company_id !== $order->company_id) {
+                throw new InvalidArgumentException('o produto não pertence à empresa do pedido.');
+            }
 
-        if ($preco === null) {
-            throw new InvalidArgumentException('produto sem preço de venda cadastrado; informe o valor unitário.');
-        }
+            $items = $order->items()->where('product_id', $product->id)->lockForUpdate()->get();
+            foreach ($items as $existing) {
+                $this->ensureHistoricalUnit($existing, $product);
+            }
 
-        return DB::transaction(function () use ($order, $product, $quantity, $preco) {
-            $item = $order->items()->where('product_id', $product->id)->first();
+            $presentation = [
+                'sale_presentation_type' => 'base',
+                'product_package_id' => null,
+                'package_name' => null,
+                'package_factor' => null,
+                'presentation_barcode' => $product->barcode,
+            ];
 
-            if ($item) {
-                $this->ensureHistoricalUnit($item, $product);
+            if ($package) {
+                $package = ProductPackage::query()->find($package->id);
+                if (! $package || $package->tenant_id !== $order->tenant_id || (string) $package->product_id !== (string) $product->id
+                    || $product->status !== 'active' || $package->factor < 2 || $package->factor > 100000) {
+                    throw new InvalidArgumentException('Esta embalagem não pode ser utilizada para este produto.');
+                }
+                if ($product->unit !== 'UN') {
+                    throw new InvalidArgumentException('Esta embalagem não pode ser utilizada porque o produto não é vendido por unidade.');
+                }
+                // Nenhum preço comercial da embalagem é inferido da tabela SALE.
+                if ($unitPrice === null) {
+                    throw new InvalidArgumentException('Informe o valor por unidade base para vender esta embalagem.');
+                }
+                $packages = ProductQuantity::normalize('UN', $quantity);
+                $quantity = (string) BigDecimal::of($packages)->multipliedBy($package->factor);
+                $presentation = [
+                    'sale_presentation_type' => 'package',
+                    'product_package_id' => (string) $package->id,
+                    'package_name' => $package->name,
+                    'package_factor' => $package->factor,
+                    'presentation_barcode' => $package->barcode,
+                ];
             }
 
             $quantity = ProductQuantity::normalize($product->unit, $quantity);
+            $price = $unitPrice ?? $this->salePrice($product, $order->currency);
+            if ($price === null) {
+                throw new InvalidArgumentException('produto sem preço de venda cadastrado; informe o valor unitário.');
+            }
+            if (! is_finite($price) || $price < 0 || $price >= 1000000000000) {
+                throw new InvalidArgumentException('Informe um valor por unidade base com até duas casas decimais.');
+            }
+            try {
+                $price = (string) BigDecimal::of((string) $price)->toScale(2, RoundingMode::Unnecessary);
+            } catch (RoundingNecessaryException) {
+                throw new InvalidArgumentException('Informe um valor por unidade base com até duas casas decimais.');
+            }
+            $identity = ['sku' => $product->sku, 'name' => $product->name, 'unit' => $product->unit, ...$presentation];
+            $item = $items->first(function (OrderItem $candidate) use ($identity, $price) {
+                if ($candidate->unit_price !== $price) {
+                    return false;
+                }
+                foreach ($identity as $field => $value) {
+                    if ($value !== $candidate->$field) {
+                        return false;
+                    }
+                }
 
-            $novaQuantidade = ProductQuantity::normalize(
-                $product->unit,
-                (string) BigDecimal::of($quantity)->plus($item?->quantity ?? '0')
-            );
-
-            $values = [
-                'quantity' => $novaQuantidade,
-                'unit_price' => $preco,
-                'total' => round((float) $novaQuantidade * $preco, 2),
-            ];
-
+                return true;
+            });
+            $newQuantity = ProductQuantity::normalize($product->unit, (string) BigDecimal::of($quantity)->plus($item?->quantity ?? '0'));
+            $values = ['quantity' => $newQuantity, 'unit_price' => $price, 'total' => round((float) $newQuantity * (float) $price, 2)];
             if ($item) {
                 $item->update($values);
             } else {
                 $item = OrderItem::create([
-                    'tenant_id' => $order->tenant_id,
-                    'order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'sku' => $product->sku,
-                    'name' => $product->name,
-                    'unit' => $product->unit,
-                    ...$values,
+                    'tenant_id' => $order->tenant_id, 'order_id' => (string) $order->id,
+                    'product_id' => (string) $product->id, ...$identity, ...$values,
                 ]);
             }
-
             $order->recalculateTotals();
 
             return $item;
         });
+    }
+
+    private function lockOrder(Order $order): void
+    {
+        $locked = Order::query()->whereKey($order->id)->lockForUpdate()->firstOrFail();
+        $order->setRawAttributes($locked->getAttributes(), true);
     }
 
     /**
@@ -148,14 +197,14 @@ class OrderService
      */
     public function removeItem(Order $order, OrderItem $item): void
     {
-        $this->ensureEditable($order);
-
-        if ($item->order_id !== $order->id) {
-            throw new InvalidArgumentException('o item não pertence a este pedido.');
-        }
-
         DB::transaction(function () use ($order, $item) {
-            $item->delete();
+            $this->lockOrder($order);
+            $this->ensureEditable($order);
+            $current = $order->items()->whereKey($item->id)->lockForUpdate()->first();
+            if (! $current) {
+                throw new InvalidArgumentException('o item não pertence a este pedido.');
+            }
+            $current->delete();
             $order->recalculateTotals();
         });
     }
@@ -168,19 +217,17 @@ class OrderService
      */
     public function changeStatus(Order $order, string $status, ?string $userId = null): Order
     {
-        if ($status === $order->status) {
-            return $order;
-        }
-
-        if (! $order->canTransitionTo($status)) {
-            throw new InvalidArgumentException("não é possível mudar de {$order->status} para {$status}.");
-        }
-
-        if ($status === Order::STATUS_CONFIRMED && $order->items()->count() === 0) {
-            throw new InvalidArgumentException('não é possível confirmar um pedido sem itens.');
-        }
-
         return DB::transaction(function () use ($order, $status, $userId) {
+            $this->lockOrder($order);
+            if ($status === $order->status) {
+                return $order;
+            }
+            if (! $order->canTransitionTo($status)) {
+                throw new InvalidArgumentException("não é possível mudar de {$order->status} para {$status}.");
+            }
+            if ($status === Order::STATUS_CONFIRMED && $order->items()->count() === 0) {
+                throw new InvalidArgumentException('não é possível confirmar um pedido sem itens.');
+            }
             $anterior = $order->status;
 
             match (true) {
@@ -255,7 +302,7 @@ class OrderService
 
     private function stockItems(Order $order): Collection
     {
-        $items = $order->items()->with('product')->get();
+        $items = $order->items()->with('product')->orderBy('product_id')->orderBy('id')->lockForUpdate()->get();
 
         // Valida todas as linhas antes da primeira movimentação de estoque.
         foreach ($items as $item) {

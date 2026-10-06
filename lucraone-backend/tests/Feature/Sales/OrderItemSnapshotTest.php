@@ -83,19 +83,20 @@ class OrderItemSnapshotTest extends TestCase
             ->assertSee(number_format((float) $expected, 3, ',', '.').' '.$unit);
     }
 
-    public function test_accumulation_preserves_identity_and_updates_only_values(): void
+    public function test_new_price_and_identity_preserve_previous_snapshot_in_separate_line(): void
     {
         $service = app(OrderService::class);
         $order = $service->create(['company_id' => $this->company->id]);
         $item = $service->addItem($order, $this->product, '2', 10);
-        $identity = $item->fresh()->only(['product_id', 'sku', 'name', 'unit']);
+        $before = $item->fresh()->getAttributes();
         $this->product->update(['sku' => 'NEW', 'name' => 'NOVO']);
         $updated = $service->addItem($order, $this->product, '1', 20);
-        $this->assertSame($identity, $updated->only(array_keys($identity)));
+        $this->assertSame($before, $item->fresh()->getAttributes());
+        $this->assertNotSame((string) $item->id, (string) $updated->id);
         $this->assertSame('UN', $updated->unit);
-        $this->assertSame('3.000', $updated->fresh()->quantity);
+        $this->assertSame('1.000', $updated->fresh()->quantity);
         $this->assertSame('20.00', $updated->fresh()->unit_price);
-        $this->assertSame('60.00', $order->fresh()->total);
+        $this->assertSame('40.00', $order->fresh()->total);
     }
 
     public static function unavailableUnits(): array

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Domain\Models\ProductPackage;
 use App\Modules\Products\Http\Concerns\PreservesQuantityInput;
 use App\Modules\Products\Http\Rules\ProductQuantityRule;
 use App\Modules\Sales\Domain\Models\Order;
@@ -32,6 +33,7 @@ class StoreWebOrderItemRequest extends FormRequest
                 'string',
                 Rule::exists(Product::class, 'id')->where('tenant_id', $context->id()),
             ],
+            'package_id' => ['nullable', 'string', Rule::exists(ProductPackage::class, 'id')->where('tenant_id', $context->id())],
             'quantity' => ['required', new ProductQuantityRule],
             'unit_price' => ['nullable', 'numeric', 'min:0'],
         ];

@@ -113,16 +113,28 @@
 
             @if ($order->isEditable())
                 <form method="POST" action="{{ route('sales.orders.items.store', $order) }}" class="mt-4 space-y-4"
-                    x-data="{ produto: @js((string) old('product_id', '')), unidades: @js($products->pluck('unit', 'id')->all()) }">
+                    x-data="{ produto: @js((string) old('product_id', '')), embalagem: @js((string) old('package_id', '')), unidades: @js($products->pluck('unit', 'id')->all()) }">
                     @csrf
                     <x-form-group nome="product_id" rotulo="produto" obrigatorio>
-                        <x-select nome="product_id" :opcoes="$productOptions" :valor="old('product_id')" vazio="selecione" x-model="produto" />
+                        <x-select nome="product_id" :opcoes="$productOptions" :valor="old('product_id')" vazio="selecione" x-model="produto" x-on:change="embalagem = ''" />
+                    </x-form-group>
+                    <x-form-group nome="package_id" rotulo="embalagem" ajuda="opcional; com embalagem, informe o número de embalagens">
+                        <select name="package_id" x-model="embalagem" class="w-full rounded border border-linha p-2 text-sm">
+                            <option value="">unidade base</option>
+                            @foreach ($products->where('unit', 'UN') as $product)
+                                @foreach ($product->packages as $package)
+                                    <option value="{{ $package->id }}" x-bind:disabled="produto !== @js((string) $product->id)" @selected(old('package_id') === (string) $package->id)>
+                                        {{ $product->name }} · {{ $package->name }} ({{ $package->factor }} UN)
+                                    </option>
+                                @endforeach
+                            @endforeach
+                        </select>
                     </x-form-group>
                     <x-form-group nome="quantity" rotulo="quantidade" obrigatorio>
                         <x-input tipo="number" nome="quantity" step="{{ $quantityStep }}" min="{{ $quantityStep }}" :valor="old('quantity')"
-                            x-bind:step="unidades[produto] === 'KG' ? '0.001' : '1'" x-bind:min="unidades[produto] === 'KG' ? '0.001' : '1'" />
+                            x-bind:step="!embalagem && unidades[produto] === 'KG' ? '0.001' : '1'" x-bind:min="!embalagem && unidades[produto] === 'KG' ? '0.001' : '1'" />
                     </x-form-group>
-                    <x-form-group nome="unit_price" rotulo="valor unitário" ajuda="em branco usa o preço de venda do produto">
+                    <x-form-group nome="unit_price" rotulo="valor por unidade base" ajuda="embalagem: informe o preço por UN, não por caixa; sem embalagem, em branco usa o preço de venda do produto">
                         <x-input tipo="number" nome="unit_price" step="0.01" min="0" :valor="old('unit_price')" />
                     </x-form-group>
                     <x-button tipo="submit" class="w-full">adicionar item</x-button>
@@ -158,7 +170,13 @@
     <x-table :cabecalhos="['produto', 'sku', 'quantidade', 'valor unitário', 'total', '']">
         @forelse ($order->items as $item)
             <tr class="border-b border-linha last:border-0">
-                <td class="px-5 py-4 text-sm font-semibold lowercase text-grafite">{{ $item->name }}</td>
+                <td class="px-5 py-4 text-sm font-semibold lowercase text-grafite">{{ $item->name }}
+                    @if ($item->sale_presentation_type === 'package')
+                        <p class="text-xs font-normal">{{ $item->package_name }} · {{ $item->package_factor }} UN por embalagem</p>
+                    @elseif ($item->sale_presentation_type === null)
+                        <p class="text-xs font-normal">apresentação histórica desconhecida</p>
+                    @endif
+                </td>
                 <td class="px-5 py-4 font-comanda text-[0.7rem] uppercase tracking-wider text-aco">{{ $item->sku }}</td>
                 <td class="px-5 py-4 font-comanda text-sm text-grafite">{{ number_format((float) $item->quantity, 3, ',', '.') }} {{ $item->unit ?? 'unidade histórica desconhecida' }}</td>
                 <td class="px-5 py-4 font-comanda text-sm text-aco">{{ number_format((float) $item->unit_price, 2, ',', '.') }}</td>

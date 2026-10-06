@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateWebOrderStatusRequest;
 use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Products\Domain\Exceptions\InvalidProductQuantity;
 use App\Modules\Products\Domain\Models\Product;
+use App\Modules\Products\Domain\Models\ProductPackage;
 use App\Modules\Sales\Application\OrderService;
 use App\Modules\Sales\Domain\Models\Customer;
 use App\Modules\Sales\Domain\Models\Order;
@@ -112,12 +113,13 @@ class OrderWebController extends Controller
         $product = Product::query()->findOrFail($request->validated('product_id'));
 
         try {
-            $this->orders->addItem(
-                $order,
-                $product,
-                $request->validated('quantity'),
-                $request->filled('unit_price') ? (float) $request->validated('unit_price') : null
-            );
+            $price = $request->filled('unit_price') ? (float) $request->validated('unit_price') : null;
+            if ($request->filled('package_id')) {
+                $package = ProductPackage::query()->findOrFail($request->validated('package_id'));
+                $this->orders->addPackageItem($order, $product, $package, $request->validated('quantity'), $price);
+            } else {
+                $this->orders->addItem($order, $product, $request->validated('quantity'), $price);
+            }
         } catch (InvalidProductQuantity $exception) {
             return back()->withErrors(['quantity' => $exception->getMessage()])->withInput();
         } catch (InvalidArgumentException $exception) {
@@ -207,7 +209,7 @@ class OrderWebController extends Controller
     private function products(string $companyId)
     {
         return Product::query()
-            ->with('prices')
+            ->with(['prices', 'packages'])
             ->active()
             ->where('company_id', $companyId)
             ->orderBy('name')
