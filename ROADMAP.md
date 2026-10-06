@@ -9,14 +9,15 @@ checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-
 **PM-04B concluído ✅ e publicado** em
 `dc23e56e927304c57d57a11863d021bdc02dbf8d` —
 `feat(sales): preservar unidade histórica no item do pedido`.
-**Próxima prioridade operacional: Cliente Teste** (Planejado · não iniciado).
-PM-04C continua planejado depois do Cliente Teste.
+**Cliente Teste concluído ✅** — criado e validação manual realizada.
+**Próxima prioridade operacional: PM-04C — Semântica de linhas para o futuro PDV**
+(Planejado · não iniciado).
 Baseline atual: 973 testes — 971 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
 0 SKIPPED e 3730 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
 foram corrigidos. SEC-04 resolvido; SEC-01/02/03 pendentes.
-Staging disponível em https://lucraone.jmfsystem.tech; Cliente Teste segue
-Planejado · próxima prioridade · não criado.
+Staging disponível em https://lucraone.jmfsystem.tech; marco Cliente Teste
+concluído.
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
@@ -87,7 +88,7 @@ PM são trilhas paralelas: nenhuma etapa de ONB bloqueia tecnicamente uma etapa 
 PM, nem o contrário.
 
 ```
-ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Teste ⬅ PRÓXIMA  →  PM-04C  →  PM-05
+ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Teste ✅  →  PM-04C ⬅ PRÓXIMA  →  PM-05
 ```
 
 | Ordem | Etapa | Trilha | Status |
@@ -96,18 +97,17 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 | 2 | ONB-01B — Experiência guiada de onboarding | ONB | **Concluído ✅** · wizard `aee736d`; ajuda e checklist concluídos |
 | 3 | PM-04A — Quantidade coerente com a unidade | PM | **Concluído ✅** · `d0ae879` |
 | 4 | PM-04B — Snapshot histórico do item | PM | **Concluído ✅** · `dc23e56` |
-| 5 | Criação e teste manual de **Cliente Teste** pelo painel | ONB (validação) | Planejado · **próxima prioridade** |
-| 6 | PM-04C — Semântica de linhas para o futuro PDV | PM | Planejado |
+| 5 | Criação e teste manual de **Cliente Teste** pelo painel | ONB (validação) | **Concluído ✅** |
+| 6 | PM-04C — Semântica de linhas para o futuro PDV | PM | Planejado · **próxima prioridade** |
 | 7 | PM-05 — Dados fiscais do produto | PM | Futuro · antes da NFC-e/NF-e |
 
 > A ordem continua sendo **prioridade operacional, não dependência técnica**.
 > ONB-01A destravou o fluxo administrativo; ONB-01B entregou o wizard guiado,
 > administrador definido pelo operador, configuração inicial, revisão e próximos
 > passos. A ajuda permanente e o checklist numerado facilitam o primeiro uso.
-> PM-04A e PM-04B foram concluídos e publicados. Cliente Teste passa a ser a
-> próxima prioridade operacional, como marco separado de validação ponta a
-> ponta como cliente real. Continua planejado; testes manuais anteriores não
-> encerram esse marco automaticamente. PM-04C permanece planejado depois dele.
+> PM-04A e PM-04B foram concluídos e publicados. O marco separado Cliente
+> Teste está concluído: cliente criado e validação manual realizada. PM-04C
+> passa a ser a próxima prioridade operacional, planejado e não iniciado.
 > Não há dependência técnica entre ONB e PM. F2.6 continua bloqueada por
 > SEC-01, SEC-02 e SEC-03.
 
@@ -1455,7 +1455,7 @@ O que esta trilha é, e o que não é:
 | PM-03 | Resolução exata por código de barras | Concluído | PM-02A |
 | PM-04A | Quantidade coerente com a unidade | **Concluído ✅** · `d0ae879` | PM-01 |
 | PM-04B | Snapshot histórico do item | **Concluído ✅** · `dc23e56` | PM-04A ✅ |
-| PM-04C | Semântica de linhas para o futuro PDV | Planejado | PM-04B + desenho do PDV |
+| PM-04C | Semântica de linhas para o futuro PDV | Planejado · **próxima prioridade** | PM-04B + desenho do PDV |
 | PM-05 | Dados fiscais do produto | Futuro · antes da NFC-e/NF-e | — |
 
 Como nas pendências, uma etapa só passa a `Concluído` com testes que provem a
@@ -1472,7 +1472,7 @@ PM-04A — quantidade coerente com a unidade   ✅ CONCLUÍDO · d0ae879
         ↓
 PM-04B — snapshot histórico do item          ✅ CONCLUÍDO · dc23e56
         ↓
-PM-04C — semântica de linhas para o PDV      📋 PLANEJADO · + desenho do PDV
+PM-04C — semântica de linhas para o PDV      📋 PLANEJADO · ⬅ PRÓXIMA · + desenho do PDV
         ↓
 PM-05 — dados fiscais do produto      📋 FUTURO · antes da NFC-e/NF-e
 ```
@@ -1964,8 +1964,9 @@ o ranking ainda não separa por unidade e alguns rótulos fixos "un" precisam
 revisão futura. Essa dívida não bloqueia o encerramento do PM-04B.
 
 **Fora desta entrega.** PM-04C, PDV, fiscal, Reporting, SEC, ONB e staging.
-Cliente Teste passa a ser a próxima prioridade operacional; PM-04C permanece
-planejado depois desse marco.
+Na conclusão do PM-04B, Cliente Teste passou a ser a próxima prioridade
+operacional. Esse marco está agora concluído; PM-04C passa a ser a próxima
+prioridade, ainda planejado.
 
 **Código de barras — decisão adiada.** `barcode` não entrou no PM-04B.
 São dois conceitos diferentes, não necessariamente iguais:
@@ -1985,8 +1986,8 @@ no PM-04C ou em etapa equivalente.
 
 #### PM-04C — Semântica de linhas para o futuro PDV
 
-**Planejado** — Depende de: PM-04B ✅ e do desenho funcional do PDV. Na ordem
-operacional, vem depois do Cliente Teste.
+**Planejado · próxima prioridade operacional · não iniciado** — Depende de:
+PM-04B ✅ e do desenho funcional do PDV. Cliente Teste está concluído.
 
 **Objetivo.** Definir como cada leitura ou adição aparece como linha de venda.
 
@@ -2126,7 +2127,7 @@ ONB-01B — experiência guiada              ├─ PM-02B                     �
                                           ↓
                                   PM-04B — snapshot do item       ✅ CONCLUÍDO · dc23e56
                                           ↓
-                                  PM-04C — semântica de linhas    📋 PLANEJADO
+                                  PM-04C — semântica de linhas    📋 PLANEJADO · ⬅ PRÓXIMA
                                           ↓
                                   PM-05 — dados fiscais     📋 FUTURO
 ```
@@ -2271,8 +2272,11 @@ ampliação silenciosa:
 19 arquivos, 1644 inserções e 209 remoções. Nenhuma migration.
 
 **Critério de pronto atendido.** Já é possível criar um estabelecimento pelo
-painel, sem Tinker e sem SQL. O **Cliente Teste** em si ainda **não foi
-criado**: segue planejado, para depois do PM-04A e do PM-04B, conforme a
+painel, sem Tinker e sem SQL. Na entrega do ONB-01A, o marco separado
+**Cliente Teste** ainda estava planejado para depois do PM-04A e do PM-04B.
+
+**Estado atual do marco Cliente Teste: Concluído ✅.** Cliente Teste criado e
+validação manual realizada. O próximo passo operacional é PM-04C, conforme a
 [prioridade operacional atual](#prioridade-operacional-atual).
 
 **1 · Comando controlado de Platform Admin.**
@@ -2558,7 +2562,7 @@ Relatórios de lucratividade e meta histórica de margem desejada continuam
 futuros. Na rodada de 2026-10-04, PM-04A/B/C, fiscal e PDV não faziam parte
 daquela entrega. O PM-04A foi concluído posteriormente em 2026-10-05, no commit
 `d0ae879`; PM-04B foi concluído em 2026-10-06 (`dc23e56`). PM-04C continua
-planejado, depois do Cliente Teste na ordem operacional.
+planejado como próxima prioridade operacional, após a conclusão do Cliente Teste.
 
 ---
 
