@@ -1,19 +1,22 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-10-05 · **ONB-01A e ONB-01B concluídos** — wizard
+**Atualizado:** 2026-10-06 · **ONB-01A e ONB-01B concluídos** — wizard
 ONB-01B publicado em `aee736db22a4f626fea6010d3e67278670606134`; ajuda permanente,
 checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-04.
 **PM-04A concluído ✅ e publicado** em
 `d0ae879de8e4c389e6584b9c9f576450d37fcc74` —
 `feat(sales): validar quantidade conforme unidade do produto`.
-**Próxima prioridade operacional: PM-04B — Snapshot histórico do item**
-(Planejado · não iniciado).
-Baseline atual: 949 testes — 947 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
-0 SKIPPED e 3627 assertions. Os RISKY continuam sendo
+**PM-04B concluído ✅ e publicado** em
+`dc23e56e927304c57d57a11863d021bdc02dbf8d` —
+`feat(sales): preservar unidade histórica no item do pedido`.
+**Próxima prioridade operacional: Cliente Teste** (Planejado · não iniciado).
+PM-04C continua planejado depois do Cliente Teste.
+Baseline atual: 973 testes — 971 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 3730 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
 foram corrigidos. SEC-04 resolvido; SEC-01/02/03 pendentes.
 Staging disponível em https://lucraone.jmfsystem.tech; Cliente Teste segue
-Planejado · não criado.
+Planejado · próxima prioridade · não criado.
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
@@ -84,7 +87,7 @@ PM são trilhas paralelas: nenhuma etapa de ONB bloqueia tecnicamente uma etapa 
 PM, nem o contrário.
 
 ```
-ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ⬅ PRÓXIMA  →  Cliente Teste  →  PM-04C  →  PM-05
+ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Teste ⬅ PRÓXIMA  →  PM-04C  →  PM-05
 ```
 
 | Ordem | Etapa | Trilha | Status |
@@ -92,8 +95,8 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ⬅ PRÓXIMA  →  C
 | 1 | ONB-01A — Fundação administrativa do onboarding | ONB | **Concluído ✅** (`6aa8d62`) |
 | 2 | ONB-01B — Experiência guiada de onboarding | ONB | **Concluído ✅** · wizard `aee736d`; ajuda e checklist concluídos |
 | 3 | PM-04A — Quantidade coerente com a unidade | PM | **Concluído ✅** · `d0ae879` |
-| 4 | PM-04B — Snapshot histórico do item | PM | Planejado · **próxima prioridade** |
-| 5 | Criação e teste manual de **Cliente Teste** pelo painel | ONB (validação) | Planejado · não criado |
+| 4 | PM-04B — Snapshot histórico do item | PM | **Concluído ✅** · `dc23e56` |
+| 5 | Criação e teste manual de **Cliente Teste** pelo painel | ONB (validação) | Planejado · **próxima prioridade** |
 | 6 | PM-04C — Semântica de linhas para o futuro PDV | PM | Planejado |
 | 7 | PM-05 — Dados fiscais do produto | PM | Futuro · antes da NFC-e/NF-e |
 
@@ -101,8 +104,10 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ⬅ PRÓXIMA  →  C
 > ONB-01A destravou o fluxo administrativo; ONB-01B entregou o wizard guiado,
 > administrador definido pelo operador, configuração inicial, revisão e próximos
 > passos. A ajuda permanente e o checklist numerado facilitam o primeiro uso.
-> PM-04A foi concluído e publicado; PM-04B passa a ser o próximo item da trilha
-> de produtos, ainda planejado e não iniciado.
+> PM-04A e PM-04B foram concluídos e publicados. Cliente Teste passa a ser a
+> próxima prioridade operacional, como marco separado de validação ponta a
+> ponta como cliente real. Continua planejado; testes manuais anteriores não
+> encerram esse marco automaticamente. PM-04C permanece planejado depois dele.
 > Não há dependência técnica entre ONB e PM. F2.6 continua bloqueada por
 > SEC-01, SEC-02 e SEC-03.
 
@@ -1449,7 +1454,7 @@ O que esta trilha é, e o que não é:
 | PM-02B | Entrada de estoque por embalagem | Concluído | PM-02A |
 | PM-03 | Resolução exata por código de barras | Concluído | PM-02A |
 | PM-04A | Quantidade coerente com a unidade | **Concluído ✅** · `d0ae879` | PM-01 |
-| PM-04B | Snapshot histórico do item | Planejado · **próxima prioridade** | PM-04A ✅ |
+| PM-04B | Snapshot histórico do item | **Concluído ✅** · `dc23e56` | PM-04A ✅ |
 | PM-04C | Semântica de linhas para o futuro PDV | Planejado | PM-04B + desenho do PDV |
 | PM-05 | Dados fiscais do produto | Futuro · antes da NFC-e/NF-e | — |
 
@@ -1465,7 +1470,7 @@ PM-02A — product_packages             ✅ CONCLUÍDO
         ↓
 PM-04A — quantidade coerente com a unidade   ✅ CONCLUÍDO · d0ae879
         ↓
-PM-04B — snapshot histórico do item          📋 PLANEJADO · ⬅ PRÓXIMA
+PM-04B — snapshot histórico do item          ✅ CONCLUÍDO · dc23e56
         ↓
 PM-04C — semântica de linhas para o PDV      📋 PLANEJADO · + desenho do PDV
         ↓
@@ -1915,27 +1920,55 @@ linhas do PDV / PM-04C, scanner, PDV, fiscal, preço, margem, relatórios e SEC.
 
 #### PM-04B — Snapshot histórico do item
 
-**Planejado · PRÓXIMA PRIORIDADE · não iniciado** — Depende de: PM-04A ✅
+**Concluído ✅ e publicado em 2026-10-06** — Depende de: PM-04A ✅
 
-**Objetivo.** Preservar no `OrderItem` o significado histórico de `quantity`.
+**Commit funcional:** `dc23e56e927304c57d57a11863d021bdc02dbf8d` —
+`feat(sales): preservar unidade histórica no item do pedido`.
 
-**Decisão.** `order_items.unit` deverá ser avaliado e implementado como snapshot
-da unidade vigente no momento da venda. `quantity` sozinha não diz se 0,350 é
-`KG` ou se 2 é `UN`.
+**Objetivo entregue.** Preservar no `OrderItem` o significado histórico de
+`quantity`, com snapshot da unidade no momento da criação da linha.
 
-- `OrderItem` já guarda snapshot de `sku` e `name`;
-- `unit` ainda não existe;
-- ler `Product.unit` depois da venda tornaria o histórico mutável, porque a
-  unidade do Product pode ser editada;
-- relatórios e o futuro fiscal precisam da unidade histórica.
+- `order_items.unit` guarda o código técnico `UN` ou `KG`;
+- migration aditiva: coluna `VARCHAR(6)`, nullable e sem default, sem alteração
+  das colunas, índices ou FKs existentes; rollback remove somente `unit`;
+- novas linhas capturam `Product.unit` no servidor, sem usar a unidade enviada
+  pelo cliente como autoridade;
+- UN e KG permanecem históricos: alterar `Product.unit` posteriormente não
+  reinterpreta o pedido antigo;
+- `sku`, `name`, `product_id` e `unit` são preservados como identidade
+  histórica; acumulação com a mesma unidade mantém esses campos;
+- acumulação com unidade divergente ou desconhecida é bloqueada;
+- movimentações de estoque são bloqueadas quando a unidade histórica é
+  desconhecida ou diverge do Product atual, sem conversão automática;
+- API expõe `unit`, inclusive NULL; painel exibe a unidade histórica e identifica
+  legado como "unidade histórica desconhecida", sem fallback para Product;
+- proteção de identidade no Model usa eventos Eloquent; updates em massa e SQL
+  direto podem ignorar esses eventos;
+- nenhuma mudança em Reporting nesta etapa.
 
-**Migration.** Provavelmente exigirá `order_items.unit`, com backfill dos
-registros existentes a partir do `Product.unit` atual. Limitação conhecida: para
-pedidos antigos, o backfill assume que a unidade do Product não mudou desde a
-venda.
+**Legado e backfill.** Itens antigos sem snapshot permanecem com `unit = NULL`.
+Não existe trilha confiável para reconstruir a unidade histórica; portanto não
+há backfill presumido com `Product.unit` atual nem informação histórica inventada.
 
-**Código de barras — decisão adiada.** Não está decidido que `barcode` entra no
-PM-04B. São dois conceitos diferentes, não necessariamente iguais:
+**Evidência da entrega (2026-10-06).** Suíte completa: 973 testes — 971 PASS,
+0 FAIL, 0 ERROR, 2 RISKY preexistentes, 0 SKIPPED e 3730 assertions. Os RISKY
+`test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`
+continuam sem correção. Testes focados: 101 testes, 556 assertions, 0 FAIL e
+0 ERROR; 24 testes de snapshot incluem migration, API, Web e estoque. Security:
+185 testes, 183 PASS, 0 FAIL, 0 ERROR e 2 RISKY preexistentes. Frontend: 5 arquivos
+de testes passaram; Pint dos seis arquivos PHP alterados/criados e
+`git diff --check` passaram. Nenhum asset alterado, sem necessidade de build.
+
+**Reporting — dívida conhecida.** Relatórios ainda podem misturar UN e KG,
+o ranking ainda não separa por unidade e alguns rótulos fixos "un" precisam
+revisão futura. Essa dívida não bloqueia o encerramento do PM-04B.
+
+**Fora desta entrega.** PM-04C, PDV, fiscal, Reporting, SEC, ONB e staging.
+Cliente Teste passa a ser a próxima prioridade operacional; PM-04C permanece
+planejado depois desse marco.
+
+**Código de barras — decisão adiada.** `barcode` não entrou no PM-04B.
+São dois conceitos diferentes, não necessariamente iguais:
 
 - `Product.barcode` — o código do Product base;
 - código de barras efetivamente lido.
@@ -1952,7 +1985,8 @@ no PM-04C ou em etapa equivalente.
 
 #### PM-04C — Semântica de linhas para o futuro PDV
 
-**Planejado** — Depende de: PM-04B e do desenho funcional do PDV
+**Planejado** — Depende de: PM-04B ✅ e do desenho funcional do PDV. Na ordem
+operacional, vem depois do Cliente Teste.
 
 **Objetivo.** Definir como cada leitura ou adição aparece como linha de venda.
 
@@ -2090,7 +2124,7 @@ ONB-01B — experiência guiada              ├─ PM-02B                     �
                                           ↓
                                   PM-04A — quantidade coerente    ✅ CONCLUÍDO · d0ae879
                                           ↓
-                                  PM-04B — snapshot do item       📋 PLANEJADO · ⬅ PRÓXIMA
+                                  PM-04B — snapshot do item       ✅ CONCLUÍDO · dc23e56
                                           ↓
                                   PM-04C — semântica de linhas    📋 PLANEJADO
                                           ↓
@@ -2523,7 +2557,8 @@ formulário e comunicada por fora do sistema. **Não implementar.**
 Relatórios de lucratividade e meta histórica de margem desejada continuam
 futuros. Na rodada de 2026-10-04, PM-04A/B/C, fiscal e PDV não faziam parte
 daquela entrega. O PM-04A foi concluído posteriormente em 2026-10-05, no commit
-`d0ae879`; PM-04B e PM-04C continuam planejados.
+`d0ae879`; PM-04B foi concluído em 2026-10-06 (`dc23e56`). PM-04C continua
+planejado, depois do Cliente Teste na ordem operacional.
 
 ---
 
