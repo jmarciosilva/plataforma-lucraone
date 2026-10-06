@@ -14,6 +14,7 @@ use App\Modules\Sales\Domain\Models\Order;
 use App\Modules\Sales\Domain\Models\OrderItem;
 use App\Modules\Tenancy\Application\TenantContext;
 use Brick\Math\BigDecimal;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -92,8 +93,6 @@ class OrderService
     {
         $this->ensureEditable($order);
 
-        $quantity = ProductQuantity::normalize($product->unit, $quantity);
-
         if ($product->company_id !== $order->company_id) {
             throw new InvalidArgumentException('o produto não pertence à empresa do pedido.');
         }
@@ -107,25 +106,36 @@ class OrderService
         return DB::transaction(function () use ($order, $product, $quantity, $preco) {
             $item = $order->items()->where('product_id', $product->id)->first();
 
+            if ($item) {
+                $this->ensureHistoricalUnit($item, $product);
+            }
+
+            $quantity = ProductQuantity::normalize($product->unit, $quantity);
+
             $novaQuantidade = ProductQuantity::normalize(
                 $product->unit,
                 (string) BigDecimal::of($quantity)->plus($item?->quantity ?? '0')
             );
 
-            $item = OrderItem::updateOrCreate(
-                [
+            $values = [
+                'quantity' => $novaQuantidade,
+                'unit_price' => $preco,
+                'total' => round((float) $novaQuantidade * $preco, 2),
+            ];
+
+            if ($item) {
+                $item->update($values);
+            } else {
+                $item = OrderItem::create([
                     'tenant_id' => $order->tenant_id,
                     'order_id' => $order->id,
                     'product_id' => $product->id,
-                ],
-                [
                     'sku' => $product->sku,
                     'name' => $product->name,
-                    'quantity' => $novaQuantidade,
-                    'unit_price' => $preco,
-                    'total' => round((float) $novaQuantidade * $preco, 2),
-                ]
-            );
+                    'unit' => $product->unit,
+                    ...$values,
+                ]);
+            }
 
             $order->recalculateTotals();
 
@@ -220,7 +230,7 @@ class OrderService
      */
     private function reserveStock(Order $order, ?string $userId): void
     {
-        foreach ($order->items()->with('product')->get() as $item) {
+        foreach ($this->stockItems($order) as $item) {
             $this->moveStock($order, $item, InventoryMovement::TYPE_RESERVATION, $userId, "reserva do pedido {$order->order_number}");
         }
     }
@@ -230,7 +240,7 @@ class OrderService
      */
     private function shipStock(Order $order, ?string $userId): void
     {
-        foreach ($order->items()->with('product')->get() as $item) {
+        foreach ($this->stockItems($order) as $item) {
             $this->moveStock($order, $item, InventoryMovement::TYPE_RELEASE, $userId, "baixa do pedido {$order->order_number}");
             $this->moveStock($order, $item, InventoryMovement::TYPE_OUT, $userId, "baixa do pedido {$order->order_number}");
         }
@@ -238,9 +248,25 @@ class OrderService
 
     private function releaseStock(Order $order, ?string $userId, string $motivo): void
     {
-        foreach ($order->items()->with('product')->get() as $item) {
+        foreach ($this->stockItems($order) as $item) {
             $this->moveStock($order, $item, InventoryMovement::TYPE_RELEASE, $userId, $motivo);
         }
+    }
+
+    private function stockItems(Order $order): Collection
+    {
+        $items = $order->items()->with('product')->get();
+
+        // Valida todas as linhas antes da primeira movimentação de estoque.
+        foreach ($items as $item) {
+            if (! $item->product) {
+                throw new InvalidArgumentException("produto do item {$item->name} não está mais disponível.");
+            }
+
+            $this->ensureHistoricalUnit($item, $item->product);
+        }
+
+        return $items;
     }
 
     private function moveStock(Order $order, OrderItem $item, string $tipo, ?string $userId, string $motivo): void
@@ -248,6 +274,8 @@ class OrderService
         if (! $item->product) {
             throw new InvalidArgumentException("produto do item {$item->name} não está mais disponível.");
         }
+
+        $this->ensureHistoricalUnit($item, $item->product);
 
         try {
             $this->inventory->adjust(
@@ -260,6 +288,17 @@ class OrderService
             );
         } catch (InvalidArgumentException $exception) {
             throw new InvalidArgumentException("{$item->name}: {$exception->getMessage()}");
+        }
+    }
+
+    private function ensureHistoricalUnit(OrderItem $item, Product $product): void
+    {
+        if ($item->unit === null) {
+            throw new InvalidArgumentException('Não é possível alterar este item porque a unidade histórica não está disponível.');
+        }
+
+        if ($item->unit !== $product->unit) {
+            throw new InvalidArgumentException('A unidade deste produto foi alterada após a criação do pedido. O item não pode ser modificado.');
         }
     }
 

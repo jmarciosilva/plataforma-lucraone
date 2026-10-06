@@ -19,6 +19,7 @@ class OrderItem extends Model
         'product_id',
         'sku',
         'name',
+        'unit',
         'quantity',
         'unit_price',
         'total',
@@ -29,6 +30,16 @@ class OrderItem extends Model
         'unit_price' => 'decimal:2',
         'total' => 'decimal:2',
     ];
+
+    protected static function booted(): void
+    {
+        // Atualizações em massa e SQL direto não executam eventos Eloquent.
+        static::updating(function (OrderItem $item) {
+            if ($item->isDirty(['product_id', 'sku', 'name', 'unit'])) {
+                throw new \InvalidArgumentException('A identificação histórica deste item não pode ser alterada.');
+            }
+        });
+    }
 
     protected static function newFactory()
     {

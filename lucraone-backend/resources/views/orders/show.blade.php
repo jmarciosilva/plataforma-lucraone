@@ -160,7 +160,7 @@
             <tr class="border-b border-linha last:border-0">
                 <td class="px-5 py-4 text-sm font-semibold lowercase text-grafite">{{ $item->name }}</td>
                 <td class="px-5 py-4 font-comanda text-[0.7rem] uppercase tracking-wider text-aco">{{ $item->sku }}</td>
-                <td class="px-5 py-4 font-comanda text-sm text-grafite">{{ number_format((float) $item->quantity, 3, ',', '.') }}</td>
+                <td class="px-5 py-4 font-comanda text-sm text-grafite">{{ number_format((float) $item->quantity, 3, ',', '.') }} {{ $item->unit ?? 'unidade histórica desconhecida' }}</td>
                 <td class="px-5 py-4 font-comanda text-sm text-aco">{{ number_format((float) $item->unit_price, 2, ',', '.') }}</td>
                 <td class="px-5 py-4 font-comanda text-sm text-grafite">{{ number_format((float) $item->total, 2, ',', '.') }}</td>
                 <td class="px-5 py-4 text-right">

@@ -21,6 +21,7 @@ class OrderItemFactory extends Factory
             'tenant_id' => Tenant::factory(),
             'order_id' => Order::factory(),
             'product_id' => Product::factory(),
+            'unit' => fn (array $attributes) => Product::withoutGlobalScopes()->findOrFail($attributes['product_id'])->unit,
             'sku' => strtoupper($this->faker->bothify('???-###')),
             'name' => $this->faker->words(2, true),
             'quantity' => $quantidade,
@@ -29,12 +30,18 @@ class OrderItemFactory extends Factory
         ];
     }
 
+    public function legacy(): static
+    {
+        return $this->state(fn (array $attributes) => ['unit' => null]);
+    }
+
     public function forOrder(Order $order, Product $product): static
     {
         return $this->state(fn (array $attributes) => [
             'tenant_id' => $order->tenant_id,
             'order_id' => $order->id,
             'product_id' => $product->id,
+            'unit' => $product->unit,
             'sku' => $product->sku,
             'name' => $product->name,
         ]);
