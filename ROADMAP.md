@@ -10,10 +10,13 @@ checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-
 `dc23e56e927304c57d57a11863d021bdc02dbf8d` —
 `feat(sales): preservar unidade histórica no item do pedido`.
 **Cliente Teste concluído ✅** — criado e validação manual realizada.
-**Próxima prioridade operacional: PM-04C — Semântica de linhas para o futuro PDV**
+**PM-04C concluído ✅ e publicado** em
+`9cbca4840d53353ef8244e1854508f1bf38938c4` —
+`feat(sales): adicionar semântica de apresentação às linhas do pedido`.
+**Próxima prioridade operacional: PM-05 — Dados fiscais do produto**
 (Planejado · não iniciado).
-Baseline atual: 973 testes — 971 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
-0 SKIPPED e 3730 assertions. Os RISKY continuam sendo
+Baseline atual: 1007 testes — 1005 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 3880 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
 foram corrigidos. SEC-04 resolvido; SEC-01/02/03 pendentes.
 Staging disponível em https://lucraone.jmfsystem.tech; marco Cliente Teste
@@ -88,7 +91,7 @@ PM são trilhas paralelas: nenhuma etapa de ONB bloqueia tecnicamente uma etapa 
 PM, nem o contrário.
 
 ```
-ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Teste ✅  →  PM-04C ⬅ PRÓXIMA  →  PM-05
+ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Teste ✅  →  PM-04C ✅  →  PM-05 ⬅ PRÓXIMA
 ```
 
 | Ordem | Etapa | Trilha | Status |
@@ -98,8 +101,8 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 | 3 | PM-04A — Quantidade coerente com a unidade | PM | **Concluído ✅** · `d0ae879` |
 | 4 | PM-04B — Snapshot histórico do item | PM | **Concluído ✅** · `dc23e56` |
 | 5 | Criação e teste manual de **Cliente Teste** pelo painel | ONB (validação) | **Concluído ✅** |
-| 6 | PM-04C — Semântica de linhas para o futuro PDV | PM | Planejado · **próxima prioridade** |
-| 7 | PM-05 — Dados fiscais do produto | PM | Futuro · antes da NFC-e/NF-e |
+| 6 | PM-04C — Semântica de linhas para o futuro PDV | PM | **Concluído ✅** · `9cbca48` |
+| 7 | PM-05 — Dados fiscais do produto | PM | Planejado · **próxima prioridade** |
 
 > A ordem continua sendo **prioridade operacional, não dependência técnica**.
 > ONB-01A destravou o fluxo administrativo; ONB-01B entregou o wizard guiado,
@@ -107,7 +110,8 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 > passos. A ajuda permanente e o checklist numerado facilitam o primeiro uso.
 > PM-04A e PM-04B foram concluídos e publicados. O marco separado Cliente
 > Teste está concluído: cliente criado e validação manual realizada. PM-04C
-> passa a ser a próxima prioridade operacional, planejado e não iniciado.
+> foi concluído e publicado. PM-05 passa a ser a próxima prioridade operacional,
+> planejado e não iniciado.
 > Não há dependência técnica entre ONB e PM. F2.6 continua bloqueada por
 > SEC-01, SEC-02 e SEC-03.
 
@@ -1455,8 +1459,8 @@ O que esta trilha é, e o que não é:
 | PM-03 | Resolução exata por código de barras | Concluído | PM-02A |
 | PM-04A | Quantidade coerente com a unidade | **Concluído ✅** · `d0ae879` | PM-01 |
 | PM-04B | Snapshot histórico do item | **Concluído ✅** · `dc23e56` | PM-04A ✅ |
-| PM-04C | Semântica de linhas para o futuro PDV | Planejado · **próxima prioridade** | PM-04B + desenho do PDV |
-| PM-05 | Dados fiscais do produto | Futuro · antes da NFC-e/NF-e | — |
+| PM-04C | Semântica de linhas para o futuro PDV | **Concluído ✅** · `9cbca48` | PM-04B ✅ |
+| PM-05 | Dados fiscais do produto | Planejado · **próxima prioridade** | — |
 
 Como nas pendências, uma etapa só passa a `Concluído` com testes que provem a
 entrega.
@@ -1472,9 +1476,9 @@ PM-04A — quantidade coerente com a unidade   ✅ CONCLUÍDO · d0ae879
         ↓
 PM-04B — snapshot histórico do item          ✅ CONCLUÍDO · dc23e56
         ↓
-PM-04C — semântica de linhas para o PDV      📋 PLANEJADO · ⬅ PRÓXIMA · + desenho do PDV
+PM-04C — semântica de linhas para o PDV      ✅ CONCLUÍDO · 9cbca48
         ↓
-PM-05 — dados fiscais do produto      📋 FUTURO · antes da NFC-e/NF-e
+PM-05 — dados fiscais do produto      📋 PLANEJADO · ⬅ PRÓXIMA
 ```
 
 ### Decisão arquitetural — Produto comercial x embalagem
@@ -1965,8 +1969,8 @@ revisão futura. Essa dívida não bloqueia o encerramento do PM-04B.
 
 **Fora desta entrega.** PM-04C, PDV, fiscal, Reporting, SEC, ONB e staging.
 Na conclusão do PM-04B, Cliente Teste passou a ser a próxima prioridade
-operacional. Esse marco está agora concluído; PM-04C passa a ser a próxima
-prioridade, ainda planejado.
+operacional. Cliente Teste e PM-04C estão agora concluídos; PM-05 passa a ser
+a próxima prioridade, ainda planejado.
 
 **Código de barras — decisão adiada.** `barcode` não entrou no PM-04B.
 São dois conceitos diferentes, não necessariamente iguais:
@@ -1981,58 +1985,76 @@ São dois conceitos diferentes, não necessariamente iguais:
 | lido pelo scanner | 789BOX |
 
 O PM-03 resolve os dois códigos para o mesmo Product base. A estratégia de
-snapshot de código de barras será decidida junto com a semântica do futuro PDV,
-no PM-04C ou em etapa equivalente.
+snapshot de código de barras foi adiada nessa entrega. No PM-04C,
+`presentation_barcode` passou a guardar o código comercial da apresentação,
+sem representar o código efetivamente lido nem a origem operacional.
 
 #### PM-04C — Semântica de linhas para o futuro PDV
 
-**Planejado · próxima prioridade operacional · não iniciado** — Depende de:
-PM-04B ✅ e do desenho funcional do PDV. Cliente Teste está concluído.
+**Concluído ✅ e publicado em 2026-10-06** — PM-04B ✅; Cliente Teste concluído.
 
-**Objetivo.** Definir como cada leitura ou adição aparece como linha de venda.
+**Commit funcional:** `9cbca4840d53353ef8244e1854508f1bf38938c4` —
+`feat(sales): adicionar semântica de apresentação às linhas do pedido`.
 
-**Problemas atuais.**
+**Entrega.** Semântica de apresentação comercial nas linhas do pedido:
 
-- índice único `(order_id, product_id)`;
-- `OrderService` consolida itens por `product_id`;
-- `updateOrCreate` soma a quantidade;
-- adicionar de novo o mesmo Product pode reprecificar a linha inteira com o novo
-  preço unitário;
-- a origem por embalagem é perdida.
+- venda base e por embalagem; o mesmo Product pode ter múltiplas linhas,
+  permitindo avulso + package e duas embalagens diferentes no mesmo pedido;
+- preço diferente cria linha distinta; nova adição não reprecifica a quantidade
+  anterior. Mesmo package compatível acumula; fator ou snapshots diferentes
+  criam nova linha;
+- `quantity` continua quantidade base e `unit_price` continua preço efetivo por
+  unidade base. Inventory não foi remodelado e permanece exclusivamente base-only:
+  3 UN avulsas + 1 caixa de 12 movimentam 15 UN;
+- snapshots de apresentação preservados no OrderItem, sem reconstrução pelo
+  cadastro atual; remoção por identidade da linha (`OrderItem.id`);
+- API expõe os campos aditivos e o painel mostra apresentação histórica;
+- nenhuma interface operacional de PDV nem pricing específico por package.
 
-**Exemplo.**
+**Campos.** `sale_presentation_type` (`base` ou `package`),
+`product_package_id`, `package_name`, `package_factor` e
+`presentation_barcode`: todos nullable, sem default de negócio.
+`product_package_id` é referência opcional com FK `ON DELETE SET NULL`;
+nome, fator e barcode históricos permanecem após remoção de ProductPackage,
+sem destruir a interpretação da venda. Os snapshots são protegidos por eventos
+Eloquent; updates em massa e SQL direto podem ignorar essa proteção.
 
-```
-1 Coca-Cola 350 ml avulsa
-+ 1 Caixa 24 Coca-Cola 350 ml
+**Identidade e índice.** Removida `UNIQUE(order_id, product_id)` para permitir
+apresentações ou preços distintos; mantido índice não-único adequado.
+Seleção manual e barcode da mesma apresentação comercial podem acumular.
+`presentation_barcode` guarda o barcode da apresentação no momento da venda,
+não a origem operacional scanner/manual. Essa origem não integra a identidade
+comercial. Alteração posterior de fator ou barcode preserva a linha antiga.
 
-hoje        → 25 UN em uma única linha
-futuro PDV  → pode exigir linhas distintas para preservar origem e apresentação
-```
+**ProductPackage.** Continua apresentação comercial/conversão, sem virar
+Product separado, sem estoque por embalagem e sem preço próprio nesta etapa.
+Venda package valida tenant, Product, fator e unidade UN no servidor; Product
+que passou a KG não aceita nova venda por embalagem. O estoque histórico usa a
+quantidade base persistida, sem consultar o fator atual.
 
-Esse não é necessariamente o desenho final: é uma questão a responder no
-PM-04C.
+**Legado.** Linhas antigas permanecem com os campos de apresentação NULL.
+Não há backfill presumido nem inferência de base/package pela quantidade.
+As garantias de quantidade do PM-04A e de unidade histórica do PM-04B permanecem.
 
-**A avaliar:**
+**Concorrência.** OrderService serializa alterações do mesmo pedido com
+transação e lock da Order. A validação automatizada usa SQLite e caracteriza a
+transação/solicitação de lock; não prova concorrência real entre processos.
 
-- remover a unicidade `(order_id, product_id)`;
-- permitir linhas repetidas do mesmo Product;
-- preservar o código de barras efetivamente lido;
-- armazenar `product_package_id` quando fizer sentido;
-- snapshot de `package_name`;
-- snapshot de `factor`;
-- cancelamento de uma linha específica;
-- linhas separadas no cupom;
-- comportamento da entrada manual versus scanner.
+**Evidência da entrega.** Suíte completa: 1007 testes — 1005 PASS, 0 FAIL,
+0 ERROR, 2 RISKY preexistentes, 0 SKIPPED e 3880 assertions. Os RISKY
+`test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`
+continuam sem correção. PM-04C: 30 testes de apresentação e 4 de migration
+aprovados. Regressão focada: 239 testes, 970 assertions, sem FAIL/ERROR.
+Frontend: 5 arquivos de testes aprovados. Pint dos arquivos PHP da rodada e
+`git diff --check` passaram.
 
-**ProductPackage.** Não é necessária no `OrderItem` para estoque, porque
-Inventory trabalha na unidade base. Pode ser útil para cupom, auditoria, UX,
-rastreabilidade e preço por embalagem. A decisão fica no PM-04C.
-
-**PM-03 → Orders.** O PM-03 já fornece o Product base, `source`, `quantity`,
-`unit` e a embalagem opcional, e o `OrderService` atual já consegue receber a
-quantidade base. Hoje, porém, `source`, embalagem e código lido se perdem, e o
-item é consolidado por `product_id`. Essas limitações pertencem ao PM-04C.
+**Limites e dívidas preservados.** Não foi implementado pricing por
+apresentação/package: preços comerciais não divisíveis exatamente pela unidade
+base no contrato monetário atual ficam para evolução futura, sem arredondamento
+silencioso. Reporting permanece com mistura UN/KG, ranking por Product sem
+separação por unidade/apresentação e labels fixos. Essas dívidas não bloqueiam
+o encerramento do PM-04C. PDV operacional, fiscal, SEC, ONB e staging ficaram
+fora desta entrega. PM-05 é a próxima prioridade operacional, ainda planejado.
 
 #### PM-04 — Dívidas e riscos preservados
 
@@ -2041,7 +2063,8 @@ soma `UN` e `KG` em `itens_vendidos`, e a tela e o e-mail exibem a quantidade
 com 0 casas decimais e rótulo "un". Ela passa a ser funcionalmente relevante
 com a venda `KG` validada pelo PM-04A. Não foi corrigida nessa entrega.
 
-Situação dos demais achados da auditoria após a entrega do PM-04A:
+Situação histórica dos demais achados da auditoria após a entrega do PM-04A
+(antes do PM-04C):
 
 | Achado | Observação |
 |---|---|
@@ -2055,7 +2078,7 @@ Situação dos demais achados da auditoria após a entrega do PM-04A:
 
 ### PM-05 — Dados fiscais do produto
 
-**Futuro · antes da NFC-e/NF-e**
+**Planejado · próxima prioridade operacional · não iniciado** — antes da NFC-e/NF-e
 
 Itens previstos no cadastro do produto:
 
@@ -2127,9 +2150,9 @@ ONB-01B — experiência guiada              ├─ PM-02B                     �
                                           ↓
                                   PM-04B — snapshot do item       ✅ CONCLUÍDO · dc23e56
                                           ↓
-                                  PM-04C — semântica de linhas    📋 PLANEJADO · ⬅ PRÓXIMA
+                                  PM-04C — semântica de linhas    ✅ CONCLUÍDO · 9cbca48
                                           ↓
-                                  PM-05 — dados fiscais     📋 FUTURO
+                                  PM-05 — dados fiscais     📋 PLANEJADO · ⬅ PRÓXIMA
 ```
 
 As duas colunas não se cruzam: **não há dependência técnica entre ONB e PM.** A
@@ -2276,7 +2299,8 @@ painel, sem Tinker e sem SQL. Na entrega do ONB-01A, o marco separado
 **Cliente Teste** ainda estava planejado para depois do PM-04A e do PM-04B.
 
 **Estado atual do marco Cliente Teste: Concluído ✅.** Cliente Teste criado e
-validação manual realizada. O próximo passo operacional é PM-04C, conforme a
+validação manual realizada. O próximo passo operacional é PM-05, após a
+conclusão do PM-04C, conforme a
 [prioridade operacional atual](#prioridade-operacional-atual).
 
 **1 · Comando controlado de Platform Admin.**
@@ -2561,8 +2585,9 @@ formulário e comunicada por fora do sistema. **Não implementar.**
 Relatórios de lucratividade e meta histórica de margem desejada continuam
 futuros. Na rodada de 2026-10-04, PM-04A/B/C, fiscal e PDV não faziam parte
 daquela entrega. O PM-04A foi concluído posteriormente em 2026-10-05, no commit
-`d0ae879`; PM-04B foi concluído em 2026-10-06 (`dc23e56`). PM-04C continua
-planejado como próxima prioridade operacional, após a conclusão do Cliente Teste.
+`d0ae879`; PM-04B foi concluído em 2026-10-06 (`dc23e56`). PM-04C foi concluído e
+publicado em 2026-10-06 (`9cbca48`), após Cliente Teste. PM-05 é a próxima
+prioridade operacional, ainda planejado.
 
 ---
 
@@ -2603,7 +2628,7 @@ provar nem para corrigir o SEC-04, e não receberam ID.
 ## Cobertura de testes por área — fotografia da auditoria
 
 417 testes, contados por diretório de `tests/` na auditoria anterior. O estado
-atual da suíte está registrado no cabeçalho e na evidência da entrega do PM-04A.
+atual da suíte está registrado no cabeçalho e na evidência da entrega do PM-04C.
 
 | Área | Testes | Área | Testes |
 |---|---|---|---|
