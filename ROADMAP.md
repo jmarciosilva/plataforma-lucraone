@@ -18,18 +18,18 @@ checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-
 `feat(products): adicionar classificação fiscal básica`.
 **Próxima prioridade operacional:** será reavaliada após o fechamento
 documental do PM-05; nenhuma nova implementação iniciada nesta rodada.
-Baseline atual: 1050 testes — 1048 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
-0 SKIPPED e 4334 assertions. Os RISKY continuam sendo
+Baseline atual: 1085 testes — 1083 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 4436 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
-foram corrigidos. SEC-04 resolvido; SEC-01/02/03 pendentes.
+foram corrigidos. SEC-04 e SEC-01 resolvidos; SEC-02/03 pendentes.
 Staging disponível em https://lucraone.jmfsystem.tech; marco Cliente Teste
 concluído.
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
 > [Pendências bloqueadoras pré-F2.6](#pendências-bloqueadoras-pré-f26) forem
-> resolvidos. O SEC-04 está resolvido; **SEC-01, SEC-02 e SEC-03 continuam
-> pendentes e bloqueiam.**
+> resolvidos. O SEC-04 e o SEC-01 estão resolvidos; **SEC-02 e SEC-03
+> continuam pendentes e bloqueiam.**
 
 ---
 
@@ -116,7 +116,7 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 > foi concluído e publicado, assim como PM-05. A próxima prioridade operacional
 > será reavaliada após o fechamento documental do PM-05.
 > Não há dependência técnica entre ONB e PM. F2.6 continua bloqueada por
-> SEC-01, SEC-02 e SEC-03.
+> SEC-02 e SEC-03.
 
 A FASE 03 entrou na frente da F2.2 de propósito: depois da F2.1 o backend já
 expunha APIs completas, mas **não havia como um humano entrar no sistema**.
@@ -204,7 +204,7 @@ Levantadas na auditoria de 2026-09-09 e conferidas contra o código em
 
 | ID | Categoria | Pendência | Prioridade | Status | Bloqueia F2.6 |
 |---|---|---|---|---|---|
-| SEC-01 | Segurança | API Authorization | Crítica | Pendente | **Sim** |
+| SEC-01 | Segurança | API Authorization | Crítica | Resolvido | **Sim** |
 | SEC-02 | Segurança | API Authentication | Crítica | Pendente | **Sim** |
 | SEC-03 | Segurança | TenantResolver | Alta | Pendente | **Sim** |
 | SEC-04 | Segurança | create-role | Crítica | Resolvido | **Sim** |
@@ -239,52 +239,137 @@ justificativa de cada item está no detalhamento.
 
 ### SEC-01 — API Authorization
 
-**Crítica · Pendente · Bloqueia F2.6: Sim** — Origem: controllers de negócio da
-FASE 02, a partir de 2026-08-16 (depois da F1.7)
+**Crítica · Resolvido · Bloqueia F2.6: Sim** — Origem: controllers de negócio da
+FASE 02, a partir de 2026-08-16 (depois da F1.7) · Resolvido em `3a14703`,
+2026-10-07
 
-**Problema.** As Policies existem e o painel web as aplica. Na API, **7 dos 14
-controllers** não verificam permissão em camada nenhuma: nem no controller, nem
-no FormRequest (`authorize()` devolve `true` ou não existe), nem em middleware —
-as rotas desses módulos usam só `['auth:sanctum', 'tenant']`.
+**Problema.** As Policies existiam e o painel web as aplicava. Na API, **7 dos
+14 controllers** não verificavam permissão em camada nenhuma: nem no controller,
+nem no FormRequest (`authorize()` devolvia `true` ou não existia), nem em
+middleware — as rotas desses módulos usavam só `['auth:sanctum', 'tenant']`.
 
 | Módulo | Controllers sem autorização | Rotas |
 |---|---|---|
-| Products | `ProductController`, `CategoryController`, `PriceController` | 20 |
+| Products | `ProductController`, `CategoryController`, `PriceController` | 21 |
 | Inventory | `InventoryController`, `StockLevelController` | 6 |
 | Sales | `OrderController`, `CustomerController` | 8 |
-| **Total** | **7** | **34** |
+| **Total** | **7** | **35** |
 
-Os outros sete estão corretos: `AutomationRuleController` e
+**Correção da contagem: 34 → 35.** A tabela anterior dizia 20 rotas em Products
+e 34 no total. Estava certa quando foi escrita, em `82a9811` (2026-09-10): o
+arquivo de rotas do módulo tinha 10 rotas explícitas mais dois `apiResource`
+(5 cada) = 20. Doze dias depois, `c846d8d` (2026-09-22, PM-03) acrescentou
+`GET products/resolve-barcode/{barcode}` e a tabela não foi atualizada. O número
+correto, conferido com `php artisan route:list --path=api/v1` na VPS em
+2026-10-07, é **21 em Products e 35 no total** — de 46 rotas em `api/v1`, as
+outras 11 são as de Automation (6) e Reporting (5), que já autorizavam.
+
+Os outros sete controllers já estavam corretos: `AutomationRuleController` e
 `AutomationLogController` chamam `Gate::authorize`; `ReportController`,
 `DashboardController` e `AnalyticsController` autorizam em
 `ReportPeriodRequest::authorize()` (Gate `view-reports`); `HealthController` e
 `AuthController` são públicos por definição.
 
 **Consequência.** Um usuário autenticado com vínculo ativo no estabelecimento —
-inclusive com papel `viewer` — cria, altera e apaga produtos, categorias e
-preços, ajusta estoque e níveis de reposição, cria e cancela pedidos e cadastra
-clientes, independentemente das permissões do seu papel. O isolamento **entre**
-estabelecimentos não é afetado: `tenant` e `TenantScope` continuam filtrando.
+inclusive com papel `viewer` — criava, alterava e apagava produtos, categorias e
+preços, ajustava estoque e níveis de reposição, criava e cancelava pedidos e
+cadastrava clientes, independentemente das permissões do seu papel. O isolamento
+**entre** estabelecimentos nunca foi afetado: `tenant` e `TenantScope` sempre
+filtraram. Era escalada horizontal de privilégio **dentro** do estabelecimento.
 
-**Por que passou.** Nenhum teste de API cobre 403 em Products, Inventory ou
-Sales. Os únicos testes de 403 na API estão em `ReportApiTest` e
+**Por que passou.** Nenhum teste de API cobria 403 em Products, Inventory ou
+Sales. Os únicos testes de 403 na API estavam em `ReportApiTest` e
 `AutomationApiTest` — justamente os módulos protegidos.
 
-**Objetivo futuro.**
+**Estratégia adotada.** `Gate::authorize()` no controller, em **uma única
+camada**, nas 35 rotas. Os FormRequests seguem cuidando só de validação.
 
-- aplicar as Policies existentes nos sete controllers;
-- adicionar testes HTTP reais de `403` por rota;
-- preservar o isolamento multi-tenant (`auth:sanctum` → `tenant` → Policy);
-- não criar um segundo sistema de autorização.
+A escolha não foi arbitrária: é o padrão que o `AutomationRuleController` — o
+controller de API que já autorizava corretamente — vinha usando, e o
+`UpdateAutomationRuleRequest` já documentava o motivo em comentário: *"Rota de
+API entrega o id como string; a autorização por instância acontece no
+controller, depois do findOrFail"*. As rotas de API usam `{id}` em vez de model
+binding tipado, então um FormRequest não tem instância para autorizar sem
+repetir a busca com escopo de tenant que o controller já faz. Concentrar tudo no
+controller evita essa duplicação e deixa a auditoria em um `grep` por arquivo.
 
-Como o SEC-04 vem antes, as Policies aplicadas aqui já estão sem o coringa
-`create-role`, removido em `6c770dc`. Os testes de 403 devem usar um usuário sem **nenhuma** das
-permissões aceitas pela Policy e incluir um caso com `create-role`, para
-garantir que o coringa não volte.
+O mapeamento reproduz o que o painel web já exigia, sem inventar permissão:
 
-**Por que bloqueia.** A F2.6 acrescenta uma API que guarda credenciais de
-terceiros. Construí-la sobre uma API que não autoriza reproduz o buraco na
+| Controller | Rotas | Policy | Ações |
+|---|---|---|---|
+| `ProductController` | 8 | `ProductPolicy` | `viewAny`, `view`, `create`, `update`, `delete` |
+| `CategoryController` | 7 | `CategoryPolicy` | `viewAny`, `view`, `create`, `update`, `delete` |
+| `PriceController` | 6 | `ProductPolicy` | `viewAny` na leitura, `update` do produto dono na escrita |
+| `InventoryController` | 5 | `InventoryPolicy` | `viewAny`, `create` no ajuste |
+| `StockLevelController` | 1 | `StockLevelPolicy` | `create` |
+| `OrderController` | 5 | `OrderPolicy` | `viewAny`, `view`, `create`, `update` no status, `delete` no cancelamento |
+| `CustomerController` | 3 | `CustomerPolicy` | `viewAny`, `view`, `create` |
+
+Preço não tem Policy própria e não ganhou uma: o painel web autoriza preço pela
+`ProductPolicy` do produto dono (`update` para escrever), e a API passou a usar
+a mesma regra. O ajuste de estoque usa `InventoryPolicy::create`, a mesma ação
+que `AdjustWebInventoryRequest` já exigia.
+
+Nas rotas de instância a autorização vem **depois** do `findOrFail` com escopo
+de tenant, de propósito: um id de outro estabelecimento continua respondendo
+`404`, não `403`, para que a resposta não confirme a existência da entidade
+alheia. Dentro do próprio estabelecimento, falta de permissão dá `403`.
+
+**Limite conhecido.** Em `store`/`update` com FormRequest, a validação roda
+antes do corpo do controller, então um usuário sem permissão que envie payload
+inválido recebe `422` antes do `403`. Com payload válido recebe `403`. É
+ordenação, não contorno: nenhuma escrita acontece em nenhum dos dois casos.
+
+**Testes adicionados.** 35 testes HTTP reais, 102 assertions, em
+`tests/Feature/Security/ApiAuthorization{Products,Inventory,Sales}Test.php`
+sobre a base comum `ApiAuthorizationTestCase`. As personas vêm da matriz real do
+estabelecimento (`StandardRoleMatrix`, via `ProvisionarEstabelecimento`), não de
+papéis inventados: `manager` para o caminho positivo e `viewer` — que tem
+`view-*` e nenhuma `manage-*` — para provar que leitura continua liberada e
+escrita passa a dar `403`. Antes da correção, 15 desses testes falhavam com
+`201`/`200` onde se esperava `403`.
+
+Como o SEC-04 veio antes, as Policies aplicadas aqui já estão sem o coringa
+`create-role`, removido em `6c770dc`. Cada módulo tem um teste com um usuário
+cujo único direito é `create-role`, cobrando `403` tanto na escrita quanto na
+leitura, para garantir que o coringa não volte por tabela.
+
+**Fixtures ajustados.** Nove suítes de API preexistentes autenticavam um usuário
+sem papel nenhum, o que bastava quando não havia autorização. Passaram a receber
+permissão legítima pelo trait `tests/Concerns/AutorizaUsuarioDeApi.php`, que usa
+a matriz de produção em vez de permissões avulsas — assim o fixture não pode
+divergir do modelo real. Quem cobre a recusa são os `ApiAuthorization*Test`.
+
+**Fora do escopo, de propósito.** Nada de SEC-02 (token `['*']`, sem expiração,
+login sem throttle) nem de SEC-03 (sem cliente de máquina no `TenantResolver`).
+Nenhuma Policy foi alterada; nenhuma migration foi criada ou executada.
+
+**Por que bloqueava.** A F2.6 acrescenta uma API que guarda credenciais de
+terceiros. Construí-la sobre uma API que não autoriza reproduziria o buraco na
 superfície mais sensível.
+
+**Evidência da entrega (2026-10-07).** Suíte completa: 1085 testes — 1083 PASS,
+0 FAIL, 0 ERROR, 2 RISKY preexistentes, 0 SKIPPED e 4436 assertions, contra
+1050/1048/4334 do baseline anterior: +35 testes e +102 assertions, exatamente os
+do SEC-01. Os RISKY `test_passwords_not_logged_in_audit` e
+`test_user_email_properly_protected` continuam sem correção. Testes focados do
+SEC-01: 35 PASS, 102 assertions. Suítes dos módulos afetados
+(Products, Inventory, Sales, Security): 462 PASS, 2132 assertions. Auditoria de
+rotas conferida por script sobre `route:list --path=api/v1 --json`: 35 rotas nos
+sete controllers, **0 sem `Gate::authorize`**. Pint passou nos 20 arquivos do
+escopo; as 7 reprovações restantes do `pint --test` do projeto já reprovavam em
+`5e5f46a` e ficaram fora do escopo. PHPStan: 17 erros, todos preexistentes em
+arquivos não tocados — nenhum dos sete controllers aparece no relatório.
+`git diff --check` limpo. Nenhuma migration criada ou executada; nenhum
+container reiniciado ou reconstruído.
+
+**Critérios de aceite.** Todos verdes: sete controllers mapeados; 35 rotas
+contabilizadas e todas com autorização por Policy; usuário sem permissão recebe
+`403`; usuário autorizado continua operando; leitura de `viewer` preservada;
+escrita indevida bloqueada; `TenantScope` intacto (testes de cross-tenant
+seguem respondendo `404`); nenhum bypass do SEC-04 reintroduzido; cobertura HTTP
+real de `403`; suíte com 0 FAIL e 0 ERROR; estilo e análise estática sem
+regressão; staging saudável; SEC-02 e SEC-03 fora do escopo.
 
 ### SEC-02 — API Authentication
 
@@ -389,10 +474,10 @@ E6 foram variantes descartadas ou absorvidas pelos demais.
 
 O SEC-04 está **resolvido**: todos os vetores estão corrigidos e os
 [critérios de aceite](#critérios-de-aceite) estão verdes. Isso **não libera a
-F2.6**, que permanece bloqueada e não iniciada — SEC-01, SEC-02 e SEC-03 seguem
+F2.6**, que permanece bloqueada e não iniciada — SEC-02 e SEC-03 seguem
 pendentes e são bloqueadores obrigatórios.
 
-**Próximo bloqueador técnico:** SEC-01 — API Authorization, ainda não iniciado.
+**Próximo bloqueador técnico:** SEC-02 — API Authentication, ainda não iniciado.
 
 **Evidência atual.** Após `7433c5b`, o SEC-04 tem 151 testes: 151 PASS, 0 FAIL,
 0 ERROR e 583 assertions.
@@ -1148,8 +1233,8 @@ O SEC-04 vem primeiro e, agora concluído, o SEC-01 pode assumir:
 - Platform Admin separado de admin de tenant;
 - testes de API com 403 representando o modelo correto.
 
-Assim o SEC-01 aplica as Policies aos 7 controllers e 34 rotas sem propagar o
-modelo vulnerável atual.
+Assim o SEC-01 aplicou as Policies aos 7 controllers e 35 rotas sem propagar o
+modelo vulnerável anterior.
 
 **Por que bloqueia.** X1, E3 e E7 são falhas de isolamento entre
 estabelecimentos — os três já corrigidos —, da mesma classe que o SEC-01 e o
@@ -1291,8 +1376,8 @@ Não há memoização. O laço para na primeira permissão encontrada, então o 
 caso é a **negação**: para um usuário sem permissão, a `ProductPolicy` testa
 três permissões e faz seis consultas, fora a de `canAccessTenant`.
 
-**Relação com o SEC-01.** Aplicar as Policies nas 34 rotas coloca esse custo em
-cada requisição da API. Vale medir logo depois do SEC-01.
+**Relação com o SEC-01.** As Policies aplicadas nas 35 rotas colocam esse custo
+em cada requisição da API. Com o SEC-01 fechado em `3a14703`, vale medir.
 
 **Objetivo futuro.** Reduzir as idas ao banco com memoização ou cache por
 requisição, ou carregando uma única vez as permissões do usuário no tenant
@@ -1320,9 +1405,9 @@ SEC-04 — create-role              ✅ RESOLVIDO
   ├─ E2                           ✅
   └─ E7                           ✅
         ↓
-SEC-01 — API Authorization        🔴 próximo bloqueador
+SEC-01 — API Authorization        ✅
         ↓
-SEC-02 — API Authentication
+SEC-02 — API Authentication       🔴 próximo bloqueador
         ↓
 SEC-03 — TenantResolver
         ↓
@@ -1343,15 +1428,16 @@ F2.6 — Integration APIs
 | **Recomendados antes da F2.6** | SEC-05, SEC-06, COR-01 | Resolver antes; adiar exige decisão registrada nesta seção |
 | **Dívida controlada** | PERF-01 | Pode seguir depois da F2.6; medir logo após o SEC-01 |
 
-**Sobre a ordem.** O SEC-04 vem antes do SEC-01 por dependência arquitetural. O
-SEC-01 vai aplicar as Policies às 34 rotas da API que hoje não as usam, e o
+**Sobre a ordem.** O SEC-04 veio antes do SEC-01 por dependência arquitetural. O
+SEC-01 aplicou as Policies às 35 rotas da API que não as usavam, e o
 SEC-04 muda o significado e o alcance dessas Policies: `create-role` era coringa
 em várias delas e a gestão de estabelecimentos quebrava o isolamento entre
 clientes — ambos já corrigidos —, as escaladas por `update-role` e por
 `manage-users` foram contidas em `2f1f6ea` e `2849c10`, e a avaliação da permissão
 num estabelecimento diferente do da entidade foi fechada em `7433c5b`.
-Espalhar as Policies atuais pela API antes de corrigi-las levaria esses defeitos
-para a API e obrigaria a refazer o SEC-01 e os seus testes.
+Espalhar as Policies pela API antes de corrigi-las levaria esses defeitos
+para a API e obrigaria a refazer o SEC-01 e os seus testes. A ordem foi
+respeitada: o SEC-01 foi fechado em `3a14703`, depois do SEC-04.
 
 ```
 SEC-04  corrige o modelo de privilégios e o isolamento administrativo
