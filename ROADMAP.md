@@ -18,13 +18,13 @@ checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-
 `feat(products): adicionar classificação fiscal básica`.
 **Próxima prioridade operacional:** será reavaliada após o fechamento
 documental do PM-05; nenhuma nova implementação iniciada nesta rodada.
-Baseline atual: 1154 testes — 1152 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
-0 SKIPPED e 4630 assertions. Os RISKY continuam sendo
+Baseline atual: 1162 testes — 1160 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 4644 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
 foram corrigidos. SEC-01, SEC-02, SEC-03 e SEC-04 resolvidos — os quatro
 bloqueadores obrigatórios pré-F2.6 estão encerrados, e o SEC-05 também está
-resolvido. SEC-06 e COR-01, recomendados antes da F2.6, continuam pendentes. A
-F2.6 não foi iniciada.
+resolvido, e o SEC-06 também. COR-01, recomendado antes da F2.6, continua
+pendente. A F2.6 não foi iniciada.
 Staging disponível em https://lucraone.jmfsystem.tech; marco Cliente Teste
 concluído.
 
@@ -33,7 +33,7 @@ concluído.
 > [Pendências bloqueadoras pré-F2.6](#pendências-bloqueadoras-pré-f26) forem
 > resolvidos. **Os quatro bloqueadores obrigatórios — SEC-01, SEC-02, SEC-03 e
 > SEC-04 — estão resolvidos**, e o SEC-05 também. Restam os recomendados
-> SEC-06 e COR-01,
+> COR-01,
 > que o [critério de liberação](#critério-para-liberar-a-f26) exige resolver ou
 > adiar com decisão registrada. A F2.6 não foi iniciada.
 
@@ -122,7 +122,7 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 > foi concluído e publicado, assim como PM-05. A próxima prioridade operacional
 > será reavaliada após o fechamento documental do PM-05.
 > Não há dependência técnica entre ONB e PM. Os bloqueadores obrigatórios da
-> F2.6 estão encerrados; faltam os recomendados SEC-06 e COR-01.
+> F2.6 estão encerrados; falta o recomendado COR-01.
 
 A FASE 03 entrou na frente da F2.2 de propósito: depois da F2.1 o backend já
 expunha APIs completas, mas **não havia como um humano entrar no sistema**.
@@ -215,7 +215,7 @@ Levantadas na auditoria de 2026-09-09 e conferidas contra o código em
 | SEC-03 | Segurança | TenantResolver | Alta | Resolvido | **Sim** |
 | SEC-04 | Segurança | create-role | Crítica | Resolvido | **Sim** |
 | SEC-05 | Segurança | SendEmailAction | Média | Resolvido | Recomendado |
-| SEC-06 | Segurança | Secrets / .env.testing | Média | Pendente | Recomendado |
+| SEC-06 | Segurança | Secrets / .env.testing | Média | Resolvido | Recomendado |
 | COR-01 | Correção | Soft delete + unicidade | Alta | Pendente | Recomendado |
 | PERF-01 | Performance | hasAnyPermission | Média | Pendente | Não |
 
@@ -722,9 +722,9 @@ O SEC-04 está **resolvido**: todos os vetores estão corrigidos e os
 [critérios de aceite](#critérios-de-aceite) estão verdes. Isso **não libera a
 F2.6**, que permanece não iniciada: com o SEC-03 fechado em `342f4ad`, os
 quatro bloqueadores obrigatórios estão resolvidos, e o critério de liberação
-ainda pede SEC-06 e COR-01 resolvidos ou adiados por decisão registrada.
+ainda pede COR-01 resolvido ou adiado por decisão registrada.
 
-**Próximo item recomendado:** SEC-06 — Secrets / .env.testing.
+**Próximo item recomendado:** COR-01 — Soft delete + unicidade.
 
 **Evidência atual.** Após `7433c5b`, o SEC-04 tem 151 testes: 151 PASS, 0 FAIL,
 0 ERROR e 583 assertions.
@@ -1689,41 +1689,166 @@ pendentes; F2.6 não iniciada.
 
 ### SEC-06 — Secrets / .env.testing
 
-**Média · Pendente · Bloqueia F2.6: Recomendado** — Origem: versionado desde
+**Média · Resolvido · Bloqueia F2.6: Recomendado** — Origem: versionado desde
 `809442f` (2026-08-13), antes da F1.7; exposto publicamente com a publicação do
-repositório no GitHub em 2026-09-09
+repositório no GitHub em 2026-09-09 · Resolvido em `693a8ef`, 2026-10-07
 
-**Problema.** `lucraone-backend/.env.testing` está versionado com uma `APP_KEY`
-real, e o repositório é público — conferido em 2026-09-10: a API do GitHub
-responde sem autenticação.
+**Problema.** `lucraone-backend/.env.testing` estava versionado com uma
+`APP_KEY` de formato real, e o repositório é público — reconferido em
+2026-10-07: a API do GitHub responde sem autenticação e devolve
+`"private": false`.
 
-Achados da conferência:
+Achados reconferidos contra o código de 2026-10-07, não herdados da auditoria
+original:
 
-- **A chave não é só de teste.** O ambiente de desenvolvimento local conferido
-  usa a mesma `APP_KEY` (comparação por hash, sem exibir o valor).
-- **Vai para a imagem de produção.** O `.dockerignore` não exclui
-  `.env.testing`, e o `COPY . .` do alvo `prod` o copia.
-- **Não há outro segredo aparente.** Nenhum arquivo `.pem`, `.key`, `.p12`,
-  `.pfx`, `credentials` ou `secret` versionado, e o `.env` nunca foi commitado.
-- **Nada é cifrado com a chave hoje:** não há cast `encrypted` nem uso de `Crypt`.
+- **A chave era válida.** `base64:` com 32 bytes decodificados, compatível com o
+  `AES-256-CBC` configurado. Presente em **1** commit (`809442f`) e alcançável
+  em **115** commits do histórico.
+- **O limite de 1.000 caracteres não era o problema; a chave era.** O arquivo
+  trazia dez variáveis, e só a `APP_KEY` é segredo.
+- **Iria para a imagem de produção.** O `.dockerignore` enumerava `.env`,
+  `.env.*.local`, `.env.backup` e `.env.production` — uma lista que não cobria
+  `.env.testing` —, e o `COPY . .` do alvo `prod` o copiaria.
+- **A imagem em uso nunca carregou o arquivo.** O alvo `dev`, que é o publicado
+  nesta VPS, não faz `COPY . .`: os arquivos aparecem no container apenas pelo
+  bind mount. O risco de imagem era do alvo `prod`, que nunca foi construído
+  aqui.
+- **Nada é cifrado com a chave.** Zero ocorrências de `Crypt::`, `encryptString`,
+  `decryptString`, `Encrypter`, cast `encrypted` ou URL assinada em todo o
+  código. Nenhuma coluna guarda dado cifrado reversível: `users.password` e
+  `password_reset_tokens.token` são hash, `personal_access_tokens.token` é
+  SHA-256 e `users.remember_token` é string aleatória comparada diretamente.
+  Logo, **não havia dado a recifrar**.
+- **Não há outro segredo versionado.** Ver a auditoria abaixo.
 
-**Consequência.** Qualquer dado cifrado ou assinado com essa chave deixa de ser
-confiável nos ambientes que a usam.
+**O achado que mudou a conclusão: staging nunca usou a chave comprometida.**
 
-**Por que Média.** Não há produção nem dado cifrado hoje.
+A auditoria original registrou que o ambiente de desenvolvimento local conferido
+usava a mesma `APP_KEY`, e por isso a expectativa era rotacionar. A conferência
+de hoje localizou primeiro a **fonte real** da chave de staging, em vez de
+presumir, e o resultado foi outro:
+
+- os dois arquivos de compose declaram, de propósito, **nenhuma** variável de
+  configuração do Laravel em `environment:`, e não existe `env_file`. A
+  configuração vem de `lucraone-backend/.env`, lido em tempo de execução;
+- o `docker/entrypoint.sh` cria esse `.env` a partir do `.env.example` — que tem
+  `APP_KEY` **vazia** — e então roda `php artisan key:generate --force`;
+- portanto staging gerou a própria chave aleatória na primeira subida. A
+  comparação por fingerprint confirmou: a chave em uso pelo processo PHP **não é**
+  a do `.env.testing`.
+
+Com isso, a condição para rotacionar — staging usar a chave comprometida — é
+**falsa**, e **nenhuma rotação foi feita**. Rotacionar por reflexo teria
+invalidado todas as sessões web do painel sem ganho de segurança algum, porque a
+chave publicada nunca protegeu nada em staging. Se a fonte não tivesse sido
+procurada, um `key:generate` às cegas teria feito exatamente isso.
+
+**O que foi mudado.**
+
+| Mudança | Efeito |
+|---|---|
+| `.env.testing` fora do Git e do disco | nenhum segredo de ambiente versionado |
+| `.gitignore`: `.env`, `.env.*`, `!.env.example` | qualquer arquivo de ambiente futuro já nasce ignorado |
+| `.dockerignore`: mesma política | nenhum arquivo de ambiente entra no contexto de build |
+| `APP_KEY` da suíte no `phpunit.xml` | a suíte deixa de depender de arquivo de ambiente |
+
+A enumeração por nome foi trocada por negar-tudo-menos-o-exemplo nos dois
+ignores. Foi justamente a lista incompleta que deixou `.env.testing` passar;
+`.env.example` continua versionado e continua entrando na imagem, porque o
+entrypoint copia dele quando não há `.env`.
+
+**A chave da suíte é pública de propósito.** Vive no `phpunit.xml`, versionada,
+com comentário dizendo que é exclusiva de teste e não pode ser reutilizada em
+desenvolvimento, staging ou produção. Uma chave de teste não precisa ser
+secreta: ela não protege dado real. O erro original não foi ter uma chave no
+repositório — foi **reutilizar** a mesma chave num ambiente real. A nova é
+recém-gerada, aleatória e distinta tanto da comprometida quanto da de staging,
+verificado por fingerprint.
+
+**Dependência oculta que a remoção revelou.** Com o `.env.testing` fora, a suíte
+passou a herdar o `.env` da máquina — porque `.env.<ambiente>` **substitui** o
+`.env` no Laravel, não soma, e era esse arquivo que dava à suíte um ambiente
+enxuto. Na VPS isso trocou o locale para `pt-BR` e quebrou
+`TenantManagementTest::test_paginacao_limita_listagem_em_vinte_por_pagina`, que
+espera o rótulo `Next`. O conserto foi fixar o ambiente da suíte no
+`phpunit.xml` — `APP_NAME`, `APP_DEBUG`, locales e `REDIS_CACHE_DB`, todos com
+`force="true"` e nos valores padrão do framework, que eram os que a suíte já
+usava. O teste não foi alterado: a falha apontava um acoplamento real, e era o
+acoplamento que precisava sair.
+
+**Auditoria de segredos.** O HEAD e os 118 commits do histórico foram varridos
+pelos mesmos padrões (`APP_KEY`, `DB_PASSWORD`, `MAIL_PASSWORD`,
+`AWS_SECRET_ACCESS_KEY`, `CLIENT_SECRET`, `PRIVATE_KEY`, `MYSQL_ROOT_PASSWORD`,
+blocos `BEGIN PRIVATE KEY`), com valores mascarados. Quatro ocorrências, as
+mesmas no HEAD e no histórico:
+
+| Ocorrência | Classificação |
+|---|---|
+| `.env.testing` → `APP_KEY` | **segredo real** — o item |
+| `docker-compose.prod.yml` → `APP_KEY`, `DB_PASSWORD` | falso positivo: comentário de instrução |
+| `docker/entrypoint.sh` → `APP_KEY` | falso positivo: o padrão `'^APP_KEY=base64:'` de um `grep` |
+| `.env.example` → `DB_PASSWORD` | default de desenvolvimento, não segredo de ambiente real — conferido: staging usa senha própria, de tamanho diferente |
+
+`prepare-testing.sh` escreve `TEST_TOKEN=$TOKEN`, variável gerada em execução, e
+o arquivo de saída agora é coberto pelo ignore. Nenhum `.pem`, `.key`, `.p12`,
+`.pfx` ou `credentials` jamais existiu no histórico; os únicos arquivos de
+ambiente que já existiram são `.env.example` e `.env.testing`. O `.env` nunca
+foi commitado.
+
+**A imagem futura está protegida, e isso foi provado.** Um build descartável, com
+o contexto real e o `.dockerignore` real, mostrou que **só `.env.example` entra
+no contexto** — `.env`, `.env.testing` e `.env.local` ficam fora. A imagem
+temporária foi removida em seguida; nada do stack de staging foi reconstruído.
+
+**Histórico Git não foi reescrito, por decisão de escopo.** `git filter-repo`,
+BFG e `push --force` reescrevem um histórico público: é operação de alto impacto,
+que invalida clones e forks, e precisa ser decidida à parte. A medida de
+segurança que importa é outra — a chave publicada **não protege nenhum ambiente
+nosso**: staging sempre teve a sua, e a suíte agora usa uma chave pública por
+desenho. O valor antigo continua recuperável do histórico para sempre, e é por
+isso que ele não pode ser reutilizado em lugar nenhum.
+
+**O que continua pendente, fora do alcance desta VPS.** A auditoria de
+2026-09-10 registrou que o ambiente de **desenvolvimento local** conferido usava
+a mesma `APP_KEY`. A VPS não tem acesso a essa máquina, então ela **não foi
+rotacionada** — e não seria honesto afirmar que foi. Ação necessária lá: apagar o
+`.env` local e deixar o entrypoint gerar uma chave nova, ou rodar
+`php artisan key:generate` na máquina. Mesma recomendação para qualquer clone ou
+ambiente que tenha copiado o `.env.testing`.
+
+**Por que Média.** Não há produção nem dado cifrado hoje, e staging nunca usou a
+chave exposta.
 
 **Por que Recomendado.** A F2.6 guarda `credentials_encrypted`, cifrado com a
-`APP_KEY`. Trocar a chave agora não custa nada; depois exige recifrar as
-credenciais.
+`APP_KEY`. Com o item fechado antes, a F2.6 nasce sobre uma chave que nunca foi
+publicada, e sem nenhum arquivo de ambiente versionado para herdar o problema.
 
-**Objetivo futuro.**
+**Evidência da entrega (2026-10-07).** Suíte completa: 1162 testes — 1160 PASS,
+0 FAIL, 0 ERROR, 2 RISKY preexistentes, 0 SKIPPED e 4644 assertions, contra
+1154/1152/4630 do baseline anterior: +8 testes e +14 assertions, exatamente os do
+SEC-06. Testes focados: 8 PASS, 14 assertions, nenhum SKIPPED. Regressões:
+SEC-01 35 PASS, SEC-02 21 PASS, SEC-03 23 PASS, SEC-05 25 PASS. Os dois RISKY
+conhecidos seguem como estavam — o SEC-06 não os toca. `php -l` e Pint sem
+achado no escopo. PHPStan: 17 erros, com totais **e conjunto de arquivos
+idênticos** à rodada anterior. `git diff --check` limpo. Nenhuma migration,
+nenhum container reiniciado ou reconstruído, nenhum `500`, nenhum
+`DecryptException`, nenhum `MAC is invalid`, nenhum `No application encryption
+key` nos logs. O `.env.testing` foi copiado para
+`/var/backups/lucraone/`, fora do repositório e com permissão `600`, antes de
+ser apagado — a chave antiga continua comprometida e serve apenas para
+investigação.
 
-- remover o segredo versionado. Remover do repositório não basta: a chave está
-  no histórico público e deve ser tratada como comprometida — gerar chave nova
-  em todo ambiente que a use;
-- definir geração segura da chave para o ambiente de testes;
-- revisar outros possíveis segredos commitados por acidente, inclusive no
-  histórico.
+**Critérios de aceite.** Todos verdes: segredo real fora do versionamento e
+protegido contra novo commit; arquivos de ambiente fora do contexto da imagem;
+suíte sem dependência de segredo real; chave de teste exclusiva, pública e
+distinta da de staging; uso da `APP_KEY` auditado; dado cifrado investigado e
+inexistente; fonte real da chave de staging identificada; rotação avaliada e
+dispensada com evidência; chave nova nunca impressa; impacto documentado;
+ambiente local inacessível **não** declarado como rotacionado; histórico
+auditado; nenhum segredo real conhecido remanescente no HEAD; imagem futura
+protegida por prova de build; SEC-01, SEC-02, SEC-03 e SEC-05 verdes; suíte com
+0 FAIL e 0 ERROR; staging saudável; histórico não reescrito; COR-01 pendente;
+F2.6 não iniciada.
 
 ### COR-01 — Soft delete + unicidade
 
@@ -1816,9 +1941,9 @@ SEC-03 — TenantResolver           ✅
         ↓
 SEC-05 — SendEmailAction          ✅
         ↓
-SEC-06 — Secrets / .env.testing   🔴 recomendado, próximo
+SEC-06 — Secrets / .env.testing   ✅
         ↓
-COR-01 — Soft delete + unicidade
+COR-01 — Soft delete + unicidade  🔴 recomendado, próximo
         ↓
 PERF-01 — hasAnyPermission
         ↓
@@ -1861,8 +1986,8 @@ SEC-01  aplica as Policies corrigidas na API
 **Estado em 2026-10-07.** Primeiro item **cumprido**: os quatro bloqueadores
 obrigatórios estão `Resolvido`, com testes — SEC-04 em `7433c5b`, SEC-01 em
 `3a14703`, SEC-02 em `e306494` e SEC-03 em `342f4ad`. Segundo item **não
-cumprido**: o SEC-05 foi resolvido em `6b271ef`, mas SEC-06 e COR-01 seguem
-pendentes e sem decisão de adiamento registrada. Terceiro item pendente de
+cumprido**: SEC-05 e SEC-06 foram resolvidos em `6b271ef` e `693a8ef`, mas o
+COR-01 segue pendente e sem decisão de adiamento registrada. Terceiro item pendente de
 conferência. A F2.6 **não foi iniciada**.
 
 Fechar os bloqueadores obrigatórios também **não** torna o backend apto para o
@@ -1946,7 +2071,7 @@ por estoque, vendas, PDV, scanner, embalagens e fiscal.
 O que esta trilha é, e o que não é:
 
 - **Não libera a F2.6.** É uma evolução funcional paralela. A F2.6 continua
-  não iniciada, e os itens recomendados SEC-06 e COR-01 mantêm o
+  não iniciada, e o item recomendado COR-01 mantém o
   status e a prioridade das
   [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26).
 - **Não é uma fase nem uma sprint.** Usa IDs próprios (`PM-*`), como as
@@ -2681,8 +2806,8 @@ O que esta trilha é, e o que não é:
 
 - **É paralela à trilha PM.** Não substitui nem absorve PM-04A, PM-04B, PM-04C
   ou PM-05, que mantêm escopo, status e ordem próprios.
-- **Não libera a F2.6.** Os itens recomendados SEC-06 e COR-01
-  continuam pendentes, com a prioridade que já tinham nas
+- **Não libera a F2.6.** O item recomendado COR-01 continua pendente, com a
+  prioridade que já tinha nas
   [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26).
 - **Não é uma fase nem uma sprint.** Usa IDs próprios (`ONB-*`), como `PM-*`,
   `SEC-*`, `COR-*` e `PERF-*`. O placar de fases não muda.
