@@ -18,18 +18,22 @@ checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-
 `feat(products): adicionar classificação fiscal básica`.
 **Próxima prioridade operacional:** será reavaliada após o fechamento
 documental do PM-05; nenhuma nova implementação iniciada nesta rodada.
-Baseline atual: 1106 testes — 1104 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
-0 SKIPPED e 4521 assertions. Os RISKY continuam sendo
+Baseline atual: 1129 testes — 1127 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 4571 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
-foram corrigidos. SEC-04, SEC-01 e SEC-02 resolvidos; SEC-03 pendente.
+foram corrigidos. SEC-01, SEC-02, SEC-03 e SEC-04 resolvidos — os quatro
+bloqueadores obrigatórios pré-F2.6 estão encerrados. SEC-05, SEC-06 e COR-01,
+recomendados antes da F2.6, continuam pendentes. A F2.6 não foi iniciada.
 Staging disponível em https://lucraone.jmfsystem.tech; marco Cliente Teste
 concluído.
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
 > [Pendências bloqueadoras pré-F2.6](#pendências-bloqueadoras-pré-f26) forem
-> resolvidos. O SEC-04, o SEC-01 e o SEC-02 estão resolvidos; **o SEC-03
-> continua pendente e bloqueia.**
+> resolvidos. **Os quatro bloqueadores obrigatórios — SEC-01, SEC-02, SEC-03 e
+> SEC-04 — estão resolvidos.** Restam os recomendados SEC-05, SEC-06 e COR-01,
+> que o [critério de liberação](#critério-para-liberar-a-f26) exige resolver ou
+> adiar com decisão registrada. A F2.6 não foi iniciada.
 
 ---
 
@@ -115,8 +119,8 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 > Teste está concluído: cliente criado e validação manual realizada. PM-04C
 > foi concluído e publicado, assim como PM-05. A próxima prioridade operacional
 > será reavaliada após o fechamento documental do PM-05.
-> Não há dependência técnica entre ONB e PM. F2.6 continua bloqueada por
-> SEC-03.
+> Não há dependência técnica entre ONB e PM. Os bloqueadores obrigatórios da
+> F2.6 estão encerrados; faltam os recomendados SEC-05, SEC-06 e COR-01.
 
 A FASE 03 entrou na frente da F2.2 de propósito: depois da F2.1 o backend já
 expunha APIs completas, mas **não havia como um humano entrar no sistema**.
@@ -206,7 +210,7 @@ Levantadas na auditoria de 2026-09-09 e conferidas contra o código em
 |---|---|---|---|---|---|
 | SEC-01 | Segurança | API Authorization | Crítica | Resolvido | **Sim** |
 | SEC-02 | Segurança | API Authentication | Crítica | Resolvido | **Sim** |
-| SEC-03 | Segurança | TenantResolver | Alta | Pendente | **Sim** |
+| SEC-03 | Segurança | TenantResolver | Alta | Resolvido | **Sim** |
 | SEC-04 | Segurança | create-role | Crítica | Resolvido | **Sim** |
 | SEC-05 | Segurança | SendEmailAction | Média | Pendente | Recomendado |
 | SEC-06 | Segurança | Secrets / .env.testing | Média | Pendente | Recomendado |
@@ -532,9 +536,11 @@ staging saudável; SEC-03 pendente; F2.6 não iniciada.
 
 ### SEC-03 — TenantResolver
 
-**Alta · Pendente · Bloqueia F2.6: Sim** — Origem: F1.8 (`c73b369`, 2026-08-16)
+**Alta · Resolvido · Bloqueia F2.6: Sim** — Origem: F1.8 (`c73b369`,
+2026-08-16) · Resolvido em `342f4ad`, 2026-10-07
 
-**Problema.** Em `TenantResolver::resolve()` a checagem de vínculo é condicional:
+**Problema.** Em `TenantResolver::resolve()` a checagem de vínculo era
+condicional:
 
 ```php
 if ($usuario && ! $usuario->canAccessTenant($tenantId)) {
@@ -542,21 +548,135 @@ if ($usuario && ! $usuario->canAccessTenant($tenantId)) {
 }
 ```
 
-Sem usuário autenticado, o `X-Tenant-ID` é aceito e vira o contexto da
+Sem usuário autenticado, o `X-Tenant-ID` era aceito e virava o contexto da
 requisição.
 
-**Por que hoje não é explorável.** Os cinco arquivos de rotas de módulo aplicam
-`['auth:sanctum', 'tenant']` nessa ordem, e `bootstrap/app.php` documenta a
-exigência. A proteção existe, mas depende de todo arquivo de rotas futuro
-repetir essa ordem — não do resolver.
+**Por que não era explorável.** Os cinco arquivos de rotas de módulo aplicam
+`['auth:sanctum', 'token.ability', 'tenant']` nessa ordem, e `bootstrap/app.php`
+documenta a exigência. A proteção existia, mas dependia de todo arquivo de rotas
+futuro repetir essa ordem — não do resolver.
 
-**Objetivo futuro.** Fazer o próprio resolver rejeitar contexto de tenant quando
-não houver identidade autenticada adequada.
+**A fragilidade foi demonstrada antes de corrigir.** Com o resolver chamado
+diretamente, um `Request` portando `X-Tenant-ID` e nenhuma identidade devolvia
+`true` e preenchia o `TenantContext`. E uma rota registrada só no teste com
+`['tenant']` e **sem** autenticação respondia `200`, com o estabelecimento
+resolvido a partir do header sozinho. Era o único jeito de provar o item:
+exercitar o resolver com `auth:sanctum` na frente apenas mostraria que a
+autenticação barra primeiro, o que não é o que o SEC-03 trata.
 
-**Por que bloqueia, embora hoje não seja explorável.** A F2.6 prevê webhooks e
+**Princípio adotado.** `X-Tenant-ID` é um **pedido** de contexto, nunca prova de
+autorização. O header diz qual dos vínculos da identidade usar; quem autoriza é
+o vínculo de uma identidade autenticada. Sem identidade não há pedido a atender.
+
+**Mudança estrutural.** Uma guarda *fail-closed* no início do `resolve()`, e a
+checagem de vínculo da estratégia 1 deixou de ser condicional. Com isso a
+segurança passou a morar no resolver, não na ordem dos middlewares.
+
+A guarda testa **tipo**, não apenas presença:
+
+```php
+if (! $usuario instanceof User) {
+    return $this->recusar();
+}
+```
+
+Estabelecimento é derivado de vínculo de pessoa, o que só existe para `User`.
+Essa é a fronteira para sujeitos não-humanos: um terminal de PDV ou uma
+integração futura não será `User`, cai nessa guarda e é recusado — então
+precisará de uma estratégia própria e explícita, em vez de pegar carona no
+header. **Nenhuma identidade de máquina foi criada nesta rodada**; a fronteira
+foi apenas fechada.
+
+A identidade passou a vir de `$request->user()` em vez de `Auth::user()`. É o
+sujeito que a autenticação **desta requisição** estabeleceu, em vez do estado
+global do guard padrão, e é como o resto do projeto lê o usuário: `Auth::user()`
+aparecia em exatamente um arquivo — este resolver — contra 16 arquivos usando
+`$request->user()`.
+
+Toda recusa passa por `recusar()`, que limpa o `TenantContext` antes de devolver
+`false`. O contexto é o que o `TenantScope` usa para filtrar; uma falha que
+deixasse em pé o estabelecimento de uma resolução anterior faria as consultas
+seguintes rodarem no estabelecimento errado.
+
+**Estratégias preservadas.** Nenhuma foi removida, e a ordem é a mesma:
+
+| # | Fonte | Exige identidade | Valida vínculo |
+|---|---|---|---|
+| 1 | header `X-Tenant-ID` | sim | `canAccessTenant` |
+| 2 | sessão (`tenant_ativo`) | sim | `canAccessTenant` |
+| 3 | vínculo único ativo | sim | pelo próprio vínculo |
+
+A estratégia 2 continua não abortando quando a sessão aponta um
+estabelecimento que deixou de valer: pode ser acesso revogado enquanto a pessoa
+navegava, e o vínculo único ainda resolve. O painel web segue intacto —
+`AutenticarWeb` autentica e confere conta ativa antes de chamar o resolver.
+
+**Defesa em profundidade mantida.** A ordem `auth:sanctum` → `token.ability` →
+`tenant` continua nos cinco arquivos de rota. O resolver ficar seguro sozinho
+não é motivo para tirar a autenticação da frente.
+
+**Testes adicionados.** 23 testes, 50 assertions, em
+`tests/Feature/Tenancy/TenantResolverSecurityTest.php`. Antes da correção, 13
+falhavam. Dez provavam a fragilidade — header sem identidade, header e sessão
+sem identidade, identidade que não é pessoa, header de estabelecimento sem
+vínculo aceito às cegas, vínculo inativo, conta inativa, header malformado,
+estabelecimento inexistente, contexto sobrevivendo a uma falha, e a rota com
+`tenant` sem autenticação. As outras três falhavam por causa da troca de fonte
+de identidade e passaram com a correção.
+
+A suíte combina testes estruturais, que chamam o resolver com um `Request`
+montado e o resolvedor de usuário preenchido como o middleware faz, e testes
+HTTP sobre as rotas reais de negócio: estabelecimento válido, estabelecimento
+alheio em `403`, vínculo único sem header, vínculo inativo em `403` e vários
+vínculos sem escolha em `403`. Os contratos de status não mudaram.
+
+**Fora do escopo, de propósito.** Nenhuma migration, nenhuma alteração de
+banco, nenhuma Policy do SEC-01, nada do SEC-02 — `TokenAbility`, throttle,
+hash descartável, expiração e revogação ficaram intocados. Sem Terminal, sem
+pareamento, sem credencial de máquina, sem `/api/v1/pdv/*`, sem webhook.
+
+**Por que bloqueava, embora não fosse explorável.** A F2.6 prevê webhooks e
 integração com gateway de pagamento, que recebem chamadas externas sem token
-Sanctum. Serão as primeiras rotas a precisar de contexto de tenant sem usuário —
-exatamente o cenário em que o resolver confia no header.
+Sanctum. Seriam as primeiras rotas a precisar de contexto de tenant sem usuário
+— exatamente o cenário em que o resolver confiava no header.
+
+**Evidência da entrega (2026-10-07).** Suíte completa: 1129 testes — 1127 PASS,
+0 FAIL, 0 ERROR, 2 RISKY preexistentes, 0 SKIPPED e 4571 assertions, contra
+1106/1104/4521 do baseline anterior: +23 testes e +50 assertions, exatamente os
+do SEC-03. Os RISKY `test_passwords_not_logged_in_audit` e
+`test_user_email_properly_protected` continuam sem correção. Testes focados: 23
+PASS, 50 assertions. Regressão do SEC-01: 35 PASS, 102 assertions. Regressão do
+SEC-02: 21 PASS, 85 assertions. Tenancy + Identity + Security + Admin: 597 PASS,
+2531 assertions. `php -l` sem erro nos dois arquivos. Pint passou nos dois.
+PHPStan: 17 erros, com totais **e conjunto de arquivos idênticos** à rodada
+anterior — `TenantResolver` não aparece no relatório. `git diff --check` limpo.
+Nenhuma migration criada ou executada, nenhum container reiniciado, e nenhum
+`500` transitório: o arquivo foi escrito de uma vez e validado com `php -l`
+imediatamente, ao contrário do que ocorreu no SEC-02.
+
+**Critérios de aceite.** Todos verdes: header sem identidade não resolve; sessão
+sem identidade não resolve; identidade com vínculo válido resolve; vínculo
+inválido não resolve; vínculo único automático preservado; vários vínculos não
+escolhem nada; vínculo inativo bloqueado; contexto só preenchido após validação
+e limpo na recusa; resolver seguro sem depender de `auth:sanctum` antes; ordem
+dos middlewares preservada; SEC-01 e SEC-02 verdes; nenhuma Policy e nenhum
+`TokenAbility` alterados; nenhuma identidade de máquina criada; nenhuma rota PDV
+criada; suíte com 0 FAIL e 0 ERROR; nenhum achado novo de Pint ou PHPStan;
+staging saudável; ROADMAP fiel.
+
+**Achado separado, não corrigido aqui: estabelecimento suspenso.**
+`canAccessTenant()` exige conta ativa e vínculo ativo, mas **não** consulta o
+status do próprio estabelecimento, e `estabelecimentosDisponiveis()` filtra pelo
+status do vínculo, não do tenant. Comprovado em sonda descartável: com um tenant
+`status = SUSPENDED`, `Tenant::isActive()` devolve `false` e
+`canAccessTenant()` devolve `true` — o resolver aceita o estabelecimento.
+
+Não é falha de isolamento nem escalada de privilégio: o alcance é o
+estabelecimento ao qual a pessoa já pertence, e nada de outro tenant fica
+acessível. É aplicação de ciclo de vida — suspensão por inadimplência ou
+bloqueio administrativo não interrompe a operação. Antecede o SEC-03 e não foi
+alterado por ele. Fica registrado para priorização própria, em vez de entrar
+nesta rodada por conveniência.
 
 ### SEC-04 — create-role
 
@@ -598,10 +718,11 @@ E6 foram variantes descartadas ou absorvidas pelos demais.
 
 O SEC-04 está **resolvido**: todos os vetores estão corrigidos e os
 [critérios de aceite](#critérios-de-aceite) estão verdes. Isso **não libera a
-F2.6**, que permanece bloqueada e não iniciada — o SEC-03 segue
-pendente e é bloqueador obrigatório.
+F2.6**, que permanece não iniciada: com o SEC-03 fechado em `342f4ad`, os
+quatro bloqueadores obrigatórios estão resolvidos, e o critério de liberação
+ainda pede SEC-05, SEC-06 e COR-01 resolvidos ou adiados por decisão registrada.
 
-**Próximo bloqueador técnico:** SEC-03 — TenantResolver, ainda não iniciado.
+**Próximo item recomendado:** SEC-05 — SendEmailAction.
 
 **Evidência atual.** Após `7433c5b`, o SEC-04 tem 151 testes: 151 PASS, 0 FAIL,
 0 ERROR e 583 assertions.
@@ -1533,9 +1654,9 @@ SEC-01 — API Authorization        ✅
         ↓
 SEC-02 — API Authentication       ✅
         ↓
-SEC-03 — TenantResolver           🔴 próximo bloqueador
+SEC-03 — TenantResolver           ✅
         ↓
-SEC-05 — SendEmailAction
+SEC-05 — SendEmailAction          🔴 recomendado, próximo
         ↓
 SEC-06 — Secrets / .env.testing
         ↓
@@ -1578,6 +1699,17 @@ SEC-01  aplica as Policies corrigidas na API
 - SEC-05, SEC-06 e COR-01 resolvidos, ou com decisão de adiamento registrada
   nesta seção;
 - tabela de acompanhamento, README e placar da FASE 02 atualizados.
+
+**Estado em 2026-10-07.** Primeiro item **cumprido**: os quatro bloqueadores
+obrigatórios estão `Resolvido`, com testes — SEC-04 em `7433c5b`, SEC-01 em
+`3a14703`, SEC-02 em `e306494` e SEC-03 em `342f4ad`. Segundo item **não
+cumprido**: SEC-05, SEC-06 e COR-01 seguem pendentes e sem decisão de adiamento
+registrada. Terceiro item pendente de conferência. A F2.6 **não foi iniciada**.
+
+Fechar os bloqueadores obrigatórios também **não** torna o backend apto para o
+PDV: esse marco é outro e exige a entidade Terminal, o vínculo
+terminal → estabelecimento/empresa/filial, pareamento, credencial de máquina e
+as rotas `/api/v1/pdv/*` — nada disso existe.
 
 ### Registro para auditoria
 
@@ -1655,7 +1787,8 @@ por estoque, vendas, PDV, scanner, embalagens e fiscal.
 O que esta trilha é, e o que não é:
 
 - **Não libera a F2.6.** É uma evolução funcional paralela. A F2.6 continua
-  bloqueada, e o SEC-03 mantém o status e a prioridade das
+  não iniciada, e os itens recomendados SEC-05, SEC-06 e COR-01 mantêm o
+  status e a prioridade das
   [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26).
 - **Não é uma fase nem uma sprint.** Usa IDs próprios (`PM-*`), como as
   pendências usam `SEC-*`, e o placar de fases não muda.
@@ -2389,8 +2522,8 @@ O que esta trilha é, e o que não é:
 
 - **É paralela à trilha PM.** Não substitui nem absorve PM-04A, PM-04B, PM-04C
   ou PM-05, que mantêm escopo, status e ordem próprios.
-- **Não libera a F2.6.** O SEC-03 continua pendente e bloqueando, com a
-  prioridade que já tinha nas
+- **Não libera a F2.6.** Os itens recomendados SEC-05, SEC-06 e COR-01
+  continuam pendentes, com a prioridade que já tinham nas
   [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26).
 - **Não é uma fase nem uma sprint.** Usa IDs próprios (`ONB-*`), como `PM-*`,
   `SEC-*`, `COR-*` e `PERF-*`. O placar de fases não muda.
