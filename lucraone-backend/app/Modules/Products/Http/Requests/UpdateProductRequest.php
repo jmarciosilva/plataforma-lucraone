@@ -2,6 +2,7 @@
 
 namespace App\Modules\Products\Http\Requests;
 
+use App\Modules\Core\Http\Rules\IdentificadorDisponivel;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Products\Http\Concerns\ValidatesFiscalClassification;
 use App\Modules\Products\Http\Rules\BarcodeAvailable;
@@ -21,7 +22,19 @@ class UpdateProductRequest extends FormRequest
     public function rules(TenantContext $context): array
     {
         return [
-            'sku' => ['sometimes', 'string', 'max:100'],
+            'sku' => [
+                'sometimes',
+                'string',
+                'max:100',
+                new IdentificadorDisponivel(
+                    tabela: 'products',
+                    coluna: 'sku',
+                    entidade: 'produto',
+                    campo: 'SKU',
+                    tenantId: $context->id(),
+                    ignorarId: $this->route('product'),
+                ),
+            ],
             'barcode' => [
                 'nullable',
                 'string',

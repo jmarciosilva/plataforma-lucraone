@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Modules\Companies\Domain\Models\Company;
+use App\Modules\Core\Http\Rules\IdentificadorDisponivel;
 use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Products\Http\Concerns\ValidatesFiscalClassification;
@@ -39,9 +40,14 @@ class UpdateWebProductRequest extends FormRequest
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('products', 'sku')
-                    ->where('tenant_id', $context->id())
-                    ->ignore($product?->id),
+                new IdentificadorDisponivel(
+                    tabela: 'products',
+                    coluna: 'sku',
+                    entidade: 'produto',
+                    campo: 'SKU',
+                    tenantId: $context->id(),
+                    ignorarId: $product?->id,
+                ),
             ],
             'barcode' => [
                 'nullable',

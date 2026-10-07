@@ -2,6 +2,7 @@
 
 namespace App\Modules\Products\Http\Requests;
 
+use App\Modules\Core\Http\Rules\IdentificadorDisponivel;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Products\Http\Concerns\ValidatesFiscalClassification;
 use App\Modules\Products\Http\Rules\BarcodeAvailable;
@@ -22,7 +23,18 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'company_id' => ['required', 'string'],
-            'sku' => ['required', 'string', 'max:100'],
+            'sku' => [
+                'required',
+                'string',
+                'max:100',
+                new IdentificadorDisponivel(
+                    tabela: 'products',
+                    coluna: 'sku',
+                    entidade: 'produto',
+                    campo: 'SKU',
+                    tenantId: $context->id(),
+                ),
+            ],
             'barcode' => [
                 'nullable',
                 'string',

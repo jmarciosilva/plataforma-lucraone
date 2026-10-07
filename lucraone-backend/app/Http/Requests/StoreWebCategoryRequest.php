@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Modules\Core\Http\Rules\IdentificadorDisponivel;
 use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
@@ -29,9 +30,15 @@ class StoreWebCategoryRequest extends FormRequest
                 'string',
                 'max:255',
                 'alpha_dash:ascii',
-                Rule::unique('categories', 'slug')
-                    ->where('tenant_id', $context->id())
-                    ->ignore($category?->id),
+                new IdentificadorDisponivel(
+                    tabela: 'categories',
+                    coluna: 'slug',
+                    entidade: 'categoria',
+                    campo: 'slug',
+                    feminino: true,
+                    tenantId: $context->id(),
+                    ignorarId: $category?->id,
+                ),
             ],
             'description' => ['nullable', 'string', 'max:1000'],
             'parent_id' => [

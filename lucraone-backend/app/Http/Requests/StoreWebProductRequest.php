@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Modules\Companies\Domain\Models\Company;
+use App\Modules\Core\Http\Rules\IdentificadorDisponivel;
 use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Products\Http\Concerns\ValidatesFiscalClassification;
@@ -36,7 +37,13 @@ class StoreWebProductRequest extends FormRequest
                 $this->boolean('sku_automatico') ? 'exclude' : 'nullable',
                 'string',
                 'max:100',
-                Rule::unique('products', 'sku')->where('tenant_id', $context->id()),
+                new IdentificadorDisponivel(
+                    tabela: 'products',
+                    coluna: 'sku',
+                    entidade: 'produto',
+                    campo: 'SKU',
+                    tenantId: $context->id(),
+                ),
             ],
             'barcode' => [
                 'nullable',

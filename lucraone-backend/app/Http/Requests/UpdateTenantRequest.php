@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Modules\Core\Http\Rules\IdentificadorDisponivel;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
@@ -25,7 +26,13 @@ class UpdateTenantRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'alpha_dash:ascii', Rule::unique('tenants', 'slug')->ignore($tenantId)],
+            'slug' => ['nullable', 'string', 'max:255', 'alpha_dash:ascii', new IdentificadorDisponivel(
+                tabela: 'tenants',
+                coluna: 'slug',
+                entidade: 'estabelecimento',
+                campo: 'slug',
+                ignorarId: $tenantId,
+            )],
             'status' => ['required', Rule::in(['TRIAL', 'ACTIVE', 'SUSPENDED', 'CANCELLED'])],
             'plan' => ['required', Rule::in(['free', 'standard', 'enterprise'])],
             'timezone' => ['required', Rule::in(['America/Sao_Paulo', 'America/Manaus', 'America/Bahia', 'UTC'])],
