@@ -18,18 +18,18 @@ checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-
 `feat(products): adicionar classificação fiscal básica`.
 **Próxima prioridade operacional:** será reavaliada após o fechamento
 documental do PM-05; nenhuma nova implementação iniciada nesta rodada.
-Baseline atual: 1085 testes — 1083 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
-0 SKIPPED e 4436 assertions. Os RISKY continuam sendo
+Baseline atual: 1106 testes — 1104 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 4521 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
-foram corrigidos. SEC-04 e SEC-01 resolvidos; SEC-02/03 pendentes.
+foram corrigidos. SEC-04, SEC-01 e SEC-02 resolvidos; SEC-03 pendente.
 Staging disponível em https://lucraone.jmfsystem.tech; marco Cliente Teste
 concluído.
 
 > 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
 > mas só começa depois que os bloqueadores obrigatórios de
 > [Pendências bloqueadoras pré-F2.6](#pendências-bloqueadoras-pré-f26) forem
-> resolvidos. O SEC-04 e o SEC-01 estão resolvidos; **SEC-02 e SEC-03
-> continuam pendentes e bloqueiam.**
+> resolvidos. O SEC-04, o SEC-01 e o SEC-02 estão resolvidos; **o SEC-03
+> continua pendente e bloqueia.**
 
 ---
 
@@ -116,7 +116,7 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 > foi concluído e publicado, assim como PM-05. A próxima prioridade operacional
 > será reavaliada após o fechamento documental do PM-05.
 > Não há dependência técnica entre ONB e PM. F2.6 continua bloqueada por
-> SEC-02 e SEC-03.
+> SEC-03.
 
 A FASE 03 entrou na frente da F2.2 de propósito: depois da F2.1 o backend já
 expunha APIs completas, mas **não havia como um humano entrar no sistema**.
@@ -205,7 +205,7 @@ Levantadas na auditoria de 2026-09-09 e conferidas contra o código em
 | ID | Categoria | Pendência | Prioridade | Status | Bloqueia F2.6 |
 |---|---|---|---|---|---|
 | SEC-01 | Segurança | API Authorization | Crítica | Resolvido | **Sim** |
-| SEC-02 | Segurança | API Authentication | Crítica | Pendente | **Sim** |
+| SEC-02 | Segurança | API Authentication | Crítica | Resolvido | **Sim** |
 | SEC-03 | Segurança | TenantResolver | Alta | Pendente | **Sim** |
 | SEC-04 | Segurança | create-role | Crítica | Resolvido | **Sim** |
 | SEC-05 | Segurança | SendEmailAction | Média | Pendente | Recomendado |
@@ -373,38 +373,162 @@ regressão; staging saudável; SEC-02 e SEC-03 fora do escopo.
 
 ### SEC-02 — API Authentication
 
-**Crítica · Pendente · Bloqueia F2.6: Sim** — Origem: login da API da F1.4
-(`b38dfb0`, 2026-08-13), anterior à F1.7 e não detectado por ela
+**Crítica · Resolvido · Bloqueia F2.6: Sim** — Origem: login da API da F1.4
+(`b38dfb0`, 2026-08-13), anterior à F1.7 e não detectado por ela · Resolvido em
+`e306494`, 2026-10-07
 
 **Problema.**
 
-- **Sem rate limiting.** `POST /api/auth/login` não tem `throttle`, e nenhuma
-  rota `/api` tem. O login web tem dois freios: `throttle:20,1` na rota e o
+- **Sem rate limiting.** `POST /api/auth/login` não tinha `throttle`, e nenhuma
+  rota `/api` tinha. O login web tem dois freios: `throttle:20,1` na rota e o
   limite por e-mail + IP do `LoginRequest` web.
-- **Enumeração de contas por tempo.** `AuthController::login` avalia
-  `! $user || ! Hash::check(...)`: quando o e-mail não existe, o hash não é
-  calculado e a resposta volta mais rápido. Mensagem e status são iguais
-  (`401`); a diferença é só de tempo.
-- **Tokens sem expiração.** `config/sanctum.php` tem `'expiration' => null`. Um
-  token vazado vale até que alguém faça logout com ele.
-- **Tokens sem abilities.** `createToken('auth_token')` é chamado sem
+- **Enumeração de contas por tempo.** `AuthController::login` avaliava
+  `! $user || ! Hash::check(...)`: quando o e-mail não existia, o hash não era
+  calculado e a resposta voltava mais rápido. Mensagem e status já eram iguais
+  (`401`); a diferença era só de tempo.
+- **Tokens sem expiração.** `config/sanctum.php` tinha `'expiration' => null`.
+  Um token vazado valia até que alguém fizesse logout com ele.
+- **Tokens sem abilities.** `createToken('auth_token')` era chamado sem
   abilities, o que equivale a `['*']`.
 
 **Consequência.** Força bruta sem freio contra a API, descoberta de quais
 e-mails têm conta e tokens com poder total por tempo indeterminado. Somado ao
-SEC-01, um token vazado de qualquer papel dá escrita permanente no
+SEC-01, um token vazado de qualquer papel dava escrita permanente no
 estabelecimento.
 
-**Objetivo futuro.**
+**Throttle.** Dois freios, como no login web, e com os mesmos números — o freio
+não deveria ser mais frouxo porque a porta é a API:
 
-- limitar tentativas de login na API;
-- reduzir a diferença observável entre usuário inexistente e senha inválida;
-- definir estratégia de expiração de tokens;
-- definir as abilities mínimas necessárias.
+| Camada | Limite | Chave | Onde |
+|---|---|---|---|
+| Rota | 20/min | IP | limiter nomeado `api-login` |
+| Conta | 5/min | e-mail normalizado + IP | `LoginRequest` da API |
 
-**Por que bloqueia.** A F2.6 introduz clientes de máquina que vão receber
-tokens. Definir expiração e abilities depois obriga a reemitir credenciais já
+O teto por IP é mais alto que o por conta de propósito: um estabelecimento
+atrás de uma única saída de rede tem várias pessoas entrando ao mesmo tempo, e
+quem trava o ataque a *uma* conta é o limite de 5. A senha nunca entra na
+chave. O limiter é nomeado em vez de `throttle:n,m` solto na rota para não criar
+um limite que pegue outros endpoints. Excedido, a resposta é `429` em JSON com
+`Retry-After` — comprovado em staging: cinco `401` e depois `429`.
+
+O bloqueio vale também para a senha correta. Um freio que liberasse o acerto
+seguinte não freia nada: bastaria ao atacante continuar tentando.
+
+**Enumeração por timing.** O caminho do e-mail inexistente passou a comparar a
+senha contra um hash bcrypt constante, descartável, que não corresponde a conta
+nenhuma e não é a senha de ninguém. Os dois caminhos executam uma verificação
+de hash, então o tempo deixa de denunciar quais e-mails existem. O hash é
+constante de propósito: gerar um por requisição custaria o mesmo que o ataque
+que se quer evitar. Mensagem e status seguem idênticos (`401`,
+`{"message":"Credenciais inválidas"}`) — isso já era verdade antes.
+
+A prova é de comportamento, não de cronômetro: o teste espiona a fachada `Hash`
+e exige que `check` seja chamado também quando o e-mail não existe. Benchmark de
+milissegundos em CI seria frágil e não provaria a causa.
+
+**Abilities.** `business:read` e `business:write`, definidas em
+`App\Modules\Identity\Domain\TokenAbility`. O conjunto é pequeno e dividido
+por natureza da operação, não por módulo.
+
+Ability não é permissão. Quem decide se *esta pessoa* pode mexer em produto são
+as Policies do SEC-01, pelo papel dela no estabelecimento; a ability diz o que
+*este token* pode fazer, independentemente de quem o carrega. Duplicar as 26
+permissões do RBAC em abilities Sanctum criaria duas verdades para a mesma
+regra. O que a remoção do `['*']` elimina não é o alcance atual do token humano
+— ele lê e escreve, e segue lendo e escrevendo — é o coringa: com `['*']` o
+mesmo token passaria a valer automaticamente para qualquer ability criada
+depois, provisionar terminal entre elas, sem ninguém decidir isso.
+
+A conferência fica em um ponto único, o middleware `token.ability`, que deriva
+a ability do método HTTP: métodos seguros exigem `business:read`, os demais
+`business:write`. Aplicado nos cinco arquivos de rota de módulo como
+`['auth:sanctum', 'token.ability', 'tenant']`, sem tocar nenhum dos 35
+controllers e sem repetir `tokenCan` por rota. Requisição de sessão de primeira
+parte não tem token de acesso e passa direto — o painel web é autorizado pelas
+Policies.
+
+**Expiração.** `720` minutos, 12 horas, via
+`env('SANCTUM_EXPIRATION_MINUTES', 720)`. Cobre um turno operacional inteiro,
+com folga para hora extra, sem obrigar novo login no meio do expediente, e
+limita um token vazado a menos de um dia. O default seguro fica no config, então
+staging não precisou de alteração de `.env`; a variável está documentada em
+`.env.example`. O painel web não é afetado: usa sessão de primeira parte, não
+token. O login passou a devolver `expires_at` em ISO-8601 UTC e `abilities`,
+para o cliente saber quando pedir outro token em vez de descobrir no meio de uma
+operação.
+
+**Revogação.** O logout continua apagando **só** o token da requisição; os
+outros dispositivos da pessoa seguem conectados, porque encerrar todos sem ela
+pedir seria surpresa. Isso nunca tinha sido testado de verdade: os dois testes
+que existiam não verificavam revogação — `SecurityAuditTest::test_logout_revokes_tokens`
+terminava em `assertTrue(true)`. Agora há prova no banco de que o token usado no
+logout desaparece e o outro permanece.
+
+A novidade é a revogação central por conta desativada. Antes, desativar alguém
+não alcançava os tokens já emitidos: o acesso caía apenas porque
+`canAccessTenant()` exige conta ativa, o que dependia do middleware `tenant`
+estar na rota. Agora o gancho nativo `Sanctum::authenticateAccessTokensUsing()`
+recusa o token de quem não está ativo, em toda rota com `auth:sanctum` — sem
+middleware de autenticação paralelo e sem espalhar `delete` de tokens por
+controllers.
+
+**Decidido ficar de fora.** Refresh token: token expirado leva a novo login, e
+um fluxo de renovação próprio é escopo seguinte, não desta correção. Revogação
+em massa por administrador: não existe endpoint administrativo de tokens, e
+criar um extrapolaria o SEC-02. Troca de senha também não revoga os tokens
+anteriores — fica registrado como lacuna, já que o único ponto que altera senha
+hoje é o `UserController` do painel, fora do escopo desta rodada.
+
+**Testes adicionados.** 21 testes, 85 assertions, em
+`tests/Feature/Security/ApiAuthenticationTest.php`. Antes da correção, 12
+falhavam. Cobrem login válido e contrato preservado, `expires_at` e `abilities`,
+ausência do coringa, token sem ability de escrita barrado, token sem ability de
+leitura barrado, expiração configurada, token válido antes e inválido depois do
+prazo (por *time travel*, não relógio real), `429` com `Retry-After`, bloqueio
+que também vale para a senha correta, bloqueio que expira, contador zerado no
+login válido, bloqueio de uma conta que não atinge outra, `Hash::check`
+executado nos dois caminhos, respostas indistinguíveis, resposta de falha sem
+vazar hash nem contagem, conta inativa em `403`, logout cirúrgico e token de
+conta desativada que para de valer.
+
+Dois achados da auditoria vieram do próprio código e não precisaram de
+correção: a mensagem de `401` já era idêntica nos dois casos, e o token de quem
+tem o **vínculo** desativado — não a conta — já era barrado pelo middleware
+`tenant`.
+
+**Por que bloqueava.** A F2.6 introduz clientes de máquina que vão receber
+tokens. Definir expiração e abilities depois obrigaria a reemitir credenciais já
 entregues a sistemas externos.
+
+**Evidência da entrega (2026-10-07).** Suíte completa: 1106 testes — 1104 PASS,
+0 FAIL, 0 ERROR, 2 RISKY preexistentes, 0 SKIPPED e 4521 assertions, contra
+1085/1083/4436 do baseline anterior: +21 testes e +85 assertions, exatamente os
+do SEC-02. Os RISKY `test_passwords_not_logged_in_audit` e
+`test_user_email_properly_protected` continuam sem correção — o SEC-02 não os
+toca. Testes focados: 21 PASS, 85 assertions. Regressão do SEC-01: 35 PASS, 102
+assertions, nenhuma Policy alterada. Identity + Security + Tenancy + API: 321
+PASS, 1142 assertions. Pint passou nos 13 arquivos do escopo; `routes/api.php`
+segue com a reprovação `concat_space` que já tinha em `420a08b`, verificada na
+versão commitada e deixada fora do escopo. PHPStan: 17 erros, os mesmos 11
+arquivos e contagens da rodada anterior — nenhum arquivo do SEC-02 aparece.
+`git diff --check` limpo. Nenhuma migration criada ou executada; nenhum
+container reiniciado ou reconstruído; `config` não está cacheado, então não foi
+preciso limpar nada.
+
+Durante a edição, staging serviu por cerca de um minuto um
+`AppServiceProvider` sem os `use` novos, e o healthcheck interno registrou um
+`500` em `GET /up` às 18:29:56. O código é bind-mounted, então a recuperação foi
+imediata ao salvar os imports, sem restart. Nenhuma requisição externa foi
+atingida — staging está ocioso — e não há outro `staging.ERROR` no dia.
+
+**Critérios de aceite.** Todos verdes: login com throttle; `429` em JSON com
+`Retry-After`; caminho de hash equivalente para e-mail inexistente e senha
+errada; mensagem e status sem permitir enumeração; token sem `['*']`; abilities
+mínimas definidas e conferidas; token com expiração; expiração provada por
+*time travel*; logout revogando o token atual; estratégia de revogação
+documentada, lacunas incluídas; conta desativada sem acesso com token antigo;
+SEC-01 verde; `TenantResolver` não alterado; suíte com 0 FAIL e 0 ERROR;
+staging saudável; SEC-03 pendente; F2.6 não iniciada.
 
 ### SEC-03 — TenantResolver
 
@@ -474,10 +598,10 @@ E6 foram variantes descartadas ou absorvidas pelos demais.
 
 O SEC-04 está **resolvido**: todos os vetores estão corrigidos e os
 [critérios de aceite](#critérios-de-aceite) estão verdes. Isso **não libera a
-F2.6**, que permanece bloqueada e não iniciada — SEC-02 e SEC-03 seguem
-pendentes e são bloqueadores obrigatórios.
+F2.6**, que permanece bloqueada e não iniciada — o SEC-03 segue
+pendente e é bloqueador obrigatório.
 
-**Próximo bloqueador técnico:** SEC-02 — API Authentication, ainda não iniciado.
+**Próximo bloqueador técnico:** SEC-03 — TenantResolver, ainda não iniciado.
 
 **Evidência atual.** Após `7433c5b`, o SEC-04 tem 151 testes: 151 PASS, 0 FAIL,
 0 ERROR e 583 assertions.
@@ -1407,9 +1531,9 @@ SEC-04 — create-role              ✅ RESOLVIDO
         ↓
 SEC-01 — API Authorization        ✅
         ↓
-SEC-02 — API Authentication       🔴 próximo bloqueador
+SEC-02 — API Authentication       ✅
         ↓
-SEC-03 — TenantResolver
+SEC-03 — TenantResolver           🔴 próximo bloqueador
         ↓
 SEC-05 — SendEmailAction
         ↓
@@ -1531,7 +1655,7 @@ por estoque, vendas, PDV, scanner, embalagens e fiscal.
 O que esta trilha é, e o que não é:
 
 - **Não libera a F2.6.** É uma evolução funcional paralela. A F2.6 continua
-  bloqueada, e SEC-01, SEC-02 e SEC-03 mantêm o status e a prioridade das
+  bloqueada, e o SEC-03 mantém o status e a prioridade das
   [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26).
 - **Não é uma fase nem uma sprint.** Usa IDs próprios (`PM-*`), como as
   pendências usam `SEC-*`, e o placar de fases não muda.
@@ -2265,8 +2389,8 @@ O que esta trilha é, e o que não é:
 
 - **É paralela à trilha PM.** Não substitui nem absorve PM-04A, PM-04B, PM-04C
   ou PM-05, que mantêm escopo, status e ordem próprios.
-- **Não libera a F2.6.** SEC-01, SEC-02 e SEC-03 continuam pendentes e
-  bloqueando, com a prioridade que já tinham nas
+- **Não libera a F2.6.** O SEC-03 continua pendente e bloqueando, com a
+  prioridade que já tinha nas
   [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26).
 - **Não é uma fase nem uma sprint.** Usa IDs próprios (`ONB-*`), como `PM-*`,
   `SEC-*`, `COR-*` e `PERF-*`. O placar de fases não muda.
