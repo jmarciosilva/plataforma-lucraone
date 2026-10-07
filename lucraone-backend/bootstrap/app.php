@@ -4,6 +4,7 @@ use App\Http\Middleware\AutenticarWeb;
 use App\Http\Middleware\RedirecionarSeAutenticado;
 use App\Modules\Automation\Infrastructure\Console\PruneAutomationLogsCommand;
 use App\Modules\Identity\Http\Middleware\ApiAuthenticationMiddleware;
+use App\Modules\Identity\Http\Middleware\EnsureTokenAbility;
 use App\Modules\Identity\Infrastructure\Console\PromoverPlatformAdminCommand;
 use App\Modules\Reporting\Infrastructure\Console\SendSalesSummaryCommand;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenantMiddleware;
@@ -68,8 +69,15 @@ return Application::configure(basePath: dirname(__DIR__))
             // middleware global: precisa rodar DEPOIS da autenticação, senão
             // não há usuário para validar o vínculo e um X-Tenant-ID de outro
             // estabelecimento passaria sem checagem.
-            // Uso correto: ['auth:sanctum', 'tenant'] — nessa ordem.
+            // Uso correto: ['auth:sanctum', 'token.ability', 'tenant'] — o
+            // 'tenant' sempre depois da autenticação.
             'tenant' => ResolveTenantMiddleware::class,
+
+            // Confere a ability do token da requisição. Como o 'tenant',
+            // precisa rodar DEPOIS da autenticação — sem token autenticado
+            // não há nada a conferir.
+            // Uso correto: ['auth:sanctum', 'token.ability', 'tenant'].
+            'token.ability' => EnsureTokenAbility::class,
         ]);
 
         // SEC-04 E7: o contexto do estabelecimento precisa estar resolvido antes

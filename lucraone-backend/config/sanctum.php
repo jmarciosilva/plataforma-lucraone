@@ -48,9 +48,14 @@ return [
     | considered expired. This will override any values set in the token's
     | "expires_at" attribute, but first-party sessions are not affected.
     |
+    | 720 minutos = 12 horas: cobre um turno operacional inteiro, com folga
+    | para hora extra, sem obrigar novo login no meio do expediente — e limita
+    | um token vazado a menos de um dia. O painel web não é afetado: ele usa
+    | sessão de primeira parte, não token.
+    |
     */
 
-    'expiration' => null,
+    'expiration' => (int) env('SANCTUM_EXPIRATION_MINUTES', 720),
 
     /*
     |--------------------------------------------------------------------------

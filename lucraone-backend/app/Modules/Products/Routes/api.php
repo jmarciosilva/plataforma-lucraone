@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 // A ordem importa: o tenant só pode ser resolvido depois de sabermos quem é
 // o usuário, para validar que ele tem vínculo com o estabelecimento pedido.
-Route::middleware(['auth:sanctum', 'tenant'])->prefix('v1')->group(function () {
+Route::middleware(['auth:sanctum', 'token.ability', 'tenant'])->prefix('v1')->group(function () {
     // Products
     Route::get('products/search/{query}', [ProductController::class, 'search']);
     Route::get('products/status/{status}', [ProductController::class, 'byStatus']);

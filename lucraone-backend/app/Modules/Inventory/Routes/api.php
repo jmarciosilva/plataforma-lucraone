@@ -4,7 +4,7 @@ use App\Modules\Inventory\Http\Controllers\InventoryController;
 use App\Modules\Inventory\Http\Controllers\StockLevelController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:sanctum', 'tenant'])->prefix('v1')->group(function () {
+Route::middleware(['auth:sanctum', 'token.ability', 'tenant'])->prefix('v1')->group(function () {
     Route::get('inventory', [InventoryController::class, 'index']);
     Route::get('inventory/low-stock', [InventoryController::class, 'lowStock']);
     Route::get('inventory/overstock', [InventoryController::class, 'overstock']);

@@ -7,7 +7,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('health', [HealthController::class, 'check'])->name('health.check');
 
 Route::prefix('auth')->group(function () {
-    Route::post('login', [AuthController::class, 'login'])->name('auth.login');
+    // Dois freios, como no login web: este limita o volume por IP e o
+    // LoginRequest limita as tentativas por conta (e-mail + IP).
+    Route::post('login', [AuthController::class, 'login'])
+        ->middleware('throttle:api-login')
+        ->name('auth.login');
     Route::post('logout', [AuthController::class, 'logout'])
         ->name('auth.logout');
 });

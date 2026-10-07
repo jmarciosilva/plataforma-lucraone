@@ -31,9 +31,14 @@ use App\Modules\Sales\Http\Policies\OrderPolicy;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Tenancy\Http\Policies\TenantPolicy;
 use App\Modules\Tenancy\TenancyServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -75,5 +80,44 @@ class AppServiceProvider extends ServiceProvider
         // O módulo Automation escuta um evento só; registrar à mão é mais
         // explícito do que depender da descoberta automática de listeners.
         Event::listen(AutomationTriggered::class, ProcessAutomationTrigger::class);
+
+        $this->configurarAutenticacaoDaApi();
+    }
+
+    /**
+     * Freio do login da API e validade dos tokens já emitidos.
+     */
+    private function configurarAutenticacaoDaApi(): void
+    {
+        // Freio por IP no login da API. Limiter nomeado, e não `throttle:n,m`
+        // solto na rota, para não criar um limite que pegue outros endpoints.
+        // O teto por IP é mais alto que o por conta de propósito: um
+        // estabelecimento atrás de uma única saída de rede tem várias pessoas
+        // entrando, e quem trava o ataque a uma conta é o limite do
+        // LoginRequest (5 por minuto, por e-mail + IP).
+        RateLimiter::for('api-login', fn (Request $request) => Limit::perMinute(20)
+            ->by($request->ip())
+            ->response(fn (Request $request, array $cabecalhos) => response()->json([
+                'message' => 'Muitas tentativas de login. Tente novamente em instantes.',
+            ], 429, $cabecalhos)));
+
+        // Revogação central: um token já emitido para de valer no instante em
+        // que a conta é desativada. Antes disto, desativar alguém não
+        // alcançava os tokens dele — só barrava o acesso ao estabelecimento,
+        // e apenas porque canAccessTenant() exige conta ativa.
+        //
+        // O gancho é do próprio Sanctum, então não há middleware de
+        // autenticação paralelo: vale para toda rota com auth:sanctum.
+        Sanctum::authenticateAccessTokensUsing(
+            function (PersonalAccessToken $token, bool $valido): bool {
+                if (! $valido) {
+                    return false;
+                }
+
+                $dono = $token->tokenable;
+
+                return $dono instanceof User ? $dono->isActive() : true;
+            }
+        );
     }
 }

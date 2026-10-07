@@ -4,7 +4,7 @@ use App\Modules\Automation\Http\Controllers\AutomationLogController;
 use App\Modules\Automation\Http\Controllers\AutomationRuleController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:sanctum', 'tenant'])->prefix('v1')->group(function () {
+Route::middleware(['auth:sanctum', 'token.ability', 'tenant'])->prefix('v1')->group(function () {
     Route::get('automation-rules', [AutomationRuleController::class, 'index']);
     Route::post('automation-rules', [AutomationRuleController::class, 'store']);
     Route::get('automation-rules/{id}', [AutomationRuleController::class, 'show']);
