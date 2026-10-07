@@ -9,11 +9,12 @@ use App\Modules\Inventory\Domain\Models\InventoryMovement;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\AutorizaUsuarioDeApi;
 use Tests\TestCase;
 
 class InventoryApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use AutorizaUsuarioDeApi, RefreshDatabase;
 
     private Tenant $tenant;
 
@@ -41,6 +42,7 @@ class InventoryApiTest extends TestCase
             'unit' => 'KG',
         ]);
         $this->user = User::factory()->forTenant($this->tenant)->create();
+        $this->autorizarNaApi($this->tenant, $this->user);
         $this->token = $this->user->createToken('test')->plainTextToken;
     }
 

@@ -7,6 +7,7 @@ use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Identity\Domain\Models\TenantUser;
 use App\Modules\Identity\Domain\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\AutorizaUsuarioDeApi;
 use Tests\Feature\Tenancy\TenancyTestCase;
 
 /**
@@ -18,7 +19,7 @@ use Tests\Feature\Tenancy\TenancyTestCase;
  */
 class MultiTenantIdentityTest extends TenancyTestCase
 {
-    use RefreshDatabase;
+    use AutorizaUsuarioDeApi, RefreshDatabase;
 
     private User $contador;
 
@@ -150,6 +151,10 @@ class MultiTenantIdentityTest extends TenancyTestCase
     public function test_vinculo_unico_dispensa_escolha(): void
     {
         $funcionario = User::factory()->forTenant($this->tenantA)->create();
+        // O que está em teste é a resolução do estabelecimento, não a
+        // autorização: sem permissão de leitura o 403 do SEC-01 mascararia o
+        // resultado que interessa aqui.
+        $this->autorizarNaApi($this->tenantA, $funcionario);
         $token = $funcionario->createToken('teste')->plainTextToken;
 
         // Sem X-Tenant-ID: só há um estabelecimento possível

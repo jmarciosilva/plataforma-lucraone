@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
 
 /**
@@ -25,6 +26,8 @@ class OrderController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Order::class);
+
         $orders = Order::query()
             ->with(['customer', 'items'])
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
@@ -38,6 +41,8 @@ class OrderController extends Controller
 
     public function store(StoreOrderRequest $request): JsonResponse
     {
+        Gate::authorize('create', Order::class);
+
         try {
             $order = $this->orders->createWithItems($request->validated(), $request->user()?->id);
         } catch (InvalidArgumentException $exception) {
@@ -55,12 +60,16 @@ class OrderController extends Controller
             ->with(['customer', 'items', 'company'])
             ->findOrFail($id);
 
+        Gate::authorize('view', $order);
+
         return new OrderResource($order);
     }
 
     public function updateStatus(UpdateOrderStatusRequest $request, string $id): OrderResource|JsonResponse
     {
         $order = Order::query()->findOrFail($id);
+
+        Gate::authorize('update', $order);
 
         try {
             $order = $this->orders->changeStatus($order, $request->validated('status'), $request->user()?->id);
@@ -74,6 +83,8 @@ class OrderController extends Controller
     public function destroy(Request $request, string $id): OrderResource|JsonResponse
     {
         $order = Order::query()->findOrFail($id);
+
+        Gate::authorize('delete', $order);
 
         try {
             $order = $this->orders->cancel($order, $request->user()?->id);

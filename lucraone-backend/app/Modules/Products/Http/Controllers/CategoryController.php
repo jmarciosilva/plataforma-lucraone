@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 
 class CategoryController extends Controller
 {
@@ -21,6 +22,8 @@ class CategoryController extends Controller
      */
     public function index(): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Category::class);
+
         $categories = Category::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->with(['children'])
@@ -35,6 +38,8 @@ class CategoryController extends Controller
      */
     public function store(StoreCategoryRequest $request): JsonResponse
     {
+        Gate::authorize('create', Category::class);
+
         $category = Category::create([
             'tenant_id' => $this->tenantContext->id(),
             'name' => $request->validated('name'),
@@ -57,6 +62,8 @@ class CategoryController extends Controller
             ->where('tenant_id', $this->tenantContext->id())
             ->findOrFail($id);
 
+        Gate::authorize('view', $category);
+
         return new CategoryResource($category->load(['children']));
     }
 
@@ -68,6 +75,8 @@ class CategoryController extends Controller
         $category = Category::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->findOrFail($id);
+
+        Gate::authorize('update', $category);
 
         $category->update($request->validated());
 
@@ -83,6 +92,8 @@ class CategoryController extends Controller
             ->where('tenant_id', $this->tenantContext->id())
             ->findOrFail($id);
 
+        Gate::authorize('delete', $category);
+
         $category->delete();
 
         return response()->json(['message' => 'Category deleted successfully']);
@@ -93,6 +104,8 @@ class CategoryController extends Controller
      */
     public function roots(): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Category::class);
+
         $categories = Category::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->whereNull('parent_id')
@@ -110,6 +123,8 @@ class CategoryController extends Controller
         $parent = Category::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->findOrFail($parentId);
+
+        Gate::authorize('view', $parent);
 
         $children = $parent->children()->get();
 

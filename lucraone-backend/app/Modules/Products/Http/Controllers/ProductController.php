@@ -12,6 +12,7 @@ use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
@@ -25,6 +26,8 @@ class ProductController extends Controller
      */
     public function index(): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Product::class);
+
         $products = Product::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->with(['categories', 'prices'])
@@ -38,6 +41,8 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request): JsonResponse
     {
+        Gate::authorize('create', Product::class);
+
         $product = Product::create([
             'tenant_id' => $this->tenantContext->id(),
             'company_id' => $request->validated('company_id'),
@@ -73,6 +78,8 @@ class ProductController extends Controller
             ->where('tenant_id', $this->tenantContext->id())
             ->findOrFail($id);
 
+        Gate::authorize('view', $product);
+
         return new ProductResource($product->load(['categories', 'prices']));
     }
 
@@ -84,6 +91,8 @@ class ProductController extends Controller
         $product = Product::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->findOrFail($id);
+
+        Gate::authorize('update', $product);
 
         $product->update($request->validated());
 
@@ -106,6 +115,8 @@ class ProductController extends Controller
             ->where('tenant_id', $this->tenantContext->id())
             ->findOrFail($id);
 
+        Gate::authorize('delete', $product);
+
         $product->delete();
 
         return response()->json(['message' => 'Product deleted successfully']);
@@ -116,6 +127,8 @@ class ProductController extends Controller
      */
     public function search(string $query): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Product::class);
+
         $products = Product::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->where(function ($q) use ($query) {
@@ -136,6 +149,8 @@ class ProductController extends Controller
      */
     public function resolveBarcode(string $barcode, ProductBarcodeResolver $resolver): JsonResponse
     {
+        Gate::authorize('viewAny', Product::class);
+
         Validator::make(['barcode' => $barcode], [
             'barcode' => ['required', 'string', 'max:14'],
         ])->validate();
@@ -174,6 +189,8 @@ class ProductController extends Controller
      */
     public function byStatus(string $status): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Product::class);
+
         $products = Product::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->where('status', $status)

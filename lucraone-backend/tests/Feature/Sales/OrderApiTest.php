@@ -12,6 +12,7 @@ use App\Modules\Sales\Domain\Models\Customer;
 use App\Modules\Sales\Domain\Models\Order;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\AutorizaUsuarioDeApi;
 use Tests\TestCase;
 
 /**
@@ -19,7 +20,7 @@ use Tests\TestCase;
  */
 class OrderApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use AutorizaUsuarioDeApi, RefreshDatabase;
 
     private Tenant $tenant;
 
@@ -54,6 +55,7 @@ class OrderApiTest extends TestCase
             'amount' => 25.00,
         ]);
         $this->user = User::factory()->forTenant($this->tenant)->create();
+        $this->autorizarNaApi($this->tenant, $this->user);
         $this->token = $this->user->createToken('test')->plainTextToken;
     }
 

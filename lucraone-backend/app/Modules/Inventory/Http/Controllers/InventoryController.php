@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
 
 class InventoryController extends Controller
@@ -25,6 +26,8 @@ class InventoryController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Inventory::class);
+
         $inventory = Inventory::query()
             ->with(['product.categories', 'company', 'stockLevel'])
             ->when($request->filled('company_id'), fn ($query) => $query->where('company_id', $request->string('company_id')->toString()))
@@ -36,6 +39,8 @@ class InventoryController extends Controller
 
     public function adjust(AdjustInventoryRequest $request, string $productId): InventoryResource|JsonResponse
     {
+        Gate::authorize('create', Inventory::class);
+
         $product = Product::query()
             ->where('tenant_id', $this->context->id())
             ->findOrFail($productId);
@@ -58,6 +63,8 @@ class InventoryController extends Controller
 
     public function movements(string $productId): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Inventory::class);
+
         Product::query()
             ->where('tenant_id', $this->context->id())
             ->findOrFail($productId);
@@ -73,6 +80,8 @@ class InventoryController extends Controller
 
     public function lowStock(): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Inventory::class);
+
         $inventory = Inventory::query()
             ->with(['product', 'company', 'stockLevel'])
             ->whereHas('stockLevel', function ($query) {
@@ -85,6 +94,8 @@ class InventoryController extends Controller
 
     public function overstock(): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Inventory::class);
+
         $inventory = Inventory::query()
             ->with(['product', 'company', 'stockLevel'])
             ->whereHas('stockLevel', function ($query) {

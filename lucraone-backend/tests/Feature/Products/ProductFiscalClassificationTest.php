@@ -12,11 +12,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\Concerns\AutorizaUsuarioDeApi;
 use Tests\TestCase;
 
 class ProductFiscalClassificationTest extends TestCase
 {
-    use RefreshDatabase;
+    use AutorizaUsuarioDeApi, RefreshDatabase;
 
     private Tenant $tenant;
 
@@ -30,6 +31,7 @@ class ProductFiscalClassificationTest extends TestCase
         $this->tenant = Tenant::factory()->active()->create();
         $this->company = Company::factory()->create(['tenant_id' => $this->tenant->id]);
         $user = User::factory()->forTenant($this->tenant)->create();
+        $this->autorizarNaApi($this->tenant, $user);
         $this->withToken($user->createToken('pm05')->plainTextToken)->withHeader('X-Tenant-ID', $this->tenant->id);
     }
 

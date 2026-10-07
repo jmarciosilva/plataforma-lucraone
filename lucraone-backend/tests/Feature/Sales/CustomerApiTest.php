@@ -7,6 +7,7 @@ use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Sales\Domain\Models\Customer;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\AutorizaUsuarioDeApi;
 use Tests\TestCase;
 
 /**
@@ -14,7 +15,7 @@ use Tests\TestCase;
  */
 class CustomerApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use AutorizaUsuarioDeApi, RefreshDatabase;
 
     private Tenant $tenant;
 
@@ -34,6 +35,7 @@ class CustomerApiTest extends TestCase
         $this->outroTenant = Tenant::factory()->active()->create();
         $this->company = Company::factory()->forCurrentTenant($this->tenant->id)->active()->create();
         $this->user = User::factory()->forTenant($this->tenant)->create();
+        $this->autorizarNaApi($this->tenant, $this->user);
         $this->token = $this->user->createToken('test')->plainTextToken;
     }
 

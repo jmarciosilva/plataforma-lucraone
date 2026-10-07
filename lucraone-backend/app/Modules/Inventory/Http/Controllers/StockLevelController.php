@@ -8,6 +8,7 @@ use App\Modules\Inventory\Http\Resources\StockLevelResource;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 
 class StockLevelController extends Controller
 {
@@ -17,6 +18,8 @@ class StockLevelController extends Controller
 
     public function store(StoreStockLevelRequest $request, string $productId): StockLevelResource
     {
+        Gate::authorize('create', StockLevel::class);
+
         $product = Product::query()
             ->where('tenant_id', $this->context->id())
             ->findOrFail($productId);

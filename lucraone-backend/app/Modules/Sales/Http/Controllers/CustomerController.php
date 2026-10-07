@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 
 class CustomerController extends Controller
 {
@@ -19,6 +20,8 @@ class CustomerController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Customer::class);
+
         $customers = Customer::query()
             ->withCount('orders')
             ->when($request->filled('company_id'), fn ($query) => $query->where('company_id', $request->string('company_id')->toString()))
@@ -40,6 +43,8 @@ class CustomerController extends Controller
 
     public function store(StoreCustomerRequest $request): JsonResponse
     {
+        Gate::authorize('create', Customer::class);
+
         $customer = Customer::create([
             ...$request->validated(),
             'tenant_id' => $this->context->id(),
@@ -54,6 +59,8 @@ class CustomerController extends Controller
     public function show(string $id): CustomerResource
     {
         $customer = Customer::query()->withCount('orders')->findOrFail($id);
+
+        Gate::authorize('view', $customer);
 
         return new CustomerResource($customer);
     }

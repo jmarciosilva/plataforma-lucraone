@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Domain\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Tests\Concerns\AutorizaUsuarioDeApi;
 use Tests\TestCase;
 
 /**
@@ -20,7 +21,7 @@ use Tests\TestCase;
  */
 class ProductMasterDataApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use AutorizaUsuarioDeApi, RefreshDatabase;
 
     protected Tenant $tenant;
 
@@ -251,6 +252,7 @@ class ProductMasterDataApiTest extends TestCase
         $tenant = Tenant::factory()->create();
         $company = Company::factory()->create(['tenant_id' => $tenant->id]);
         $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $this->autorizarNaApi($tenant, $user);
 
         return [$tenant, $company, $user->createToken('test')->plainTextToken];
     }

@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Gate;
 
 class PriceController extends Controller
 {
@@ -25,6 +26,8 @@ class PriceController extends Controller
      */
     public function byProduct(string $productId): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Product::class);
+
         $prices = Price::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->where('product_id', $productId)
@@ -39,6 +42,7 @@ class PriceController extends Controller
     public function store(StorePriceRequest $request): JsonResponse
     {
         $product = Product::where('tenant_id', $this->tenantContext->id())->findOrFail($request->validated('product_id'));
+        Gate::authorize('update', $product);
         $price = app(RegistrarPreco::class)->salvar($product, $request->safe()->only(['currency', 'amount', 'type']), $request->user()?->id, 'alteração pela API');
 
         return (new PriceResource($price))
@@ -51,6 +55,8 @@ class PriceController extends Controller
      */
     public function history(string $productId): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Product::class);
+
         $history = PriceHistory::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->where('product_id', $productId)
@@ -81,6 +87,8 @@ class PriceController extends Controller
      */
     public function salePrice(string $productId): JsonResponse
     {
+        Gate::authorize('viewAny', Product::class);
+
         $price = Price::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->where('product_id', $productId)
@@ -99,6 +107,8 @@ class PriceController extends Controller
      */
     public function costPrice(string $productId): JsonResponse
     {
+        Gate::authorize('viewAny', Product::class);
+
         $price = Price::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->where('product_id', $productId)
@@ -120,6 +130,8 @@ class PriceController extends Controller
         $price = Price::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->findOrFail($priceId);
+
+        Gate::authorize('update', $price->product()->firstOrFail());
 
         app(RegistrarPreco::class)->remover($price, request()->user()?->id, 'remoção pela API');
 

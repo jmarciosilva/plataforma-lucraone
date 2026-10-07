@@ -7,11 +7,12 @@ use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use Database\Factories\CategoryFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\AutorizaUsuarioDeApi;
 use Tests\TestCase;
 
 class CategoryApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use AutorizaUsuarioDeApi, RefreshDatabase;
 
     protected Tenant $tenant;
     protected User $user;
@@ -23,6 +24,7 @@ class CategoryApiTest extends TestCase
 
         $this->tenant = Tenant::factory()->create();
         $this->user = User::factory()->create(['tenant_id' => $this->tenant->id]);
+        $this->autorizarNaApi($this->tenant, $this->user);
         $this->token = $this->user->createToken('test')->plainTextToken;
     }
 
