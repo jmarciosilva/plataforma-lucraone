@@ -18,24 +18,23 @@ checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-
 `feat(products): adicionar classificação fiscal básica`.
 **Próxima prioridade operacional:** será reavaliada após o fechamento
 documental do PM-05; nenhuma nova implementação iniciada nesta rodada.
-Baseline atual: 1162 testes — 1160 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
-0 SKIPPED e 4644 assertions. Os RISKY continuam sendo
+Baseline atual: 1185 testes — 1183 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 4705 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
 foram corrigidos. SEC-01, SEC-02, SEC-03 e SEC-04 resolvidos — os quatro
 bloqueadores obrigatórios pré-F2.6 estão encerrados, e o SEC-05 também está
-resolvido, e o SEC-06 também. COR-01, recomendado antes da F2.6, continua
-pendente. A F2.6 não foi iniciada.
+resolvido, assim como SEC-06 e COR-01. **Todos os itens pré-F2.6, obrigatórios
+e recomendados, estão encerrados** — resta apenas PERF-01, que nunca bloqueou. A
+F2.6 não foi iniciada.
 Staging disponível em https://lucraone.jmfsystem.tech; marco Cliente Teste
 concluído.
 
-> 🔴 **A F2.6 continua bloqueada.** Ela segue sendo a próxima sprint funcional,
-> mas só começa depois que os bloqueadores obrigatórios de
-> [Pendências bloqueadoras pré-F2.6](#pendências-bloqueadoras-pré-f26) forem
-> resolvidos. **Os quatro bloqueadores obrigatórios — SEC-01, SEC-02, SEC-03 e
-> SEC-04 — estão resolvidos**, e o SEC-05 também. Restam os recomendados
-> COR-01,
-> que o [critério de liberação](#critério-para-liberar-a-f26) exige resolver ou
-> adiar com decisão registrada. A F2.6 não foi iniciada.
+> 🟢 **A F2.6 está liberada, e não foi iniciada.** Os quatro bloqueadores
+> obrigatórios — SEC-01, SEC-02, SEC-03 e SEC-04 — e os três recomendados —
+> SEC-05, SEC-06 e COR-01 — estão resolvidos, e os três itens do
+> [critério de liberação](#critério-para-liberar-a-f26) estão satisfeitos.
+> Liberar não é começar: iniciar a F2.6 é decisão de quem conduz o produto.
+> PERF-01 segue pendente e nunca bloqueou.
 
 ---
 
@@ -122,7 +121,7 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 > foi concluído e publicado, assim como PM-05. A próxima prioridade operacional
 > será reavaliada após o fechamento documental do PM-05.
 > Não há dependência técnica entre ONB e PM. Os bloqueadores obrigatórios da
-> F2.6 estão encerrados; falta o recomendado COR-01.
+> F2.6 e os recomendados estão todos encerrados.
 
 A FASE 03 entrou na frente da F2.2 de propósito: depois da F2.1 o backend já
 expunha APIs completas, mas **não havia como um humano entrar no sistema**.
@@ -216,7 +215,7 @@ Levantadas na auditoria de 2026-09-09 e conferidas contra o código em
 | SEC-04 | Segurança | create-role | Crítica | Resolvido | **Sim** |
 | SEC-05 | Segurança | SendEmailAction | Média | Resolvido | Recomendado |
 | SEC-06 | Segurança | Secrets / .env.testing | Média | Resolvido | Recomendado |
-| COR-01 | Correção | Soft delete + unicidade | Alta | Pendente | Recomendado |
+| COR-01 | Correção | Soft delete + unicidade | Alta | Resolvido | Recomendado |
 | PERF-01 | Performance | hasAnyPermission | Média | Pendente | Não |
 
 **Bloqueia F2.6** — **Sim**: a F2.6 não começa com o item aberto.
@@ -722,9 +721,9 @@ O SEC-04 está **resolvido**: todos os vetores estão corrigidos e os
 [critérios de aceite](#critérios-de-aceite) estão verdes. Isso **não libera a
 F2.6**, que permanece não iniciada: com o SEC-03 fechado em `342f4ad`, os
 quatro bloqueadores obrigatórios estão resolvidos, e o critério de liberação
-ainda pede COR-01 resolvido ou adiado por decisão registrada.
+está integralmente satisfeito nos dois primeiros itens.
 
-**Próximo item recomendado:** COR-01 — Soft delete + unicidade.
+**Nenhum item pré-F2.6 em aberto.** PERF-01 segue pendente e nunca bloqueou.
 
 **Evidência atual.** Após `7433c5b`, o SEC-04 tem 151 testes: 151 PASS, 0 FAIL,
 0 ERROR e 583 assertions.
@@ -1852,45 +1851,177 @@ F2.6 não iniciada.
 
 ### COR-01 — Soft delete + unicidade
 
-**Alta · Pendente · Bloqueia F2.6: Recomendado** — Origem: F2.1, F3.4 e F3.5,
-2026-08-16
+**Alta · Resolvido · Bloqueia F2.6: Recomendado** — Origem: F2.1, F3.4 e F3.5,
+2026-08-16 · Resolvido em `18eaa10`, 2026-10-07
 
-**Problema.** Quatro tabelas combinam soft delete com índice único que não
-considera `deleted_at`:
+**Problema.** Tabelas que combinam soft delete com índice único que não
+considera `deleted_at`. A auditoria de hoje encontrou **cinco** índices nessa
+situação, um a mais que os quatro registrados:
 
 | Tabela | Unicidade | Soft delete desde |
 |---|---|---|
 | `products` | `(tenant_id, sku)` | F2.1 |
+| `products` | `(tenant_id, barcode)` | PM-03 (`c846d8d`) — **não constava** |
 | `categories` | `(tenant_id, slug)` | F2.1 |
 | `tenants` | `slug` (global) | F3.4 |
 | `users` | `email` (global) | F3.5 |
 
-O que isso causa, pela leitura do código:
+O índice de `barcode` nasceu depois da auditoria original. Já estava coberto: a
+regra `BarcodeAvailable` o valida desde o PM-03, e o docblock dela declara a
+política — *"produtos arquivados continuam ocupando o código, como no índice
+único"*.
 
-- **No painel**, as validações `Rule::unique` contam registros arquivados e
-  respondem "já existe" para um valor que não aparece na listagem padrão.
-  Restaurar, disponível nas quatro telas, é a única saída.
-- **Na API de produtos**, `StoreProductRequest` não valida a unicidade do SKU —
-  a mensagem `sku.unique` existe, a regra não — e não há tratamento de violação
-  de constraint. Um SKU repetido, arquivado ou ativo, chega ao banco como
-  exceção não tratada.
-- **Em `users.email`**, que é identidade global desde a F1.8, o efeito depende
-  do fluxo de reingresso de uma pessoa arquivada. Ainda não foi mapeado.
+**A política já existia no código; o que faltava era aplicá-la por igual.** O
+item foi registrado como "definir uma estratégia", mas a estratégia estava
+escrita em três lugares, todos dizendo a mesma coisa:
 
-O banco preserva a integridade: nenhuma duplicata é gravada.
+- `BarcodeAvailable` valida contra arquivados, e explica por quê;
+- `CriarProdutoComSku::proximo()` gera o próximo SKU com `Product::withTrashed()`,
+  pulando os arquivados;
+- `UserController::store` e `CriarClienteLucraOne` recusam e-mail de conta
+  arquivada com mensagem própria, e o comentário amarra a decisão ao SEC-04 E3:
+  *"jamais restaurar ou reativar identidade global como efeito de um novo
+  vínculo"*.
 
-**Consequência.** Um valor que pertence a um registro arquivado fica
-indisponível indefinidamente.
+Então o COR-01 não escolheu uma política nova: formalizou a que o projeto já
+seguia e a estendeu aos pontos que tinham ficado de fora.
 
-**Objetivo futuro.** Definir uma estratégia coerente entre soft delete,
-restauração, reutilização, constraints e validação de domínio. É a política que
-a Fundação pediu na seção 51 ("a política deverá ser definida explicitamente") e
-que não chegou a ser escrita.
+**Política adotada.**
+
+| Entidade | Chave única | Valor arquivado reservado? | Create | Restore | Reutilizar |
+|---|---|---|---|---|---|
+| `products` | `(tenant_id, sku)` | **sim** | `422`, distinguindo ativo de arquivado | sempre possível | não |
+| `products` | `(tenant_id, barcode)` | **sim** | `422` (`BarcodeAvailable`, já existia) | sempre possível | não |
+| `categories` | `(tenant_id, slug)` | **sim** | `422`, distinguindo | sempre possível | não |
+| `tenants` | `slug` (global) | **sim** | erro de validação | sempre possível | não |
+| `users` | `email` (global) | **sim** | reusa a identidade se ativa; recusa se arquivada | restore explícito | nunca duas identidades |
+
+**Justificativa por entidade.**
+
+- **Product SKU** — é identificador de negócio, e a F2.6 casa produtos por SKU
+  com ERP e marketplace. Reaproveitar um SKU para um produto diferente faria a
+  integração externa colar o histórico errado no item errado. O SKU arquivado
+  continua pertencendo ao produto histórico, e voltar a usá-lo é restaurar
+  aquele produto.
+- **Category slug** — é mais apresentação que identidade externa, então a
+  reutilização seria defensável. Não foi adotada por dois motivos: a tela de
+  categorias tem restore, o que torna o reaproveitamento desnecessário; e uma
+  política diferente da do produto, na mesma tela de catálogo, seria uma
+  inconsistência que o operador paga para aprender. Vale revisitar se um dia
+  houver demanda concreta.
+- **Tenant slug** — é global e identifica o estabelecimento em URL, log e
+  auditoria. Deixar outro estabelecimento assumir um slug histórico confunde
+  exatamente o rastro que se quer preservar. Reativação é por restore.
+- **User email** — identidade global desde a F1.8. Duas contas com o mesmo
+  e-mail nunca podem existir. Com a conta **ativa**, criar vínculo reaproveita a
+  mesma identidade e só acrescenta o vínculo e os papéis. Com a conta
+  **arquivada**, a criação é recusada com mensagem, e restaurar é ato próprio de
+  quem administra — é a regra do SEC-04 E3, preservada.
+
+**Nenhuma migration foi necessária, e isso é a conclusão, não a economia.** A
+política é "arquivado continua reservado", e é exatamente isso que os índices
+únicos atuais fazem ao cobrir as linhas arquivadas. Mexer neles — somar
+`deleted_at` à chave, ou soltar a constraint — implementaria a política oposta.
+De passagem, a decisão evita duas armadilhas: a semântica de `NULL` em
+`UNIQUE(..., deleted_at)` no MySQL, que permitiria mais duplicidade do que se
+espera, e mutar o identificador histórico no delete, que quebraria auditoria e
+restore.
+
+**O que estava realmente quebrado era a aplicação não dizer o que o banco diz.**
+Dois defeitos, ambos reproduzidos antes de corrigir:
+
+- **A API não validava.** `StoreProductRequest` tinha a mensagem `sku.unique` e
+  **nenhuma regra** `unique`; `UpdateProductRequest` idem; `StoreCategoryRequest`
+  não validava `slug`. Um SKU ou slug repetido ia ao banco e voltava como
+  **HTTP 500** com `SQLSTATE[23000]: Integrity constraint violation`. Registrado
+  no teste vermelho.
+- **A mensagem do painel não explicava.** `Rule::unique` conta os arquivados —
+  correto para a política — mas responde "já existe" para um registro que
+  nenhuma listagem mostra. Quem recebia a mensagem ia procurar e não encontrava.
+
+**A correção.** Uma regra de validação, `IdentificadorDisponivel`, irmã de
+`BarcodeAvailable` e com a mesma forma: consulta por `DB::table`, sem global
+scope, com o estabelecimento explícito — a mesma pergunta que o índice único
+faz. A diferença é que ela sabe responder *por que* o valor está ocupado, porque
+lê `deleted_at`:
+
+- ativo: *"já existe um produto ativo com este SKU."*
+- arquivado: *"já existe um produto arquivado com este SKU. restaure o produto
+  existente ou use outro SKU."*
+
+Aplicada nos três requests de API que não validavam e, em substituição ao
+`Rule::unique`, nos requests de produto, categoria e estabelecimento do painel —
+para que API e painel digam a mesma frase. Nada no banco mudou.
+
+**Restore nunca colide, por construção.** Como o identificador jamais é
+liberado, não existe o cenário "A arquivado, B novo com o mesmo valor, restaurar
+A". Há teste provando o encadeamento: arquiva, confirma que a criação com aquele
+valor é recusada, restaura, e o registro volta com o identificador intacto.
+
+**Isolamento por estabelecimento preservado.** `products` e `categories` seguem
+únicos **por estabelecimento**: o mesmo SKU em dois estabelecimentos continua
+permitido, inclusive quando em um deles o produto está arquivado. `tenants.slug`
+e `users.email` seguem globais. Há teste para cada caso.
+
+**MySQL e SQLite: uma divergência, documentada e inofensiva.** A suíte roda em
+SQLite e o item mexe em unicidade, então o comportamento foi conferido também no
+MySQL de staging, em transação revertida — nada foi gravado:
+
+| Pergunta | MySQL 8.4 | SQLite |
+|---|---|---|
+| Linha arquivada continua ocupando o valor? | sim | sim |
+| `COR01-CASE` colide com `cor01-case`? | **sim** | não |
+
+A collation é `utf8mb4_unicode_ci`, insensível a caixa; o SQLite compara byte a
+byte. A divergência é preexistente e **não produz erro de banco em nenhum dos
+dois**: a consulta da regra usa a mesma coluna e a mesma collation do índice,
+então aplicação e banco sempre dão a mesma resposta dentro do mesmo motor —
+conferido no MySQL, onde a regra enxerga a linha arquivada inclusive com a caixa
+trocada. Nenhum `lower()` foi adicionado: mudar a sensibilidade a caixa é
+decisão de produto, não efeito colateral desta correção.
+
+**Nada de dado foi perdido ou alterado.** Nenhum `forceDelete`, nenhum
+identificador histórico renomeado, nenhuma entidade ativa sobrescrita, nenhum
+dado movido entre estabelecimentos, nenhuma migration, nenhum backfill.
+
+**Testes adicionados.** 23 testes, 61 assertions, em
+`tests/Feature/Domain/SoftDeleteUniquenessTest.php`. Antes da correção, 11
+falhavam; os 12 que já passavam documentam o que o projeto acertava — tenant
+slug reservado, restore, identidade global de usuário, isolamento entre
+estabelecimentos e o banco recusando duplicata arquivada nas três tabelas
+globais. A suíte cobre API e painel, create, update e restore, e inclui testes
+que atacam o banco direto, para provar que validação e constraint dizem a mesma
+coisa.
 
 **Por que Recomendado.** A F2.6 prevê sincronização com ERP e marketplace, que
-casa produtos por SKU: um SKU arquivado quebraria a importação.
+casa produtos por SKU: um SKU reaproveitado quebraria a importação.
 
-**Por que não Sim.** Não é falha de segurança e não corrompe dados.
+**Por que não Sim.** Não era falha de segurança e não corrompia dados — o banco
+sempre preservou a integridade.
+
+**Evidência da entrega (2026-10-07).** Suíte completa: 1185 testes — 1183 PASS,
+0 FAIL, 0 ERROR, 2 RISKY preexistentes, 0 SKIPPED e 4705 assertions, contra
+1162/1160/4644 do baseline anterior: +23 testes e +61 assertions, exatamente os
+do COR-01. Testes focados: 23 PASS, 61 assertions. Domínio afetado — Products,
+Admin, Tenancy, Identity, Companies e Domain: 562 PASS, 2827 assertions.
+Regressões: SEC-01 35 PASS, SEC-02 21 PASS, SEC-03 23 PASS, SEC-05 25 PASS,
+SEC-06 8 PASS. `php -l` sem erro nos 10 arquivos PHP alterados. Pint passou nos
+11 do escopo. PHPStan: 17 erros, com totais **e conjunto de arquivos idênticos**
+à rodada anterior. `git diff --check` limpo. As onze entradas
+`Integrity constraint` do dia são do canal `testing`, às 20:07, da fase vermelha;
+**nenhuma depois da correção**, e zero `5xx` no nginx. Nenhum container
+reiniciado, nenhuma migration criada ou executada.
+
+**Critérios de aceite.** Todos verdes: política explícita por entidade; SKU,
+slug de categoria, slug de estabelecimento e e-mail com comportamento definido;
+create sem `500` por duplicidade previsível; update tratando duplicidade e
+ignorando o próprio registro; restore sem colisão possível; identidade global de
+`users.email` e de `tenants.slug` preservadas; unicidade por estabelecimento
+preservada em products e categories; API e painel com a mesma política e a mesma
+mensagem; banco e validação alinhados; divergência MySQL/SQLite conferida e
+documentada; nenhuma perda de dados; SEC-01, SEC-02, SEC-03, SEC-05 e SEC-06
+verdes; suíte com 0 FAIL e 0 ERROR; nenhum achado novo de qualidade; staging
+saudável; F2.6 não iniciada.
 
 ### PERF-01 — hasAnyPermission
 
@@ -1943,9 +2074,9 @@ SEC-05 — SendEmailAction          ✅
         ↓
 SEC-06 — Secrets / .env.testing   ✅
         ↓
-COR-01 — Soft delete + unicidade  🔴 recomendado, próximo
+COR-01 — Soft delete + unicidade  ✅
         ↓
-PERF-01 — hasAnyPermission
+PERF-01 — hasAnyPermission        🔴 pendente, nunca bloqueou
         ↓
 F2.6 — Integration APIs
 ```
@@ -1985,10 +2116,16 @@ SEC-01  aplica as Policies corrigidas na API
 
 **Estado em 2026-10-07.** Primeiro item **cumprido**: os quatro bloqueadores
 obrigatórios estão `Resolvido`, com testes — SEC-04 em `7433c5b`, SEC-01 em
-`3a14703`, SEC-02 em `e306494` e SEC-03 em `342f4ad`. Segundo item **não
-cumprido**: SEC-05 e SEC-06 foram resolvidos em `6b271ef` e `693a8ef`, mas o
-COR-01 segue pendente e sem decisão de adiamento registrada. Terceiro item pendente de
-conferência. A F2.6 **não foi iniciada**.
+`3a14703`, SEC-02 em `e306494` e SEC-03 em `342f4ad`. Segundo item **cumprido**:
+SEC-05, SEC-06 e COR-01 resolvidos em `6b271ef`, `693a8ef` e `18eaa10`, nenhum
+adiado. Terceiro item **cumprido**: tabela de acompanhamento, README e placar da
+FASE 02 conferidos nesta data — o README estava defasado, afirmando SEC-01/02/03
+pendentes e um baseline de 568 testes, e foi atualizado; o placar da FASE 02 e o
+DEVELOPMENT_DASHBOARD não afirmavam status de pendência e seguem corretos.
+
+**Os três critérios estão satisfeitos: a F2.6 está liberada.** Liberar não é
+iniciar — começar a F2.6 é decisão de quem conduz o produto, e ela **não foi
+iniciada**.
 
 Fechar os bloqueadores obrigatórios também **não** torna o backend apto para o
 PDV: esse marco é outro e exige a entidade Terminal, o vínculo
@@ -2071,9 +2208,8 @@ por estoque, vendas, PDV, scanner, embalagens e fiscal.
 O que esta trilha é, e o que não é:
 
 - **Não libera a F2.6.** É uma evolução funcional paralela. A F2.6 continua
-  não iniciada, e o item recomendado COR-01 mantém o
-  status e a prioridade das
-  [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26).
+  não iniciada. Os itens das
+  [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26) estão encerrados.
 - **Não é uma fase nem uma sprint.** Usa IDs próprios (`PM-*`), como as
   pendências usam `SEC-*`, e o placar de fases não muda.
 - **Não antecipa PDV, fiscal nem scanner.** Prepara apenas o cadastro mestre
@@ -2806,9 +2942,8 @@ O que esta trilha é, e o que não é:
 
 - **É paralela à trilha PM.** Não substitui nem absorve PM-04A, PM-04B, PM-04C
   ou PM-05, que mantêm escopo, status e ordem próprios.
-- **Não libera a F2.6.** O item recomendado COR-01 continua pendente, com a
-  prioridade que já tinha nas
-  [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26).
+- **Não libera a F2.6 por si.** Quem a libera são as
+  [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26), hoje encerradas.
 - **Não é uma fase nem uma sprint.** Usa IDs próprios (`ONB-*`), como `PM-*`,
   `SEC-*`, `COR-*` e `PERF-*`. O placar de fases não muda.
 - **Não antecipa PDV nem fiscal.** Trata do cadastro e da ativação do cliente,

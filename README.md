@@ -17,16 +17,18 @@ O plano de execução está em **[ROADMAP.md](ROADMAP.md)**.
 | **Fase funcional atual** | FASE 02 — Features (6 de 7 sprints entregues) |
 | **Última sprint concluída** | F2.5 — Advanced Automation |
 | **Próxima sprint funcional** | F2.6 — Integration APIs |
-| **Status da F2.6** | 🔴 **Bloqueada temporariamente** pelo hardening de segurança pré-F2.6 |
-| **Testes** | 849 no total · 847 PASS · 0 FAIL/ERROR · 2 risky preexistentes · 0 skipped · 3248 assertions |
+| **Status da F2.6** | 🟢 **Liberada e não iniciada** — o hardening pré-F2.6 foi concluído |
+| **Testes** | 1185 no total · 1183 PASS · 0 FAIL/ERROR · 2 risky preexistentes · 0 skipped · 4705 assertions |
 | **Módulos** | 12 |
 | **Superfícies** | Painel web (sessão) + API REST `/api/v1` (Sanctum) |
 
-A F2.6 só começa quando os bloqueadores obrigatórios **SEC-01 a SEC-04** estiverem
-resolvidos. O SEC-04 está resolvido; **SEC-01, SEC-02 e SEC-03 continuam pendentes
-e mantêm a F2.6 bloqueada.** Essas pendências não são uma fase nova e não reabrem a
-F1.7: são correções identificadas depois que os módulos da FASE 02 cresceram. Lista
-em [Limitações conhecidas](#limitações-conhecidas); detalhe e critério de liberação
+O hardening pré-F2.6 está concluído: os quatro bloqueadores obrigatórios
+(**SEC-01** a **SEC-04**) e os três recomendados (**SEC-05**, **SEC-06** e
+**COR-01**) estão resolvidos, cada um com os testes que provam a correção.
+**A F2.6 está liberada e não foi iniciada** — liberar e começar são coisas
+diferentes. Essas pendências não foram uma fase nova e não reabriram a F1.7: eram
+correções identificadas depois que os módulos da FASE 02 cresceram. Lista em
+[Limitações conhecidas](#limitações-conhecidas); detalhe e critério de liberação
 em [ROADMAP.md](ROADMAP.md#pendências-bloqueadoras-pré-f26).
 
 ONB-01B está concluído: criação guiada em quatro passos, ajuda permanente para
@@ -71,8 +73,9 @@ O SEC-04 foi concluído. Nele foram corrigidos:
   binding, e uma entidade de outro estabelecimento simplesmente não é encontrada —
   retorna 404 —, mesmo com permissão no estabelecimento ativo.
 
-Com o E7 fechado, o SEC-04 está **resolvido**: 151 testes do vetor, todos verdes. A
-F2.6 **permanece bloqueada** pelos SEC-01, SEC-02 e SEC-03.
+Com o E7 fechado, o SEC-04 está **resolvido**: 151 testes do vetor, todos verdes.
+SEC-01, SEC-02 e SEC-03 foram resolvidos depois dele, nessa ordem, e os
+recomendados SEC-05, SEC-06 e COR-01 em seguida.
 
 O sistema é operável por uma pessoa desde a F3.2: há login em `/login`, e quem
 tem vínculo com vários estabelecimentos escolhe onde vai trabalhar e troca pelo
@@ -179,7 +182,7 @@ e nos ADRs em [`lucraone-backend/docs/adr/`](lucraone-backend/docs/adr/).
 ## Desenvolvimento
 
 ```bash
-docker compose exec app php artisan test        # 568 testes; 566 PASS e 2 risky preexistentes
+docker compose exec app php artisan test        # 1185 testes; 1183 PASS e 2 risky preexistentes
 docker compose exec app ./vendor/bin/pint       # estilo
 docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=1G
 docker compose exec app php artisan tinker
@@ -195,21 +198,27 @@ demanda antes do commit.
 
 ## Limitações conhecidas
 
-Levantadas em auditoria de 2026-09-09 e conferidas contra o código em
-2026-09-10. São as **pendências pré-F2.6**; evidências, objetivo de cada
-correção e ordem recomendada estão em
+Levantadas em auditoria de 2026-09-09, conferidas contra o código em 2026-09-10
+e **encerradas em 2026-10-07**, exceto PERF-01, que nunca bloqueou. Eram as
+**pendências pré-F2.6**; evidências, política adotada em cada caso e os testes
+que provam cada correção estão em
 [ROADMAP.md](ROADMAP.md#pendências-bloqueadoras-pré-f26).
 
-| ID | Pendência | Prioridade | Bloqueia F2.6 |
-|---|---|---|---|
-| SEC-01 | 7 dos 14 controllers da API não verificam permissão | Crítica | Sim |
-| SEC-02 | Login da API sem rate limiting; tokens sem expiração nem abilities | Crítica | Sim |
-| SEC-03 | `TenantResolver` aceita `X-Tenant-ID` sem usuário autenticado | Alta | Sim |
-| SEC-04 | ✅ Resolvido: Platform Admin/X1, coringa `create-role` nos módulos, identidade global (E3), delegação por `update-role` (E1), administração de usuários por `manage-users` (E2) e contexto de estabelecimento no route binding (E7) corrigidos | Crítica | Sim |
-| SEC-05 | Automações enviam e-mail para qualquer destinatário | Média | Recomendado |
-| SEC-06 | `APP_KEY` versionada em `.env.testing` | Média | Recomendado |
-| COR-01 | Índices únicos ignoram soft delete (SKU, slug, e-mail) | Alta | Recomendado |
-| PERF-01 | `hasAnyPermission()` repete consultas a cada permissão verificada | Média | Não |
+| ID | Pendência | Prioridade | Bloqueia F2.6 | Status |
+|---|---|---|---|---|
+| SEC-01 | 7 dos 14 controllers da API não verificavam permissão | Crítica | Sim | ✅ `3a14703` |
+| SEC-02 | Login da API sem rate limiting; tokens sem expiração nem abilities | Crítica | Sim | ✅ `e306494` |
+| SEC-03 | `TenantResolver` aceitava `X-Tenant-ID` sem usuário autenticado | Alta | Sim | ✅ `342f4ad` |
+| SEC-04 | Platform Admin/X1, coringa `create-role`, identidade global (E3), delegação por `update-role` (E1), administração por `manage-users` (E2) e contexto no route binding (E7) | Crítica | Sim | ✅ `7433c5b` |
+| SEC-05 | Automações enviavam e-mail para qualquer destinatário, sem limite | Média | Recomendado | ✅ `6b271ef` |
+| SEC-06 | `APP_KEY` versionada em `.env.testing` | Média | Recomendado | ✅ `693a8ef` |
+| COR-01 | Validação não acompanhava os índices únicos sob soft delete | Alta | Recomendado | ✅ `18eaa10` |
+| PERF-01 | `hasAnyPermission()` repete consultas a cada permissão verificada | Média | Não | 🔴 Pendente |
+
+O backend **não** está apto para integração com o PDV: esse marco é outro e
+exige a entidade Terminal, o vínculo terminal → estabelecimento/empresa/filial,
+pareamento, credencial de máquina e as rotas `/api/v1/pdv/*` — nada disso
+existe.
 
 ---
 
