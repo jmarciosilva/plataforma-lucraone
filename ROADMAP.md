@@ -18,12 +18,13 @@ checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-
 `feat(products): adicionar classificação fiscal básica`.
 **Próxima prioridade operacional:** será reavaliada após o fechamento
 documental do PM-05; nenhuma nova implementação iniciada nesta rodada.
-Baseline atual: 1129 testes — 1127 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
-0 SKIPPED e 4571 assertions. Os RISKY continuam sendo
+Baseline atual: 1154 testes — 1152 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 4630 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
 foram corrigidos. SEC-01, SEC-02, SEC-03 e SEC-04 resolvidos — os quatro
-bloqueadores obrigatórios pré-F2.6 estão encerrados. SEC-05, SEC-06 e COR-01,
-recomendados antes da F2.6, continuam pendentes. A F2.6 não foi iniciada.
+bloqueadores obrigatórios pré-F2.6 estão encerrados, e o SEC-05 também está
+resolvido. SEC-06 e COR-01, recomendados antes da F2.6, continuam pendentes. A
+F2.6 não foi iniciada.
 Staging disponível em https://lucraone.jmfsystem.tech; marco Cliente Teste
 concluído.
 
@@ -31,7 +32,8 @@ concluído.
 > mas só começa depois que os bloqueadores obrigatórios de
 > [Pendências bloqueadoras pré-F2.6](#pendências-bloqueadoras-pré-f26) forem
 > resolvidos. **Os quatro bloqueadores obrigatórios — SEC-01, SEC-02, SEC-03 e
-> SEC-04 — estão resolvidos.** Restam os recomendados SEC-05, SEC-06 e COR-01,
+> SEC-04 — estão resolvidos**, e o SEC-05 também. Restam os recomendados
+> SEC-06 e COR-01,
 > que o [critério de liberação](#critério-para-liberar-a-f26) exige resolver ou
 > adiar com decisão registrada. A F2.6 não foi iniciada.
 
@@ -120,7 +122,7 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 > foi concluído e publicado, assim como PM-05. A próxima prioridade operacional
 > será reavaliada após o fechamento documental do PM-05.
 > Não há dependência técnica entre ONB e PM. Os bloqueadores obrigatórios da
-> F2.6 estão encerrados; faltam os recomendados SEC-05, SEC-06 e COR-01.
+> F2.6 estão encerrados; faltam os recomendados SEC-06 e COR-01.
 
 A FASE 03 entrou na frente da F2.2 de propósito: depois da F2.1 o backend já
 expunha APIs completas, mas **não havia como um humano entrar no sistema**.
@@ -212,7 +214,7 @@ Levantadas na auditoria de 2026-09-09 e conferidas contra o código em
 | SEC-02 | Segurança | API Authentication | Crítica | Resolvido | **Sim** |
 | SEC-03 | Segurança | TenantResolver | Alta | Resolvido | **Sim** |
 | SEC-04 | Segurança | create-role | Crítica | Resolvido | **Sim** |
-| SEC-05 | Segurança | SendEmailAction | Média | Pendente | Recomendado |
+| SEC-05 | Segurança | SendEmailAction | Média | Resolvido | Recomendado |
 | SEC-06 | Segurança | Secrets / .env.testing | Média | Pendente | Recomendado |
 | COR-01 | Correção | Soft delete + unicidade | Alta | Pendente | Recomendado |
 | PERF-01 | Performance | hasAnyPermission | Média | Pendente | Não |
@@ -720,9 +722,9 @@ O SEC-04 está **resolvido**: todos os vetores estão corrigidos e os
 [critérios de aceite](#critérios-de-aceite) estão verdes. Isso **não libera a
 F2.6**, que permanece não iniciada: com o SEC-03 fechado em `342f4ad`, os
 quatro bloqueadores obrigatórios estão resolvidos, e o critério de liberação
-ainda pede SEC-05, SEC-06 e COR-01 resolvidos ou adiados por decisão registrada.
+ainda pede SEC-06 e COR-01 resolvidos ou adiados por decisão registrada.
 
-**Próximo item recomendado:** SEC-05 — SendEmailAction.
+**Próximo item recomendado:** SEC-06 — Secrets / .env.testing.
 
 **Evidência atual.** Após `7433c5b`, o SEC-04 tem 151 testes: 151 PASS, 0 FAIL,
 0 ERROR e 583 assertions.
@@ -1489,45 +1491,201 @@ terceiros, que herdaria o padrão atual.
 
 ### SEC-05 — SendEmailAction
 
-**Média · Pendente · Bloqueia F2.6: Recomendado** — Origem: F2.5 (`3fd8f3b`,
-2026-09-09)
+**Média · Resolvido · Bloqueia F2.6: Recomendado** — Origem: F2.5 (`3fd8f3b`,
+2026-09-09) · Resolvido em `6b271ef`, 2026-10-07
 
-**Problema.** `SendEmailAction` aceita em `action_config.recipients` até 1.000
+**Problema.** `SendEmailAction` aceitava em `action_config.recipients` até 1.000
 caracteres de endereços separados por vírgula, ponto e vírgula ou quebra de
-linha, e só filtra o formato. Assunto e mensagem são escritos pelo usuário e
-interpolados com os dados do gatilho. Não há restrição a usuários ou contatos do
-estabelecimento, limite de destinatários, limite de envios por regra ou período,
-nem registro voltado a detectar abuso.
+linha, e só filtrava o formato. Assunto e mensagem são escritos pelo usuário e
+interpolados com os dados do gatilho. Não havia restrição a usuários ou contatos
+do estabelecimento, limite de destinatários, limite de envios por regra ou
+período, nem registro voltado a detectar abuso.
+
+Os três números medidos antes de corrigir, para dimensionar o que "1.000
+caracteres" significava:
+
+| Medição | Antes |
+|---|---|
+| Destinatários que cabem em 1.000 caracteres | **143** |
+| Destinatários aceitos pela API em um teste | **50** → `201 Created` |
+| `A@Casa.test` + `a@casa.test` | **2** destinatários, a mesma caixa duas vezes |
+| Execuções consecutivas da mesma regra | **70**, todas executadas, 0 bloqueios |
 
 **Quem pode configurar.** Quem tem `manage-automations`, verificado na API e no
 painel. Até `6c770dc`, `create-role` também servia como coringa.
 
-**Agravante enquanto o SEC-01 estiver aberto.** O gatilho `product_created`
-dispara na criação de produto, que hoje qualquer usuário autenticado faz pela
-API, sem limite de volume. Um usuário sem privilégio consegue multiplicar os
-envios de uma regra já existente.
+**Agravante histórico, encerrado.** Enquanto o SEC-01 estava aberto, o gatilho
+`product_created` podia ser multiplicado por qualquer usuário autenticado, que
+criava produto pela API sem passar por permissão. Com o SEC-01 resolvido em
+`3a14703`, criar produto exige `manage-products`, e esse vetor deixou de
+existir. O registro fica como histórico da avaliação de risco original.
 
 **Risco.** Uso indevido, spam, abuso da infraestrutura de e-mail e deterioração
 da reputação do domínio remetente.
 
+**Princípio de produto adotado.** Automação é notificação operacional — avisar o
+comprador, o estoquista, o contador —, não campanha de marketing. Os defaults
+são, portanto, volume baixo, destinatários controlados e rastro auditável.
+
+**Política de destinatários.**
+
+| Decisão | Valor |
+|---|---|
+| Máximo por regra | **10** |
+| Formato | e-mail válido, e **a lista inteira é recusada** se houver um inválido |
+| Separadores | vírgula, ponto e vírgula, quebra de linha |
+| Normalização | `trim`, caixa baixa, descarte de entradas vazias |
+| Deduplicação | sim, depois da normalização — `A@Casa.test` e `a@casa.test` contam como um |
+| Domínio externo | **permitido** |
+| Precisa ser `User` do sistema | **não** |
+
+O `max:1000` caracteres continua na validação como freio barato de tamanho, mas
+nunca foi um limite semântico — cabiam 143 endereços nele. Quem limita agora é a
+quantidade.
+
+Endereço inválido passou a recusar a lista inteira em vez de ser descartado em
+silêncio. Antes, um erro de digitação no meio da lista fazia a notificação
+simplesmente não chegar àquela pessoa, sem ninguém saber. É mudança de
+comportamento deliberada: falhar com motivo registrado é o que dá chance de
+corrigir.
+
+**Por que não restringir a `User` do sistema.** Notificação operacional
+legítima vai com frequência para quem não tem conta no LucraOne: o contador, o
+fornecedor, o financeiro terceirizado, um gestor que só quer receber o aviso.
+Exigir cadastro quebraria o uso real sem reduzir o risco de forma proporcional —
+quem configura a regra já tem `manage-automations`.
+
+**Por que não usar whitelist de domínio.** Seria rígida demais sem uma tela para
+gerenciá-la, e a primeira notificação para um Gmail legítimo viraria um chamado
+de suporte. Fica registrada como opção para quando houver interface de
+governança; o limite de quantidade mais o orçamento de entregas atacam o mesmo
+risco sem esse custo.
+
+**Limites de envio.** Dois limiters nativos, ambos em janela de 3.600 segundos,
+aplicados **junto do executor da ação** e não na rota — o risco é a execução da
+automação, não a requisição HTTP:
+
+| Limite | Valor | Unidade | Chave |
+|---|---|---|---|
+| Por regra | **60** | execuções | `automation-email:rule:{tenant_id}:{rule_id}` |
+| Por estabelecimento | **500** | **entregas** | `automation-email:tenant:{tenant_id}` |
+
+As chaves incluem o `tenant_id` sempre, então o contador de um estabelecimento
+nunca atinge outro — verificado por teste, inclusive para a forma da chave.
+
+O limite por regra conta execuções: 60 por hora é uma por minuto sustentada,
+muito acima de qualquer cadência real dos três gatilhos existentes
+(`product_created`, `stock_low`, `order_completed`), todos nascidos de ação
+humana — nenhum é agendado nem de alta frequência. O limite do estabelecimento
+conta **entregas**, porque é a entrega que gasta reputação do remetente, e
+porque sem ele somar regras multiplicaria o volume: dez regras sob o limite por
+regra entregariam 6.000 e-mails por hora.
+
+**Comportamento ao bloquear.** Nada é enviado — não existe envio parcial. O
+orçamento do estabelecimento considera as entregas **desta** execução antes de
+liberar, em vez de só o total corrente, justamente para não mandar metade da
+lista e cortar o resto. O bloqueio sobe como exceção, que o `RuleEngine` já
+captura: a execução é gravada como `failed` com o motivo, as outras regras do
+gatilho seguem, e **a fila não repete** — importante, porque o listener roda
+enfileirado com `tries = 3` e um bloqueio que escapasse faria a passagem inteira
+rodar três vezes.
+
+**Auditoria.** Pelo mecanismo que já existia, sem sistema paralelo: cada
+passagem gera uma linha em `automation_logs` com `tenant_id`,
+`automation_rule_id`, `trigger`, `action`, `result` e `message`. Sucesso grava
+`executed`; bloqueio e configuração inválida gravam `failed` com o motivo em
+`message`, cada motivo sendo uma constante — `SendEmailAction::MOTIVO_LIMITE`,
+`EmailRecipients::MOTIVO_INVALIDOS`, `MOTIVO_EXCEDE_MAXIMO` e o
+`MOTIVO_VAZIO` preexistente. O `Log::warning('automação falhou', …)` do
+`RuleEngine` já carrega regra, estabelecimento e gatilho, o que dá a trilha de
+abuso sem nada novo.
+
+O `outcome` da execução passou a guardar `recipient_count` em vez da lista de
+endereços. A lista é dado de contato de terceiros e o histórico de execuções é
+consultável pelo painel; a contagem responde à pergunta operacional sem guardar
+os endereços. Nenhum teste dependia do formato anterior.
+
+**O que foi auditado e não precisou de correção.** `recipients` **não** passa
+pelo interpolador — só assunto e mensagem passam —, então dado do gatilho não
+consegue alterar destinatário. E header injection via assunto não é possível:
+testei um assunto com `\r\n` tentando injetar `Bcc:` e o Symfony Mailer
+codifica o valor, produzindo `Subject: =?utf-8?Q?Promo?=` sem a linha injetada.
+Nenhuma regex própria foi criada para isso.
+
+**Decidido ficar de fora.** Whitelist de domínio e restrição a `User`, pelos
+motivos acima. Nenhum `AllowedDomainService`, `RecipientApprovalWorkflow` ou
+`DestinationPolicyEngine` — o risco atual não justifica um motor de política. Um
+orçamento de entregas por regra, além do de execuções, é a evolução natural se o
+volume real pedir. Nada de SMTP de produção, provedor externo, webhook ou SSRF.
+
+**Testes adicionados.** 25 testes, 59 assertions, em
+`tests/Feature/Automation/SendEmailAbuseTest.php`. Antes da correção, 21
+falhavam. Cobrem a validação pela API (um destinatário, vários, os três
+separadores, espaço em excesso, inválido, lista vazia, exatamente no máximo,
+acima do máximo, duplicados que não contam para o máximo), a mesma política no
+painel web, a normalização no envio, as duas formas de configuração legada
+(acima do máximo e com endereço inválido), os limites (abaixo, na última vaga,
+acima por regra, acima por entregas do estabelecimento, contagem por
+destinatário, expiração da janela), o isolamento (estabelecimento A não atinge
+B, regra A não atinge B, forma da chave) e a auditoria (contagem sem endereços,
+bloqueio registrado e consultável, bloqueio que não vira retry de fila).
+
+**Mesma política nos dois caminhos.** A validação mora em
+`SendEmailAction::regrasDeConfiguracao()`, que é a fonte única consumida pelo
+`AutomationRuleRequest` — do qual descendem tanto os requests da API quanto os
+do painel. API e web não podem divergir por construção, e há teste para os dois.
+
+**Defesa em profundidade.** A ação relê e revalida a configuração na execução em
+vez de confiar no JSON persistido, porque existem regras gravadas antes desta
+política e pode haver import futuro. Sem migration e sem backfill: configuração
+legada fora da política simplesmente não envia e fica registrada.
+
 **Por que Média, e não Alta.** Exige permissão administrativa de automação, não
 há cadastro self-service de estabelecimentos e não há envio real — o ambiente
 usa Mailpit. **Sobe para Alta** antes de configurar SMTP de produção ou abrir
-cadastro self-service.
+cadastro self-service, e é nesse momento que os números acima devem ser
+revisados contra volume observado.
 
-**Por que Recomendado.** A F2.6 prevê entrega de webhooks para endereços
+**Princípios para a F2.6.** A F2.6 prevê entrega de webhooks para endereços
 configurados pelo estabelecimento: o mesmo padrão de destino controlado pelo
 cliente, com risco maior, porque permite requisições para a rede interna (SSRF),
-como os containers de MySQL e Redis. A política decidida aqui deve orientar o
-desenho da F2.6.
+como os containers de MySQL e Redis. O que se decidiu aqui e deve ser reusado
+conceitualmente, sem que nada de webhook tenha sido implementado:
 
-**Objetivo futuro.** Avaliar:
+- **destino é configuração validada**, nunca valor interpolado do evento;
+- **limite semântico**, não limite de tamanho de texto — quantidade de destinos,
+  não bytes;
+- **falhar a configuração cedo**, em vez de descartar destino inválido em
+  silêncio na hora de entregar;
+- **dois limites, um por regra e um por estabelecimento**, com a chave sempre
+  incluindo o `tenant_id`;
+- **contar a unidade que custa** — entrega para e-mail, requisição para webhook;
+- **sem entrega parcial**, e bloqueio que não vira retry de fila;
+- **registro pelo mecanismo existente**, com contagem em vez do destino
+  completo.
 
-- restrição a usuários e contatos pertencentes ao tenant;
-- whitelist de domínios ou destinatários;
-- limites de envio;
-- rate limiting;
-- auditoria de abuso.
+Para webhook, a esses princípios se soma o que o e-mail não exige: política de
+destino de rede, que é o SSRF, deliberadamente fora desta rodada.
+
+**Evidência da entrega (2026-10-07).** Suíte completa: 1154 testes — 1152 PASS,
+0 FAIL, 0 ERROR, 2 RISKY preexistentes, 0 SKIPPED e 4630 assertions, contra
+1129/1127/4571 do baseline anterior: +25 testes e +59 assertions, exatamente os
+do SEC-05. Testes focados: 25 PASS, 59 assertions. Módulo Automation inteiro,
+incluindo o painel: 65 PASS, 170 assertions. Regressões: SEC-01 35 PASS, SEC-02
+21 PASS, SEC-03 23 PASS. `php -l` sem erro nos três arquivos. Pint passou nos
+quatro do escopo. PHPStan: 17 erros, com totais **e conjunto de arquivos
+idênticos** à rodada anterior — nenhum arquivo do SEC-05 aparece.
+`git diff --check` limpo. **Nenhuma migration criada ou executada**, nenhuma
+alteração de `.env`, nenhum container reiniciado, nenhum `500` transitório.
+
+**Critérios de aceite.** Todos verdes: destinatários validados, normalizados e
+deduplicados; máximo explícito de 10; regra acima do máximo recusada na API e no
+painel; configuração legada inválida não envia; rate limiting de execução; limite
+isolado por estabelecimento; sem envio parcial; bloqueio sem retry infinito;
+bloqueio auditável; sucesso preservado; multi-tenancy intacto; API e painel com a
+mesma política; SEC-01, SEC-02 e SEC-03 verdes; suíte com 0 FAIL e 0 ERROR;
+nenhum achado novo de Pint ou PHPStan; staging saudável; SEC-06 e COR-01
+pendentes; F2.6 não iniciada.
 
 ### SEC-06 — Secrets / .env.testing
 
@@ -1656,9 +1814,9 @@ SEC-02 — API Authentication       ✅
         ↓
 SEC-03 — TenantResolver           ✅
         ↓
-SEC-05 — SendEmailAction          🔴 recomendado, próximo
+SEC-05 — SendEmailAction          ✅
         ↓
-SEC-06 — Secrets / .env.testing
+SEC-06 — Secrets / .env.testing   🔴 recomendado, próximo
         ↓
 COR-01 — Soft delete + unicidade
         ↓
@@ -1703,8 +1861,9 @@ SEC-01  aplica as Policies corrigidas na API
 **Estado em 2026-10-07.** Primeiro item **cumprido**: os quatro bloqueadores
 obrigatórios estão `Resolvido`, com testes — SEC-04 em `7433c5b`, SEC-01 em
 `3a14703`, SEC-02 em `e306494` e SEC-03 em `342f4ad`. Segundo item **não
-cumprido**: SEC-05, SEC-06 e COR-01 seguem pendentes e sem decisão de adiamento
-registrada. Terceiro item pendente de conferência. A F2.6 **não foi iniciada**.
+cumprido**: o SEC-05 foi resolvido em `6b271ef`, mas SEC-06 e COR-01 seguem
+pendentes e sem decisão de adiamento registrada. Terceiro item pendente de
+conferência. A F2.6 **não foi iniciada**.
 
 Fechar os bloqueadores obrigatórios também **não** torna o backend apto para o
 PDV: esse marco é outro e exige a entidade Terminal, o vínculo
@@ -1787,7 +1946,7 @@ por estoque, vendas, PDV, scanner, embalagens e fiscal.
 O que esta trilha é, e o que não é:
 
 - **Não libera a F2.6.** É uma evolução funcional paralela. A F2.6 continua
-  não iniciada, e os itens recomendados SEC-05, SEC-06 e COR-01 mantêm o
+  não iniciada, e os itens recomendados SEC-06 e COR-01 mantêm o
   status e a prioridade das
   [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26).
 - **Não é uma fase nem uma sprint.** Usa IDs próprios (`PM-*`), como as
@@ -2522,7 +2681,7 @@ O que esta trilha é, e o que não é:
 
 - **É paralela à trilha PM.** Não substitui nem absorve PM-04A, PM-04B, PM-04C
   ou PM-05, que mantêm escopo, status e ordem próprios.
-- **Não libera a F2.6.** Os itens recomendados SEC-05, SEC-06 e COR-01
+- **Não libera a F2.6.** Os itens recomendados SEC-06 e COR-01
   continuam pendentes, com a prioridade que já tinham nas
   [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26).
 - **Não é uma fase nem uma sprint.** Usa IDs próprios (`ONB-*`), como `PM-*`,
