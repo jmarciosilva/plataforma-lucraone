@@ -1,9 +1,11 @@
 *.log
 .DS_Store
 .env
-.env.*.local
-.env.backup
-.env.production
+# Qualquer arquivo de ambiente, por nome que seja: foi uma enumeração
+# incompleta que deixou .env.testing ser versionado com uma APP_KEY de
+# formato real (SEC-06). O exemplo é a única exceção.
+.env.*
+!.env.example
 .phpactor.json
 .phpunit.result.cache
 /.codex
@@ -35,7 +37,6 @@ Thumbs.db
 *.crt
 *.cert
 secrets/
-.env.secret
 credentials.json
 
 # IDE

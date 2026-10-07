@@ -26,6 +26,38 @@
     -->
     <php>
         <env name="APP_ENV" value="testing" force="true"/>
+        <!--
+            O ambiente da suíte é fixado aqui, e não num arquivo .env.
+
+            Quando existia um `.env.testing`, o Laravel carregava só aquele
+            arquivo — `.env.<ambiente>` substitui o `.env`, não soma — e era
+            ele que dava à suíte um ambiente enxuto. Sem ele, a suíte passaria
+            a herdar o `.env` da máquina: na VPS isso trocou o locale para
+            pt-BR e quebrou a asserção do rótulo de paginação.
+
+            Estes valores reproduzem os defaults do framework, que eram o que
+            a suíte efetivamente usava, e tornam o resultado igual em qualquer
+            máquina — com ou sem .env ao lado.
+        -->
+        <env name="APP_NAME" value="LUCRAONE — Testing" force="true"/>
+        <env name="APP_DEBUG" value="false" force="true"/>
+        <env name="APP_LOCALE" value="en" force="true"/>
+        <env name="APP_FALLBACK_LOCALE" value="en" force="true"/>
+        <env name="APP_FAKER_LOCALE" value="en_US" force="true"/>
+        <env name="REDIS_CACHE_DB" value="1" force="true"/>
+        <!--
+            Chave de criptografia da suíte. É PÚBLICA e EXCLUSIVA DE TESTE:
+            fica versionada de propósito, não protege nenhum dado real e não
+            pode ser reutilizada em desenvolvimento, staging ou produção.
+
+            Vive aqui, e não num arquivo .env, porque assim um clone limpo
+            roda a suíte sem depender de nenhum arquivo de ambiente — era o
+            `.env.testing` versionado que carregava uma APP_KEY de formato
+            real, e foi ele o problema do SEC-06.
+
+            force="true" garante precedência sobre .env e .env.<ambiente>.
+        -->
+        <env name="APP_KEY" value="base64:udzVmWmQ9gCoLGQUnAw3p8MnAi1yTyCy/zKA5HRRJnc=" force="true"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file" force="true"/>
         <env name="BCRYPT_ROUNDS" value="4" force="true"/>
         <env name="BROADCAST_CONNECTION" value="null" force="true"/>

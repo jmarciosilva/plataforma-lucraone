@@ -19,9 +19,11 @@ public/storage
 
 # Segredos e estado local
 .env
-.env.*.local
-.env.backup
-.env.production
+# .env.example precisa entrar: o entrypoint copia dele quando não há
+# .env. Todo o resto fica fora da imagem, inclusive .env.testing — o
+# stage prod faz COPY . . e levaria o arquivo para a imagem final.
+.env.*
+!.env.example
 auth.json
 
 # Estado descartável
