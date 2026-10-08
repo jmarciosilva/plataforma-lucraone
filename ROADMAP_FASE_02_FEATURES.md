@@ -37,6 +37,10 @@
 | F2.5 — Advanced Automation | ✅ DONE | ✅ DONE | 40 testes |
 | F2.6 — Integration APIs | 📋 TODO | 📋 TODO | — |
 
+F2.6 está **liberada e não iniciada**. A trilha backend PDV-BE é separada desta
+sprint e consta no [ROADMAP](ROADMAP.md#pdv-be--backend-para-integração-com-pdv).
+Concluir PDV-BE-01 não torna o backend apto para PDV.
+
 > **Nota sobre numeração:** esta tabela listava anteriormente "F2.4 Payments /
 > F2.5 Reports / F2.6 Integrations", divergindo da especificação detalhada da
 > seção 5. A especificação detalhada é a fonte de verdade; a tabela foi
@@ -882,5 +886,5 @@ Antes de começar F2.2, implementar F2.1b para que produtos estejam operáveis n
 
 **Autor:** Claude Code  
 **Data de Criação:** 2026-08-16  
-**Status:** F2.4 Reporting & Analytics concluída · F2.5 Advanced Automation é o próximo passo
-**Próxima Atualização:** Quando F2.5 iniciar
+**Status:** F2.5 Advanced Automation concluída · F2.6 Integration APIs liberada e não iniciada
+**Próxima Atualização:** Quando F2.6 iniciar

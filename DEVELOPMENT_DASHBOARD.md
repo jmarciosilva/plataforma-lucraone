@@ -1,9 +1,13 @@
 # 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-09-09 (F2.5 — automação avançada)
+**Atualizado:** 2026-10-08 (PDV-BE-01 — fundação pré-Terminal)
 **Fase Ativa:** FASE 02 — FEATURES 🟡 (F2.6 é o próximo)
 **Fase Concluída:** FASE 03 — ADMIN FRONTEND ✅ (6/6 sprints)
-**Testes:** 417 passing
+**Testes:** baseline global atualizado no [ROADMAP](ROADMAP.md); contagens por
+sprint abaixo são registros históricos.
+**PDV-BE:** PDV-BE-01 concluído; PDV-BE-02 planejado/próximo. Trilha própria,
+separada da F2.6. Backend ainda não apto para PDV.
+**F2.6:** liberada e não iniciada.
 
 ---
 
@@ -303,14 +307,14 @@ Adiado:
   ⏸️ Modelos Report/Dashboard genéricos → sem demanda real
 ```
 
-### 🟡 Sprints F2.5 a F2.6 (PRÓXIMAS)
+### F2.5 concluída; F2.6 liberada e não iniciada
 
 ```
-F2.5 — Advanced Automation      📋  0/20 itens  ← próximo
-F2.6 — Integration APIs         ⏸️  0/20 itens
+F2.5 — Advanced Automation      ✅ concluída
+F2.6 — Integration APIs         🟢 liberada · não iniciada
+PDV-BE — backend para PDV       trilha própria; próximo: PDV-BE-02 (planejado)
 
-A F2.5 traz a infraestrutura de fila/e-mail que o envio agendado
-de relatório está esperando.
+A infraestrutura de fila/e-mail e o envio agendado foram entregues na F2.5.
 ```
 
 ---
@@ -596,16 +600,15 @@ Foundation Phase:       ✅ 100% (7/7 sprints) — 189 TESTS
 
 ## ⚙️ Próximas Ações (Roadmap)
 
-### 🔜 Imediato — Sprint F2.5 (Advanced Automation)
+### Próximo planejado — PDV-BE-02, Entidade Terminal e vínculos
 
-- [ ] Regras "quando X então faça Y" por tenant
-- [ ] Gatilhos: produto criado, estoque baixo, pedido concluído
-- [ ] Ações: enviar e-mail, criar tarefa, atualizar preço
-- [ ] Infraestrutura de fila, Mailable e scheduler (herda o adiado da F2.4)
-- [ ] Histórico de execução com erros
-- [ ] Testes API e web da sprint
+A fundação PDV-BE-01 está registrada no
+[ROADMAP](ROADMAP.md#pdv-be--backend-para-integração-com-pdv).
+PDV-BE-02 não foi iniciada; a Fase 4 do Java PDV aguarda contratos reais.
 
-### Depois — F2.5 → F2.6 Integration APIs
+### Próxima sprint funcional — F2.6 Integration APIs
+
+Liberada e não iniciada; não é parte da trilha PDV-BE.
 
 ### 🔧 Dívida técnica
 
@@ -627,7 +630,7 @@ Em aberto:
 - [x] F2.2 — Inventory Management
 - [x] F2.3 — Sales & Orders
 - [x] F2.4 — Reporting & Analytics
-- [ ] F2.5 — Advanced Automation
+- [x] F2.5 — Advanced Automation
 - [ ] F2.6 — Integration APIs
 
 ---
@@ -758,7 +761,9 @@ Uma sprint é considerada **pronta** quando:
 - F2.3 (Sales & Orders): 100% pronto ✅
 - F2.4 (Reporting & Analytics): 100% pronto ✅
 - F3.1 → F3.6: 100% pronto ✅
-- F2.5 → F2.6: 🟡 próximos módulos de negócio
+- F2.5 (Advanced Automation): concluída ✅
+- F2.6 (Integration APIs): liberada e não iniciada
+- PDV-BE: trilha própria; backend ainda não apto para PDV
 
 ---
 

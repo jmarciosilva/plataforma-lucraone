@@ -1,6 +1,8 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-10-06 · **ONB-01A e ONB-01B concluídos** — wizard
+**Atualizado:** 2026-10-08 · **PDV-BE-01 — Fundação pré-Terminal concluído ✅**.
+Trilha própria do backend para PDV; F2.6 liberada e não iniciada. Backend ainda
+**não apto para PDV**. **ONB-01A e ONB-01B concluídos** — wizard
 ONB-01B publicado em `aee736db22a4f626fea6010d3e67278670606134`; ajuda permanente,
 checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-04.
 **PM-04A concluído ✅ e publicado** em
@@ -16,10 +18,10 @@ checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-
 **PM-05 concluído ✅ e publicado** em
 `d958a50ddf52ee509eb02ea5cb14c881c01cbeaa` —
 `feat(products): adicionar classificação fiscal básica`.
-**Próxima prioridade operacional:** será reavaliada após o fechamento
-documental do PM-05; nenhuma nova implementação iniciada nesta rodada.
-Baseline atual: 1185 testes — 1183 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
-0 SKIPPED e 4705 assertions. Os RISKY continuam sendo
+**Próxima prioridade operacional:** PDV-BE-02 — Entidade Terminal e vínculos,
+planejado, após o fechamento de PDV-BE-01. Não iniciado nesta rodada.
+Baseline atual: 1212 testes — 1210 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 4802 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
 foram corrigidos. SEC-01, SEC-02, SEC-03 e SEC-04 resolvidos — os quatro
 bloqueadores obrigatórios pré-F2.6 estão encerrados, e o SEC-05 também está
@@ -50,7 +52,8 @@ por acidente histórico. Confundi-las é o erro mais fácil de cometer aqui:
 
 > ⚠️ **A FASE 2 do macro não é a FASE 02 da execução.** A execução cobre hoje o
 > que o macro chama de FASE 0 a 5 — fundação, tenancy, produtos, preços, estoque
-> e clientes. PDV, fiscal e sync, que são o grosso do macro, ainda não começaram.
+> e clientes. A preparação do backend para PDV agora tem trilha própria PDV-BE;
+> integração real, fiscal e sync continuam futuros.
 
 Este arquivo é o índice e o placar. O detalhe por sprint fica nos arquivos de
 fase; o tracking histórico, em [PROJECT_STATUS.md](PROJECT_STATUS.md).
@@ -74,9 +77,9 @@ Dentro da FASE 02, a sequência oficial é:
 ```
 F2.5 — Automation                 ✅
         ↓
-Pendências pré-F2.6              🔴 BLOQUEADOR
+Pendências pré-F2.6              ✅ ENCERRADAS (PERF-01 não bloqueante)
         ↓
-F2.6 — Integration APIs          📋 NÃO INICIADA
+F2.6 — Integration APIs          🟢 LIBERADA · NÃO INICIADA
 ```
 
 As pendências pré-F2.6 não são uma fase nem uma sprint. São correções com IDs
@@ -85,12 +88,17 @@ próprios (`SEC-*`, `COR-*`, `PERF-*`), acompanhadas numa seção dedicada abaix
 Em paralelo corre a trilha
 [Cadastro mestre de produtos — preparação para o PDV](#cadastro-mestre-de-produtos--preparação-para-o-pdv)
 (`PM-*`), aberta por necessidade de cliente. Ela evolui o cadastro de produtos e
-não altera o bloqueio da F2.6 nem a ordem das pendências.
+não altera o estado da F2.6 nem a ordem das pendências.
 
 Desde 2026-10-03 corre também, **em paralelo à PM e independente dela**, a
 trilha [ONB — Onboarding e Experiência Inicial](#onb--onboarding-e-experiência-inicial)
 (`ONB-*`), aberta depois que o ambiente staging entrou no ar e o cadastro do
 primeiro cliente real passou a ser necessário.
+
+Desde 2026-10-08 existe também a trilha
+[PDV-BE — Backend para integração com PDV](#pdv-be--backend-para-integração-com-pdv).
+Ela é separada da F2.6 e prepara os contratos para o Java PDV; concluir sua
+fundação não libera a integração real.
 
 ### Prioridade operacional atual
 
@@ -118,8 +126,8 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 > passos. A ajuda permanente e o checklist numerado facilitam o primeiro uso.
 > PM-04A e PM-04B foram concluídos e publicados. O marco separado Cliente
 > Teste está concluído: cliente criado e validação manual realizada. PM-04C
-> foi concluído e publicado, assim como PM-05. A próxima prioridade operacional
-> será reavaliada após o fechamento documental do PM-05.
+> foi concluído e publicado, assim como PM-05. A preparação do backend agora
+> segue na trilha PDV-BE; PDV-BE-02 é o próximo passo planejado.
 > Não há dependência técnica entre ONB e PM. Os bloqueadores obrigatórios da
 > F2.6 e os recomendados estão todos encerrados.
 
@@ -179,7 +187,7 @@ Detalhe: [ROADMAP_FASE_02](ROADMAP_FASE_02_FEATURES.md)
 | F2.3 — Sales & Orders | ✅ | ✅ | Clientes, pedidos, reserva de estoque |
 | F2.4 — Reporting | ✅ | ✅ | Relatórios, dashboard, tendências, CSV |
 | F2.5 — Automation | ✅ | ✅ | Regras, gatilhos, notificações, e-mail |
-| **F2.6 — Integration APIs** | 📋 | 📋 | **próxima funcional — 🔴 bloqueada** |
+| **F2.6 — Integration APIs** | 📋 | 📋 | **próxima funcional — 🟢 liberada e não iniciada** |
 
 > Entre a F2.5 e a F2.6 ficam as
 > [pendências bloqueadoras pré-F2.6](#pendências-bloqueadoras-pré-f26).
@@ -188,8 +196,9 @@ Detalhe: [ROADMAP_FASE_02](ROADMAP_FASE_02_FEATURES.md)
 
 ## Pendências bloqueadoras pré-F2.6
 
-**A F2.6 continua sendo a próxima sprint funcional, mas não pode começar** até
-que os bloqueadores obrigatórios desta seção estejam resolvidos.
+**A F2.6 continua sendo a próxima sprint funcional, liberada e não iniciada.**
+Os bloqueadores obrigatórios e recomendados desta seção foram encerrados;
+PERF-01 segue pendente e não bloqueante.
 
 O que estas pendências são, e o que não são:
 
@@ -2180,9 +2189,9 @@ criar novo ID:
 
 ## Próxima sprint funcional — F2.6, Integration APIs
 
-> 🔴 **Bloqueada** até que os bloqueadores obrigatórios das
-> [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26) estejam resolvidos.
-> Status: 📋 não iniciada.
+> 🟢 **Liberada e não iniciada.** As
+> [pendências pré-F2.6](#pendências-bloqueadoras-pré-f26) obrigatórias e recomendadas
+> estão encerradas. A trilha PDV-BE não inicia nem absorve a F2.6.
 
 Integração com sistemas externos: cadastrar integração pelo painel, disparar
 webhook de teste e auditar os envios. Modelos `Integration` (com credenciais
@@ -2193,6 +2202,111 @@ Sete das oito pendências tocam diretamente o que a F2.6 constrói: API sensíve
 (SEC-01, SEC-04), clientes de máquina com token (SEC-02), webhooks recebidos sem
 usuário (SEC-03), destinos controlados pelo cliente (SEC-05), credenciais
 cifradas com a `APP_KEY` (SEC-06) e sincronização por SKU (COR-01).
+
+---
+
+## PDV-BE — Backend para integração com PDV
+
+Trilha própria aberta em **2026-10-08**, após a auditoria de retomada no HEAD
+`9bb933e`, para preparar a integração futura do backend com o LucraOne PDV Java.
+Usa IDs `PDV-BE-*`, seguindo as trilhas PM e ONB, sem alterar o placar de fases.
+
+**Propósito.** Construir identidade operacional de Terminal, vínculos com
+estabelecimento/empresa/filial, pareamento, autenticação de máquina e contratos
+reais de API. Branch é o alvo operacional do PDV; Company é a empresa superior;
+Tenant é o cliente lógico do SaaS.
+
+- **É separada da F2.6.** F2.6 continua **LIBERADA e NÃO INICIADA**.
+- **PDV-BE-01 é apenas fundação.** Concluí-la não torna o backend apto para PDV.
+- **Java PDV:** Fases 1–3 concluídas conforme informado pelo responsável pelo
+  produto; Fase 4 planejada e aguardando contratos reais do backend. A integração
+  real permanece aguardando o marco de aptidão abaixo.
+- **Não altera TenantResolver humano nem os findings fora do escopo.** A
+  autenticação de máquina terá fronteira própria, sem escolher tenant por header.
+
+### Acompanhamento da trilha PDV-BE
+
+| ID | Etapa | Status | Depende de |
+|---|---|---|---|
+| PDV-BE-01 | Fundação pré-Terminal | **Concluído ✅** · `2d20395` | Auditoria de retomada ✅ |
+| PDV-BE-02 | Entidade Terminal e vínculos | **Planejado · próximo** | PDV-BE-01 |
+| PDV-BE-03 | Pairing e provisionamento | **Planejado** | PDV-BE-02 |
+| PDV-BE-04 | Machine credential e autorização | **Planejado** | PDV-BE-02 e PDV-BE-03 |
+| PDV-BE-05 | Endpoints base do PDV | **Planejado** | PDV-BE-03 e PDV-BE-04 |
+
+PDV-BE-03 prepara o fluxo de pairing; a emissão de credencial nesse fluxo só
+fica completa com PDV-BE-04. A sequência não anuncia integração utilizável antes
+de satisfazer as dependências. Nenhuma etapa posterior foi iniciada.
+
+### PDV-BE-01 — Fundação pré-Terminal
+
+**Concluído ✅ · 2026-10-08 · `2d203951b2e824234b53b0e675ffe8e5b82bf5c3`**
+
+**Escopo entregue.** BranchPolicy passa a usar o model real, registrada no
+AppServiceProvider, sem `User->branches()`. Usa as permissões já existentes
+`view-branches`, `view-all-branches` e `manage-branches`; exige conta/vínculo
+ativos, tenant/contexto corretos e Company coerente com a filial. Não herda
+autoridade de `manage-companies` nem cria permissões novas.
+
+X-Request-ID é ativado uma vez no grupo API, incluindo health, login e APIs de
+negócio. Gera ULID quando ausente/inválido; preserva IDs de 1–128 caracteres
+alfanuméricos ASCII e `._:-`; compartilha o ID com Request, resposta, logger
+Laravel e AuditLog. Respostas 401/403/404 de entidade/422 são cobertas.
+
+**Arquitetura.** Terminal proposto como identidade própria da instalação, com
+`tenant_id`, `company_id`, `branch_id` obrigatórios e `installation_id` UUID v4
+público. Pairing de uso único e credencial revogável futura não usam login humano
+nem X-Tenant-ID para autenticar/resolver contexto. Detalhes, invariantes, status,
+contratos conceituais e questões abertas em
+[PDV Backend Foundation](lucraone-backend/docs/architecture/pdv-backend-foundation.md).
+
+**Limites.** Sem Terminal/model/table/migration, Branch API, pairing, credencial
+de máquina ou rotas `/api/v1/pdv/*`. PERF-01 e demais findings continuam abertos.
+Tenant SUSPENDED ainda pode ser resolvido pelo fluxo humano; o bloqueio de
+Tenant/Company/Branch para máquinas é decisão pendente de PDV-BE-04.
+
+**Evidência da entrega.** Gate inicial: `main`, HEAD/origin `9bb933e`, ahead/behind
+0/0, árvore limpa e 40 migrations executadas, 0 pendentes. Baseline inicial
+reproduzido: 1185 testes, 1183 PASS, 2 RISKY conhecidos e 4705 assertions.
+Os testes novos foram executados antes da correção: 25 falharam e 2 passaram,
+incluindo import incompatível, Policy não encontrada e ausência de correlação.
+Após a correção: BranchPolicy 13 PASS/48 assertions; correlação 14 PASS/49
+assertions. Regressões SEC-01 35 PASS, SEC-02 21 PASS, SEC-03 23 PASS, SEC-05
+25 PASS, SEC-06 8 PASS e COR-01 23 PASS. Suíte relacionada: 414 testes,
+412 PASS, 2 RISKY conhecidos e 1359 assertions. Suíte completa: 1212 testes,
+1210 PASS, 0 FAIL, 0 ERROR, 2 RISKY conhecidos, 0 SKIPPED e 4802 assertions.
+
+Sintaxe PHP e Pint no escopo aprovados; PHPStan mantém exatamente os 17 achados
+preexistentes. A exceção global `class.notFound`, sem correspondência após a
+correção do import, foi removida, sem esconder erro novo. `git diff --check`
+limpo. Staging: health/login/up 200, raiz 302, ULID gerado e
+`pdv-be-01-smoke` preservado; sem novos 5xx ou staging.ERROR nas verificações.
+Nenhuma migration criada/executada, container reiniciado ou rebuild realizado.
+
+**Findings preservados.** PERF-01; UUID em category_ids de entidades ULID;
+User legado aparentemente órfão; senha default no exemplo; Tenant SUSPENDED
+humano. Findings adicionais: construtor antigo de StructuredLoggingService;
+FKs individuais não garantem igualdade tenant da Branch/Company; 404 sem rota
+não entra no middleware do grupo API. Detalhes no documento de arquitetura.
+
+### Marco — Backend apto para PDV
+
+**NÃO atingido.** Só poderá ser marcado após, no mínimo:
+
+- Terminal implementado com identidade própria;
+- vínculos Terminal → Tenant/Company/Branch e invariantes validadas;
+- pairing de curta duração, uso único e proteção de replay implementado;
+- machine credential, expiração e revogação implementadas;
+- autenticação/autorização de máquina isolada de User e abilities humanas;
+- status operacionais de Tenant, Company e Branch aplicados à máquina;
+- `GET /api/v1/pdv/health`, `POST /api/v1/pdv/terminals/pair` e
+  `GET /api/v1/pdv/terminal` implementados;
+- X-Request-ID ativo, inclusive nos erros dos contratos PDV;
+- testes automatizados de contrato, isolamento e segurança;
+- staging validado com os contratos reais.
+
+**Próximo passo:** PDV-BE-02 — Entidade Terminal e vínculos, planejado.
+Concluir PDV-BE-01 não inicia essa etapa nem a F2.6.
 
 ---
 
@@ -2912,7 +3026,7 @@ no Product: dependem da operação, emitente, regime e contexto fiscal.
 Product e apresentações/labels sem revisão. Pricing por package não foi
 implementado. SQLite não comprova concorrência real entre processos. Validação
 normativa, catálogos fiscais e regime/CRT permanecem futuros. F2.6 continua
-bloqueada: SEC-01/02/03 pendentes, SEC-04 resolvido.
+liberada e não iniciada: SEC-01/02/03/04 e recomendados encerrados.
 
 **Próximo passo.** A próxima prioridade operacional será reavaliada após o
 fechamento documental do PM-05. Nenhuma nova implementação iniciada nesta rodada.
