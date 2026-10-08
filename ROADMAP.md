@@ -1,6 +1,6 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-10-08 · **PDV-BE-01 — Fundação pré-Terminal concluído ✅**.
+**Atualizado:** 2026-10-08 · **PDV-BE-02 — Entidade Terminal e vínculos concluído ✅**.
 Trilha própria do backend para PDV; F2.6 liberada e não iniciada. Backend ainda
 **não apto para PDV**. **ONB-01A e ONB-01B concluídos** — wizard
 ONB-01B publicado em `aee736db22a4f626fea6010d3e67278670606134`; ajuda permanente,
@@ -18,10 +18,10 @@ checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-
 **PM-05 concluído ✅ e publicado** em
 `d958a50ddf52ee509eb02ea5cb14c881c01cbeaa` —
 `feat(products): adicionar classificação fiscal básica`.
-**Próxima prioridade operacional:** PDV-BE-02 — Entidade Terminal e vínculos,
-planejado, após o fechamento de PDV-BE-01. Não iniciado nesta rodada.
-Baseline atual: 1212 testes — 1210 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
-0 SKIPPED e 4802 assertions. Os RISKY continuam sendo
+**Próxima prioridade operacional:** PDV-BE-03 — Pairing e provisionamento,
+planejado, após o fechamento de PDV-BE-02. Não iniciado nesta rodada.
+Baseline atual: 1251 testes — 1249 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 4890 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
 foram corrigidos. SEC-01, SEC-02, SEC-03 e SEC-04 resolvidos — os quatro
 bloqueadores obrigatórios pré-F2.6 estão encerrados, e o SEC-05 também está
@@ -127,7 +127,7 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 > PM-04A e PM-04B foram concluídos e publicados. O marco separado Cliente
 > Teste está concluído: cliente criado e validação manual realizada. PM-04C
 > foi concluído e publicado, assim como PM-05. A preparação do backend agora
-> segue na trilha PDV-BE; PDV-BE-02 é o próximo passo planejado.
+> segue na trilha PDV-BE; PDV-BE-02 concluído, PDV-BE-03 é o próximo passo planejado.
 > Não há dependência técnica entre ONB e PM. Os bloqueadores obrigatórios da
 > F2.6 e os recomendados estão todos encerrados.
 
@@ -2229,8 +2229,8 @@ Tenant é o cliente lógico do SaaS.
 | ID | Etapa | Status | Depende de |
 |---|---|---|---|
 | PDV-BE-01 | Fundação pré-Terminal | **Concluído ✅** · `2d20395` | Auditoria de retomada ✅ |
-| PDV-BE-02 | Entidade Terminal e vínculos | **Planejado · próximo** | PDV-BE-01 |
-| PDV-BE-03 | Pairing e provisionamento | **Planejado** | PDV-BE-02 |
+| PDV-BE-02 | Entidade Terminal e vínculos | **Concluído ✅** · `1e96b20` | PDV-BE-01 |
+| PDV-BE-03 | Pairing e provisionamento | **Planejado · próximo** | PDV-BE-02 |
 | PDV-BE-04 | Machine credential e autorização | **Planejado** | PDV-BE-02 e PDV-BE-03 |
 | PDV-BE-05 | Endpoints base do PDV | **Planejado** | PDV-BE-03 e PDV-BE-04 |
 
@@ -2289,6 +2289,68 @@ humano. Findings adicionais: construtor antigo de StructuredLoggingService;
 FKs individuais não garantem igualdade tenant da Branch/Company; 404 sem rota
 não entra no middleware do grupo API. Detalhes no documento de arquitetura.
 
+### PDV-BE-02 — Entidade Terminal e vínculos
+
+**Concluído ✅ · 2026-10-08 · `1e96b207a102d81ed089ab1f7693ef2cc6aadb89`**
+
+**Escopo entregue.** Módulo Terminals com identidade ULID, HasTenant/TenantScope,
+Factory coerente, relações Tenant/Company/Branch e inversas `terminals()`.
+Schema mínimo: `id`, `tenant_id`, `company_id`, `branch_id`, `installation_id`,
+`name`, `status`, timestamps. Nome administrativo obrigatório; sem código,
+`paired_at`, `last_seen_at` ou soft delete. Status em strings/enum SQL, seguindo
+o padrão existente: PENDING (default), ACTIVE, BLOCKED, REVOKED.
+
+`installation_id` é UUID v4 público, nullable até pairing, único globalmente;
+múltiplos NULLs permitidos. UUID é canonicalizado para minúsculas para impedir
+que caixa burle unicidade no SQLite. ACTIVE exige instalação informada, mas
+não autentica nem comprova pairing. REVOKED não permite reativação pelo model.
+Transições operacionais completas e imutabilidade pós-pairing ficam futuras.
+
+`TerminalAssignmentValidator`, chamado pelo evento `saving`, valida criação e
+atualização Eloquent: Company e Branch existem e pertencem ao tenant indicado;
+Branch pertence à Company indicada. Não confia no contexto para validar esses
+IDs. Rejeita inconsistência, nome inválido, UUID inválido e status inválido com
+`InvalidTerminalAssignment`. FKs individuais usam RESTRICT, inclusive diante
+dos cascades existentes nos pais. SQL direto/bulk updates não disparam eventos;
+não são fluxo oficial de escrita. Mudanças nos vínculos dos pais e concorrência
+exigem tratamento explícito nos futuros fluxos administrativos; não foi criada
+constraint composta nem alterado o schema dos pais.
+
+TerminalPolicy registrada no AppServiceProvider, delegando à autoridade de
+Branch: leitura `view-branches`/`view-all-branches`/`manage-branches`, gestão
+`manage-branches`, temporariamente. Não há permissão própria de Terminal hoje;
+a decisão sobre catálogo específico fica antes de expor UI/API. Exige contexto
+igual ao `terminal.tenant_id`, conta/membership ativos, relações coerentes e
+permissões no tenant correto. Declara viewAny/view/create/update/revoke;
+não autoriza delete físico nem executa revogação de credenciais.
+
+**Validação.** Gate: main e HEAD/origin `7cc1d1a`, 0/0, árvore limpa,
+40 migrations executadas; baseline 1212 testes, 1210 PASS, 2 RISKY e 4802
+assertions. Tests-first: 33 erros por classes ainda inexistentes. Resultado:
+26 testes de domínio PASS/45 assertions e 13 de Policy PASS/43 assertions.
+SEC-01 35, SEC-02 21, SEC-03 23, SEC-05 25, SEC-06 8, COR-01 23,
+BranchPolicy 13 e correlação 14, todos PASS. Suíte relacionada: 485 testes,
+483 PASS, 2 RISKY, 1538 assertions. Suíte completa: **1251 testes, 1249 PASS,
+0 FAIL/ERROR, 2 RISKY preexistentes, 0 SKIPPED, 4890 assertions**.
+Sintaxe/Pint/diff-check aprovados; PHPStan mantém os 17 achados preexistentes.
+
+**Migration e staging.** `2026_10_08_120000_create_terminals_table` testada em
+SQLite e MySQL descartável (FKs, RESTRICT, unicidade/NULL, rollback e reaplicação).
+DDL revisado por `--pretend`; única migration pendente aplicada após backup
+`/var/backups/lucraone/pdv-be-02-before-terminals-20261008.sql`, 139837 bytes,
+root/600, concluído em 2026-10-08 19:44:54 UTC. Agora 41 executadas/0 pendentes;
+SHOW CREATE validado. Sem Terminal real cadastrado. Smoke health/login/up 200,
+landing 302; ULID gerado e `pdv-be-02-smoke` preservado. Sem 5xx no período
+verificado. Um staging.ERROR de diagnóstico (`Missing branch allowed`) foi
+produzido pelo script descartável: o caso usava união de arrays em vez de
+substituição de branch_id. Caso corrigido e validação final PASS; nenhum erro
+operacional novo identificado. Banco descartável e grant removidos.
+
+**Limites.** Sem pairing, credential/abilities/auth de máquina, HasApiTokens no
+Terminal, endpoints `/api/v1/pdv/*`, Terminal API/UI ou alteração no Java PDV.
+Tenant SUSPENDED humano e demais findings continuam preservados. Backend
+continua **NÃO apto para PDV**; F2.6 **LIBERADA / NÃO INICIADA**.
+
 ### Marco — Backend apto para PDV
 
 **NÃO atingido.** Só poderá ser marcado após, no mínimo:
@@ -2305,8 +2367,8 @@ não entra no middleware do grupo API. Detalhes no documento de arquitetura.
 - testes automatizados de contrato, isolamento e segurança;
 - staging validado com os contratos reais.
 
-**Próximo passo:** PDV-BE-02 — Entidade Terminal e vínculos, planejado.
-Concluir PDV-BE-01 não inicia essa etapa nem a F2.6.
+**Próximo passo:** PDV-BE-03 — Pairing e provisionamento, planejado.
+PDV-BE-02 não inicia essa etapa nem a F2.6.
 
 ---
 

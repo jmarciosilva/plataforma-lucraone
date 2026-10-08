@@ -1,11 +1,11 @@
 # 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-10-08 (PDV-BE-01 — fundação pré-Terminal)
+**Atualizado:** 2026-10-08 (PDV-BE-02 — entidade Terminal)
 **Fase Ativa:** FASE 02 — FEATURES 🟡 (F2.6 é o próximo)
 **Fase Concluída:** FASE 03 — ADMIN FRONTEND ✅ (6/6 sprints)
 **Testes:** baseline global atualizado no [ROADMAP](ROADMAP.md); contagens por
 sprint abaixo são registros históricos.
-**PDV-BE:** PDV-BE-01 concluído; PDV-BE-02 planejado/próximo. Trilha própria,
+**PDV-BE:** PDV-BE-01 e PDV-BE-02 concluídos; PDV-BE-03 planejado/próximo. Trilha própria,
 separada da F2.6. Backend ainda não apto para PDV.
 **F2.6:** liberada e não iniciada.
 
@@ -312,7 +312,7 @@ Adiado:
 ```
 F2.5 — Advanced Automation      ✅ concluída
 F2.6 — Integration APIs         🟢 liberada · não iniciada
-PDV-BE — backend para PDV       trilha própria; próximo: PDV-BE-02 (planejado)
+PDV-BE — backend para PDV       trilha própria; próximo: PDV-BE-03 (planejado)
 
 A infraestrutura de fila/e-mail e o envio agendado foram entregues na F2.5.
 ```
@@ -600,11 +600,12 @@ Foundation Phase:       ✅ 100% (7/7 sprints) — 189 TESTS
 
 ## ⚙️ Próximas Ações (Roadmap)
 
-### Próximo planejado — PDV-BE-02, Entidade Terminal e vínculos
+### Próximo planejado — PDV-BE-03, Pairing e provisionamento
 
 A fundação PDV-BE-01 está registrada no
 [ROADMAP](ROADMAP.md#pdv-be--backend-para-integração-com-pdv).
-PDV-BE-02 não foi iniciada; a Fase 4 do Java PDV aguarda contratos reais.
+PDV-BE-02 concluiu Terminal, vínculos e Policy; PDV-BE-03 não foi iniciada.
+A Fase 4 do Java PDV aguarda contratos reais; backend ainda não apto para PDV.
 
 ### Próxima sprint funcional — F2.6 Integration APIs
 

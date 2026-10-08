@@ -1,10 +1,11 @@
-# PDV-BE-01 — Fundação do backend para PDV
+# PDV-BE — Fundação do backend e entidade Terminal
 
 **Trilha:** PDV-BE · **Data:** 2026-10-08
-**Estado:** fundação implementada; Terminal e contratos PDV ainda não implementados.
-**Commit funcional:** `2d203951b2e824234b53b0e675ffe8e5b82bf5c3`.
+**Estado:** PDV-BE-01 e PDV-BE-02 implementados; pairing, machine auth e contratos PDV ainda não implementados.
+**Commit funcional PDV-BE-01:** `2d203951b2e824234b53b0e675ffe8e5b82bf5c3`.
+**Commit funcional PDV-BE-02:** `1e96b207a102d81ed089ab1f7693ef2cc6aadb89`.
 
-**Validação:** 13 testes BranchPolicy (48 assertions) e 14 testes de correlação
+**Validação histórica PDV-BE-01:** 13 testes BranchPolicy (48 assertions) e 14 testes de correlação
 (49 assertions), todos PASS. Suíte completa: 1212 testes, 1210 PASS, 0 FAIL/ERROR,
 2 RISKY preexistentes, 0 SKIPPED e 4802 assertions. Staging validado com geração e
 preservação de X-Request-ID. Nenhuma migration nesta etapa.
@@ -21,9 +22,10 @@ Conforme o estado informado pelo responsável pelo produto, as Fases 1–3 do Ja
 PDV estão concluídas. A Fase 4 permanece planejada, aguardando os contratos reais
 do backend; este documento não autoriza iniciar integração real nem altera o Java.
 
-Nesta etapa foram corrigidos BranchPolicy e correlação da API. Não foram criados
-Terminal, migration, Branch API, pairing, machine authentication ou rotas PDV.
-As seções futuras abaixo são decisões/propostas arquiteturais, não código pronto.
+No PDV-BE-01 foram corrigidos BranchPolicy e correlação da API. No PDV-BE-02
+foram implementados Terminal, migration, vínculos e Policy, conforme abaixo.
+Branch API, pairing, machine authentication e rotas PDV continuam ausentes.
+As seções de pairing, machine auth e endpoints continuam propostas futuras.
 
 ## Base existente: Tenant, Company, Branch e User
 
@@ -101,11 +103,11 @@ Esse serviço não foi redesenhado nem ativado nesta rodada. O teste comprova o
 logger Laravel ativo e AuditLog, não promete funcionamento daquele construtor.
 Fallbacks independentes de ULID ainda existem fora da API registrada.
 
-## Terminal: papel e vínculos propostos
+## Terminal: papel e vínculos implementados no PDV-BE-02
 
 Terminal representa **uma instalação operacional do LucraOne PDV**, com identidade
 própria. Não é User, não reutiliza e-mail/senha de uma pessoa e não pertence ao
-modelo humano de memberships/RBAC. Propõe-se ID ULID, coerente com o backend.
+modelo humano de memberships/RBAC. ID ULID implementado com HasUlid e cast string, coerente com o backend.
 
 Terminal pertence obrigatoriamente a `tenant_id`, `company_id` e `branch_id`.
 Branch é o alvo operacional principal; Company é a empresa jurídica/comercial;
@@ -114,28 +116,34 @@ mantê-los explícitos favorece consultas, auditoria, autorização, cache/sync 
 e verificação operacional. A redundância exige validação; não é permissão para
 aceitar três IDs independentes fornecidos pelo PDV.
 
-Invariantes futuras:
+Invariantes implementadas na escrita Eloquent de Terminal:
 
 - `terminal.tenant_id == branch.tenant_id`;
 - `terminal.company_id == branch.company_id`;
-- Company da Branch pertence ao mesmo tenant;
-- Terminal não opera fora da sua Branch, mesmo manipulando IDs/header;
-- mudança de filial exige procedimento administrativo explícito, credenciais e
+- Company da Branch pertence ao mesmo tenant.
+
+Fronteiras operacionais futuras, ainda sem machine auth ou administração:
+
+- Terminal não poderá operar fora da sua Branch, mesmo manipulando IDs/header;
+- mudança de filial exigirá procedimento administrativo explícito, credenciais e
   estado local revistos; não será uma troca livre de contexto pelo cliente.
 
 ### installation_id
 
 O Java PDV já gera UUID v4 estável por instalação, conforme informado pelo produto.
 Será enviado no pairing e associado ao Terminal. É identificador, **não segredo
-nem prova de posse**. Propõe-se unicidade global entre instalações vinculadas para
+nem prova de posse**. Unicidade global entre instalações vinculadas foi implementada para
 impedir que uma instalação ativa seja associada a dois Terminais. Terminal
-pré-cadastrado ainda sem pairing pode não ter `installation_id`.
+pré-cadastrado nasce com `installation_id` NULL; múltiplos NULLs são permitidos.
+O validador aceita somente UUID v4 e canonicaliza letras para minúsculas, evitando
+unicidade diferente entre SQLite (comparação sensível à caixa) e MySQL.
 
 Reinstalação, substituição de hardware e reatribuição de installation_id exigem
-decisão explícita antes do schema definitivo; um ID antigo não deve reativar uma
-identidade revogada. Nenhuma coluna/constraint foi criada nesta etapa.
+decisão explícita antes do pairing; um ID antigo não deve reativar uma
+identidade revogada. A coluna nullable e o unique global existem no PDV-BE-02.
+A imutabilidade pós-pairing continua pendente: ainda não existe pairing.
 
-### Status mínimo proposto
+### Status formalizado no PDV-BE-02
 
 | Status | Significado | Transição conceitual |
 |---|---|---|
@@ -145,9 +153,72 @@ identidade revogada. Nenhuma coluna/constraint foi criada nesta etapa.
 | `REVOKED` | Identidade retirada de operação | Revogar credenciais; novo provisionamento explícito |
 
 Os nomes distinguem provisionamento, operação, suspensão reversível e revogação.
-São proposta a confirmar em PDV-BE-02; revogação não deve ser contornada por
-simples troca de status. Política de exclusão/soft delete e retenção de auditoria
-permanece aberta.
+São constantes string no model e enum SQL, seguindo Company/Branch, sem enum
+PHP novo. Default PENDING no model e no banco; ACTIVE exige installation_id,
+sem emitir credencial nem comprovar pairing. REVOKED não pode mudar para outro
+status pelo model. Não há soft delete: REVOKED representa retirada operacional.
+Policy não autoriza exclusão física. Retenção histórica e transições completas
+ainda deverão ser fechadas antes dos fluxos administrativos e de pairing.
+
+## Persistência e autorização implementadas no PDV-BE-02
+
+Schema mínimo: id ULID, tenant_id/company_id/branch_id char(26) obrigatórios,
+installation_id UUID nullable/unique global, name varchar(255) obrigatório,
+status enum com default PENDING, created_at/updated_at. Nome identifica o caixa
+na administração, sem unicidade/normalização inventada. Não há requisito de
+código humano separado; code, paired_at e last_seen_at ficam adiados até haver
+consumidor. Não há tokens, segredos ou HasApiTokens no model.
+
+Terminal usa HasFactory, HasUlid e HasTenant/TenantScope. Expõe tenant(),
+company(), branch(); os três pais expõem terminals(). Relações suportam eager
+loading. TenantScope filtra quando há contexto, conforme o padrão existente;
+sem contexto não é uma barreira de autorização. A Policy exige contexto.
+
+Um pequeno evento saving delega a TerminalAssignmentValidator, protegendo
+create()/save()/update() de instâncias sem duplicar regras numa futura camada
+HTTP. O validador consulta os pais sem TenantScope, mas compara explicitamente
+todos os IDs: company.tenant_id == terminal.tenant_id == branch.tenant_id,
+branch.company_id == terminal.company_id. Tenant não pode estar soft-deleted.
+Não aplica isActive aos pais: status operacional será aplicado à máquina no
+PDV-BE-04, preservando o comportamento humano atual. Rejeita vínculos ausentes
+ou inconsistentes, UUID não-v4, nome vazio/maior que 255, status desconhecido,
+ACTIVE sem instalação e reativação de REVOKED. Exceção de domínio:
+InvalidTerminalAssignment, derivada de InvalidArgumentException.
+
+FKs dos três pais usam RESTRICT; não apagam Terminals silenciosamente, mesmo
+quando o schema dos pais tem cascades. Índices: (tenant_id,status), company_id,
+branch_id; unique installation_id. Igualdades entre vínculos são validação de
+domínio, não FKs compostas. SQL direto, query-builder bulk update, saveQuietly e
+alterações nos pais não executam o evento de Terminal; não devem ser usados
+como fluxo oficial de alteração de vínculos. Futuras operações administrativas
+nos pais deverão preservar essas igualdades com estratégia transacional; os
+fluxos atuais de Company/Branch não foram redesenhados nesta entrega.
+
+Factory cria uma Branch e deriva dela Company/Tenant, PENDING/NULL por default.
+forBranch() recebe uma filial existente e copia os três IDs coerentes. Não há
+state paired nem simulação de pairing; fixtures podem fornecer status e UUID
+explicitamente, sujeitos ao mesmo validador.
+
+TerminalPolicy está registrada no AppServiceProvider e reutiliza BranchPolicy.
+Não há view-terminals/manage-terminals no catálogo atual: leitura usa as
+permissões existentes view-branches/view-all-branches/manage-branches e gestão
+usa manage-branches, temporariamente. Catálogo específico deverá ser decidido
+antes de expor administração. A instância deve corresponder ao contexto e seus
+vínculos devem continuar coerentes; conta e membership ativos, permissões no
+tenant da entidade. Ações: viewAny/view/create/update/revoke. revoke somente
+autoriza futura administração; não revoga token. delete físico não autorizado.
+
+Validação: 26 testes de domínio/45 assertions e 13 de Policy/43 assertions.
+Suíte completa: 1251 total, 1249 PASS, 0 FAIL/ERROR, 2 RISKY conhecidos,
+0 SKIPPED, 4890 assertions. PHPStan: os mesmos 17 achados preexistentes.
+Migration 2026_10_08_120000 aplicada em staging após backup e revisão do DDL;
+41 migrations executadas, 0 pendentes. SQLite e MySQL descartável validaram
+unicidade/NULL, FKs e RESTRICT; rollback/reaplicação testados apenas no banco
+descartável. MySQL usa enum nativo, SQLite usa CHECK para os mesmos status.
+Nenhum Terminal real cadastrado; smoke saudável e correlação preservada.
+
+PDV-BE-02 não torna o backend apto para PDV. Pairing, credenciais e endpoints
+abaixo continuam propostas futuras. F2.6 permanece liberada e não iniciada.
 
 ## Pairing futuro
 
@@ -249,9 +320,11 @@ versionamento e códigos de erro serão fechados antes da integração Java real
 
 ## Questões abertas e sequência
 
-- PDV-BE-02: implementar Terminal/vínculos e validação da invariável na escrita;
-  fechar status, unicidade da instalação, reatribuição e retenção de histórico.
-- PDV-BE-03: pairing, consumo concorrente, rate limits, expiração e recuperação.
+- PDV-BE-02: concluído — Terminal/vínculos, validação na escrita, status,
+  unicidade e Policy. Reatribuição/imutabilidade pós-pairing e retenção de
+  histórico continuam decisões futuras.
+- PDV-BE-03: próximo, ainda planejado — pairing, consumo concorrente, rate
+  limits, expiração e recuperação.
 - PDV-BE-04: escolha final da credencial, validade/renovação, revogação, sujeito,
   abilities e aplicação dos estados operacionais. Completa emissão pelo pairing.
 - PDV-BE-05: endpoints reais, contrato Java, testes HTTP e staging; só então
