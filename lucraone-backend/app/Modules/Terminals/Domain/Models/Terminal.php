@@ -12,6 +12,7 @@ use Database\Factories\TerminalFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Terminal extends Model
 {
@@ -51,6 +52,11 @@ class Terminal extends Model
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function pairingCodes(): HasMany
+    {
+        return $this->hasMany(TerminalPairingCode::class);
     }
 
     protected static function newFactory(): TerminalFactory

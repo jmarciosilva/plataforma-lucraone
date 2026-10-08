@@ -37,12 +37,15 @@ class TerminalAssignmentValidator
         }
 
         if ($terminal->installation_id !== null) {
-            if (! is_string($terminal->installation_id)
-                || ! preg_match('/\A[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\z/i', $terminal->installation_id)) {
+            if (! is_string($terminal->installation_id)) {
                 throw new InvalidTerminalAssignment('Installation ID must be a UUID v4.');
             }
-            // Uma instalação com letras maiúsculas é a mesma identidade UUID.
-            $terminal->installation_id = strtolower($terminal->installation_id);
+            $terminal->installation_id = InstallationId::normalize($terminal->installation_id);
+        }
+
+        if ($terminal->exists && $terminal->getRawOriginal('installation_id') !== null
+            && $terminal->installation_id !== $terminal->getRawOriginal('installation_id')) {
+            throw new InvalidTerminalAssignment('A bound Installation ID cannot be changed or cleared.');
         }
 
         if ($terminal->status === Terminal::STATUS_ACTIVE && $terminal->installation_id === null) {
