@@ -18,8 +18,8 @@ O plano de execução está em **[ROADMAP.md](ROADMAP.md)**.
 | **Última sprint concluída** | F2.5 — Advanced Automation |
 | **Próxima sprint funcional** | F2.6 — Integration APIs |
 | **Status da F2.6** | 🟢 **Liberada e não iniciada** — o hardening pré-F2.6 foi concluído |
-| **Trilha backend PDV** | PDV-BE-01 e PDV-BE-02 concluídos; PDV-BE-03 planejado/próximo. Separada da F2.6; backend ainda não apto para PDV |
-| **Testes** | 1251 no total · 1249 PASS · 0 FAIL/ERROR · 2 risky preexistentes · 0 skipped · 4890 assertions |
+| **Trilha backend PDV** | PDV-BE-01 a PDV-BE-03 concluídos; PDV-BE-04 planejado/próximo. Separada da F2.6; backend ainda não apto para PDV |
+| **Testes** | 1302 no total · 1300 PASS · 0 FAIL/ERROR · 2 risky preexistentes · 0 skipped · 5060 assertions |
 | **Módulos** | 13 |
 | **Superfícies** | Painel web (sessão) + API REST `/api/v1` (Sanctum) |
 
@@ -183,7 +183,7 @@ e nos ADRs em [`lucraone-backend/docs/adr/`](lucraone-backend/docs/adr/).
 ## Desenvolvimento
 
 ```bash
-docker compose exec app php artisan test --do-not-cache-result # 1251 testes; 1249 PASS e 2 risky preexistentes
+docker compose exec app php artisan test --do-not-cache-result # 1302 testes; 1300 PASS e 2 risky preexistentes
 docker compose exec app ./vendor/bin/pint       # estilo
 docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=1G
 docker compose exec app php artisan tinker
@@ -219,14 +219,16 @@ que provam cada correção estão em
 O backend **não** está apto para integração com o PDV: esse marco é outro e
 exige a entidade Terminal, o vínculo terminal → estabelecimento/empresa/filial,
 pareamento, credencial de máquina e as rotas `/api/v1/pdv/*`. Terminal e seus
-vínculos existem; pairing, machine auth e endpoints PDV ainda não existem.
+vínculos e domínio de pairing existem; machine auth e endpoints PDV ainda
+não existem. Pairing não emite credencial de máquina.
 
 A trilha oficial [PDV-BE](ROADMAP.md#pdv-be--backend-para-integração-com-pdv)
 prepara essa integração separadamente da F2.6. PDV-BE-01 entrega BranchPolicy,
 correlação da API e o
 [desenho de Terminal](lucraone-backend/docs/architecture/pdv-backend-foundation.md);
 PDV-BE-02 entrega Terminal, vínculos, invariantes e Policy inicial;
-PDV-BE-03 é o próximo passo planejado. A Fase 4 do Java PDV segue aguardando
+PDV-BE-03 entrega pairing/provisionamento sem HTTP ou credencial;
+PDV-BE-04 é o próximo passo planejado. A Fase 4 do Java PDV segue aguardando
 contratos reais do backend.
 
 ---

@@ -1,9 +1,10 @@
-# PDV-BE — Fundação do backend e entidade Terminal
+# PDV-BE — Fundação, Terminal e pairing
 
 **Trilha:** PDV-BE · **Data:** 2026-10-08
-**Estado:** PDV-BE-01 e PDV-BE-02 implementados; pairing, machine auth e contratos PDV ainda não implementados.
+**Estado:** PDV-BE-01 a PDV-BE-03 implementados; domínio de pairing disponível, sem machine auth ou endpoints PDV.
 **Commit funcional PDV-BE-01:** `2d203951b2e824234b53b0e675ffe8e5b82bf5c3`.
 **Commit funcional PDV-BE-02:** `1e96b207a102d81ed089ab1f7693ef2cc6aadb89`.
+**Commit funcional PDV-BE-03:** `6887d60803fc9989b8623c6c2cc2b12a80b9dfd8`.
 
 **Validação histórica PDV-BE-01:** 13 testes BranchPolicy (48 assertions) e 14 testes de correlação
 (49 assertions), todos PASS. Suíte completa: 1212 testes, 1210 PASS, 0 FAIL/ERROR,
@@ -24,8 +25,9 @@ do backend; este documento não autoriza iniciar integração real nem altera o 
 
 No PDV-BE-01 foram corrigidos BranchPolicy e correlação da API. No PDV-BE-02
 foram implementados Terminal, migration, vínculos e Policy, conforme abaixo.
-Branch API, pairing, machine authentication e rotas PDV continuam ausentes.
-As seções de pairing, machine auth e endpoints continuam propostas futuras.
+No PDV-BE-03 foi implementado o domínio de pairing/provisionamento, sem HTTP
+ou credencial. Branch API, machine authentication e rotas PDV continuam ausentes.
+As seções de machine auth e endpoints continuam propostas futuras.
 
 ## Base existente: Tenant, Company, Branch e User
 
@@ -141,7 +143,10 @@ unicidade diferente entre SQLite (comparação sensível à caixa) e MySQL.
 Reinstalação, substituição de hardware e reatribuição de installation_id exigem
 decisão explícita antes do pairing; um ID antigo não deve reativar uma
 identidade revogada. A coluna nullable e o unique global existem no PDV-BE-02.
-A imutabilidade pós-pairing continua pendente: ainda não existe pairing.
+No PDV-BE-03 o primeiro UUID não nulo persistido passa a ser imutável no fluxo
+Eloquent. Consumo associa instalação e ativa o Terminal atomicamente; tentativa
+de troca/remoção posterior é recusada. A mesma UUID com caixa diferente mantém
+a identidade canonicalizada. Re-pairing/recuperação ainda não têm fluxo.
 
 ### Status formalizado no PDV-BE-02
 
@@ -217,34 +222,175 @@ unicidade/NULL, FKs e RESTRICT; rollback/reaplicação testados apenas no banco
 descartável. MySQL usa enum nativo, SQLite usa CHECK para os mesmos status.
 Nenhum Terminal real cadastrado; smoke saudável e correlação preservada.
 
-PDV-BE-02 não torna o backend apto para PDV. Pairing, credenciais e endpoints
-abaixo continuam propostas futuras. F2.6 permanece liberada e não iniciada.
+PDV-BE-02 não tornou o backend apto para PDV; PDV-BE-03 também não. O domínio
+de pairing está implementado abaixo; credenciais/endpoints continuam futuros.
+F2.6 permanece liberada e não iniciada.
 
-## Pairing futuro
+## Pairing e provisionamento implementados no PDV-BE-03
 
-1. Administrador autorizado pré-cadastra Terminal e vínculos no backend.
-2. Backend emite código aleatório de pareamento, de uso único e curta duração.
-3. PDV envia `pairing_code` e `installation_id` por HTTPS.
-4. Backend valida código, prazo, tentativas, Terminal e coerência dos vínculos.
-5. Consumo atômico do código, vínculo da instalação e emissão da credencial.
-6. Resposta: `terminal_id`, `tenant_id`, `company_id`, `branch_id` e machine
-   credential, entregue somente na emissão. O código fica consumido.
+Esta entrega é domínio: IssueTerminalPairingCode e ConsumeTerminalPairingCode,
+sem endpoint, UI, User/login, Gate interno ou credencial. A camada administrativa
+futura deve autorizar emissão/regeneração pela TerminalPolicy. Posse do código
+permite consumir somente a identidade Terminal associada ao selector; contexto
+é derivado do Terminal, sem X-Tenant-ID. Isso ainda não autentica operação PDV.
 
-Proposta: armazenar hash do código, nunca o valor em claro ou em logs; usar
-entropia adequada e comparação segura. Prazo inicial sugerido de 10 minutos,
-a confirmar em PDV-BE-03. Limitar tentativas por IP e código/Terminal, sem
-armazenar código bruto nas chaves de rate limit; definir limites numéricos após
-análise de uso e abuso. Respostas inválidas não devem revelar Terminal/vínculos.
+### Persistência e histórico
 
-Replay e concorrência devem ser recusados por consumo transacional/atômico;
-apenas uma tentativa pode emitir a credencial. Rotação invalida código anterior.
-Uma perda de resposta após consumo não permite reutilizar o código: recuperação
-administrativa ou protocolo seguro de recuperação deve ser definido. O endpoint
-terá correlation ID; código e token não podem aparecer em logs ou auditoria.
+TerminalPairingCode usa HasUlid/HasFactory, sem coluna tenant_id redundante ou
+TenantScope: pertence ao Terminal por FK. Lookup do código é global por selector;
+não concede leitura pública da entidade nem cria rota. Relações: Terminal
+pairingCodes() e TerminalPairingCode terminal(). Não há hard delete automático.
 
-**Dependência real:** PDV-BE-03 prepara pairing/provisionamento; o fluxo que
-retorna credencial só fica completo após PDV-BE-04. Nenhum pairing funcional
-deve ser anunciado antes dessa dependência estar satisfeita.
+| Campo | Função implementada |
+|---|---|
+| id char(26), PK | Identidade ULID do ciclo de pairing |
+| terminal_id char(26), obrigatório/FK RESTRICT | Identidade operacional alvo; preservar histórico frente a delete físico |
+| selector char(6), unique global | Lookup público eficiente e associação de tentativa à linha |
+| code_hash char(64) | SHA-256 somente do segredo; oculto na serialização |
+| expires_at obrigatório | Prazo efetivo do código |
+| attempts tinyint unsigned, default 0 | Contador persistente de submissões localizáveis |
+| consumed_at nullable | Uso bem-sucedido único |
+| invalidated_at nullable | Regeneração ou esgotamento de tentativas |
+| created_at/updated_at | Rastreabilidade do ciclo |
+
+Índices usados: unique selector e terminal_id para histórico/invalidação. Não
+há índice de hash/expiração sem consumidor. A Factory produz Terminal PENDING,
+segredo aleatório somente transformado em hash, código não consumido e prazo
+futuro; states expired/consumed/invalidated. Não guarda código conhecido em claro.
+
+### Código, hash e ameaça considerada
+
+Formato **SSSSSS.XXXXXXXXXXXX**, 19 caracteres: selector público de 6 e segredo
+de 12. Alfabeto de 30 símbolos: **23456789ABCDEFGHJKMNPQRSTVWXYZ**, excluindo
+0/O, 1/I/L e U. Gerado com random_int criptográfico sem viés modular. Entropia
+aproximada do segredo: **58,88 bits**; selector tem 29,44 bits públicos e não é
+contado como segredo. Comprimento maior que oito caracteres foi escolhido para
+manter entropia e permitir contador direcionado sem Terminal ID adicional.
+Entrada aceita caixa diferente, canonicalizada em maiúsculas; formato/separador
+exatos, sem trim ou substituição de caracteres ambíguos.
+
+SHA-256 do segredo + comparação hash_equals, sem pepper novo. O código aleatório
+não é senha humana de baixa entropia. Selector evita scan e permite attempts;
+TTL curto e limite online são obrigatórios. Padrão conceitual semelhante ao
+selector/hash instalado no Sanctum, sem usar Sanctum no Terminal. Reset de
+senha existente usa hasher e identificação por email, portanto não foi copiado
+como protocolo de pairing. Vazamento somente-leitura do banco não entrega o
+segredo; ataques offline continuam uma ameaça, reduzida pela entropia e TTL.
+SHA-256 não promete proteção contra comprometimento de escrita do próprio banco.
+
+Código em claro existe somente no retorno IssuedTerminalPairingCode da emissão,
+com pairingId, code e expiresAt; não há método de recuperação. Debug do DTO
+oculta code. Parâmetros sensíveis usam SensitiveParameter; mensagens de falha
+não incluem código, hash, UUID, SQL ou exceção de banco anterior.
+
+### Emissão, prazo e regeneração
+
+config/pdv.php contém somente **ttl_minutes=10** e **max_attempts=5**, sem ENV ou
+segredo novo. Terminal deve ser PENDING e installation_id NULL. ACTIVE, BLOCKED,
+REVOKED ou instalação já informada são recusados; re-pairing será fluxo futuro.
+
+Emissão relê/bloqueia Terminal, valida/bloqueia pais e invalida registros antigos
+não consumidos/não invalidados, incluindo expirados preservados no histórico.
+Cria novo selector/hash/prazo com attempts=0. Uma transação e lock do Terminal
+serializam emissão concorrente; no fluxo oficial há no máximo um código válido.
+Colisão de selector tem retry limitado com rollback, sem destruir o código
+anterior. Falha na regeneração também preserva o código antigo. Model/factory,
+SQL direto e alterações em lote não substituem os serviços oficiais.
+
+### Consumo e transação
+
+Entrada: pairing_code + installation_id. Saída TerminalProvisioningResult:
+terminalId, tenantId, companyId, branchId, installationId, status; sem token,
+credential ou secret. Uma UUID pública não é prova de posse de credencial.
+
+1. Validar formato e localizar pairing por selector.
+2. Bloquear Terminal **antes** do pairing; reler/bloquear pairing depois.
+3. Recusar consumed, attempts esgotado, invalidated e expires_at <= agora.
+4. Incrementar attempts em memória e comparar hash do segredo.
+5. Validar Terminal PENDING/NULL; bloquear Tenant, Company, Branch nessa ordem
+   e revalidar estados e invariantes com TerminalAssignmentValidator.
+6. Normalizar UUID v4 pela regra compartilhada InstallationId e recusar vínculo
+   já existente, independentemente de TenantContext.
+7. Associar instalação, promover ACTIVE e marcar consumed_at/attempts.
+8. Commit único; devolver resultado sem credencial.
+
+Ordem Terminal → pairing coincide com emissão e evita deadlock por inversão
+em regeneração/consumo. Os pais ficam protegidos contra atualização durante a
+validação. A constraint global de installation_id é a defesa final em corrida
+entre Terminals de tenants diferentes. Exceção de unicidade vira falha de domínio
+sanitizada após rollback completo. Não há sucesso idempotente em replay: mesmo
+código/instalação ou instalação diferente após consumo sempre falha.
+
+Falhas de domínio localizáveis são retornadas internamente pela transação,
+persistindo attempts/invalidação; PairingFailed é lançado somente após esse
+commit. Falhas de infraestrutura revertem Terminal, pairing e contador, sem
+estado parcial. Camada chamadora não deve envolver consume numa transação externa
+que reverta attempts ao capturar a falha; serviços devem controlar esse ciclo.
+
+### Attempts e limite de abuso
+
+Cinco submissões permitidas para registro ainda válido. Contam erro de segredo,
+UUID inválida, estrutura/Terminal recusados, instalação duplicada e sucesso.
+O quinto erro invalida; a quinta submissão pode ter sucesso se válida. Limite
+é persistente e não reseta ao reiniciar processo. Regeneração cria novo registro.
+
+Selector desconhecido e código malformado não permitem atribuir tentativa à
+linha. Expirado/invalidado/consumido já são inutilizáveis e não acumulam attempts.
+Constraint concorrente/erro de infraestrutura faz rollback e pode não incrementar
+o contador. **Não há RateLimiter de IP nesta etapa, pois não há HTTP.** O futuro
+endpoint deve limitar por IP e selector/Terminal, sem segredo em chaves/logs,
+usar mensagens públicas genéricas e prever recuperação administrativa.
+Selector conhecido também permite DoS dirigido pelo esgotamento; attempts não
+substitui limitação de IP, controles de emissão e suporte à regeneração.
+
+### Estados operacionais e fronteira humana
+
+Emissão e consumo usam Tenant::isActive existente: active=true e ACTIVE/TRIAL.
+Tenant SUSPENDED/CANCELLED, disabled ou soft-deleted é recusado. Company/Branch
+precisam existir e estar ACTIVE; INACTIVE/SUSPENDED são recusados. Invariantes
+Company/Tenant e Branch/Company/Tenant são revalidadas, inclusive se um pai foi
+alterado após emissão. Aceitação de TRIAL segue semântica atual, somente para
+pairing; política contínua de máquina continua responsabilidade PDV-BE-04.
+
+TenantResolver humano não mudou. Tenant SUSPENDED humano permanece finding.
+PENDING → ACTIVE aqui indica provisionamento de identidade, sem emissão de token
+e sem habilitar requisições operacionais. O primeiro UUID não nulo persistido
+é imutável no model, inclusive quando fixtures/fluxos internos o informam antes;
+reinstalação e reatribuição exigirão procedimento futuro explícito.
+
+### Auditoria, logging e evidências
+
+Serviços não escrevem código/hash/UUID em logger ou AuditLog. O helper AuditLog
+atual deriva contexto humano/HTTP e gera request_id quando ausente; não foi
+acoplado ao domínio nem fabricado request_id. Histórico mantém emissão, prazo,
+contador, invalidação e consumo. Auditoria contextual de operador e tentativas
+HTTP será definida na camada chamadora, sem segredos.
+
+Tests-first: 48 erros por classes ausentes. Resultado final: emissão 9 PASS/33
+assertions; consumo 10 PASS/34; segurança/replay 29 PASS/91; transação 3 PASS/12.
+Suíte completa: 1302 testes, 1300 PASS, 0 FAIL/ERROR, 2 RISKY conhecidos,
+0 SKIPPED, 5060 assertions. Todas as regressões SEC/COR/PDV-BE-01/02 verdes;
+PHPStan idêntico ao baseline de 17 achados.
+
+MySQL descartável validou schema, FKs, RESTRICT, unique, datas/NULL, attempts,
+expiração e rollback/reaplicação. Processos PHP independentes, sincronizados por
+barreiras e lock mantido pelo processo coordenador, provaram: mesmo código tem
+um sucesso/um replay; mesmo UUID entre tenants tem um provisionamento; emissão
+concorrente deixa um código válido. SQLite :memory: prova comportamento funcional,
+sem prometer concorrência multiprocess. Isso não é teste de carga distribuída.
+Migration 2026_10_08_130000 aplicada em staging após DDL/backup; 42 executadas,
+0 pendentes; schema e smoke validados, sem dados reais ou erros operacionais novos.
+
+### Fronteira com PDV-BE-04 e PDV-BE-05
+
+Domínio de pairing está concluído. Nenhum endpoint foi criado: POST pair,
+GET health e GET terminal permanecem no PDV-BE-05. Emissão da credencial é
+exclusivamente PDV-BE-04; o fluxo HTTP final com credencial depende das duas
+etapas. Perda de resposta não reabre código consumido: recuperação segura deve
+ser desenhada antes do contrato final, sem transformar replay em sucesso.
+
+Backend continua **NÃO APTO PARA PDV** e Java Fase 4 aguarda contratos reais.
+F2.6 segue liberada e não iniciada. PDV-BE-04 não foi iniciado nesta rodada.
 
 ## Machine credential e Sanctum
 
@@ -321,11 +467,12 @@ versionamento e códigos de erro serão fechados antes da integração Java real
 ## Questões abertas e sequência
 
 - PDV-BE-02: concluído — Terminal/vínculos, validação na escrita, status,
-  unicidade e Policy. Reatribuição/imutabilidade pós-pairing e retenção de
-  histórico continuam decisões futuras.
-- PDV-BE-03: próximo, ainda planejado — pairing, consumo concorrente, rate
-  limits, expiração e recuperação.
-- PDV-BE-04: escolha final da credencial, validade/renovação, revogação, sujeito,
+  unicidade e Policy. PDV-BE-03 tornou a instalação persistida imutável;
+  reatribuição e política de retenção continuam decisões futuras.
+- PDV-BE-03: concluído — domínio de pairing, prazo, attempts persistentes,
+  consumo atômico, replay e instalação. HTTP/rate limiting/recuperação do
+  contrato final ainda futuros.
+- PDV-BE-04: próximo, não iniciado — escolha final da credencial, validade/renovação, revogação, sujeito,
   abilities e aplicação dos estados operacionais. Completa emissão pelo pairing.
 - PDV-BE-05: endpoints reais, contrato Java, testes HTTP e staging; só então
   avaliar o marco **backend apto para PDV**.

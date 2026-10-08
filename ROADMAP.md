@@ -1,6 +1,6 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-10-08 · **PDV-BE-02 — Entidade Terminal e vínculos concluído ✅**.
+**Atualizado:** 2026-10-08 · **PDV-BE-03 — Pairing e provisionamento concluído ✅**.
 Trilha própria do backend para PDV; F2.6 liberada e não iniciada. Backend ainda
 **não apto para PDV**. **ONB-01A e ONB-01B concluídos** — wizard
 ONB-01B publicado em `aee736db22a4f626fea6010d3e67278670606134`; ajuda permanente,
@@ -18,10 +18,10 @@ checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-
 **PM-05 concluído ✅ e publicado** em
 `d958a50ddf52ee509eb02ea5cb14c881c01cbeaa` —
 `feat(products): adicionar classificação fiscal básica`.
-**Próxima prioridade operacional:** PDV-BE-03 — Pairing e provisionamento,
-planejado, após o fechamento de PDV-BE-02. Não iniciado nesta rodada.
-Baseline atual: 1251 testes — 1249 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
-0 SKIPPED e 4890 assertions. Os RISKY continuam sendo
+**Próxima prioridade operacional:** PDV-BE-04 — Machine credential e autorização,
+planejado, após o fechamento de PDV-BE-03. Não iniciado nesta rodada.
+Baseline atual: 1302 testes — 1300 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 5060 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
 foram corrigidos. SEC-01, SEC-02, SEC-03 e SEC-04 resolvidos — os quatro
 bloqueadores obrigatórios pré-F2.6 estão encerrados, e o SEC-05 também está
@@ -127,7 +127,7 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 > PM-04A e PM-04B foram concluídos e publicados. O marco separado Cliente
 > Teste está concluído: cliente criado e validação manual realizada. PM-04C
 > foi concluído e publicado, assim como PM-05. A preparação do backend agora
-> segue na trilha PDV-BE; PDV-BE-02 concluído, PDV-BE-03 é o próximo passo planejado.
+> segue na trilha PDV-BE; PDV-BE-03 concluído, PDV-BE-04 é o próximo passo planejado.
 > Não há dependência técnica entre ONB e PM. Os bloqueadores obrigatórios da
 > F2.6 e os recomendados estão todos encerrados.
 
@@ -2230,8 +2230,8 @@ Tenant é o cliente lógico do SaaS.
 |---|---|---|---|
 | PDV-BE-01 | Fundação pré-Terminal | **Concluído ✅** · `2d20395` | Auditoria de retomada ✅ |
 | PDV-BE-02 | Entidade Terminal e vínculos | **Concluído ✅** · `1e96b20` | PDV-BE-01 |
-| PDV-BE-03 | Pairing e provisionamento | **Planejado · próximo** | PDV-BE-02 |
-| PDV-BE-04 | Machine credential e autorização | **Planejado** | PDV-BE-02 e PDV-BE-03 |
+| PDV-BE-03 | Pairing e provisionamento | **Concluído ✅** · `6887d60` | PDV-BE-02 |
+| PDV-BE-04 | Machine credential e autorização | **Planejado · próximo** | PDV-BE-02 e PDV-BE-03 |
 | PDV-BE-05 | Endpoints base do PDV | **Planejado** | PDV-BE-03 e PDV-BE-04 |
 
 PDV-BE-03 prepara o fluxo de pairing; a emissão de credencial nesse fluxo só
@@ -2351,6 +2351,90 @@ Terminal, endpoints `/api/v1/pdv/*`, Terminal API/UI ou alteração no Java PDV.
 Tenant SUSPENDED humano e demais findings continuam preservados. Backend
 continua **NÃO apto para PDV**; F2.6 **LIBERADA / NÃO INICIADA**.
 
+### PDV-BE-03 — Pairing e provisionamento
+
+**Concluído ✅ · 2026-10-08 · `6887d60803fc9989b8623c6c2cc2b12a80b9dfd8`**
+
+**Escopo entregue.** Domínio e serviços de emissão/consumo, sem HTTP nem
+credencial. Tabela `terminal_pairing_codes`: id ULID, terminal_id obrigatório
+(FK RESTRICT), selector público único, code_hash SHA-256 do segredo, expires_at,
+attempts, consumed_at, invalidated_at e timestamps. Histórico preservado; hash
+oculto na serialização. Índices somente para lookup por selector e Terminal.
+
+Formato `SSSSSS.XXXXXXXXXXXX`: selector de 6 e segredo de 12 caracteres,
+19 caracteres totais. Alfabeto `23456789ABCDEFGHJKMNPQRSTVWXYZ`, 30 símbolos;
+random_int criptográfico, aproximadamente 59 bits de entropia no segredo.
+Maiúsculas/minúsculas são equivalentes; sem normalização arbitrária de separador.
+O aumento sobre 8 caracteres preserva entropia e permite selector independente.
+Código/segredo nunca persistidos em claro; retorno somente na emissão. Sem
+pepper ou segredo de configuração novo. TTL **10 minutos** e máximo **5
+attempts**, centralizados em config/pdv.php.
+
+`IssueTerminalPairingCode` aceita somente PENDING sem installation_id; recusa
+ACTIVE/BLOCKED/REVOKED. Regeneração invalida os códigos anteriores não consumidos,
+sem apagá-los. `ConsumeTerminalPairingCode` valida código/prazo/attempts/estado,
+estrutura e UUID v4; associa instalação e promove PENDING → ACTIVE junto com
+consumed_at numa única transação. Retorno tipado com IDs/status/instalação,
+sem token ou credential. Replay falha, inclusive com a mesma instalação.
+
+Ambos usam DB::transaction e lockForUpdate; Terminal é bloqueado antes do
+pairing, na mesma ordem da emissão, evitando inversão de locks com regeneração.
+Pais também são bloqueados e invariantes revalidadas no consumo. Provisionamento
+não admite Tenant arquivado, active=false, SUSPENDED/CANCELLED; aceita ACTIVE ou
+TRIAL ativos, seguindo isActive existente. Company e Branch devem ser ACTIVE.
+Regra isolada no pairing: TenantResolver humano permanece intocado.
+
+Attempts contam submissões bem formadas com selector existente e código ainda
+válido, inclusive erro de segredo, UUID/estrutura e sucesso. Rejeições de domínio
+persistem o contador antes de lançar PairingFailed; no quinto erro o registro é
+invalidado. Código inexistente/malformado, expirado, invalidado ou consumido não
+incrementa outra linha. Erro de infraestrutura/constraint concorrente reverte a
+transação. Selector conhecido permite esgotamento dirigido: futuro endpoint
+**deve** aplicar rate limit por IP e selector/Terminal, sem segredo nas chaves e
+com erros públicos genéricos. Não há RateLimiter HTTP nesta etapa.
+
+UUID v4 é canonicalizado, permanece único globalmente e passa a ser imutável
+quando o primeiro valor não nulo é persistido. Após pairing, não pode ser trocado
+nem apagado pelo model; caixa diferente do mesmo UUID é aceita. Extraída a regra
+para InstallationId, reutilizada pelo validador e consumo. SQL/bulk/saveQuietly
+continuam fora do fluxo oficial, como no PDV-BE-02; mudanças administrativas de
+vínculos e re-pairing exigem fluxo futuro explícito.
+
+Sem logs de código/hash/UUID e sem AuditLog artificial: o helper atual deriva
+contexto humano/HTTP e gera request_id quando ausente. Histórico de pairing
+registra o ciclo; camada administrativa futura deverá autorizar emissão pela
+TerminalPolicy e definir auditoria contextual segura. Consumir não usa User,
+X-Tenant-ID ou TenantResolver para escolher vínculos.
+
+**Validação.** Gate main/HEAD/origin `f6315e3`, 0/0 e árvore limpa; 41 migrations.
+Baseline inicial reproduzido: 1251 total, 1249 PASS, 2 RISKY, 4890 assertions.
+Tests-first: 48 erros por classes ausentes. Resultado final: emissão 9 PASS/33
+assertions, consumo 10 PASS/34, segurança/replay 29 PASS/91, transação 3 PASS/12.
+Todas as regressões SEC-01 35, SEC-02 21, SEC-03 23, SEC-05 25, SEC-06 8,
+COR-01 23, BranchPolicy 13, correlação 14, Terminal domínio 26 e Policy 13 PASS.
+Suíte relacionada: 514 total, 512 PASS, 2 RISKY, 1651 assertions. Completa:
+**1302 total, 1300 PASS, 0 FAIL/ERROR, 2 RISKY preexistentes, 0 SKIPPED,
+5060 assertions**. Sintaxe/Pint/diff-check aprovados; PHPStan idêntico ao baseline
+anterior, 17 achados, sem novo finding.
+
+**MySQL e staging.** Banco descartável validou unique, FK/RESTRICT, datas/NULL,
+attempts/expiração, rollback e reaplicação. Processos PHP independentes com
+barreira de início validaram: mesmo código → um sucesso/um replay; mesmo UUID
+entre tenants → um provisionamento; emissão concorrente → um código válido.
+SQLite não é prova de concorrência multiprocess; essa evidência é MySQL.
+Migration `2026_10_08_130000_create_terminal_pairing_codes_table` aplicada após
+DDL --pretend e backup `/var/backups/lucraone/pdv-be-03-before-pairing-20261008.sql`,
+141597 bytes, root/600, concluído em 2026-10-08 20:24:29 UTC. Agora 42
+executadas/0 pendentes; SHOW CREATE validado. Banco descartável/grant removidos.
+Staging health/login/up 200, landing 302; X-Request-ID gerado/preservado.
+Sem novos 5xx ou staging.ERROR no período verificado. Nenhum Terminal/pairing real
+criado, container reiniciado ou rebuild realizado.
+
+**Limites.** Terminal pode ser pareado pelo domínio, mas não autentica requisições
+operacionais. Sem PersonalAccessToken/HasApiTokens/abilities/machine auth,
+endpoints `/api/v1/pdv/*`, UI ou Java PDV. Backend **NÃO APTO PARA PDV**;
+F2.6 **LIBERADA / NÃO INICIADA**. Próximo: PDV-BE-04, ainda não iniciado.
+
 ### Marco — Backend apto para PDV
 
 **NÃO atingido.** Só poderá ser marcado após, no mínimo:
@@ -2367,8 +2451,8 @@ continua **NÃO apto para PDV**; F2.6 **LIBERADA / NÃO INICIADA**.
 - testes automatizados de contrato, isolamento e segurança;
 - staging validado com os contratos reais.
 
-**Próximo passo:** PDV-BE-03 — Pairing e provisionamento, planejado.
-PDV-BE-02 não inicia essa etapa nem a F2.6.
+**Próximo passo:** PDV-BE-04 — Machine credential e autorização, planejado.
+PDV-BE-03 não inicia essa etapa nem a F2.6.
 
 ---
 
