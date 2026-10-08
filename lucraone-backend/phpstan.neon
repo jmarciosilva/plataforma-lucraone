@@ -14,7 +14,6 @@ parameters:
     - identifier: property.notFound
     - identifier: staticMethod.notFound
     - identifier: method.notFound
-    - identifier: class.notFound
     - identifier: new.static
     - identifier: variable.undefined
     - identifier: arguments.count

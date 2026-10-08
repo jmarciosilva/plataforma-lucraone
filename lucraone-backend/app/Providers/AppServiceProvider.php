@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Modules\Authorization\Domain\Models\Permission;
 use App\Modules\Authorization\Domain\Models\Role;
+use App\Modules\Authorization\Http\Policies\BranchPolicy;
 use App\Modules\Authorization\Http\Policies\PermissionPolicy;
 use App\Modules\Authorization\Http\Policies\RolePolicy;
 use App\Modules\Automation\Application\Listeners\ProcessAutomationTrigger;
@@ -12,6 +13,7 @@ use App\Modules\Automation\Domain\Models\AutomationRule;
 use App\Modules\Automation\Domain\Models\Notification;
 use App\Modules\Automation\Http\Policies\AutomationRulePolicy;
 use App\Modules\Automation\Http\Policies\NotificationPolicy;
+use App\Modules\Branches\Domain\Models\Branch;
 use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Companies\Http\Policies\CompanyPolicy;
 use App\Modules\Identity\Domain\Models\User;
@@ -59,6 +61,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Tenant::class, TenantPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Company::class, CompanyPolicy::class);
+        Gate::policy(Branch::class, BranchPolicy::class);
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Permission::class, PermissionPolicy::class);
         Gate::policy(Product::class, ProductPolicy::class);

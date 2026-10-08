@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AutenticarWeb;
 use App\Http\Middleware\RedirecionarSeAutenticado;
+use App\Modules\Audit\Http\Middleware\RequestCorrelationMiddleware;
 use App\Modules\Automation\Infrastructure\Console\PruneAutomationLogsCommand;
 use App\Modules\Identity\Http\Middleware\ApiAuthenticationMiddleware;
 use App\Modules\Identity\Http\Middleware\EnsureTokenAbility;
@@ -57,7 +58,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // ApiAuthenticationMiddleware converte AuthenticationException em JSON 401.
         // Fica restrito ao grupo api: no navegador queremos redirect para /login,
         // não um corpo JSON.
-        $middleware->api(append: [
+        $middleware->api(prepend: [
+            RequestCorrelationMiddleware::class,
+        ], append: [
             ApiAuthenticationMiddleware::class,
         ]);
 

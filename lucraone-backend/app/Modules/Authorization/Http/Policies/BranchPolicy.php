@@ -2,66 +2,66 @@
 
 namespace App\Modules\Authorization\Http\Policies;
 
-use App\Modules\Companies\Domain\Models\Branch;
+use App\Modules\Branches\Domain\Models\Branch;
 use App\Modules\Identity\Domain\Models\User;
+use App\Modules\Tenancy\Application\TenantContext;
 
 class BranchPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $this->canRead($user, $this->currentTenant());
     }
 
     public function view(User $user, Branch $branch): bool
     {
-        return $user->canAccessTenant($branch->tenant_id)
-            && $this->canAccessBranch($user, $branch);
+        return $this->matchesContext($branch)
+            && $this->canRead($user, $branch->tenant_id)
+            && $branch->company !== null;
     }
 
     public function create(User $user): bool
     {
-        return $user->hasPermission('create-branch');
+        return $this->canManage($user, $this->currentTenant());
     }
 
     public function update(User $user, Branch $branch): bool
     {
-        return $user->canAccessTenant($branch->tenant_id)
-            && $this->canManageBranch($user, $branch);
+        return $this->matchesContext($branch)
+            && $this->canManage($user, $branch->tenant_id)
+            && $branch->company !== null;
     }
 
     public function delete(User $user, Branch $branch): bool
     {
-        return $user->canAccessTenant($branch->tenant_id)
-            && $this->canManageBranch($user, $branch);
+        return $this->update($user, $branch);
     }
 
-    private function canAccessBranch(User $user, Branch $branch): bool
+    private function currentTenant(): ?string
     {
-        if ($user->hasPermission('view-all-branches')) {
-            return true;
-        }
+        $context = app(TenantContext::class);
 
-        if ($user->hasPermission('view-assigned-branches')) {
-            return $user->branches()
-                ->where('branch_id', $branch->id)
-                ->exists();
-        }
-
-        return false;
+        return $context->resolved() ? $context->id() : null;
     }
 
-    private function canManageBranch(User $user, Branch $branch): bool
+    private function matchesContext(Branch $branch): bool
     {
-        if ($user->hasPermission('manage-all-branches')) {
-            return true;
-        }
+        return $this->currentTenant() === $branch->tenant_id;
+    }
 
-        if ($user->hasPermission('manage-assigned-branches')) {
-            return $user->branches()
-                ->where('branch_id', $branch->id)
-                ->exists();
-        }
+    private function canRead(User $user, ?string $tenantId): bool
+    {
+        // O catálogo já distingue leitura e gestão de filiais. Permissões de
+        // "filiais atribuídas" não autorizam sem um modelo de atribuição real.
+        return $tenantId !== null
+            && $user->canAccessTenant($tenantId)
+            && $user->hasAnyPermission(['view-branches', 'view-all-branches', 'manage-branches'], $tenantId);
+    }
 
-        return false;
+    private function canManage(User $user, ?string $tenantId): bool
+    {
+        return $tenantId !== null
+            && $user->canAccessTenant($tenantId)
+            && $user->hasPermission('manage-branches', $tenantId);
     }
 }
