@@ -5,6 +5,7 @@ namespace App\Modules\Companies\Domain\Models;
 use App\Modules\Branches\Domain\Models\Branch;
 use App\Modules\Companies\Domain\Events\CompanyCreated;
 use App\Modules\Tenancy\Domain\Models\HasTenant;
+use App\Modules\Terminals\Domain\Models\Terminal;
 use Database\Factories\CompanyFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -79,6 +80,11 @@ class Company extends Model
     public function isActive(): bool
     {
         return $this->status === 'ACTIVE';
+    }
+
+    public function terminals()
+    {
+        return $this->hasMany(Terminal::class, 'company_id', 'id');
     }
 
     /**

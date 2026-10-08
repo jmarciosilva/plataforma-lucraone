@@ -5,6 +5,7 @@ namespace App\Modules\Branches\Domain\Models;
 use App\Modules\Companies\Domain\Models\Address;
 use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Tenancy\Domain\Models\HasTenant;
+use App\Modules\Terminals\Domain\Models\Terminal;
 use Database\Factories\BranchFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -87,6 +88,11 @@ class Branch extends Model
         return Company::where('id', $this->company_id)
             ->where('tenant_id', $this->tenant_id)
             ->first();
+    }
+
+    public function terminals()
+    {
+        return $this->hasMany(Terminal::class, 'branch_id', 'id');
     }
 
     /**

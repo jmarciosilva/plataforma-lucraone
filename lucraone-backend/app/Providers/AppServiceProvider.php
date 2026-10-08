@@ -33,6 +33,8 @@ use App\Modules\Sales\Http\Policies\OrderPolicy;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Tenancy\Http\Policies\TenantPolicy;
 use App\Modules\Tenancy\TenancyServiceProvider;
+use App\Modules\Terminals\Domain\Models\Terminal;
+use App\Modules\Terminals\Http\Policies\TerminalPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -62,6 +64,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Company::class, CompanyPolicy::class);
         Gate::policy(Branch::class, BranchPolicy::class);
+        Gate::policy(Terminal::class, TerminalPolicy::class);
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Permission::class, PermissionPolicy::class);
         Gate::policy(Product::class, ProductPolicy::class);

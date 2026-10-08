@@ -6,6 +6,7 @@ use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Identity\Domain\Models\TenantUser;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Tenancy\Domain\Events\TenantCreated;
+use App\Modules\Terminals\Domain\Models\Terminal;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -96,6 +97,11 @@ class Tenant extends Model
         return Attribute::make(
             get: fn () => "{$this->name} ({$this->slug})"
         );
+    }
+
+    public function terminals()
+    {
+        return $this->hasMany(Terminal::class, 'tenant_id', 'id');
     }
 
     /**
