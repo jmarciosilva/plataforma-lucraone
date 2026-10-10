@@ -2,6 +2,7 @@
 
 namespace App\Modules\Terminals\Http\Middleware;
 
+use App\Modules\Pdv\Http\Responses\PdvErrorResponse;
 use App\Modules\Tenancy\Application\TenantContext;
 use App\Modules\Terminals\Application\TerminalAuthenticationEligibility;
 use App\Modules\Terminals\Application\TerminalContext;
@@ -44,7 +45,7 @@ class ResolveTerminalContext
         // atribuísse a ability de máquina — para aqui, porque a pergunta é de
         // tipo, não de alcance do token.
         if (! $sujeito instanceof Terminal) {
-            return $this->recusar('Esta operação exige uma credencial de Terminal', 403);
+            return $this->recusar($request, 'Esta operação exige uma credencial de Terminal.', 403);
         }
 
         // X-Tenant-ID é proibido para máquina, inclusive quando aponta para o
@@ -53,14 +54,14 @@ class ResolveTerminalContext
         // manda e o vínculo real passaria a ser uma decisão de servidor. O
         // Terminal autenticado é a única autoridade sobre o contexto.
         if ($request->hasHeader('X-Tenant-ID')) {
-            return $this->recusar('Credencial de Terminal não aceita seleção de estabelecimento por cabeçalho', 403);
+            return $this->recusar($request, 'Credencial de Terminal não aceita seleção de estabelecimento por cabeçalho.', 403);
         }
 
         // Reconferido aqui, e não só no callback do Sanctum, porque este
         // middleware também é a porta de quem usa sessão de primeira parte ou
         // um sujeito injetado em teste — nenhum dos dois passa pelo callback.
         if (! $this->eligibility->allows($sujeito)) {
-            return $this->recusar('Terminal não está apto a operar', 403);
+            return $this->recusar($request, 'Terminal não está apto a operar.', 403);
         }
 
         $this->terminalContext->set($sujeito);
@@ -80,11 +81,16 @@ class ResolveTerminalContext
      * Mesmo motivo do `recusar()` do TenantResolver: um contexto remanescente
      * faria a consulta seguinte rodar no estabelecimento errado.
      */
-    private function recusar(string $mensagem, int $status): Response
+    private function recusar(Request $request, string $mensagem, int $status): Response
     {
         $this->terminalContext->clear();
         $this->tenantContext->clear();
 
-        return response()->json(['message' => $mensagem], $status);
+        return PdvErrorResponse::make(
+            $request,
+            PdvErrorResponse::CODE_FORBIDDEN,
+            $mensagem,
+            $status,
+        );
     }
 }

@@ -30,3 +30,6 @@ require __DIR__ . '/../app/Modules/Reporting/Routes/api.php';
 
 // Automation Module Routes
 require __DIR__ . '/../app/Modules/Automation/Routes/api.php';
+
+// PDV Module Routes
+require __DIR__ . '/../app/Modules/Pdv/Routes/api.php';

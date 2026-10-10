@@ -22,6 +22,7 @@ use App\Modules\Inventory\Domain\Models\Inventory;
 use App\Modules\Inventory\Domain\Models\StockLevel;
 use App\Modules\Inventory\Http\Policies\InventoryPolicy;
 use App\Modules\Inventory\Http\Policies\StockLevelPolicy;
+use App\Modules\Pdv\Http\Responses\PdvErrorResponse;
 use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Products\Http\Policies\CategoryPolicy;
@@ -35,6 +36,7 @@ use App\Modules\Tenancy\Http\Policies\TenantPolicy;
 use App\Modules\Tenancy\TenancyServiceProvider;
 use App\Modules\Terminals\Application\TerminalAuthenticationEligibility;
 use App\Modules\Terminals\Domain\Models\Terminal;
+use App\Modules\Terminals\Domain\PairingCode;
 use App\Modules\Terminals\Http\Policies\TerminalPolicy;
 use App\Modules\Terminals\TerminalsServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -110,6 +112,51 @@ class AppServiceProvider extends ServiceProvider
                 'message' => 'Muitas tentativas de login. Tente novamente em instantes.',
             ], 429, $cabecalhos)));
 
+        // Freio do pareamento de PDV, em duas dimensões. Nenhuma das duas
+        // substitui a outra, e nenhuma substitui os `attempts` persistentes do
+        // PDV-BE-03:
+        //
+        // - os attempts travam o ataque a UM código, mas não impedem varrer
+        //   muitos códigos diferentes;
+        // - o freio por IP trava o volume de uma origem, mas não um ataque
+        //   distribuído;
+        // - o freio por selector trava a insistência contra um alvo, mesmo
+        //   vindo de muitos IPs — e o atacante só troca de selector às custas
+        //   de voltar a enfrentar o freio por IP.
+        //
+        // As janelas acompanham o domínio: o código vive 10 minutos, então
+        // contar em 10 minutos é contar exatamente a vida útil do alvo. O teto
+        // por selector é 5, igual ao `max_attempts`, para que o freio de HTTP
+        // não seja mais frouxo que o do banco; o teto por IP é mais alto porque
+        // uma loja pode ter vários caixas sendo instalados atrás de uma única
+        // saída de rede — mesma lógica do 'api-login'.
+        //
+        // O IP é confiável nesta infraestrutura: o nginx do host acrescenta o
+        // endereço real à direita do X-Forwarded-For e o Symfony lê dessa ponta,
+        // ignorando entradas injetadas pelo cliente (verificado contra a stack
+        // real antes de escrever este limiter).
+        RateLimiter::for('pdv-pairing', function (Request $request) {
+            $limites = [
+                Limit::perMinutes(10, 20)
+                    ->by('pdv-pair:ip:'.$request->ip())
+                    ->response($this->recusaPorVolume()),
+            ];
+
+            // Só a parte pública do código entra na chave. O segredo não vai
+            // para cache em nenhuma hipótese; código sem selector plausível
+            // fica apenas sob o freio por IP.
+            $codigo = $request->input('pairing_code');
+            $selector = is_string($codigo) ? PairingCode::selectorFrom($codigo) : null;
+
+            if ($selector !== null) {
+                $limites[] = Limit::perMinutes(10, 5)
+                    ->by('pdv-pair:selector:'.hash('sha256', $selector))
+                    ->response($this->recusaPorVolume());
+            }
+
+            return $limites;
+        });
+
         // Revogação central: um token já emitido para de valer no instante em
         // que a conta é desativada. Antes disto, desativar alguém não
         // alcançava os tokens dele — só barrava o acesso ao estabelecimento,
@@ -149,6 +196,24 @@ class AppServiceProvider extends ServiceProvider
 
                 return false;
             }
+        );
+    }
+
+    /**
+     * Resposta pública de 429 do pareamento.
+     *
+     * Estável e muda: não diz se o selector existe, se há Terminal por trás,
+     * nem quantas tentativas restam no banco — qualquer uma dessas viraria
+     * oráculo. O Retry-After vem dos cabeçalhos que o próprio throttle calcula.
+     */
+    private function recusaPorVolume(): callable
+    {
+        return fn (Request $request, array $cabecalhos) => PdvErrorResponse::make(
+            $request,
+            PdvErrorResponse::CODE_RATE_LIMITED,
+            'Muitas tentativas. Tente novamente mais tarde.',
+            429,
+            headers: $cabecalhos,
         );
     }
 }

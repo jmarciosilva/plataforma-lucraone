@@ -2,6 +2,7 @@
 
 namespace App\Modules\Terminals\Http\Middleware;
 
+use App\Modules\Pdv\Http\Responses\PdvErrorResponse;
 use App\Modules\Terminals\Domain\Models\Terminal;
 use Closure;
 use Illuminate\Http\Request;
@@ -32,9 +33,12 @@ class EnsureMachineTokenAbility
         $sujeito = $request->user();
 
         if (! $sujeito instanceof Terminal) {
-            return response()->json([
-                'message' => 'Esta operação exige uma credencial de Terminal',
-            ], 403);
+            return PdvErrorResponse::make(
+                $request,
+                PdvErrorResponse::CODE_FORBIDDEN,
+                'Esta operação exige uma credencial de Terminal.',
+                403,
+            );
         }
 
         // Fail-closed em vez de "deixa passar quem não tem token": o caminho de
@@ -43,9 +47,12 @@ class EnsureMachineTokenAbility
         // `tokenCan()` do Sanctum já é falso quando a requisição não trouxe
         // token — dois testes para a mesma condição só criariam um ramo morto.
         if (! $sujeito->tokenCan($ability)) {
-            return response()->json([
-                'message' => 'Esta credencial não tem permissão para esta operação',
-            ], 403);
+            return PdvErrorResponse::make(
+                $request,
+                PdvErrorResponse::CODE_FORBIDDEN,
+                'Esta credencial não tem permissão para esta operação.',
+                403,
+            );
         }
 
         return $next($request);
