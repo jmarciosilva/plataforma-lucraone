@@ -157,6 +157,24 @@ class AppServiceProvider extends ServiceProvider
             return $limites;
         });
 
+        RateLimiter::for('pdv-credential', fn (Request $request) => Limit::perMinute(12)
+            ->by('pdv-credential:'.($request->user()?->getAuthIdentifier() ?? $request->ip()))
+            ->response($this->recusaPorVolume()));
+        RateLimiter::for('pdv-recovery-admin', fn (Request $request) => Limit::perMinutes(10, 5)
+            ->by('pdv-recovery-admin:'.$request->user()?->getAuthIdentifier())
+            ->response($this->recusaPorVolume()));
+        RateLimiter::for('pdv-recovery', function (Request $request) {
+            $limits = [Limit::perMinutes(10, 20)->by('pdv-recovery:ip:'.$request->ip())->response($this->recusaPorVolume())];
+            $code = $request->input('recovery_code');
+            $selector = is_string($code) ? PairingCode::selectorFrom($code) : null;
+            if ($selector !== null) {
+                // More than five requests allows delivery retries; persistent bad attempts still stop at five.
+                $limits[] = Limit::perMinutes(10, 10)->by('pdv-recovery:selector:'.hash('sha256', $selector))->response($this->recusaPorVolume());
+            }
+
+            return $limits;
+        });
+
         // Revogação central: um token já emitido para de valer no instante em
         // que a conta é desativada. Antes disto, desativar alguém não
         // alcançava os tokens dele — só barrava o acesso ao estabelecimento,

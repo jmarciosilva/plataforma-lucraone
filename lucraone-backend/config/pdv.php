@@ -1,6 +1,12 @@
 <?php
 
 return [
+    'lifecycle' => [
+        'pending_minutes' => 10,
+        'recovery_minutes' => 10,
+        'max_attempts' => 5,
+    ],
+
     'pairing' => [
         'ttl_minutes' => 10,
         'max_attempts' => 5,

@@ -24,6 +24,10 @@ final class MachineTokenAbility
     /** Consultar o próprio Terminal e seus vínculos. */
     public const TERMINAL_READ = 'pdv:terminal:read';
 
+    public const CREDENTIAL_RENEW = 'pdv:credential:renew';
+
+    public const CREDENTIAL_CONFIRM = 'pdv:credential:confirm';
+
     /**
      * Abilities de uma credencial de máquina recém-emitida.
      *

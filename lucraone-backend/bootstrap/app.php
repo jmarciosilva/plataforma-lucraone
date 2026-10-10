@@ -11,10 +11,12 @@ use App\Modules\Pdv\Http\Responses\PdvErrorResponse;
 use App\Modules\Reporting\Infrastructure\Console\SendSalesSummaryCommand;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenantMiddleware;
 use App\Modules\Tenancy\TenancyServiceProvider;
+use App\Modules\Terminals\Domain\Exceptions\CredentialLifecycleFailed;
 use App\Modules\Terminals\Domain\Exceptions\MachineCredentialRefused;
 use App\Modules\Terminals\Domain\Exceptions\PairingFailed;
 use App\Modules\Terminals\Http\Middleware\EnsureMachineTokenAbility;
 use App\Modules\Terminals\Http\Middleware\ResolveTerminalContext;
+use App\Modules\Terminals\Infrastructure\Console\ExpireCredentialOperations;
 use App\Modules\Terminals\TerminalsServiceProvider;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -23,6 +25,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
@@ -40,6 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
     // A descoberta automática só varre app/Console/Commands; os comandos vivem
     // dentro dos módulos, então precisam ser registrados à mão.
     ->withCommands([
+        ExpireCredentialOperations::class,
         PromoverPlatformAdminCommand::class,
         PruneAutomationLogsCommand::class,
         SendSalesSummaryCommand::class,
@@ -113,6 +117,29 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->dontReport([CredentialLifecycleFailed::class]);
+        $exceptions->dontFlash(['password', 'password_confirmation', 'current_password', 'delivery_secret', 'recovery_code']);
+        // Exception traces and SQL messages can contain secret request arguments.
+        // Keep lifecycle diagnostics useful without reporting the original object.
+        $exceptions->report(function (Throwable $e) {
+            if (request()->is('api/v1/pdv/terminal/credential/*')
+                || request()->is('api/v1/pdv/admin/terminals/*/credential-recovery-codes')) {
+                $reported = request()->attributes->get('pdv_credential_reported', []);
+                if (in_array(spl_object_id($e), $reported, true)) {
+                    return false;
+                }
+                $reported[] = spl_object_id($e);
+                request()->attributes->set('pdv_credential_reported', $reported);
+                Log::error('PDV credential operation failed.', [
+                    'exception_type' => get_class($e),
+                    'request_id' => request()->header('X-Request-ID'),
+                ]);
+
+                return false;
+            }
+
+            return null;
+        });
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
@@ -127,6 +154,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // loja; a forma do erro dele precisa ser estável e pobre em informação.
         // ----------------------------------------------------------------
         $noPdv = fn (Request $request) => $request->is('api/v1/pdv/*');
+
+        $exceptions->render(function (CredentialLifecycleFailed $e, Request $request) use ($noPdv) {
+            if (! $noPdv($request)) {
+                return null;
+            }
+
+            return PdvErrorResponse::make($request, $e->errorCode, 'Não foi possível concluir a operação de credencial.', $e->httpStatus);
+        });
 
         // Estrutura da requisição. É o único erro que detalha campo, porque o
         // cliente precisa saber o que corrigir — e as mensagens são nossas,

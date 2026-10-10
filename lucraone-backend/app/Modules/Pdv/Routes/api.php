@@ -1,9 +1,12 @@
 <?php
 
+use App\Modules\Pdv\Http\Controllers\CredentialLifecycleController;
 use App\Modules\Pdv\Http\Controllers\CurrentTerminalController;
 use App\Modules\Pdv\Http\Controllers\PairTerminalController;
 use App\Modules\Pdv\Http\Controllers\PdvHealthController;
+use App\Modules\Pdv\Http\Middleware\RecoveryAdministrationContext;
 use App\Modules\Terminals\Domain\MachineTokenAbility;
+use App\Modules\Terminals\Http\Middleware\EnsureCredentialAbility;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1/pdv')->group(function () {
@@ -18,6 +21,20 @@ Route::prefix('v1/pdv')->group(function () {
     Route::post('terminals/pair', PairTerminalController::class)
         ->middleware('throttle:pdv-pairing')
         ->name('pdv.terminals.pair');
+
+    Route::post('terminal/credential/recover', [CredentialLifecycleController::class, 'recover'])
+        ->middleware('throttle:pdv-recovery')->name('pdv.credential.recover');
+
+    Route::post('admin/terminals/{terminal}/credential-recovery-codes', [CredentialLifecycleController::class, 'authorizeRecovery'])
+        ->middleware(['auth:sanctum', RecoveryAdministrationContext::class, 'throttle:pdv-recovery-admin'])
+        ->name('pdv.credential.authorize');
+
+    Route::middleware(['auth:sanctum', 'terminal.context', 'throttle:pdv-credential'])->group(function () {
+        Route::post('terminal/credential/rotations', [CredentialLifecycleController::class, 'prepare'])
+            ->middleware(EnsureCredentialAbility::class.':renew')->name('pdv.credential.prepare');
+        Route::post('terminal/credential/confirm', [CredentialLifecycleController::class, 'confirm'])
+            ->middleware(EnsureCredentialAbility::class.':confirm')->name('pdv.credential.confirm');
+    });
 
     // A ordem importa e é a mesma documentada no PDV-BE-04: autenticar,
     // estabelecer o sujeito-máquina e seu contexto, e só então conferir o

@@ -3,6 +3,8 @@
 namespace App\Modules\Terminals\Application;
 
 use App\Modules\Terminals\Domain\Models\Terminal;
+use App\Modules\Terminals\Domain\Models\TerminalCredentialOperation;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Apaga as credenciais de máquina de um Terminal.
@@ -24,6 +26,12 @@ class RevokeTerminalMachineCredentials
      */
     public function revoke(Terminal $terminal): int
     {
-        return $terminal->tokens()->delete();
+        return DB::transaction(function () use ($terminal) {
+            Terminal::withoutGlobalScopes()->whereKey($terminal->id)->lockForUpdate()->firstOrFail();
+            TerminalCredentialOperation::where('terminal_id', $terminal->id)
+                ->whereIn('status', ['ISSUED', 'PENDING'])->update(['status' => 'INVALIDATED', 'updated_at' => now()]);
+
+            return $terminal->tokens()->delete();
+        }, 3);
     }
 }
