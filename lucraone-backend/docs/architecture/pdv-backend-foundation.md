@@ -1,10 +1,11 @@
 # PDV-BE — Fundação, Terminal e pairing
 
-**Trilha:** PDV-BE · **Data:** 2026-10-08
-**Estado:** PDV-BE-01 a PDV-BE-03 implementados; domínio de pairing disponível, sem machine auth ou endpoints PDV.
+**Trilha:** PDV-BE · **Data:** 2026-10-10
+**Estado:** PDV-BE-01 a PDV-BE-04 implementados; machine auth e credencial de máquina disponíveis, sem endpoints PDV.
 **Commit funcional PDV-BE-01:** `2d203951b2e824234b53b0e675ffe8e5b82bf5c3`.
 **Commit funcional PDV-BE-02:** `1e96b207a102d81ed089ab1f7693ef2cc6aadb89`.
 **Commit funcional PDV-BE-03:** `6887d60803fc9989b8623c6c2cc2b12a80b9dfd8`.
+**Commit funcional PDV-BE-04:** `316db631c4f4e9f5c42132cdf9ae92b05268ccc1`.
 
 **Validação histórica PDV-BE-01:** 13 testes BranchPolicy (48 assertions) e 14 testes de correlação
 (49 assertions), todos PASS. Suíte completa: 1212 testes, 1210 PASS, 0 FAIL/ERROR,
@@ -26,8 +27,11 @@ do backend; este documento não autoriza iniciar integração real nem altera o 
 No PDV-BE-01 foram corrigidos BranchPolicy e correlação da API. No PDV-BE-02
 foram implementados Terminal, migration, vínculos e Policy, conforme abaixo.
 No PDV-BE-03 foi implementado o domínio de pairing/provisionamento, sem HTTP
-ou credencial. Branch API, machine authentication e rotas PDV continuam ausentes.
-As seções de machine auth e endpoints continuam propostas futuras.
+ou credencial. No PDV-BE-04 foram implementados a política de sujeito do Sanctum,
+o Terminal autenticável, a credencial de máquina com ability própria, o contexto
+de máquina e o enforcement por requisição — e o pairing passou a emitir a
+credencial. Branch API e rotas PDV continuam ausentes: a seção de endpoints
+segue sendo proposta futura, do PDV-BE-05.
 
 ## Base existente: Tenant, Company, Branch e User
 
@@ -392,69 +396,192 @@ ser desenhada antes do contrato final, sem transformar replay em sucesso.
 Backend continua **NÃO APTO PARA PDV** e Java Fase 4 aguarda contratos reais.
 F2.6 segue liberada e não iniciada. PDV-BE-04 não foi iniciado nesta rodada.
 
-## Machine credential e Sanctum
+## Machine credential e Sanctum — implementado no PDV-BE-04
 
-Requisitos: credencial específica do Terminal, revogável, com expiração explícita,
-armazenada como hash no backend; sem User/password/login humano. Tenant,
-Company e Branch derivam da identidade autenticada, nunca de `X-Tenant-ID`.
-Sem `*` nem herança automática de `business:read`/`business:write`.
+**A ordem de implementação foi de segurança.** O callback do Sanctum terminava em
+`: true`: qualquer tokenable que não fosse `User` autenticava apenas porque o
+guard havia considerado o token válido, sem checagem de estado. O guard não
+fecha essa porta — `auth.guards.sanctum.provider` é nulo neste projeto, então o
+`hasValidProvider()` do Sanctum aceita qualquer tokenable —, o que faz do
+callback o único ponto de controle. Portanto o fail-closed foi a primeira
+alteração e foi coberto por teste **antes** de o Terminal receber `HasApiTokens`.
+Entre uma coisa e outra o Terminal caía em `return false`: nunca existiu janela
+em que um Terminal tokenable fosse aceito pelo ramo permissivo.
 
-**Sanctum é tecnicamente viável**, conforme o código instalado: PersonalAccessToken
-tem relação polimórfica `tokenable`, e `tokenable_id` já suporta ULID. O tokenable
-proposto seria o futuro Terminal. `HasApiTokens` pode ser reutilizado, desde que
-Terminal cumpra o contrato de autenticação necessário ao guard, além de usar o
-trait. O trait sozinho não estabelece uma identidade autenticável.
+**Política de sujeito, por tipo e fail-closed:**
 
-O callback atual do Sanctum preserva a validade calculada pelo guard e exige
-atividade quando o dono é User; para outros tipos retorna true se o guard já
-considerou o token válido. Portanto não é exclusivo de User, mas **não aplica**
-status de Terminal/Tenant/Company/Branch. PDV-BE-04 deverá definir essa política
-explicitamente, preservando SEC-02. Rotas humanas e de máquina precisam recusar
-o tipo incorreto de sujeito; abilities isoladas não substituem essa fronteira.
+| Sujeito | Decisão |
+|---|---|
+| `User` | `User::isActive()` — SEC-02 preservado integralmente |
+| `Terminal` | `TerminalAuthenticationEligibility` |
+| qualquer outro, inclusive tokenable órfão | `false` |
 
-Proposta mínima de ability: `pdv:terminal:read` para consultar o próprio Terminal.
-Demais operações receberão abilities específicas quando seus contratos existirem.
-Esses nomes são proposta documental; TokenAbility humano não mudou.
+O callback só restringe: `$valido = false` vindo do guard nunca é revertido.
 
-Expiração específica, rotação, renovação e número de tokens por Terminal ainda
-precisam ser definidos. O limite global atual do Sanctum é 720 minutos e se
-aplica também aos tokens polimórficos; um `expires_at` futuro não pode ser
-tratado como extensão automática desse limite. Não aumentar a expiração humana
-silenciosamente para acomodar máquinas. Avaliar política diferenciada/guard ou
-outra estratégia antes de fechar a implementação em PDV-BE-04.
+**Terminal é sujeito autenticável.** Implementa
+`Illuminate\Contracts\Auth\Authenticatable` e usa `HasApiTokens`. O contrato é
+exigência técnica verificada no Sanctum 4.3.3 instalado, não precaução: o guard
+devolve o tokenable como `$request->user()` e `GuardHelpers::setUser()` declara o
+tipo — é por ele que `Sanctum::actingAs()` passa. O trait sozinho fornece
+`tokens()`/`createToken()`/`tokenCan()`, não identidade. Não há password,
+remember_token, e-mail, login, auth provider próprio nem password broker:
+`getAuthPassword()` e `getAuthPasswordName()` lançam `LogicException` em vez de
+devolver string vazia, e `getRememberTokenName()` devolve null, que é como o
+framework reconhece a ausência de "lembrar-me". Terminal não é model de nenhum
+provider configurado.
 
-Revogação pode excluir todos os tokens ligados ao tokenable Terminal, além de
-verificar seu status a cada request. Revogar apenas um token é possível na
-rotação; bloquear operação não depende somente de apagar um token isolado.
+**Ability.** `MachineTokenAbility::TERMINAL_READ` = `pdv:terminal:read`, em fonte
+separada do `TokenAbility` humano, que já reservava essa separação em docblock.
+Nunca `*`, nunca `business:read`/`business:write`. Abilities de venda,
+sincronização, estoque ou pagamento não foram antecipadas: entram quando as APIs
+correspondentes existirem.
 
-## Fronteira humana e estados operacionais
+**Expiração: o teto global foi verificado no Guard instalado, não presumido.**
+`Guard::isValidAccessToken()` combina as duas expirações com E lógico:
 
-User humano → TenantResolver atual, preservado integralmente nesta rodada:
+```
+(! $this->expiration || $accessToken->created_at->gt(now()->subMinutes($this->expiration)))
+&& (! $accessToken->expires_at || ! $accessToken->expires_at->isPast())
+&& $this->hasValidProvider($accessToken->tokenable)
+```
+
+O `expiration` global (`SANCTUM_EXPIRATION_MINUTES`, 720) é medido sobre
+`created_at` e vale para **qualquer** tokenable, inclusive os polimórficos: é
+teto absoluto, não default. Um `expires_at` de máquina acima de 720 minutos
+seria ficção — o token morreria no teto de todo jeito. Por isso
+`pdv.machine_credentials.ttl_minutes` vale 720, mantendo o que o projeto promete
+igual ao que o Sanctum cumpre, e há teste provando que um token com `expires_at`
+de um ano ainda é recusado após o teto.
+
+`SANCTUM_EXPIRATION_MINUTES` **não foi alterado** e nenhum token humano foi
+revogado. A auditoria do banco antes da implementação encontrou 0
+`personal_access_tokens` (0 com `expires_at`, 0 sem), logo não havia política a
+migrar. Validade de máquina maior exigiria remover o teto global — o que
+transformaria todo token humano sem `expires_at` em token sem prazo — ou dar à
+máquina um guard próprio com expiração independente. Nenhuma das duas foi feita:
+é mudança de política de sessão humana e fica fora desta etapa.
+
+**Um token ativo por Terminal, rotação e revogação.** Um Terminal operacional é
+uma instalação física, e o `installation_id` é único e imutável desde o
+PDV-BE-03; logo há no máximo uma credencial vigente, e reemitir é rotação.
+`IssueTerminalMachineCredential` revoga antes de criar — nessa ordem, para que
+uma falha deixe o Terminal sem credencial em vez de com duas.
+`RevokeTerminalMachineCredentials` é o ponto único de deleção, restrito pela
+morphMany do tokenable (`tokenable_type` + `tokenable_id`); nunca por nome,
+ability ou tenant_id, que não distinguem sujeito. Testes provam que token humano
+e token de outro Terminal não são alcançados.
+
+**Decisão revista em relação à tabela de status do PDV-BE-02: sair de `ACTIVE`
+revoga as credenciais.** A tabela dizia, para `BLOCKED`, "tokens permanecem
+sujeitos ao status". O PDV-BE-04 é mais estrito: um gancho Eloquent `updated`
+revoga fisicamente as credenciais quando o status deixa de ser `ACTIVE`, tanto em
+`BLOCKED` quanto em `REVOKED`. A negação por requisição continua sendo a garantia
+principal — Terminal bloqueado não autentica nem com token íntegro —, e a remoção
+resolve o passo seguinte: desbloquear não ressuscita uma credencial que passou
+tempo fora de controle. Voltar a `ACTIVE` exige nova emissão. Para `REVOKED` a
+remoção física é requisito, e a irreversibilidade do PDV-BE-02 segue valendo —
+nem reativação, nem nova credencial. Limite conhecido, igual ao do validador de
+vínculos: o gancho é Eloquent; SQL direto, bulk update e `saveQuietly` mudam
+status sem passar por ele e não são fluxo oficial de administração.
+
+**Texto puro.** Entregue uma única vez, em `IssuedTerminalMachineCredential` ou
+`TerminalProvisioningResult`. Nunca persistido — o Sanctum guarda só o SHA-256 —,
+nunca logado, nunca auditado, nunca em mensagem de exceção. `__debugInfo()`
+censura o valor nos dois objetos, porque é por `var_dump`/`dd`/log de objeto que
+um segredo acaba em arquivo. Não há coluna no projeto que receba o valor legível,
+nem forma de relê-lo depois.
+
+**Sem refresh token.** Auditado e dispensado: a política é credencial direta com
+rotação. Um segundo segredo de longa duração só ampliaria a superfície sem
+resolver nada que a rotação não resolva.
+
+## Fronteira humana e estados operacionais — implementado no PDV-BE-04
+
+User humano → `TenantResolver` atual, **não alterado nesta etapa**:
 `$request->user()`, tipo User modular, conta/vínculo ativos, header/sessão/vínculo
-único e limpeza do contexto ao recusar. Sujeito não User é recusado.
+único e limpeza do contexto ao recusar. Sujeito não User continua recusado, e é
+essa recusa por tipo que forma metade da fronteira bidirecional.
 
-Terminal/machine client → estratégia própria, explícita, que deriva contexto dos
-vínculos do Terminal autenticado e aplica suas invariantes. Não usar o resolver
-humano nem permitir que `X-Tenant-ID` escolha outro estabelecimento.
+Terminal → caminho próprio. `TerminalContext` é singleton por requisição, no
+padrão do `TenantContext`, e expõe terminal, tenant, company e branch. O
+middleware `terminal.context` (`ResolveTerminalContext`) exige sujeito
+`Terminal`, recusa `X-Tenant-ID` e preenche `TerminalContext` e `TenantContext` a
+partir do Terminal autenticado — o `TenantContext` porque o `TenantScope` dos
+models de negócio o consulta, e é isso que permite a uma rota de máquina
+consultar dados com o mesmo filtro do caminho humano. Falha limpa os dois
+contextos, pelo mesmo motivo do `recusar()` do `TenantResolver`.
 
-**Decisão pendente para PDV-BE-04:** machine client não deverá operar com Tenant
-`SUSPENDED`/`CANCELLED`, Company `INACTIVE`/`SUSPENDED` ou Branch
-`INACTIVE`/`SUSPENDED`. Propõe-se Tenant `active=true` e status `ACTIVE`/`TRIAL`,
-Company/Branch `ACTIVE` e Terminal `ACTIVE`; entidades ausentes/arquivadas devem
-recusar acesso. A aceitação de TRIAL e a recuperação após suspensão exigem
-confirmação de produto. Testes deverão provar esses bloqueios.
+`X-Tenant-ID` é **recusado para máquina, inclusive quando correto** (403,
+seguindo a convenção do `ResolveTenantMiddleware`). Aceitá-lo "porque coincide"
+ensinaria o cliente de PDV a enviar o cabeçalho, e a divergência entre o que ele
+manda e o vínculo real passaria a ser decisão de servidor. O Terminal autenticado
+é a única autoridade sobre o contexto.
+
+**Fronteira bidirecional, por tipo.** Rota de máquina recusa `User`; rota humana
+recusa `Terminal`. Como ability não prova tipo de sujeito, os dois casos são
+testados também com a ability "certa" adulterada na fixture: `User` com
+`pdv:terminal:read` segue recusado em rota de máquina, e Terminal com
+`business:read`/`business:write` segue recusado em `/api/v1/products`, onde chega
+ao `TenantResolver` e é barrado por tipo. A ability de máquina tem middleware
+próprio, `machine.ability:<ability>` (`EnsureMachineTokenAbility`), e não o
+`EnsureTokenAbility` humano, que deriva a ability do método HTTP — mapeamento
+que é regra da sessão humana e devolveria a máquina ao espaço de abilities das
+pessoas.
+
+**Pipeline, documentado e ainda sem rota registrada:**
+
+```
+auth:sanctum → terminal.context → machine.ability:<ability> → controller PDV
+```
+
+**Estados operacionais aplicados por requisição.**
+`TerminalAuthenticationEligibility` exige:
+
+| Entidade | Exigência |
+|---|---|
+| Terminal | `ACTIVE` e `installation_id` não nulo |
+| Tenant | `Tenant::isActive()` — `active=true` e status `ACTIVE`/`TRIAL`; soft delete recusa |
+| Company | `ACTIVE` |
+| Branch | `ACTIVE` |
+| Vínculos | company/branch/tenant coerentes entre si |
+
+`TRIAL` continua aceito, como no pairing: a semântica vem de `Tenant::isActive()`,
+compartilhada com o fluxo humano, e mudá-la só para máquina criaria duas
+definições de "tenant em operação". A coerência de vínculos é reconferida porque
+as FKs são individuais e não existe FK composta; quem lê o Terminal para
+autenticar não passa pelo validador de escrita.
+
+A regra de "estrutura operacional" foi extraída para `TerminalStructure` e é
+compartilhada com `PairingEligibility`. Só a forma de carregar difere: o pairing
+lê os três pais com `lockForUpdate`, por decidir uma transição, e a autenticação
+lê sem lock a cada requisição. A coerência de vínculos ficou em método separado
+de propósito — juntá-la ao estado trocaria o motivo de recusa que o pairing já
+devolvia (`invalid-assignment` viraria `structure-unavailable`).
+
+A verificação é **por requisição**, e não só na emissão: suspender Tenant,
+Company ou Branch, ou bloquear o Terminal, derruba um token já emitido sem que
+nada o toque. Há teste que altera o status fora do Eloquent — caso em que o
+gancho de revogação não roda e a linha do token permanece no banco — provando
+que a negação vem do estado, não da ausência da linha.
 
 Hoje o acesso humano verifica conta e membership, sem exigir `Tenant::isActive()`;
-um Tenant SUSPENDED pode ser resolvido. Esse finding continua aberto, sem alteração
-do User/TenantResolver nesta etapa. Não copiar essa lacuna para a autenticação
-de máquina nem presumir que corrigir máquinas mudará o acesso humano.
+um Tenant SUSPENDED pode ser resolvido. Esse finding continua aberto e o
+User/TenantResolver não foi alterado. A lacuna não foi copiada para a
+autenticação de máquina, e corrigir máquinas não mudou o acesso humano.
 
-## Endpoints futuros: contratos conceituais
+**`installation_id` não autentica.** Continua identificador público da instalação,
+não segredo nem prova de posse: não é exigido por requisição e nada nele
+autoriza. Quem prova posse é a credencial. Device fingerprinting e detecção de
+clonagem não foram implementados; se vierem, serão camada adicional.
+Recuperação de credencial perdida segue sendo questão operacional futura — novo
+processo administrativo ou re-pairing —, sem fluxo automático nesta etapa.
+
+## Endpoints do PDV-BE-05: contratos conceituais
 
 | Endpoint | Acesso/credencial | Finalidade e resposta conceitual | Origem do tenant |
 |---|---|---|---|
 | `GET /api/v1/pdv/health` | Público, sem credencial | Conectividade, versão do contrato e estado público do backend | Nenhum contexto de tenant |
-| `POST /api/v1/pdv/terminals/pair` | Código + installation_id; ainda sem machine credential | Consumir pairing e entregar identidade/vínculos e credencial na emissão | Terminal pré-cadastrado associado ao código |
+| `POST /api/v1/pdv/terminals/pair` | Código + installation_id | Consumir pairing e entregar identidade/vínculos e a credencial já emitida pelo PDV-BE-04 | Terminal pré-cadastrado associado ao código |
 | `GET /api/v1/pdv/terminal` | Machine credential, sujeito Terminal e ability específica | Próprio Terminal, Tenant, Company, Branch, status e configuração mínima | Terminal autenticado |
 
 Todos terão `X-Request-ID`. Health PDV não expõe DB, Redis, detalhes internos ou
@@ -462,7 +589,11 @@ segredos; não é alias da resposta detalhada de `/api/health`. Pairing exige ra
 limit, prazo, consumo único e proteção de replay descritos acima. Consulta de
 Terminal nunca retorna tokens, hashes ou pairing codes. Forma exata do JSON,
 versionamento e códigos de erro serão fechados antes da integração Java real.
-**Nenhum destes endpoints existe nesta entrega.**
+**Nenhum destes endpoints existe.** O PDV-BE-04 entregou o motor que eles vão
+usar: `terminal.context` e `machine.ability` para o `GET /api/v1/pdv/terminal`, e
+`ConsumeTerminalPairingCode` já devolvendo credencial para o
+`POST /api/v1/pdv/terminals/pair` — que só precisará mapear
+`TerminalProvisioningResult` para JSON, campo por campo, sem serializar o objeto.
 
 ## Questões abertas e sequência
 
@@ -472,12 +603,27 @@ versionamento e códigos de erro serão fechados antes da integração Java real
 - PDV-BE-03: concluído — domínio de pairing, prazo, attempts persistentes,
   consumo atômico, replay e instalação. HTTP/rate limiting/recuperação do
   contrato final ainda futuros.
-- PDV-BE-04: próximo, não iniciado — escolha final da credencial, validade/renovação, revogação, sujeito,
-  abilities e aplicação dos estados operacionais. Completa emissão pelo pairing.
-- PDV-BE-05: endpoints reais, contrato Java, testes HTTP e staging; só então
-  avaliar o marco **backend apto para PDV**.
+- PDV-BE-04: concluído — política de sujeito fail-closed, Terminal autenticável,
+  credencial de máquina com ability própria, expiração no teto real do Sanctum,
+  um token por Terminal com rotação, revogação ao sair de `ACTIVE`, enforcement
+  por requisição, contexto de máquina e emissão integrada ao pairing. Ficam
+  abertos: validade acima de 720 minutos (exigiria guard próprio ou remoção do
+  teto global), recuperação de credencial perdida, reatribuição de instalação e
+  detecção de clonagem.
+- PDV-BE-05: próximo, não iniciado — endpoints reais, rate limiting HTTP do
+  pairing, contrato público de erros, contrato Java, testes de contrato e
+  staging ponta a ponta; só então avaliar o marco **backend apto para PDV**.
 
 Findings fora do escopo preservados: PERF-01; validação UUID em category_ids ULID;
 User legado aparentemente órfão; senha default de desenvolvimento no exemplo;
-Tenant SUSPENDED humano; construtor legado do StructuredLoggingService. Nenhuma
-dessas correções nem o desenvolvimento Java/F2.6 foi iniciado nesta rodada.
+Tenant SUSPENDED humano; construtor legado do StructuredLoggingService; FKs
+individuais sem garantia composta no banco; limite de SQL direto/`saveQuietly`
+fora das garantias Eloquent. Nenhuma dessas correções nem o desenvolvimento
+Java/F2.6 foi iniciado nesta rodada.
+
+**Validação do PDV-BE-04.** 74 testes novos (política de sujeito 7, Terminal
+autenticável/enforcement 20, credencial 11, ciclo de vida 12, contexto/fronteira
+15, pairing+credential 9); Terminals completo 125 PASS. Suíte completa: 1376
+total, 1374 PASS, 0 FAIL/ERROR, 2 RISKY preexistentes, 5248 assertions. PHPStan
+17 achados, idêntico ao baseline. Nenhuma migration e nenhuma alteração no schema
+de `personal_access_tokens`. Rotas de API seguem 49, nenhuma de PDV.

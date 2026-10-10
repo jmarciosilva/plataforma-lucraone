@@ -1,6 +1,6 @@
 # Roadmap — LUCRAONE
 
-**Atualizado:** 2026-10-08 · **PDV-BE-03 — Pairing e provisionamento concluído ✅**.
+**Atualizado:** 2026-10-10 · **PDV-BE-04 — Machine credential e autorização concluído ✅**.
 Trilha própria do backend para PDV; F2.6 liberada e não iniciada. Backend ainda
 **não apto para PDV**. **ONB-01A e ONB-01B concluídos** — wizard
 ONB-01B publicado em `aee736db22a4f626fea6010d3e67278670606134`; ajuda permanente,
@@ -18,10 +18,10 @@ checklist numerado e melhorias de empresa/produto/preço concluídos em 2026-10-
 **PM-05 concluído ✅ e publicado** em
 `d958a50ddf52ee509eb02ea5cb14c881c01cbeaa` —
 `feat(products): adicionar classificação fiscal básica`.
-**Próxima prioridade operacional:** PDV-BE-04 — Machine credential e autorização,
-planejado, após o fechamento de PDV-BE-03. Não iniciado nesta rodada.
-Baseline atual: 1302 testes — 1300 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
-0 SKIPPED e 5060 assertions. Os RISKY continuam sendo
+**Próxima prioridade operacional:** PDV-BE-05 — Endpoints base do PDV,
+planejado, após o fechamento de PDV-BE-04. Não iniciado nesta rodada.
+Baseline atual: 1376 testes — 1374 PASS, 0 FAIL, 0 ERROR, 2 RISKY preexistentes,
+0 SKIPPED e 5248 assertions. Os RISKY continuam sendo
 `test_passwords_not_logged_in_audit` e `test_user_email_properly_protected`; não
 foram corrigidos. SEC-01, SEC-02, SEC-03 e SEC-04 resolvidos — os quatro
 bloqueadores obrigatórios pré-F2.6 estão encerrados, e o SEC-05 também está
@@ -127,7 +127,7 @@ ONB-01A ✅  →  ONB-01B ✅  →  PM-04A ✅  →  PM-04B ✅  →  Cliente Te
 > PM-04A e PM-04B foram concluídos e publicados. O marco separado Cliente
 > Teste está concluído: cliente criado e validação manual realizada. PM-04C
 > foi concluído e publicado, assim como PM-05. A preparação do backend agora
-> segue na trilha PDV-BE; PDV-BE-03 concluído, PDV-BE-04 é o próximo passo planejado.
+> segue na trilha PDV-BE; PDV-BE-04 concluído, PDV-BE-05 é o próximo passo planejado.
 > Não há dependência técnica entre ONB e PM. Os bloqueadores obrigatórios da
 > F2.6 e os recomendados estão todos encerrados.
 
@@ -2231,12 +2231,13 @@ Tenant é o cliente lógico do SaaS.
 | PDV-BE-01 | Fundação pré-Terminal | **Concluído ✅** · `2d20395` | Auditoria de retomada ✅ |
 | PDV-BE-02 | Entidade Terminal e vínculos | **Concluído ✅** · `1e96b20` | PDV-BE-01 |
 | PDV-BE-03 | Pairing e provisionamento | **Concluído ✅** · `6887d60` | PDV-BE-02 |
-| PDV-BE-04 | Machine credential e autorização | **Planejado · próximo** | PDV-BE-02 e PDV-BE-03 |
-| PDV-BE-05 | Endpoints base do PDV | **Planejado** | PDV-BE-03 e PDV-BE-04 |
+| PDV-BE-04 | Machine credential e autorização | **Concluído ✅** · `316db63` | PDV-BE-02 e PDV-BE-03 |
+| PDV-BE-05 | Endpoints base do PDV | **Planejado · próximo** | PDV-BE-03 e PDV-BE-04 |
 
-PDV-BE-03 prepara o fluxo de pairing; a emissão de credencial nesse fluxo só
-fica completa com PDV-BE-04. A sequência não anuncia integração utilizável antes
-de satisfazer as dependências. Nenhuma etapa posterior foi iniciada.
+PDV-BE-03 preparou o fluxo de pairing e o PDV-BE-04 completou a emissão de
+credencial nesse fluxo. O motor de autenticação existe, mas nenhum endpoint o
+expõe: a sequência não anuncia integração utilizável antes de satisfazer as
+dependências. Nenhuma etapa posterior foi iniciada.
 
 ### PDV-BE-01 — Fundação pré-Terminal
 
@@ -2435,24 +2436,206 @@ operacionais. Sem PersonalAccessToken/HasApiTokens/abilities/machine auth,
 endpoints `/api/v1/pdv/*`, UI ou Java PDV. Backend **NÃO APTO PARA PDV**;
 F2.6 **LIBERADA / NÃO INICIADA**. Próximo: PDV-BE-04, ainda não iniciado.
 
+### PDV-BE-04 — Machine credential e autorização
+
+**Concluído ✅ · 2026-10-10 · `316db631c4f4e9f5c42132cdf9ae92b05268ccc1`**
+
+**A ordem foi de segurança, não de conveniência.** Antes desta etapa o callback
+do Sanctum terminava em `: true`: qualquer tokenable que não fosse `User`
+autenticava só porque o guard considerou o token válido, sem nenhuma checagem de
+estado. O guard não fecha essa porta — `auth.guards.sanctum.provider` é nulo
+neste projeto, então o `hasValidProvider()` do Sanctum aceita qualquer tokenable
+—, o que faz do callback o único ponto de controle. Por isso o fail-closed foi a
+primeira alteração e foi provado por teste **antes** de o Terminal receber
+`HasApiTokens`. Em nenhum momento existiu um Terminal tokenable aceito pelo ramo
+`: true`: entre uma coisa e outra o Terminal caía em `return false`.
+
+**Política de sujeito.** Decisão por tipo, fail-closed: `User` mantém
+`User::isActive()` (SEC-02 intacto), `Terminal` passa por
+`TerminalAuthenticationEligibility`, e qualquer outro sujeito — inclusive
+tokenable órfão — é recusado. O callback só restringe: `$valido = false` vindo do
+guard nunca é revertido.
+
+**Terminal como sujeito.** Implementa `Illuminate\Contracts\Auth\Authenticatable`
+e usa `HasApiTokens`. O contrato é exigência técnica verificada no código
+instalado, não precaução: o guard devolve o tokenable como `$request->user()` e
+`GuardHelpers::setUser()` declara o tipo — é por ele que `Sanctum::actingAs()`
+passa. O trait sozinho dá `tokens()`/`createToken()`/`tokenCan()`, não
+identidade. Não há password, remember_token, e-mail, login, provider próprio nem
+password broker: `getAuthPassword()` e `getAuthPasswordName()` lançam
+`LogicException` em vez de devolver string vazia, e `getRememberTokenName()`
+devolve null, que é como o framework reconhece a ausência de "lembrar-me".
+
+**Ability própria.** `MachineTokenAbility::TERMINAL_READ` = `pdv:terminal:read`,
+em fonte separada do `TokenAbility` humano — cujo docblock já reservava essa
+separação. Sem `*`, sem `business:read`/`business:write`. Abilities de venda,
+sincronização, estoque ou pagamento não foram antecipadas: entram quando as APIs
+correspondentes existirem.
+
+**Expiração: o teto global do Sanctum foi verificado no Guard instalado (4.3.3),
+não presumido.** `Guard::isValidAccessToken()` combina as duas expirações com E
+lógico — `(! expiration || created_at > now - expiration) && (! expires_at ||
+! expires_at->isPast())`. O `expiration` global (`SANCTUM_EXPIRATION_MINUTES`,
+720) é medido sobre `created_at` e vale para **qualquer** tokenable, logo é teto
+absoluto: um `expires_at` de máquina acima de 720 minutos seria ficção. Por isso
+`pdv.machine_credentials.ttl_minutes` vale 720 — o que o projeto promete é igual
+ao que o Sanctum cumpre — e há teste provando que um token com `expires_at` de um
+ano ainda morre no teto global. **`SANCTUM_EXPIRATION_MINUTES` não foi alterado e
+nenhum token humano foi revogado**; a auditoria prévia do banco confirmou 0
+`personal_access_tokens` existentes, sem necessidade de migração de política.
+Validade de máquina maior exigiria remover o teto global — o que tornaria todo
+token humano sem `expires_at` um token sem prazo — ou dar à máquina um guard
+próprio. Nenhuma das duas foi feita: é mudança de política de sessão humana,
+fora do escopo desta etapa.
+
+**Um token por Terminal, rotação e revogação.** Um Terminal operacional é uma
+instalação física, e o `installation_id` é único e imutável desde o PDV-BE-03;
+logo há no máximo uma credencial vigente. `IssueTerminalMachineCredential` revoga
+antes de criar — nessa ordem, para que uma falha deixe o Terminal sem credencial
+em vez de com duas. `RevokeTerminalMachineCredentials` é o ponto único de
+deleção, restrito pela morphMany do tokenable (`tokenable_type` + `tokenable_id`),
+nunca por nome, ability ou tenant_id; há teste provando que token humano e token
+de outro Terminal não são alcançados.
+
+**Mudança de decisão registrada: sair de ACTIVE revoga as credenciais.** A tabela
+de status do PDV-BE-02 dizia, para `BLOCKED`, "tokens permanecem sujeitos ao
+status". Esta etapa é mais estrita: um gancho Eloquent `updated` revoga
+fisicamente as credenciais quando o status deixa de ser `ACTIVE`, tanto em
+`BLOCKED` quanto em `REVOKED`. A negação por requisição continua sendo a garantia
+principal — um Terminal bloqueado não autentica nem com token íntegro na mão —, e
+a remoção resolve o passo seguinte: o desbloqueio não ressuscita uma credencial
+que passou tempo fora de controle. Voltar a `ACTIVE` exige nova emissão, e há
+teste provando que a antiga não volta. Para `REVOKED` a remoção física é
+requisito, e a irreversibilidade do PDV-BE-02 segue valendo. Limite conhecido,
+igual ao do validador de vínculos: o gancho é Eloquent — SQL direto, bulk update
+e `saveQuietly` mudam status sem passar por ele e não são fluxo oficial.
+
+**Enforcement por requisição.** `TerminalAuthenticationEligibility` exige Terminal
+`ACTIVE` com `installation_id`, Tenant operacional (`active=true` e
+`ACTIVE`/`TRIAL`, o mesmo `Tenant::isActive()` do fluxo humano, com soft delete
+recusando), Company `ACTIVE`, Branch `ACTIVE` e coerência dos três vínculos —
+reconferida porque as FKs são individuais e não há FK composta. `TRIAL` continua
+aceito, como no pairing. A regra de "estrutura operacional" foi extraída para
+`TerminalStructure` e é compartilhada com `PairingEligibility`; só a forma de
+carregar difere (o pairing usa `lockForUpdate` por decidir transição, a
+autenticação lê sem lock a cada requisição). A coerência de vínculos ficou em
+método separado para não trocar o motivo de recusa que o pairing já devolvia.
+Testes provam que suspender Tenant, Company ou Branch, ou bloquear o Terminal,
+derruba um token já emitido sem que nada o toque — inclusive com o status
+alterado fora do Eloquent, caso em que a linha do token permanece no banco e a
+negação vem do estado.
+
+**Contexto de máquina.** `TerminalContext` é singleton por requisição, no padrão
+do `TenantContext`, e expõe terminal, tenant, company e branch. O middleware
+`terminal.context` (`ResolveTerminalContext`) exige sujeito `Terminal`, recusa
+`X-Tenant-ID` e preenche `TerminalContext` e `TenantContext` a partir do Terminal
+autenticado — o `TenantContext` porque o `TenantScope` dos models de negócio o
+consulta. Falha limpa os dois contextos, como o `recusar()` do `TenantResolver`.
+
+**X-Tenant-ID é recusado, inclusive quando correto.** 403, seguindo a convenção
+do `ResolveTenantMiddleware`. Aceitá-lo "porque coincide" ensinaria o cliente de
+PDV a enviar o cabeçalho, e a divergência entre o que ele manda e o vínculo real
+passaria a ser decisão de servidor. Teste prova que, recusada a requisição,
+nenhum contexto ficou fixado.
+
+**Fronteira bidirecional, por tipo.** Rota de máquina recusa `User`; rota humana
+recusa `Terminal`. O **`TenantResolver` humano não foi alterado** — sua recusa por
+tipo (`! $usuario instanceof User`) já era metade da fronteira, e continua sendo.
+Como ability não prova tipo de sujeito, os dois casos são testados também com a
+ability "certa" adulterada na fixture: `User` com `pdv:terminal:read` segue
+recusado em rota de máquina, e Terminal com `business:read`/`business:write`
+segue recusado em `/api/v1/products`, onde chega ao `TenantResolver` e é barrado
+por tipo. A ability de máquina tem middleware próprio
+(`machine.ability:pdv:terminal:read`), e não o `EnsureTokenAbility` humano, que
+deriva ability do método HTTP.
+
+**Pipeline documentado**, ainda sem rota registrada:
+`auth:sanctum` → `terminal.context` → `machine.ability:<ability>` → controller PDV.
+
+**Pairing passa a emitir a credencial.** `ConsumeTerminalPairingCode` emite
+dentro da **mesma transação** da ativação, e `TerminalProvisioningResult` carrega
+`credential` e `credentialExpiresAt`. O estado parcial que isso elimina é o pior
+possível: Terminal `ACTIVE`, código consumido e nenhuma credencial — um PDV
+pareado que não autentica, sem caminho de volta, porque o código é de uso único e
+o `installation_id` é imutável. Testes provam que falha na emissão e falha ao
+persistir o PAT desfazem ativação, vínculo de instalação e consumo. Texto puro do
+token sai uma única vez, nunca é persistido (o banco guarda só o SHA-256 do
+Sanctum), nunca é logado nem auditado, e `__debugInfo()` o censura em
+`TerminalProvisioningResult` e `IssuedTerminalMachineCredential`.
+
+**Teste do PDV-BE-03 atualizado conscientemente.** `PairingConsumeTest` exigia
+`personal_access_tokens = 0` e a ausência do campo `credential` — expectativa
+correta para o escopo antigo, em que provar a não emissão era o ponto. A regra
+mudou: agora o teste exige exatamente uma credencial, deste Terminal, com o nome
+`pdv-machine`, e que o texto puro não esteja no banco. O teste foi renomeado e o
+motivo registrado no próprio docblock, em vez de contornado.
+
+**O que não foi feito.** Nenhum endpoint `/api/v1/pdv/*`, controller, FormRequest
+ou rota real — pertencem ao PDV-BE-05; as rotas dos testes são registradas dentro
+dos próprios testes. **Nenhuma migration**: `personal_access_tokens` já tinha
+morph `tokenable`, `tokenable_id` ULID, `abilities`, `expires_at` e
+`last_used_at`, e o schema não foi alterado — nada de `terminal_id`, `tenant_id`,
+`company_id` ou `branch_id` na tabela de tokens, porque esses dados vêm do
+tokenable. **Nenhum refresh token** — auditado e dispensado: a política é
+credencial direta com rotação, e um segundo segredo de longa duração só
+ampliaria a superfície. Sem device fingerprinting: `installation_id` continua
+identificador público, não prova de posse, não é exigido por requisição e não
+autentica nada. Recuperação de credencial perdida continua questão operacional
+futura (novo processo administrativo ou re-pairing). F2.6, PERF-01 e os findings
+fora de escopo seguem intocados.
+
+**Validação.** Gate main/HEAD/origin `f082c3d`, 0/0 e árvore limpa; 7 serviços no
+ar; 42 migrations/0 pendentes. Baseline inicial reproduzido: 1302 total, 1300
+PASS, 2 RISKY, 5060 assertions. Auditoria do Sanctum 4.3.3 feita no vendor
+instalado (Guard, HasApiTokens, PersonalAccessToken) e do banco (0 PATs, 0 com
+`expires_at`, 0 sem — nenhum dado sensível exibido). Suítes novas: política de
+sujeito 7 PASS, Terminal autenticável/enforcement 20, credencial 11, ciclo de
+vida 12, contexto/fronteira 15, pairing+credential 9 — 74 testes novos. Terminals
+completo: 125 PASS. Regressões todas verdes nas contagens esperadas: SEC-01 35,
+SEC-02 21, SEC-03 23, SEC-05 25, SEC-06 8, COR-01 23, BranchPolicy 13,
+correlação 14, Terminal domínio 26, TerminalPolicy 13, pairing PDV-BE-03 51.
+Suíte completa: **1376 total, 1374 PASS, 0 FAIL/ERROR, 2 RISKY preexistentes,
+0 SKIPPED, 5248 assertions**. `php -l` em cada arquivo editado, Pint PASS em 40
+arquivos do escopo, `git diff --check` limpo, PHPStan 17 achados — idêntico ao
+baseline, sem novo finding. Um achado novo surgiu durante a rodada
+(`booleanNot.alwaysFalse` em `EnsureMachineTokenAbility`) e foi eliminado
+removendo a checagem redundante de token nulo, já coberta pelo `tokenCan()` do
+Sanctum, com teste cobrindo o caso. Staging: health/login/up 200, landing 302,
+X-Request-ID gerado, preservado e presente em 401; nenhum `staging.ERROR` ou 5xx
+novo, e nenhum Terminal, token ou pairing real criado. Rotas de API seguem 49,
+nenhuma de PDV ou Terminal.
+
+**Limites.** O motor de autenticação de máquina existe e está testado, mas **nada
+o expõe por HTTP**: sem os três endpoints, sem rate limiting de pairing HTTP, sem
+contrato público de erros e sem validação ponta a ponta em staging. Backend
+**NÃO APTO PARA PDV**; F2.6 **LIBERADA / NÃO INICIADA**. Próximo: PDV-BE-05,
+ainda não iniciado.
+
 ### Marco — Backend apto para PDV
 
-**NÃO atingido.** Só poderá ser marcado após, no mínimo:
+**NÃO atingido.** Dos requisitos mínimos, os seis primeiros estão cumpridos
+desde o PDV-BE-04; os quatro últimos dependem do PDV-BE-05:
 
-- Terminal implementado com identidade própria;
-- vínculos Terminal → Tenant/Company/Branch e invariantes validadas;
-- pairing de curta duração, uso único e proteção de replay implementado;
-- machine credential, expiração e revogação implementadas;
-- autenticação/autorização de máquina isolada de User e abilities humanas;
-- status operacionais de Tenant, Company e Branch aplicados à máquina;
-- `GET /api/v1/pdv/health`, `POST /api/v1/pdv/terminals/pair` e
+- ✅ Terminal implementado com identidade própria — PDV-BE-02, autenticável no PDV-BE-04;
+- ✅ vínculos Terminal → Tenant/Company/Branch e invariantes validadas — PDV-BE-02;
+- ✅ pairing de curta duração, uso único e proteção de replay implementado — PDV-BE-03;
+- ✅ machine credential, expiração e revogação implementadas — PDV-BE-04;
+- ✅ autenticação/autorização de máquina isolada de User e abilities humanas — PDV-BE-04;
+- ✅ status operacionais de Tenant, Company e Branch aplicados à máquina — PDV-BE-04,
+  por requisição;
+- ❌ `GET /api/v1/pdv/health`, `POST /api/v1/pdv/terminals/pair` e
   `GET /api/v1/pdv/terminal` implementados;
-- X-Request-ID ativo, inclusive nos erros dos contratos PDV;
-- testes automatizados de contrato, isolamento e segurança;
-- staging validado com os contratos reais.
+- ❌ X-Request-ID ativo, inclusive nos erros dos contratos PDV — o middleware já
+  cobre a API, mas não há contrato PDV para cobrir;
+- ❌ testes automatizados de contrato, isolamento e segurança — isolamento e
+  segurança de máquina cobertos; falta contrato HTTP;
+- ❌ staging validado com os contratos reais.
 
-**Próximo passo:** PDV-BE-04 — Machine credential e autorização, planejado.
-PDV-BE-03 não inicia essa etapa nem a F2.6.
+Enquanto os endpoints não existirem, o motor de autenticação não é utilizável por
+nenhum cliente: o marco permanece não atingido.
+
+**Próximo passo:** PDV-BE-05 — Endpoints base do PDV, planejado.
+PDV-BE-04 não inicia essa etapa nem a F2.6.
 
 ---
 
