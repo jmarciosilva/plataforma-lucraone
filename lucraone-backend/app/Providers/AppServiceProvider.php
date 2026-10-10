@@ -33,8 +33,10 @@ use App\Modules\Sales\Http\Policies\OrderPolicy;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Tenancy\Http\Policies\TenantPolicy;
 use App\Modules\Tenancy\TenancyServiceProvider;
+use App\Modules\Terminals\Application\TerminalAuthenticationEligibility;
 use App\Modules\Terminals\Domain\Models\Terminal;
 use App\Modules\Terminals\Http\Policies\TerminalPolicy;
+use App\Modules\Terminals\TerminalsServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -53,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Registrar módulos
         $this->app->register(TenancyServiceProvider::class);
+        $this->app->register(TerminalsServiceProvider::class);
     }
 
     /**
@@ -114,6 +117,14 @@ class AppServiceProvider extends ServiceProvider
         //
         // O gancho é do próprio Sanctum, então não há middleware de
         // autenticação paralelo: vale para toda rota com auth:sanctum.
+        //
+        // A decisão é POR TIPO DE SUJEITO e fail-closed. Até o PDV-BE-04 o
+        // ramo final era `: true`: qualquer tokenable que não fosse User
+        // autenticava só porque o guard considerou o token válido, sem
+        // nenhuma checagem de estado. O guard não fecha essa porta — com
+        // `auth.guards.sanctum.provider` nulo, o `hasValidProvider()` do
+        // Sanctum aceita qualquer tokenable —, então este callback é o único
+        // ponto de controle. Sujeito desconhecido não autentica.
         Sanctum::authenticateAccessTokensUsing(
             function (PersonalAccessToken $token, bool $valido): bool {
                 if (! $valido) {
@@ -122,7 +133,21 @@ class AppServiceProvider extends ServiceProvider
 
                 $dono = $token->tokenable;
 
-                return $dono instanceof User ? $dono->isActive() : true;
+                // Humano: comportamento do SEC-02, preservado integralmente.
+                if ($dono instanceof User) {
+                    return $dono->isActive();
+                }
+
+                // Máquina: política própria, reavaliada a cada requisição.
+                // Status do Terminal e estado operacional de Tenant, Company e
+                // Branch entram aqui, e não só na emissão — bloquear um
+                // Terminal ou suspender o estabelecimento precisa derrubar a
+                // credencial no mesmo instante, sem esperar expiração.
+                if ($dono instanceof Terminal) {
+                    return app(TerminalAuthenticationEligibility::class)->allows($dono);
+                }
+
+                return false;
             }
         );
     }

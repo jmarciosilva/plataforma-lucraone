@@ -3,6 +3,7 @@
 namespace App\Modules\Terminals\Application;
 
 use App\Modules\Terminals\Domain\Exceptions\InvalidTerminalAssignment;
+use App\Modules\Terminals\Domain\Exceptions\MachineCredentialRefused;
 use App\Modules\Terminals\Domain\Exceptions\PairingFailed;
 use App\Modules\Terminals\Domain\InstallationId;
 use App\Modules\Terminals\Domain\Models\Terminal;
@@ -68,9 +69,22 @@ class ConsumeTerminalPairingCode
                 $pairing->consumed_at = now();
                 $pairing->save();
 
+                // Credencial emitida na MESMA transação da ativação. Fora dela
+                // existiriam dois estados parciais possíveis: Terminal ACTIVE e
+                // código consumido sem credencial — um PDV pareado que não
+                // autentica e não tem como repetir o pairing —, ou credencial
+                // viva para um código não consumido. A exceção abaixo desfaz
+                // tudo, em vez de registrar tentativa e seguir.
+                try {
+                    $credencial = app(IssueTerminalMachineCredential::class)->issue($terminal);
+                } catch (MachineCredentialRefused) {
+                    throw new PairingFailed('credential-failure');
+                }
+
                 return new TerminalProvisioningResult(
                     $terminal->id, $terminal->tenant_id, $terminal->company_id,
-                    $terminal->branch_id, $terminal->installation_id, $terminal->status
+                    $terminal->branch_id, $terminal->installation_id, $terminal->status,
+                    $credencial->plainTextToken, $credencial->expiresAt
                 );
             }, 3);
         } catch (UniqueConstraintViolationException $exception) {

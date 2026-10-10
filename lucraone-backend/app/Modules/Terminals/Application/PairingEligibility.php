@@ -9,6 +9,7 @@ use App\Modules\Terminals\Domain\Exceptions\InvalidTerminalAssignment;
 use App\Modules\Terminals\Domain\Exceptions\PairingFailed;
 use App\Modules\Terminals\Domain\Models\Terminal;
 use App\Modules\Terminals\Domain\TerminalAssignmentValidator;
+use App\Modules\Terminals\Domain\TerminalStructure;
 
 class PairingEligibility
 {
@@ -19,12 +20,13 @@ class PairingEligibility
             throw new PairingFailed('terminal-not-pairable');
         }
 
+        // Com lock: o pairing decide uma transição e não pode ver a estrutura
+        // mudar no meio. A regra de "operacional" é a mesma da autenticação de
+        // máquina (TerminalStructure); só a forma de carregar difere.
         $tenant = Tenant::whereKey($terminal->tenant_id)->lockForUpdate()->first();
         $company = Company::withoutGlobalScopes()->whereKey($terminal->company_id)->lockForUpdate()->first();
         $branch = Branch::withoutGlobalScopes()->whereKey($terminal->branch_id)->lockForUpdate()->first();
-        if ($tenant === null || ! $tenant->isActive()
-            || $company === null || ! $company->isActive()
-            || $branch === null || ! $branch->isActive()) {
+        if (! TerminalStructure::operacional($tenant, $company, $branch)) {
             throw new PairingFailed('structure-unavailable');
         }
         try {

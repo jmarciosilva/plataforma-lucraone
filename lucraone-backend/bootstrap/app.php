@@ -10,6 +10,9 @@ use App\Modules\Identity\Infrastructure\Console\PromoverPlatformAdminCommand;
 use App\Modules\Reporting\Infrastructure\Console\SendSalesSummaryCommand;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenantMiddleware;
 use App\Modules\Tenancy\TenancyServiceProvider;
+use App\Modules\Terminals\Http\Middleware\EnsureMachineTokenAbility;
+use App\Modules\Terminals\Http\Middleware\ResolveTerminalContext;
+use App\Modules\Terminals\TerminalsServiceProvider;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,6 +23,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         TenancyServiceProvider::class,
+        TerminalsServiceProvider::class,
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -81,6 +85,18 @@ return Application::configure(basePath: dirname(__DIR__))
             // não há nada a conferir.
             // Uso correto: ['auth:sanctum', 'token.ability', 'tenant'].
             'token.ability' => EnsureTokenAbility::class,
+
+            // Caminho de máquina (PDV-BE-04), separado do humano. Exige
+            // sujeito Terminal, recusa X-Tenant-ID e deriva contexto do
+            // Terminal autenticado. Como os dois acima, roda DEPOIS da
+            // autenticação.
+            // Uso correto, nesta ordem:
+            // ['auth:sanctum', 'terminal.context', 'machine.ability:pdv:terminal:read'].
+            'terminal.context' => ResolveTerminalContext::class,
+
+            // Ability da credencial de máquina, declarada na rota. Roda depois
+            // de 'terminal.context': alcance do token não prova tipo de sujeito.
+            'machine.ability' => EnsureMachineTokenAbility::class,
         ]);
 
         // SEC-04 E7: o contexto do estabelecimento precisa estar resolvido antes

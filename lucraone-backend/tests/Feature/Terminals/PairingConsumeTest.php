@@ -9,7 +9,17 @@ use Illuminate\Support\Str;
 
 class PairingConsumeTest extends PairingTestCase
 {
-    public function test_valid_pairing_binds_installation_and_activates_without_credential(): void
+    /**
+     * Regra alterada no PDV-BE-04.
+     *
+     * No PDV-BE-03 este teste exigia `personal_access_tokens = 0` e a ausência
+     * do campo `credential`: a credencial de máquina não existia, e provar que
+     * nada era emitido era o ponto. Com o PDV-BE-04 o consumo passa a ativar o
+     * Terminal e emitir a credencial na mesma transação, então a expectativa
+     * correta deixa de ser "nenhum token" e passa a ser "exatamente um token,
+     * deste Terminal".
+     */
+    public function test_valid_pairing_binds_installation_activates_and_issues_one_credential(): void
     {
         $issued = $this->issue();
         $uuid = (string) Str::uuid();
@@ -24,8 +34,20 @@ class PairingConsumeTest extends PairingTestCase
         $this->assertSame($uuid, $result->installationId);
         $this->assertSame('ACTIVE', $result->status);
         $this->assertNotNull(TerminalPairingCode::findOrFail($issued->pairingId)->consumed_at);
-        $this->assertDatabaseCount('personal_access_tokens', 0);
-        $this->assertArrayNotHasKey('credential', get_object_vars($result));
+
+        $this->assertDatabaseCount('personal_access_tokens', 1);
+        $this->assertDatabaseHas('personal_access_tokens', [
+            'tokenable_type' => Terminal::class,
+            'tokenable_id' => $terminal->id,
+            'name' => 'pdv-machine',
+        ]);
+        $this->assertNotSame('', $result->credential);
+        $this->assertNotNull($result->credentialExpiresAt);
+
+        // O texto puro sai no resultado, nunca no banco.
+        $this->assertDatabaseMissing('personal_access_tokens', [
+            'token' => $result->credential,
+        ]);
     }
 
     public function test_expired_code_is_rejected_at_exact_boundary(): void
