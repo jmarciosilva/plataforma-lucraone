@@ -18,7 +18,7 @@ O plano de execução está em **[ROADMAP.md](ROADMAP.md)**.
 | **Última sprint concluída** | F2.5 — Advanced Automation |
 | **Próxima sprint funcional** | F2.6 — Integration APIs |
 | **Status da F2.6** | 🟢 **Liberada e não iniciada** — o hardening pré-F2.6 foi concluído |
-| **Trilha backend PDV** | PDV-BE-01 a PDV-BE-03 concluídos; PDV-BE-04 planejado/próximo. Separada da F2.6; backend ainda não apto para PDV |
+| **Trilha backend PDV** | PDV-BE-01 a PDV-BE-05 concluídos; trilha completa. Separada da F2.6; backend apto para a integração inicial do PDV |
 | **Testes** | 1302 no total · 1300 PASS · 0 FAIL/ERROR · 2 risky preexistentes · 0 skipped · 5060 assertions |
 | **Módulos** | 13 |
 | **Superfícies** | Painel web (sessão) + API REST `/api/v1` (Sanctum) |
@@ -216,11 +216,13 @@ que provam cada correção estão em
 | COR-01 | Validação não acompanhava os índices únicos sob soft delete | Alta | Recomendado | ✅ `18eaa10` |
 | PERF-01 | `hasAnyPermission()` repete consultas a cada permissão verificada | Média | Não | 🔴 Pendente |
 
-O backend **não** está apto para integração com o PDV: esse marco é outro e
-exige a entidade Terminal, o vínculo terminal → estabelecimento/empresa/filial,
-pareamento, credencial de máquina e as rotas `/api/v1/pdv/*`. Terminal e seus
-vínculos e domínio de pairing existem; machine auth e endpoints PDV ainda
-não existem. Pairing não emite credencial de máquina.
+O backend está apto para a **integração inicial** do PDV: Terminal, vínculos,
+pareamento, credencial de máquina, autenticação/autorização de máquina e as três
+rotas `/api/v1/pdv/*` existem e foram validadas ponta a ponta em staging. Isso
+não é "PDV completo" nem "produção fiscal pronta": não há endpoint comercial —
+produto, preço, estoque, venda, pagamento, caixa, sincronização, fiscal —, a
+ability de máquina é apenas `pdv:terminal:read`, e credencial perdida exige novo
+pareamento presencial.
 
 A trilha oficial [PDV-BE](ROADMAP.md#pdv-be--backend-para-integração-com-pdv)
 prepara essa integração separadamente da F2.6. PDV-BE-01 entrega BranchPolicy,
@@ -228,8 +230,10 @@ correlação da API e o
 [desenho de Terminal](lucraone-backend/docs/architecture/pdv-backend-foundation.md);
 PDV-BE-02 entrega Terminal, vínculos, invariantes e Policy inicial;
 PDV-BE-03 entrega pairing/provisionamento sem HTTP ou credencial;
-PDV-BE-04 é o próximo passo planejado. A Fase 4 do Java PDV segue aguardando
-contratos reais do backend.
+PDV-BE-04 entrega credencial de máquina, autenticação e autorização;
+PDV-BE-05 entrega os três contratos HTTP (`health`, `terminals/pair`, `terminal`),
+freio do pareamento e contrato público de erro. A Fase 4 do Java PDV está
+desbloqueada pelos contratos reais do backend.
 
 ---
 

@@ -1,11 +1,12 @@
 # PDV-BE — Fundação, Terminal e pairing
 
 **Trilha:** PDV-BE · **Data:** 2026-10-10
-**Estado:** PDV-BE-01 a PDV-BE-04 implementados; machine auth e credencial de máquina disponíveis, sem endpoints PDV.
+**Estado:** trilha completa — PDV-BE-01 a PDV-BE-05 implementados; os três contratos HTTP do PDV estão no ar e validados em staging.
 **Commit funcional PDV-BE-01:** `2d203951b2e824234b53b0e675ffe8e5b82bf5c3`.
 **Commit funcional PDV-BE-02:** `1e96b207a102d81ed089ab1f7693ef2cc6aadb89`.
 **Commit funcional PDV-BE-03:** `6887d60803fc9989b8623c6c2cc2b12a80b9dfd8`.
 **Commit funcional PDV-BE-04:** `316db631c4f4e9f5c42132cdf9ae92b05268ccc1`.
+**Commit funcional PDV-BE-05:** `be4058748bba6e77030a4df109e171d1179ae3cf`.
 
 **Validação histórica PDV-BE-01:** 13 testes BranchPolicy (48 assertions) e 14 testes de correlação
 (49 assertions), todos PASS. Suíte completa: 1212 testes, 1210 PASS, 0 FAIL/ERROR,
@@ -30,8 +31,11 @@ No PDV-BE-03 foi implementado o domínio de pairing/provisionamento, sem HTTP
 ou credencial. No PDV-BE-04 foram implementados a política de sujeito do Sanctum,
 o Terminal autenticável, a credencial de máquina com ability própria, o contexto
 de máquina e o enforcement por requisição — e o pairing passou a emitir a
-credencial. Branch API e rotas PDV continuam ausentes: a seção de endpoints
-segue sendo proposta futura, do PDV-BE-05.
+credencial. No PDV-BE-05 os três contratos HTTP foram expostos, com freio do
+pareamento, contrato público de erro e validação ponta a ponta em staging.
+Branch API continua ausente. O marco de aptidão para a integração inicial do PDV
+está atingido; operação comercial do PDV depende de contratos funcionais que
+ainda não existem.
 
 ## Base existente: Tenant, Company, Branch e User
 
@@ -576,24 +580,204 @@ clonagem não foram implementados; se vierem, serão camada adicional.
 Recuperação de credencial perdida segue sendo questão operacional futura — novo
 processo administrativo ou re-pairing —, sem fluxo automático nesta etapa.
 
-## Endpoints do PDV-BE-05: contratos conceituais
+## Contratos HTTP implementados no PDV-BE-05
 
-| Endpoint | Acesso/credencial | Finalidade e resposta conceitual | Origem do tenant |
+Três endpoints, nada além. A camada é fina de propósito: HTTP → validação
+estrutural → serviço existente → resposta pública. Nenhuma regra de pareamento,
+credencial ou elegibilidade foi reimplementada aqui.
+
+Módulo `app/Modules/Pdv`, com `Routes/api.php` exigido por `routes/api.php`, no
+mesmo padrão dos outros cinco módulos. Rotas de API: 49 → 52.
+
+### GET /api/v1/pdv/health
+
+| | |
+|---|---|
+| **Auth** | nenhuma; público |
+| **Middleware** | grupo `api` (correlação + 401 JSON) |
+| **Request** | nenhum parâmetro |
+| **Response** | `{"data":{"status":"ok","api":"pdv","version":"v1"}}` |
+| **Status** | 200 |
+| **Erros** | — |
+| **Rate limit** | nenhum |
+| **X-Request-ID** | gerado se ausente, preservado se válido |
+
+É contrato de CLIENTE, não diagnóstico interno. Responde a única pergunta que o
+aplicativo de loja precisa fazer: "alcancei o backend certo, no contrato certo?".
+O `/api/health` segue existindo, intacto, com estado de banco e cache para quem
+opera a plataforma — e este **não é alias** dele. Ambiente, versões de
+PHP/Laravel, host, container, caminho, commit, timestamp e estado de dependências
+não aparecem: não têm consumidor aqui e cada um ajudaria quem mapeia a
+infraestrutura. Há teste asseverando a ausência de cada termo.
+
+### POST /api/v1/pdv/terminals/pair
+
+| | |
+|---|---|
+| **Auth** | nenhuma; público por necessidade — antes do pareamento o Terminal não tem credencial |
+| **Middleware** | `throttle:pdv-pairing` |
+| **Request** | `pairing_code` (string, tamanho exato) e `installation_id` (`uuid:4`) |
+| **Response** | `data.terminal{id,name,status,installation_id}`, `data.tenant{id,name}`, `data.company{id,trade_name}`, `data.branch{id,name,code}`, `data.credential{token_type,access_token,expires_at}` |
+| **Status** | 200 |
+| **Erros** | 422 `validation_error`, 422 `pairing_failed`, 429 `rate_limited`, 500 `internal_error` |
+| **Rate limit** | IP 20/10min e selector 5/10min |
+| **Cache** | `Cache-Control: no-store, private` |
+
+200 e não 201: o Terminal já existia, pré-cadastrado pela administração; o que a
+chamada cria é o vínculo da instalação e a credencial. Chama
+`ConsumeTerminalPairingCode` diretamente — hash, selector, prazo, attempts, lock,
+transição de status e emissão continuam decididos lá, em uma única transação.
+
+**A credencial aparece SOMENTE nesta resposta, e somente no sucesso.** O banco
+guarda apenas o SHA-256 do Sanctum; não existe coluna com o valor legível nem
+endpoint que o devolva. Perder esta resposta significa precisar de um novo
+pareamento — o código é de uso único e o `installation_id` é imutável. É por isso
+que a resposta vai com `no-store, private`: um proxy no caminho da loja poderia
+guardar e reentregar a credencial de um Terminal para outro.
+
+A validação estrutural é deliberadamente pobre e **nunca mais permissiva que o
+domínio**: `installation_id` usa `uuid:4` com versão explícita, porque a regra
+`uuid` sem parâmetro aceita qualquer versão e seria mais frouxa que o
+`InstallationId::normalize()`. Mensagens não ecoam o valor enviado.
+
+### GET /api/v1/pdv/terminal
+
+| | |
+|---|---|
+| **Auth** | machine credential (Bearer) |
+| **Middleware** | `auth:sanctum` → `terminal.context` → `machine.ability:pdv:terminal:read` |
+| **Request** | nenhum parâmetro — não existe "qual terminal?" a responder |
+| **Response** | mesmas quatro entidades do pareamento, mais `data.credential{expires_at}` |
+| **Status** | 200 |
+| **Erros** | 401 `unauthenticated`, 403 `forbidden`, 500 `internal_error` |
+| **Rate limit** | nenhum |
+
+Tudo vem do `TerminalContext`, preenchido pelo middleware a partir do Terminal
+autenticado. Um Terminal só pode consultar a si mesmo, e isso é consequência da
+forma do endpoint — sem identificador em rota, corpo ou cabeçalho —, não de uma
+checagem que alguém poderia esquecer.
+
+**Não devolve credencial.** Apenas `credential.expires_at`, de
+`currentAccessToken()`, sem token nem hash. Foi incluído com consumidor concreto:
+o PDV opera o dia inteiro, a única recuperação hoje é novo pareamento presencial,
+e saber a expiração permite avisar o operador antes do turno virar em vez de
+descobrir com um 401 no meio de uma venda.
+
+### Mapeamento manual do contrato
+
+Nenhum model é serializado. `return $terminal` ou `toArray()` faria qualquer
+coluna, cast ou relação futura entrar no contrato sem decisão — é assim que
+`document`, `legal_name` ou um atributo interno viram resposta pública por
+acidente. `PdvTerminalPayload` lista o que é público, campo por campo, e só com
+coluna que existe: `Company` **não tem** `name`, tem `trade_name`. Testes fecham
+a estrutura com `array_keys`, então acrescentar campo exige editar o arquivo e o
+teste.
+
+`legal_name` e `document` ficaram fora: dado cadastral/fiscal entra junto dos
+contratos fiscais. Configuração operacional — timezone, moeda, parâmetros de
+caixa — **não foi inventada**: não há consumidor ainda, e campo sem consumidor é
+contrato que se paga para manter. Será definida junto dos contratos funcionais.
+
+Nunca retornados: PAT, hash de token, histórico/selector/hash de pairing,
+permissões humanas, vínculos de usuário, dados administrativos.
+
+## Contrato público de erro do PDV
+
+Escopado em `/api/v1/pdv/*`. Forma fixa:
+
+```json
+{"error": {"code": "...", "message": "...", "request_id": "..."}}
+```
+
+| `code` | HTTP | Quando | Detalha campo? |
 |---|---|---|---|
-| `GET /api/v1/pdv/health` | Público, sem credencial | Conectividade, versão do contrato e estado público do backend | Nenhum contexto de tenant |
-| `POST /api/v1/pdv/terminals/pair` | Código + installation_id | Consumir pairing e entregar identidade/vínculos e a credencial já emitida pelo PDV-BE-04 | Terminal pré-cadastrado associado ao código |
-| `GET /api/v1/pdv/terminal` | Machine credential, sujeito Terminal e ability específica | Próprio Terminal, Tenant, Company, Branch, status e configuração mínima | Terminal autenticado |
+| `validation_error` | 422 | requisição malformada | sim, em `error.errors` |
+| `pairing_failed` | 422 | qualquer falha de pareamento | não |
+| `unauthenticated` | 401 | credencial ausente, inválida, expirada, rotacionada, ou sujeito/estrutura fora de operação | não |
+| `forbidden` | 403 | autenticado sem autorização de rota, contexto ou ability | não |
+| `rate_limited` | 429 | freio do pareamento; acompanha `Retry-After` | não |
+| `internal_error` | 500 | erro inesperado | não |
 
-Todos terão `X-Request-ID`. Health PDV não expõe DB, Redis, detalhes internos ou
-segredos; não é alias da resposta detalhada de `/api/health`. Pairing exige rate
-limit, prazo, consumo único e proteção de replay descritos acima. Consulta de
-Terminal nunca retorna tokens, hashes ou pairing codes. Forma exata do JSON,
-versionamento e códigos de erro serão fechados antes da integração Java real.
-**Nenhum destes endpoints existe.** O PDV-BE-04 entregou o motor que eles vão
-usar: `terminal.context` e `machine.ability` para o `GET /api/v1/pdv/terminal`, e
-`ConsumeTerminalPairingCode` já devolvendo credencial para o
-`POST /api/v1/pdv/terminals/pair` — que só precisará mapear
-`TerminalProvisioningResult` para JSON, campo por campo, sem serializar o objeto.
+`PdvErrorResponse` é a fonte única: middlewares de máquina e renderizadores de
+exceção passam por ela. `error.request_id` é exatamente o valor do cabeçalho
+`X-Request-ID`, lido do Request já normalizado pelo `RequestCorrelationMiddleware`
+— sem duplicar aquela implementação. Vai no corpo além do cabeçalho porque quem
+atende a loja costuma ter a tela, não o header.
+
+**Falha de pareamento não vira oráculo.** O domínio distingue selector
+inexistente, segredo errado, expirado, consumido, invalidado, Terminal inadequado
+e estrutura fora de operação; todos saem como o mesmo 422 com a mesma mensagem.
+Saber que o selector existe mas o segredo está errado diria ao atacante que ele
+acertou metade de um código de 18 caracteres. O mesmo vale para o 401: nada
+revela se foi o Terminal, o Tenant, a Company ou a Branch que saiu de operação.
+
+**Escopo preservado.** Cada renderizador devolve null fora do prefixo PDV, então
+as 49 rotas anteriores mantêm o contrato que tinham — há teste provando que
+`/api/v1/products` sem token segue respondendo `{"message":"Não autenticado"}` e
+que o login humano mantém o formato antigo de validação.
+
+Duas famílias ficam fora do catch-all de 500, e as duas por necessidade:
+`HttpExceptionInterface` são status deliberados (404, 405), e
+`HttpResponseException` **não é erro** — é o mecanismo pelo qual o Laravel carrega
+uma resposta já montada através da pilha, e é como o `throttle` entrega o 429 do
+nosso próprio limiter. Como o `renderViaCallbacks()` roda antes do `match` que
+desembrulha essa exceção, um catch-all sem essa guarda transformaria o 429 em
+500 — foi exatamente o que os testes de rate limit apontaram.
+
+## Freio do pareamento
+
+Limiter nomeado `pdv-pairing`, sem reaproveitar o `api-login` humano.
+
+| Dimensão | Limite | Chave |
+|---|---|---|
+| IP | 20 / 10 min | `pdv-pair:ip:<ip>` |
+| Selector | 5 / 10 min | `pdv-pair:selector:<sha256 do selector>` |
+
+As janelas acompanham o domínio: o código vive 10 minutos, então contar em 10
+minutos é contar a vida útil do alvo. O teto por selector é igual ao
+`max_attempts` do PDV-BE-03, para o freio de HTTP não ser mais frouxo que o do
+banco; o teto por IP é mais alto porque uma loja instala vários caixas atrás de
+uma única saída de rede — mesma lógica do `api-login`.
+
+**Os três controles são complementares e nenhum basta sozinho:** os `attempts`
+persistentes travam o ataque a UM código mas não impedem varrer muitos; o freio
+por IP trava o volume de uma origem mas não um ataque distribuído; o freio por
+selector trava a insistência contra um alvo vindo de muitos IPs, e trocar de
+selector devolve o atacante ao freio por IP.
+
+Só a parte **pública** do código entra na chave, via
+`PairingCode::selectorFrom()`, que extrai o selector e nunca devolve nem registra
+o segredo. Código sem selector plausível fica apenas sob o freio por IP, em vez
+de virar chave de cache com segredo dentro. O 429 não informa se o selector
+existe, se há Terminal por trás, nem quantas tentativas restam no banco. Teste
+prova que a tentativa recusada por volume **não chega ao serviço**: o `attempts`
+no banco não se move.
+
+### IP real atrás do proxy
+
+Verificado contra a stack antes de escrever o limiter, não presumido. Cadeia:
+Internet → nginx do host (TLS) → `127.0.0.1:9010` → nginx do container →
+php-fpm. O `REMOTE_ADDR` que chega ao PHP é `172.21.0.1`, gateway da rede do
+compose, dentro de `172.16.0.0/12` e portanto confiado pelo `trustProxies`
+existente. O vhost do host define `X-Forwarded-For $proxy_add_x_forwarded_for`,
+que **acrescenta à direita** o endereço real.
+
+| Caso | `$request->ip()` |
+|---|---|
+| cliente público `198.51.100.42` | `198.51.100.42` |
+| cliente injeta `203.0.113.7` à esquerda do XFF | `198.51.100.42` — spoof ignorado |
+| sem XFF (acesso direto ao container) | `172.21.0.1` |
+| `REMOTE_ADDR` não confiado | o próprio; XFF descartado |
+
+O Symfony lê a entrada mais à direita que não seja proxy confiado, que é
+exatamente a que o nginx do host acrescentou. **Rate limiting por IP é confiável
+para cliente da Internet**, e nenhuma alteração em `TrustProxies` foi necessária.
+Limite conhecido: um cliente que já venha de faixa privada confiada poderia
+injetar a entrada à esquerda e ser lido por ela — inerente ao modelo de proxy
+confiado e não alcançável da Internet, já que o nginx do container escuta apenas
+em `127.0.0.1:9010`. Os testes simulam cliente por `REMOTE_ADDR`, que é o
+equivalente fiel: endereço público não é proxy confiado, o XFF é ignorado e a
+autoridade sobre o IP é a mesma de produção.
 
 ## Questões abertas e sequência
 
@@ -610,9 +794,14 @@ usar: `terminal.context` e `machine.ability` para o `GET /api/v1/pdv/terminal`, 
   abertos: validade acima de 720 minutos (exigiria guard próprio ou remoção do
   teto global), recuperação de credencial perdida, reatribuição de instalação e
   detecção de clonagem.
-- PDV-BE-05: próximo, não iniciado — endpoints reais, rate limiting HTTP do
-  pairing, contrato público de erros, contrato Java, testes de contrato e
-  staging ponta a ponta; só então avaliar o marco **backend apto para PDV**.
+- PDV-BE-05: concluído — os três contratos HTTP, freio do pareamento em duas
+  dimensões, contrato público de erro escopado, 82 testes pelas rotas reais e
+  validação ponta a ponta em staging. **Marco de aptidão para a integração
+  inicial do PDV atingido.** Ficam abertos: recuperação/rotação de credencial por
+  HTTP, configuração operacional no contrato (timezone, moeda, parâmetros de
+  caixa), versionamento do contrato além de `v1` e os contratos funcionais de
+  operação comercial.
+- Próximo: **LucraOne PDV Java — Fase 4**, contrato e conectividade com a API.
 
 Findings fora do escopo preservados: PERF-01; validação UUID em category_ids ULID;
 User legado aparentemente órfão; senha default de desenvolvimento no exemplo;
@@ -620,6 +809,18 @@ Tenant SUSPENDED humano; construtor legado do StructuredLoggingService; FKs
 individuais sem garantia composta no banco; limite de SQL direto/`saveQuietly`
 fora das garantias Eloquent. Nenhuma dessas correções nem o desenvolvimento
 Java/F2.6 foi iniciado nesta rodada.
+
+**Validação do PDV-BE-05.** 82 testes novos pelas rotas reais (health 6,
+pareamento 25, rate limit 7, Terminal 28, contrato de erro 12, ponta a ponta 4),
+1120 assertions. Suíte completa: 1458 total, 1456 PASS, 0 FAIL/ERROR, 2 RISKY
+preexistentes, 6368 assertions. PHPStan 17, idêntico ao baseline. Nenhuma
+migration; schema de `personal_access_tokens` intocado; rotas 49 → 52. Staging
+ponta a ponta por HTTPS com fixture sintética `PDV-BE-05-SMOKE-<ULID>`, criada
+após confirmar que nenhum listener, observer, e-mail, notificação ou regra de
+automação é disparado, e removida integralmente em ordem segura de FK — totais de
+volta ao pré-smoke e nenhuma credencial temporária ativa. Backup
+`/var/backups/lucraone/pdv-be-05-before-smoke-20261010-153355.sql`, 143080 bytes,
+root/600.
 
 **Validação do PDV-BE-04.** 74 testes novos (política de sujeito 7, Terminal
 autenticável/enforcement 20, credencial 11, ciclo de vida 12, contexto/fronteira

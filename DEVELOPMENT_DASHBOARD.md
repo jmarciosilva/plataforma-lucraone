@@ -1,12 +1,13 @@
 # 📊 Dashboard de Desenvolvimento — LUCRAONE
 
-**Atualizado:** 2026-10-08 (PDV-BE-03 — pairing e provisionamento)
+**Atualizado:** 2026-10-10 (PDV-BE-05 — endpoints base do PDV; trilha PDV-BE completa)
 **Fase Ativa:** FASE 02 — FEATURES 🟡 (F2.6 é o próximo)
 **Fase Concluída:** FASE 03 — ADMIN FRONTEND ✅ (6/6 sprints)
 **Testes:** baseline global atualizado no [ROADMAP](ROADMAP.md); contagens por
 sprint abaixo são registros históricos.
-**PDV-BE:** PDV-BE-01 a PDV-BE-03 concluídos; PDV-BE-04 planejado/próximo. Trilha própria,
-separada da F2.6. Backend ainda não apto para PDV.
+**PDV-BE:** PDV-BE-01 a PDV-BE-05 concluídos; trilha completa. Trilha própria,
+separada da F2.6. Backend apto para a integração inicial do PDV — não é PDV
+completo nem produção fiscal pronta.
 **F2.6:** liberada e não iniciada.
 
 ---
@@ -312,7 +313,7 @@ Adiado:
 ```
 F2.5 — Advanced Automation      ✅ concluída
 F2.6 — Integration APIs         🟢 liberada · não iniciada
-PDV-BE — backend para PDV       trilha própria; próximo: PDV-BE-04 (planejado)
+PDV-BE — backend para PDV       ✅ COMPLETA (PDV-BE-01 a 05); próximo: Java Fase 4
 
 A infraestrutura de fila/e-mail e o envio agendado foram entregues na F2.5.
 ```
@@ -600,12 +601,16 @@ Foundation Phase:       ✅ 100% (7/7 sprints) — 189 TESTS
 
 ## ⚙️ Próximas Ações (Roadmap)
 
-### Próximo planejado — PDV-BE-04, Machine credential e autorização
+### Trilha PDV-BE completa — próximo: LucraOne PDV Java, Fase 4
 
 A fundação PDV-BE-01 está registrada no
 [ROADMAP](ROADMAP.md#pdv-be--backend-para-integração-com-pdv).
-PDV-BE-03 concluiu domínio de pairing/provisionamento; PDV-BE-04 não foi iniciada.
-A Fase 4 do Java PDV aguarda contratos reais; backend ainda não apto para PDV.
+PDV-BE-03 concluiu o domínio de pairing/provisionamento, PDV-BE-04 a credencial
+de máquina com autenticação e autorização, e PDV-BE-05 os três contratos HTTP
+(`/api/v1/pdv/health`, `/api/v1/pdv/terminals/pair`, `/api/v1/pdv/terminal`) com
+freio do pareamento, contrato público de erro e validação ponta a ponta em
+staging. A Fase 4 do Java PDV está desbloqueada; o backend está apto para a
+integração inicial do PDV, sem endpoints comerciais ou fiscais.
 
 ### Próxima sprint funcional — F2.6 Integration APIs
 
@@ -764,7 +769,7 @@ Uma sprint é considerada **pronta** quando:
 - F3.1 → F3.6: 100% pronto ✅
 - F2.5 (Advanced Automation): concluída ✅
 - F2.6 (Integration APIs): liberada e não iniciada
-- PDV-BE: trilha própria; backend ainda não apto para PDV
+- PDV-BE: trilha própria, completa; backend apto para a integração inicial do PDV
 
 ---
 
