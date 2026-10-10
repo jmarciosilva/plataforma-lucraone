@@ -13,6 +13,18 @@
 2 RISKY preexistentes, 0 SKIPPED e 4802 assertions. Staging validado com geração e
 preservação de X-Request-ID. Nenhuma migration nesta etapa.
 
+## Evolução posterior: ciclo de credencial
+
+A renovação em duas etapas e recuperação administrativa estão implementadas em
+branch de trabalho, com contratos em [pdv-machine-credential-lifecycle.md](pdv-machine-credential-lifecycle.md).
+As descrições abaixo preservam o histórico PDV-BE-01 a PDV-BE-05. Afirmações
+históricas de um PAT por terminal, ausência de recuperação HTTP e entrega única
+referem-se àquelas entregas; a evolução permite uma candidata limitada durante
+10 minutos e retry verificável sem token recuperável no banco. A credencial antiga
+é revogada na confirmação; recuperação administrativa a revoga na autorização.
+Java Fase 5 permanece EM ANDAMENTO / PARCIAL; operador pendente; Fase 6 não iniciada.
+Integração e deploy aguardam revisão; nenhum serviço operacional foi alterado.
+
 ## Contexto e fronteira da entrega
 
 PDV-BE prepara o backend para integrar uma instalação operacional do LucraOne
@@ -801,7 +813,7 @@ autoridade sobre o IP é a mesma de produção.
   HTTP, configuração operacional no contrato (timezone, moeda, parâmetros de
   caixa), versionamento do contrato além de `v1` e os contratos funcionais de
   operação comercial.
-- Próximo: **LucraOne PDV Java — Fase 4**, contrato e conectividade com a API.
+- Próximo após revisão desta evolução: integração Java da renovação/recuperação e autorização de operador por filial no backend; Fase 5 parcial, Fase 6 não iniciada.
 
 Findings fora do escopo preservados: PERF-01; validação UUID em category_ids ULID;
 User legado aparentemente órfão; senha default de desenvolvimento no exemplo;

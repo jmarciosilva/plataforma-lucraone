@@ -803,3 +803,10 @@ Uma sprint é considerada **pronta** quando:
 usuários, empresas e permissões já são operáveis pela interface.
 
 **Status:** Ready for F2.5 — Advanced Automation
+
+## Evolução PDV — ciclo de credencial de máquina (branch de trabalho)
+
+Renovação/recuperação implementadas em `feat/pdv-machine-credential-lifecycle`,
+sem merge/deploy. PDV-BE-01 a PDV-BE-05 preservados. Contrato e validação:
+[lifecycle](lucraone-backend/docs/architecture/pdv-machine-credential-lifecycle.md).
+Java Fase 5 EM ANDAMENTO / PARCIAL; operador pendente; Fase 6 não iniciada.
