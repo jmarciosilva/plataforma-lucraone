@@ -365,5 +365,31 @@ sessão de operador.
 Pint: aprovado nos 51 arquivos PHP alterados ou criados. PHPStan: 16 diagnósticos de arquivo e
 um ignore não correspondente, exatamente o baseline — nenhum diagnóstico novo.
 
+### Reprodução do ambiente descartável
+
+Rede dedicada, sem portas publicadas, dados em tmpfs, senha exclusiva do
+container efêmero. **Nunca apontar para o MySQL operacional.**
+
+```bash
+docker network create pdv-lifecycle-net
+docker run -d --name pdv-lifecycle-mysql --network pdv-lifecycle-net \
+  --tmpfs /var/lib/mysql:rw,size=1g \
+  -e MYSQL_ROOT_PASSWORD=<SENHA_EFEMERA> -e MYSQL_DATABASE=pdv_lifecycle_test \
+  mysql:8.4 --innodb-buffer-pool-size=96M --innodb-log-buffer-size=8M \
+  --performance-schema=OFF --max-connections=60 --innodb-redo-log-capacity=64M
+
+# A suíte roda em container próprio, nunca no container operacional.
+docker run --rm --network pdv-lifecycle-net -v "$PWD":/app -w /app \
+  -e PDV_DISPOSABLE_MYSQL=1 -e DB_PASSWORD=<SENHA_EFEMERA> \
+  lucraone-app:dev php vendor/bin/phpunit -c phpunit.mysql-lifecycle.xml --do-not-cache-result
+
+docker rm -f pdv-lifecycle-mysql && docker network rm pdv-lifecycle-net
+```
+
+Os parâmetros de buffer e log são reduzidos de propósito: a execução anterior
+registrou OOM no container descartável com os valores padrão. A suíte SQLite roda
+no mesmo `lucraone-app:dev`, com `--network none`, porque o PHP do host não tem
+`pdo_sqlite`.
+
 Não iniciar Fase 6, catálogo, vendas, pagamentos ou caixa financeiro nesta
 entrega.
