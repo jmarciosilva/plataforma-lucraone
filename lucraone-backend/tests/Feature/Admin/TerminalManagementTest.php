@@ -25,8 +25,11 @@ class TerminalManagementTest extends TestCase
     use RefreshDatabase;
 
     private Tenant $tenant;
+
     private Company $empresa;
+
     private Branch $filial;
+
     private User $admin;
 
     protected function setUp(): void
@@ -91,6 +94,54 @@ class TerminalManagementTest extends TestCase
     // ----------------------------------------------------------------
     // Create / Store
     // ----------------------------------------------------------------
+
+    public function test_admin_acessa_formulario_de_criacao_de_terminal(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('terminals.create'))
+            ->assertOk()
+            ->assertViewIs('terminals.create')
+            ->assertViewHas('filiais');
+    }
+
+    public function test_formulario_renderiza_sem_terminais_cadastrados(): void
+    {
+        $this->assertDatabaseMissing('terminals', ['tenant_id' => $this->tenant->id]);
+
+        $this->actingAs($this->admin)
+            ->get(route('terminals.create'))
+            ->assertOk();
+    }
+
+    public function test_usuario_sem_permissao_recebe_403_no_create(): void
+    {
+        $visitante = User::factory()->forTenant($this->tenant)->create();
+
+        $this->actingAs($visitante)
+            ->get(route('terminals.create'))
+            ->assertForbidden();
+    }
+
+    public function test_admin_de_outro_tenant_nao_ve_filiais_alheias(): void
+    {
+        $outraTenant = Tenant::factory()->active()->create();
+        app(ProvisionarEstabelecimento::class)->provisionarMatriz($outraTenant);
+        $outraEmpresa = Company::factory()->create(['tenant_id' => $outraTenant->id]);
+        $outraFilial = Branch::factory()->forCompany($outraEmpresa)->create(['name' => 'Filial Secreta']);
+
+        $this->actingAs($this->admin)
+            ->get(route('terminals.create'))
+            ->assertOk()
+            ->assertDontSee('Filial Secreta');
+    }
+
+    public function test_formulario_nao_emite_credenciais_de_maquina(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('terminals.create'))
+            ->assertOk()
+            ->assertDontSee('installation_id');
+    }
 
     public function test_admin_cria_terminal(): void
     {
