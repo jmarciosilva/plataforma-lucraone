@@ -810,3 +810,16 @@ Renovação/recuperação implementadas em `feat/pdv-machine-credential-lifecycl
 sem merge/deploy. PDV-BE-01 a PDV-BE-05 preservados. Contrato e validação:
 [lifecycle](lucraone-backend/docs/architecture/pdv-machine-credential-lifecycle.md).
 Java Fase 5 EM ANDAMENTO / PARCIAL; operador pendente; Fase 6 não iniciada.
+
+## Evolução PDV — operador e sessão operacional (branch de trabalho)
+
+Autorização de operador por filial, login do operador, sessão operacional,
+revalidação, logout e política offline assinada implementados em
+`feat/pdv-operator-auth-session` (base: a branch do ciclo de credencial), sem
+merge/deploy e sem migration aplicada. Decisões:
+[operador](lucraone-backend/docs/architecture/pdv-operator-auth-session.md).
+Contrato para o cliente:
+[integração Java](lucraone-backend/docs/architecture/pdv-java-operator-integration.md).
+Backend da Fase 5 completo e testado; a Fase 5 do projeto Java permanece
+EM ANDAMENTO / PARCIAL porque a integração Java não foi feita. Fase 6 não
+iniciada.

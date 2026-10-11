@@ -22,8 +22,21 @@ históricas de um PAT por terminal, ausência de recuperação HTTP e entrega ú
 referem-se àquelas entregas; a evolução permite uma candidata limitada durante
 10 minutos e retry verificável sem token recuperável no banco. A credencial antiga
 é revogada na confirmação; recuperação administrativa a revoga na autorização.
-Java Fase 5 permanece EM ANDAMENTO / PARCIAL; operador pendente; Fase 6 não iniciada.
 Integração e deploy aguardam revisão; nenhum serviço operacional foi alterado.
+
+## Evolução posterior: operador e sessão operacional
+
+A autorização de operador por filial, o login do operador, a sessão operacional e
+a política offline assinada estão implementados em branch de trabalho, com
+decisões em [pdv-operator-auth-session.md](pdv-operator-auth-session.md) e
+contrato de cliente em [pdv-java-operator-integration.md](pdv-java-operator-integration.md).
+A partir dessa entrega a credencial de máquina emitida no pairing passa a ter
+quatro abilities (`pdv:terminal:read`, `pdv:credential:renew`,
+`pdv:credential:confirm`, `pdv:operator-session`); afirmações históricas abaixo
+de uma única ability de leitura referem-se às entregas PDV-BE-01 a PDV-BE-05.
+Credenciais legadas em campo continuam com apenas `pdv:terminal:read` e adquirem
+a nova ability pela rotação segura.
+Java Fase 5 permanece EM ANDAMENTO / PARCIAL; Fase 6 não iniciada.
 
 ## Contexto e fronteira da entrega
 
@@ -813,7 +826,7 @@ autoridade sobre o IP é a mesma de produção.
   HTTP, configuração operacional no contrato (timezone, moeda, parâmetros de
   caixa), versionamento do contrato além de `v1` e os contratos funcionais de
   operação comercial.
-- Próximo após revisão desta evolução: integração Java da renovação/recuperação e autorização de operador por filial no backend; Fase 5 parcial, Fase 6 não iniciada.
+- Próximo após revisão destas evoluções: integração Java da renovação/recuperação da credencial de máquina, da autenticação do operador e da sessão operacional; Fase 5 parcial, Fase 6 não iniciada.
 
 Findings fora do escopo preservados: PERF-01; validação UUID em category_ids ULID;
 User legado aparentemente órfão; senha default de desenvolvimento no exemplo;
