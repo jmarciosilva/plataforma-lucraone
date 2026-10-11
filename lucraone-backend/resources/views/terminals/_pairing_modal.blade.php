@@ -17,7 +17,7 @@
 
         <p class="mt-2 text-sm text-aco">
             Informe este código ao operador de caixa. Ele tem validade única e expira em
-            <strong class="text-grafite">{{ $expira->format('H:i \d\e d/m/Y') }}</strong>.
+            <strong class="text-grafite">{{ $expira }}</strong>.
         </p>
 
         <div class="mt-4 rounded-xl bg-nevoa p-4 text-center">

@@ -363,6 +363,88 @@ class TerminalManagementTest extends TestCase
             ->assertSessionHas('codigoPareamento');
     }
 
+    public function test_codigo_expira_na_sessao_e_string_e_nao_objeto(): void
+    {
+        // Regressão: cookie session driver serializa CarbonImmutable como string;
+        // o controller deve pré-formatar para evitar ->format() em string na view.
+        $terminal = Terminal::factory()->forBranch($this->filial)->create([
+            'status' => Terminal::STATUS_PENDING,
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('terminals.pairing-code', $terminal));
+
+        $expira = $response->getSession()->get('codigoExpira');
+        $this->assertIsString($expira, 'codigoExpira deve ser string pré-formatada');
+        $this->assertMatchesRegularExpression('/^\d{2}:\d{2} de \d{2}\/\d{2}\/\d{4}$/', $expira);
+    }
+
+    public function test_pagina_show_renderiza_sem_500_apos_emissao_de_codigo(): void
+    {
+        // Regressão: HTTP 500 no redirect de volta para terminals.show após POST.
+        // O modal chamava ->format() numa string; deve renderizar sem exceção.
+        // Usa from() para simular o Referer e fazer back() redirecionar corretamente.
+        $terminal = Terminal::factory()->forBranch($this->filial)->create([
+            'status' => Terminal::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->from(route('terminals.show', $terminal))
+            ->followingRedirects()
+            ->post(route('terminals.pairing-code', $terminal))
+            ->assertOk()
+            ->assertSee('Informe este código ao operador de caixa');
+    }
+
+    public function test_show_nao_exibe_codigo_em_get_comum_apos_flash_consumido(): void
+    {
+        $terminal = Terminal::factory()->forBranch($this->filial)->create([
+            'status' => Terminal::STATUS_PENDING,
+        ]);
+
+        // GET direto sem flash não deve mostrar o modal (sem "Informe este código")
+        $this->actingAs($this->admin)
+            ->get(route('terminals.show', $terminal))
+            ->assertOk()
+            ->assertDontSee('Informe este código ao operador de caixa');
+    }
+
+    public function test_usuario_sem_permissao_recebe_403_no_pairing_code(): void
+    {
+        $terminal = Terminal::factory()->forBranch($this->filial)->create([
+            'status' => Terminal::STATUS_PENDING,
+        ]);
+        $visitante = User::factory()->forTenant($this->tenant)->create();
+
+        $this->actingAs($visitante)
+            ->post(route('terminals.pairing-code', $terminal))
+            ->assertForbidden();
+    }
+
+    public function test_terminal_bloqueado_nao_aceita_emissao_de_codigo(): void
+    {
+        $terminal = Terminal::factory()->forBranch($this->filial)->create([
+            'status' => Terminal::STATUS_BLOCKED,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('terminals.pairing-code', $terminal))
+            ->assertRedirect()
+            ->assertSessionHasErrors();
+    }
+
+    public function test_terminal_revogado_nao_aceita_emissao_de_codigo(): void
+    {
+        $terminal = Terminal::factory()->forBranch($this->filial)->create([
+            'status' => Terminal::STATUS_REVOKED,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('terminals.pairing-code', $terminal))
+            ->assertRedirect()
+            ->assertSessionHasErrors();
+    }
+
     // ----------------------------------------------------------------
     // Branches/show — seção de terminais
     // ----------------------------------------------------------------

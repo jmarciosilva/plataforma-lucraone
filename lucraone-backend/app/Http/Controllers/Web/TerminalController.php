@@ -7,7 +7,6 @@ use App\Http\Requests\StoreTerminalRequest;
 use App\Http\Requests\UpdateTerminalRequest;
 use App\Modules\Audit\Domain\Models\AuditLog;
 use App\Modules\Branches\Domain\Models\Branch;
-use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Tenancy\Application\TenantContext;
 use App\Modules\Terminals\Application\IssueTerminalPairingCode;
 use App\Modules\Terminals\Application\TerminalManagementService;
@@ -228,7 +227,8 @@ class TerminalController extends Controller
             return back()->withErrors(['pairing' => 'Não foi possível emitir o código: '.$e->getMessage()]);
         }
 
-        return back()->with('codigoPareamento', $issued->code)->with('codigoExpira', $issued->expiresAt);
+        // Sessão com driver cookie usa JSON; objetos Carbon viram string. Formatar aqui.
+        return back()->with('codigoPareamento', $issued->code)->with('codigoExpira', $issued->expiresAt->format('H:i \d\e d/m/Y'));
     }
 
     // -------------------------------------------------------------------------
