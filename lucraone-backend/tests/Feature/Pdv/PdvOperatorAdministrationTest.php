@@ -63,7 +63,8 @@ class PdvOperatorAdministrationTest extends PdvOperatorTestCase
 
         // Com permissão e atribuição, o caixa aceita a pessoa.
         $this->concederPermissaoDePdv($novo);
-        $this->login(payload: ['email' => $novo->email, 'password' => self::SENHA])->assertCreated();
+        $this->perfilDeOperador($novo, username: 'novo.caixa');
+        $this->login(payload: ['username' => 'novo.caixa', 'password' => self::SENHA])->assertCreated();
     }
 
     public function test_conceder_duas_vezes_e_idempotente(): void

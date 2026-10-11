@@ -4,6 +4,7 @@ namespace App\Modules\Pdv\Application;
 
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Pdv\Domain\Models\PdvOperatorBranchAssignment;
+use App\Modules\Pdv\Domain\Models\PdvOperatorProfile;
 use App\Modules\Pdv\Domain\OperatorPermission;
 use App\Modules\Terminals\Application\TerminalAuthenticationEligibility;
 use App\Modules\Terminals\Domain\Models\Terminal;
@@ -23,13 +24,27 @@ use App\Modules\Terminals\Domain\Models\Terminal;
  * depender de nenhum evento ter rodado. Os eventos (revogação em cascata)
  * antecipam o efeito; não são a garantia.
  *
- * As cinco condições são conjuntivas e não há atalho por papel: um
- * administrador do estabelecimento sem atribuição ativa à filial não opera
+ * As condições são conjuntivas e não há atalho por papel: um administrador do
+ * estabelecimento sem perfil de caixa e sem atribuição ativa à filial não opera
  * caixa. Autoridade para administrar não é autoridade para operar.
  */
 class OperatorAuthorization
 {
     public function __construct(private TerminalAuthenticationEligibility $elegibilidade) {}
+
+    /**
+     * O perfil de caixa ATIVO desta pessoa no estabelecimento do Terminal.
+     *
+     * Terceiro degrau da escada de status, verificado por requisição como os
+     * outros: desativar um operador tem de derrubar a sessão dele na requisição
+     * seguinte, sem depender de nenhum evento.
+     */
+    public function perfilAtivo(User $operador, Terminal $terminal): ?PdvOperatorProfile
+    {
+        $perfil = PdvOperatorProfile::para($terminal->tenant_id, $operador->id);
+
+        return $perfil !== null && $perfil->isActive() ? $perfil : null;
+    }
 
     /**
      * A atribuição ativa que autoriza esta pessoa neste Terminal, ou null.
@@ -41,6 +56,12 @@ class OperatorAuthorization
     public function atribuicaoAtiva(User $operador, Terminal $terminal): ?PdvOperatorBranchAssignment
     {
         if (! $this->elegibilidade->allows($terminal)) {
+            return null;
+        }
+
+        // Perfil de caixa ativo: sem ele a pessoa não é operadora aqui, mesmo
+        // com conta, vínculo, permissão e atribuição em ordem.
+        if ($this->perfilAtivo($operador, $terminal) === null) {
             return null;
         }
 
@@ -91,6 +112,8 @@ class OperatorAuthorization
             ->values()
             ->all();
 
+        $perfil = PdvOperatorProfile::para($terminal->tenant_id, $operador->id);
+
         $insumos = [
             'u' => $operador->id,
             'us' => $operador->status,
@@ -98,6 +121,12 @@ class OperatorAuthorization
             'a' => $atribuicao->id,
             'as' => $atribuicao->status,
             'au' => $atribuicao->updated_at?->getTimestamp(),
+            // Perfil de caixa: trocar o username ou desativar o operador muda a
+            // autorização efetiva, e um cliente offline precisa perceber.
+            'o' => $perfil?->id,
+            'ou' => $perfil?->username_canonical,
+            'os' => $perfil?->status,
+            'oupd' => $perfil?->updated_at?->getTimestamp(),
             't' => $terminal->id,
             'ts' => $terminal->status,
             'p' => $permissoes,

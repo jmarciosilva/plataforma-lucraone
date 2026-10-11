@@ -9,6 +9,7 @@ use App\Modules\Identity\Domain\Models\TenantUser;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Pdv\Application\OperatorSessionContext;
 use App\Modules\Pdv\Domain\Models\PdvOperatorBranchAssignment;
+use App\Modules\Pdv\Domain\Models\PdvOperatorProfile;
 use App\Modules\Pdv\Domain\OperatorPermission;
 use App\Modules\Pdv\Http\Middleware\AuthenticateOperatorSession;
 use App\Modules\Tenancy\Application\ProvisionarEstabelecimento;
@@ -53,6 +54,9 @@ abstract class PdvOperatorTestCase extends TestCase
 
     protected string $maquina;
 
+    /** Username operacional do operador montado no setUp. */
+    protected string $username = 'caixa.teste';
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -63,7 +67,7 @@ abstract class PdvOperatorTestCase extends TestCase
 
         app(ProvisionarEstabelecimento::class)->provisionarMatriz($this->tenant);
 
-        $this->operador = $this->operadorAutorizado();
+        $this->operador = $this->operadorAutorizado(username: $this->username);
         $this->maquina = $this->credencialDeMaquina($this->terminal);
 
         // Freio em store de array: nasce vazio em cada boot da aplicação, ou
@@ -97,8 +101,13 @@ abstract class PdvOperatorTestCase extends TestCase
 
     /**
      * Pessoa com tudo o que o login legítimo exige.
+     *
+     * Inclui o perfil de caixa: desde a gestão de operadores, o login resolve um
+     * USERNAME dentro do estabelecimento, e sem perfil ativo não há o que
+     * resolver. O username é derivado quando não informado, para que cada
+     * operador de um mesmo teste tenha o seu sem o teste precisar inventar nomes.
      */
-    protected function operadorAutorizado(?Tenant $tenant = null, ?Branch $branch = null): User
+    protected function operadorAutorizado(?Tenant $tenant = null, ?Branch $branch = null, ?string $username = null): User
     {
         $tenant ??= $this->tenant;
         $branch ??= $this->branch;
@@ -108,8 +117,29 @@ abstract class PdvOperatorTestCase extends TestCase
 
         $this->concederPermissaoDePdv($operador, $tenant);
         $this->atribuirFilial($operador, $branch);
+        $this->perfilDeOperador($operador, $tenant, $username ?? 'op'.Str::lower(Str::random(8)));
 
         return $operador->fresh();
+    }
+
+    /**
+     * Perfil de caixa ativo, com username normalizado.
+     */
+    protected function perfilDeOperador(User $operador, ?Tenant $tenant = null, string $username = 'caixa.teste'): PdvOperatorProfile
+    {
+        $tenant ??= $this->tenant;
+
+        $perfil = PdvOperatorProfile::withoutGlobalScopes()->firstOrNew([
+            'tenant_id' => $tenant->id,
+            'user_id' => $operador->id,
+        ]);
+
+        $perfil->id ??= (string) Str::ulid();
+        $perfil->status = PdvOperatorProfile::STATUS_ACTIVE;
+        $perfil->definirUsername($username);
+        $perfil->save();
+
+        return $perfil->fresh();
     }
 
     /**
@@ -195,7 +225,7 @@ abstract class PdvOperatorTestCase extends TestCase
         $this->novaRequisicao();
 
         $corpo = $payload === []
-            ? ['email' => $this->operador->email, 'password' => self::SENHA]
+            ? ['username' => $this->username, 'password' => self::SENHA]
             : $payload;
 
         return $this->withServerVariables(['REMOTE_ADDR' => self::IP_CLIENTE])
@@ -244,6 +274,29 @@ abstract class PdvOperatorTestCase extends TestCase
     protected function logout(string $credencial, ?string $maquina = null): TestResponse
     {
         return $this->comSessao('DELETE', '/api/v1/pdv/operator-session', $credencial, $maquina);
+    }
+
+    /**
+     * Promove uma credencial de máquina nova pelo fluxo real de rotação.
+     */
+    protected function rotacionarMaquina(): string
+    {
+        $operacao = (string) Str::uuid();
+        $segredo = bin2hex(random_bytes(32));
+
+        $this->novaRequisicao();
+        $candidata = $this->withToken($this->maquina)
+            ->postJson('/api/v1/pdv/terminal/credential/rotations', [
+                'operation_id' => $operacao,
+                'delivery_secret' => $segredo,
+            ])->assertOk()->json('data.credential.access_token');
+
+        $this->novaRequisicao();
+        $this->withToken($candidata)
+            ->postJson('/api/v1/pdv/terminal/credential/confirm', ['operation_id' => $operacao])
+            ->assertOk();
+
+        return $candidata;
     }
 
     /**

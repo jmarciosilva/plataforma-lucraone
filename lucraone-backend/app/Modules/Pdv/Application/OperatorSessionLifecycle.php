@@ -6,8 +6,10 @@ use App\Modules\Identity\Application\PasswordVerification;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Pdv\Domain\Exceptions\OperatorSessionFailed;
 use App\Modules\Pdv\Domain\Models\PdvOperatorBranchAssignment;
+use App\Modules\Pdv\Domain\Models\PdvOperatorProfile;
 use App\Modules\Pdv\Domain\Models\PdvOperatorSession;
 use App\Modules\Pdv\Domain\OperatorSessionCredential;
+use App\Modules\Pdv\Domain\OperatorUsername;
 use App\Modules\Terminals\Application\MachineCredentialExpiration;
 use App\Modules\Terminals\Application\TerminalCredentialLifecycle;
 use App\Modules\Terminals\Domain\Models\Terminal;
@@ -31,6 +33,11 @@ use SensitiveParameter;
  * Não há chamada externa dentro das transações, e nenhuma delas deixa estado
  * parcial: a credencial só é entregue depois do commit da linha que a
  * representa.
+ *
+ * A continuidade da jornada é obtida separando dois prazos: a credencial tem
+ * validade técnica finita e DESLIZANTE, e a jornada não tem teto fixo. Isso
+ * substitui o prazo absoluto de oito horas da primeira versão, que encerrava o
+ * turno de quem abre a loja às sete e fecha às vinte e duas.
  */
 class OperatorSessionLifecycle
 {
@@ -51,21 +58,23 @@ class OperatorSessionLifecycle
     public function start(
         Terminal $sujeito,
         PersonalAccessToken $tokenDeMaquina,
-        string $email,
+        string $username,
         #[SensitiveParameter] string $senha,
     ): OperatorSessionResult {
-        $identificador = $this->normalizar($email);
+        $identificador = OperatorUsername::canonical($username);
 
         $resultado = DB::transaction(function () use ($sujeito, $tokenDeMaquina, $identificador, $senha) {
             $terminal = $this->maquina->lockEligibleTerminal($sujeito->id);
             $maquina = $this->tokenVigente($terminal, $tokenDeMaquina);
 
-            // Uma pessoa não é entidade de estabelecimento: a busca é global
-            // por e-mail, e a autorização é que amarra ao estabelecimento do
-            // Terminal. Sem global scopes porque User não tem TenantScope.
-            $operador = User::where('email', $identificador)->first();
+            // O username é resolvido DENTRO do estabelecimento do Terminal
+            // autenticado. Nunca num espaço global: é isso que permite a cada
+            // cliente do LucraOne ter o seu `marcio` sem que um descubra a
+            // existência do outro.
+            $perfil = PdvOperatorProfile::ativoPorUsername($terminal->tenant_id, $identificador);
+            $operador = $perfil === null ? null : User::whereKey($perfil->user_id)->first();
 
-            // Senha sempre verificada, inclusive para e-mail sem conta: é o
+            // Senha sempre verificada, inclusive para username inexistente: é o
             // que iguala o tempo de resposta dos dois caminhos.
             if (! $this->verificacaoDeSenha->confere($operador, $senha)) {
                 $this->auditoria->loginRecusado($terminal, $operador, $identificador, 'credentials');
@@ -75,10 +84,11 @@ class OperatorSessionLifecycle
 
             $atribuicao = $this->autorizacao->atribuicaoAtiva($operador, $terminal);
 
-            // Conta inativa, vínculo suspenso, permissão ausente, filial não
-            // atribuída e filial de outro estabelecimento caem todas aqui, com
-            // a MESMA resposta pública da senha errada. Distinguir publicaria
-            // quem tem conta, quem continua empregado e quem trabalha onde.
+            // Conta inativa, vínculo suspenso, operador desativado, permissão
+            // ausente, filial não atribuída e filial de outro estabelecimento
+            // caem todas aqui, com a MESMA resposta pública da senha errada.
+            // Distinguir publicaria quem tem conta, quem continua empregado e
+            // quem trabalha onde.
             if ($atribuicao === null) {
                 $this->auditoria->loginRecusado($terminal, $operador, $identificador, 'authorization');
 
@@ -97,18 +107,29 @@ class OperatorSessionLifecycle
                     return OperatorSessionFailed::conflito();
                 }
 
-                // Mesmo operador e a sessão continua amarrada a esta máquina:
+                // Mesmo operador, sessão VIGENTE e amarrada a esta máquina:
                 // recuperação controlada. Exigiu nova senha (acima) e rotaciona
-                // a credencial, mas NÃO mexe no prazo absoluto.
-                if ($this->amarradaA($ativa, $terminal, $maquina)) {
+                // a credencial, mas NÃO mexe no teto da jornada.
+                //
+                // `vigente()` é conferido aqui além da reconciliação acima: é a
+                // garantia de que uma sessão vencida nunca é recuperada, nem se
+                // a reconciliação deixasse passar alguma linha.
+                if ($ativa->vigente() && $this->amarradaA($ativa, $terminal, $maquina)) {
                     return $this->rotacionar($ativa, $operador);
                 }
 
-                // Mesmo operador, mas a sessão pertence a uma credencial de
-                // máquina que já não é esta: a rotação da máquina derruba o
-                // turno. Fecha a antiga antes de abrir a nova, para o caixa
-                // nunca ter duas.
-                $this->encerrar($ativa, PdvOperatorSession::STATUS_REVOKED, $operador, 'machine-credential-rotated');
+                // Sobrou o caso em que o turno antigo não pode ser recuperado:
+                // ou a sessão já não é vigente, ou aponta para uma credencial de
+                // máquina que não é esta e não foi religada por rotação legítima
+                // — recuperação administrativa, substituição física ou
+                // comprometimento. Fecha a antiga e abre um turno novo, com o
+                // motivo real registrado.
+                $this->encerrar(
+                    $ativa,
+                    PdvOperatorSession::STATUS_REVOKED,
+                    $operador,
+                    $ativa->vigente() ? 'machine-credential-replaced' : 'session-not-recoverable',
+                );
             }
 
             return $this->abrir($terminal, $maquina, $operador, $atribuicao);
@@ -126,8 +147,12 @@ class OperatorSessionLifecycle
     /**
      * A sessão apresentada vale AGORA, neste Terminal?
      *
-     * Chamada em toda requisição protegida. Reconfere identidade, prazo e as
-     * cinco condições de autorização, sem confiar em nada guardado no login.
+     * Chamada em toda requisição protegida. Reconfere identidade, prazos e
+     * todas as condições de autorização, sem confiar em nada guardado no login.
+     *
+     * Em caso de sucesso, DESLIZA o prazo técnico: é o uso legítimo que mantém
+     * a credencial válida, e é por isso que uma jornada longa não precisa de
+     * login novo nem de token eterno.
      *
      * @throws OperatorSessionFailed
      */
@@ -149,7 +174,12 @@ class OperatorSessionLifecycle
             // Reconcilia uma única vez: a partir daqui o status já não é
             // ACTIVE e repetições não escrevem mais nada.
             if ($sessao->isActive()) {
-                $this->encerrar($sessao, PdvOperatorSession::STATUS_EXPIRED, $sessao->user, 'absolute-deadline');
+                $this->encerrar(
+                    $sessao,
+                    PdvOperatorSession::STATUS_EXPIRED,
+                    $sessao->user,
+                    $sessao->jornadaEncerrada() ? 'journey-deadline' : 'idle-deadline',
+                );
             }
 
             throw OperatorSessionFailed::sessaoInvalida();
@@ -163,15 +193,18 @@ class OperatorSessionLifecycle
             throw OperatorSessionFailed::sessaoInvalida();
         }
 
-        return $sessao;
+        // O deslizamento vem DEPOIS de toda a revalidação, nunca antes: uma
+        // sessão que acabou de perder autorização não pode ganhar prazo.
+        return $this->deslizar($sessao);
     }
 
     /**
      * Revalidação online explícita.
      *
-     * Confirma as mesmas condições e move `last_revalidated_at`, que é o marco
-     * da graça offline. NÃO estende `expires_at`: prorrogar a sessão sem novo
-     * login é exatamente o que a política proíbe.
+     * Confirma as mesmas condições, desliza o prazo técnico e move
+     * `last_revalidated_at`, que é o marco da graça offline. O teto da jornada,
+     * quando existe, não se move: ele é o único prazo que nenhuma renovação
+     * ultrapassa.
      */
     public function revalidate(
         Terminal $terminal,
@@ -180,11 +213,74 @@ class OperatorSessionLifecycle
     ): PdvOperatorSession {
         $sessao = $this->authenticate($terminal, $tokenDeMaquina, $credencial);
 
-        $sessao->update(['last_revalidated_at' => now()]);
+        $sessao->update([
+            'last_revalidated_at' => now(),
+            // A revalidação é a prova de conectividade mais forte que existe no
+            // contrato, então ela desliza o prazo integralmente, sem o freio de
+            // gravação que vale para o uso comum.
+            'expires_at' => $this->prazoDeslizante($sessao),
+        ]);
 
-        $this->auditoria->sessao(OperatorSessionAudit::SESSION_REVALIDATED, $sessao, $sessao->user);
+        $this->auditoria->sessao(OperatorSessionAudit::SESSION_REVALIDATED, $sessao->fresh(), $sessao->user);
 
         return $sessao->fresh();
+    }
+
+    /**
+     * Religa as sessões ativas de um Terminal à credencial de máquina promovida
+     * por uma rotação legítima.
+     *
+     * Roda DENTRO da transação que confirma a rotação, chamada pelo listener do
+     * evento de domínio — e é isso que torna a troca atômica: ou a credencial
+     * nova vale e as sessões a acompanham, ou nada mudou.
+     *
+     * O que autoriza a religação é estreito de propósito:
+     *
+     *   - é o MESMO Terminal e a MESMA instalação;
+     *   - a sessão apontava exatamente para o PAT que acabou de ser substituído;
+     *   - a rotação é renovação, não recuperação administrativa.
+     *
+     * Quem decide esses três pontos é quem confirma a rotação; aqui o terceiro
+     * já chegou filtrado. Nada além do vínculo técnico muda: operador,
+     * autorização, prazos e auditoria permanecem, e possuir um token novo não
+     * concede nada — a autorização continua sendo revalidada por requisição.
+     *
+     * Recuperação administrativa, substituição física e comprometimento NÃO
+     * passam por aqui: eles revogam os PATs e, com eles, a amarração — a sessão
+     * cai e exige reautenticação humana.
+     */
+    public function repointAfterRotation(
+        Terminal $terminal,
+        int $tokenAnterior,
+        int $tokenPromovido,
+        string $installationId,
+    ): int {
+        if ($terminal->installation_id !== $installationId || $tokenAnterior === $tokenPromovido) {
+            return 0;
+        }
+
+        $sessoes = PdvOperatorSession::consultaIsolada($terminal->tenant_id)
+            ->where('terminal_id', $terminal->id)
+            ->where('installation_id', $installationId)
+            ->where('machine_token_id', $tokenAnterior)
+            ->where('status', PdvOperatorSession::STATUS_ACTIVE)
+            ->get();
+
+        foreach ($sessoes as $sessao) {
+            $sessao->update([
+                'machine_token_id' => $tokenPromovido,
+                'machine_rotations' => $sessao->machine_rotations + 1,
+            ]);
+
+            $this->auditoria->sessao(
+                OperatorSessionAudit::SESSION_MACHINE_ROTATED,
+                $sessao->fresh(),
+                $sessao->user,
+                ['machine_rotations' => $sessao->machine_rotations + 1],
+            );
+        }
+
+        return $sessoes->count();
     }
 
     /**
@@ -250,6 +346,26 @@ class OperatorSessionLifecycle
     }
 
     /**
+     * Revoga as sessões ativas de uma pessoa no estabelecimento.
+     *
+     * Usada quando o perfil de caixa é desativado. Antecipação, não garantia: a
+     * revalidação por requisição já recusaria, porque o perfil ativo é uma das
+     * condições. Rodar aqui fecha a janela do lease offline já emitido.
+     */
+    public function revokeForOperator(string $tenantId, string $userId, ?User $ator, string $motivo): void
+    {
+        $sessoes = PdvOperatorSession::consultaIsolada($tenantId)
+            ->where('user_id', $userId)
+            ->where('status', PdvOperatorSession::STATUS_ACTIVE)
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($sessoes as $sessao) {
+            $this->encerrar($sessao, PdvOperatorSession::STATUS_REVOKED, $ator, $motivo);
+        }
+    }
+
+    /**
      * Revoga as sessões ativas de um Terminal que saiu de operação.
      *
      * Pendurado no mesmo gancho que apaga as credenciais de máquina: sair de
@@ -268,21 +384,63 @@ class OperatorSessionLifecycle
     }
 
     /**
-     * Prazo efetivo de uma sessão: o menor entre o teto de política e a
-     * expiração efetiva da credencial de máquina que a abriu.
+     * Prazo técnico DESLIZANTE da sessão.
      *
-     * Uma sessão nunca sobrevive à máquina. Sem este mínimo, um caixa cuja
-     * credencial vence em 20 minutos abriria um turno de 8 horas e o Java
-     * descobriria a incoerência só na primeira recusa.
+     * `now + sliding_minutes`, limitado pelo teto da jornada quando ele existe.
+     *
+     * A expiração da credencial de MÁQUINA deixou de entrar nesta conta, e a
+     * mudança é deliberada. Antes a sessão era limitada pelo prazo do PAT, o
+     * que fazia um caixa com credencial vencendo em vinte minutos abrir um
+     * turno de vinte minutos. Com a rotação religando a sessão de forma
+     * transacional, a máquina deixa de ser um teto e volta a ser o que sempre
+     * foi: uma prova que precisa estar VÁLIDA NO MOMENTO de cada requisição —
+     * e isso o guard do Sanctum já garante, a cada requisição, para o Terminal
+     * autenticado.
      */
-    public function prazo(PersonalAccessToken $tokenDeMaquina): CarbonInterface
+    public function prazoDeslizante(?PdvOperatorSession $sessao = null): CarbonInterface
     {
-        $politica = now()->addMinutes((int) config('pdv.operator_sessions.ttl_minutes'));
-        $maquina = $this->expiracao->effective($tokenDeMaquina);
+        $deslizante = now()->addMinutes((int) config('pdv.operator_sessions.sliding_minutes'));
+        $teto = $sessao?->absolute_expires_at;
 
-        return $maquina !== null && $maquina->lessThan($politica)
-            ? Carbon::instance($maquina->toDateTime())
-            : $politica;
+        return $teto !== null && $teto->lessThan($deslizante)
+            ? Carbon::instance($teto->toDateTime())
+            : $deslizante;
+    }
+
+    /**
+     * Teto absoluto da jornada, ou null quando não há.
+     *
+     * Zero em `max_minutes` significa jornada sem teto — a política do piloto, e
+     * a razão de existir desta entrega: o comerciante que abre e fecha a loja no
+     * mesmo turno não deve ser interrompido por um relógio.
+     */
+    public function tetoDaJornada(): ?CarbonInterface
+    {
+        $minutos = (int) config('pdv.operator_sessions.max_minutes');
+
+        return $minutos > 0 ? now()->addMinutes($minutos) : null;
+    }
+
+    /**
+     * Avança o prazo técnico, com freio de gravação.
+     *
+     * Sem o freio, cada requisição de um caixa movimentado viraria um UPDATE na
+     * linha da sessão — e elas chegam em rajada. Só grava quando o prazo
+     * avançaria mais que `slide_threshold_minutes`, o que limita a escrita a uma
+     * por janela de freio sem encurtar a validade percebida.
+     */
+    private function deslizar(PdvOperatorSession $sessao): PdvOperatorSession
+    {
+        $novo = $this->prazoDeslizante($sessao);
+        $freio = (int) config('pdv.operator_sessions.slide_threshold_minutes');
+
+        if ($sessao->expires_at->greaterThan($novo->copy()->subMinutes($freio))) {
+            return $sessao;
+        }
+
+        $sessao->update(['expires_at' => $novo]);
+
+        return $sessao->fresh();
     }
 
     public function sessaoAtivaDoTerminal(Terminal $terminal, bool $bloquear = false): ?PdvOperatorSession
@@ -301,23 +459,41 @@ class OperatorSessionLifecycle
     }
 
     /**
-     * Marca como EXPIRED as sessões do Terminal que já passaram do prazo.
+     * Marca como EXPIRED as sessões do Terminal que já passaram de algum prazo.
+     *
+     * Os DOIS prazos entram: a janela deslizante e o teto da jornada. Olhar só o
+     * primeiro deixaria uma sessão cuja jornada acabou aparecer como ativa — e,
+     * sendo do mesmo operador, ela seria RECUPERADA pelo login em vez de dar
+     * lugar a um turno novo, o que anularia o teto na prática.
      *
      * A expiração é aplicada pela autenticação, independentemente desta
-     * reconciliação; ela existe para que o caixa livre volte a aceitar login em
-     * vez de responder conflito por causa de uma linha vencida.
+     * reconciliação; ela existe para que o caixa volte a aceitar login em vez de
+     * responder conflito por causa de uma linha vencida.
      */
     private function reconciliarVencidas(Terminal $terminal): void
     {
-        $vencidas = PdvOperatorSession::consultaIsolada($terminal->tenant_id)
+        $consulta = PdvOperatorSession::consultaIsolada($terminal->tenant_id)
             ->where('terminal_id', $terminal->id)
             ->where('status', PdvOperatorSession::STATUS_ACTIVE)
-            ->where('expires_at', '<=', now())
-            ->lockForUpdate()
-            ->get();
+            ->where(fn ($query) => $query
+                ->where('expires_at', '<=', now())
+                ->orWhere(fn ($query) => $query
+                    ->whereNotNull('absolute_expires_at')
+                    ->where('absolute_expires_at', '<=', now())));
+
+        // Lock em instrução própria, pela mesma razão explicada em
+        // PdvOperatorBranchAssignment::travarPara.
+        $consulta->lockForUpdate();
+
+        $vencidas = $consulta->get();
 
         foreach ($vencidas as $sessao) {
-            $this->encerrar($sessao, PdvOperatorSession::STATUS_EXPIRED, $sessao->user, 'absolute-deadline');
+            $this->encerrar(
+                $sessao,
+                PdvOperatorSession::STATUS_EXPIRED,
+                $sessao->user,
+                $sessao->jornadaEncerrada() ? 'journey-deadline' : 'idle-deadline',
+            );
         }
     }
 
@@ -342,7 +518,9 @@ class OperatorSessionLifecycle
             'status' => PdvOperatorSession::STATUS_ACTIVE,
             'authenticated_at' => $agora,
             'last_revalidated_at' => $agora,
-            'expires_at' => $this->prazo($maquina),
+            'expires_at' => $this->prazoDeslizante(),
+            // Null quando a política não tem teto de jornada, que é o padrão.
+            'absolute_expires_at' => $this->tetoDaJornada(),
         ]);
 
         $this->auditoria->sessao(OperatorSessionAudit::LOGIN, $sessao, $operador, [
@@ -354,13 +532,16 @@ class OperatorSessionLifecycle
     }
 
     /**
-     * Recuperação da própria sessão: credencial nova, prazo intacto.
+     * Recuperação da própria sessão: credencial nova, jornada intacta.
      *
      * Serve ao caso da resposta perdida — o Java criou a sessão, não recebeu o
      * segredo, repete o login com a mesma senha. Rotacionar em vez de
      * reentregar significa que o segredo antigo, se vazou no caminho, deixa de
      * valer; e não guardar resposta em cache de idempotência significa que não
      * existe cópia do segredo em lugar nenhum.
+     *
+     * `absolute_expires_at` NÃO é recalculado: a jornada continua sendo a que
+     * começou no primeiro login, e repetir o login não compra tempo de jornada.
      */
     private function rotacionar(PdvOperatorSession $sessao, User $operador): OperatorSessionResult
     {
@@ -369,6 +550,7 @@ class OperatorSessionLifecycle
         $sessao->update([
             'credential_hash' => OperatorSessionCredential::hash($credencial),
             'last_revalidated_at' => now(),
+            'expires_at' => $this->prazoDeslizante($sessao),
         ]);
 
         $atualizada = $sessao->fresh();
@@ -398,8 +580,14 @@ class OperatorSessionLifecycle
      *
      * Os seis campos são conferidos juntos porque cada um fecha um reuso
      * diferente: outro Terminal, outra instalação do mesmo Terminal, outra
-     * credencial de máquina (rotação), e Terminal cujos vínculos de
-     * estabelecimento, empresa ou filial mudaram depois do login.
+     * credencial de máquina, e Terminal cujos vínculos de estabelecimento,
+     * empresa ou filial mudaram depois do login.
+     *
+     * A igualdade de `machine_token_id` continua exigida, e é por isso que a
+     * rotação precisa RELIGAR a sessão de forma transacional
+     * (`repointAfterRotation`) em vez de a checagem ser afrouxada. Afrouxar
+     * aceitaria qualquer PAT do terminal — inclusive um emitido por recuperação
+     * administrativa depois de uma suspeita de comprometimento.
      */
     private function amarradaA(PdvOperatorSession $sessao, Terminal $terminal, PersonalAccessToken $maquina): bool
     {
@@ -447,10 +635,5 @@ class OperatorSessionLifecycle
         }
 
         return $atual;
-    }
-
-    private function normalizar(string $email): string
-    {
-        return mb_strtolower(trim($email));
     }
 }

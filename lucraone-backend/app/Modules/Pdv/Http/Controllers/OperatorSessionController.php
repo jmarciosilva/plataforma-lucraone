@@ -50,7 +50,7 @@ final class OperatorSessionController
         $resultado = $this->sessoes->start(
             $terminal,
             $this->tokenDeMaquina($terminal),
-            (string) $request->validated('email'),
+            (string) $request->validated('username'),
             (string) $request->validated('password'),
         );
 

@@ -10,7 +10,9 @@ use App\Modules\Pdv\Application\OperatorSessionAudit;
 use App\Modules\Pdv\Domain\Exceptions\OperatorSessionFailed;
 use App\Modules\Pdv\Domain\Models\PdvOperatorBranchAssignment;
 use App\Modules\Pdv\Domain\Models\PdvOperatorSession;
+use App\Modules\Tenancy\Application\ProvisionarEstabelecimento;
 use App\Modules\Terminals\Domain\Models\Terminal;
+use App\Modules\Terminals\Domain\Models\TerminalCredentialOperation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\Group;
@@ -61,7 +63,14 @@ class PdvOperatorSessionTest extends PdvOperatorTestCase
         $this->assertTrue($antes->equalTo(PdvOperatorSession::withoutGlobalScopes()->sole()->last_revalidated_at));
     }
 
-    public function test_revalidar_move_o_marco_sem_estender_o_prazo_absoluto(): void
+    /**
+     * Revalidar move o marco offline E desliza o prazo técnico.
+     *
+     * Na primeira versão o prazo era absoluto e revalidar não o movia; é
+     * justamente essa regra que impedia a jornada longa. O que continua
+     * intocável é o teto da JORNADA — quando configurado.
+     */
+    public function test_revalidar_move_o_marco_e_desliza_o_prazo_tecnico(): void
     {
         $credencial = $this->abrirSessao();
         $sessao = PdvOperatorSession::withoutGlobalScopes()->sole();
@@ -69,18 +78,43 @@ class PdvOperatorSessionTest extends PdvOperatorTestCase
         $marco = $sessao->last_revalidated_at;
 
         $this->travel(10)->minutes();
-        $this->revalidar($credencial)->assertOk()
-            ->assertJsonPath('data.session.expires_at', $prazo->toIso8601String());
+        $this->revalidar($credencial)->assertOk();
 
         $atualizada = PdvOperatorSession::withoutGlobalScopes()->sole();
 
         $this->assertTrue($atualizada->last_revalidated_at->greaterThan($marco));
-        $this->assertTrue($atualizada->expires_at->equalTo($prazo));
+        $this->assertTrue($atualizada->expires_at->greaterThan($prazo));
+        $this->assertNull($atualizada->absolute_expires_at);
 
         $this->assertDatabaseHas('audit_logs', [
             'action' => OperatorSessionAudit::SESSION_REVALIDATED,
             'user_id' => $this->operador->id,
         ]);
+    }
+
+    /**
+     * Com teto de jornada configurado, nenhuma revalidação passa dele.
+     */
+    public function test_revalidacao_nunca_passa_do_teto_da_jornada(): void
+    {
+        config(['pdv.operator_sessions.max_minutes' => 60]);
+
+        $credencial = $this->abrirSessao();
+        $sessao = PdvOperatorSession::withoutGlobalScopes()->sole();
+
+        $this->assertNotNull($sessao->absolute_expires_at);
+
+        $this->travel(30)->minutes();
+        $this->revalidar($credencial)->assertOk();
+
+        $atualizada = PdvOperatorSession::withoutGlobalScopes()->sole();
+
+        $this->assertTrue($atualizada->expires_at->lessThanOrEqualTo($sessao->absolute_expires_at));
+
+        // Passado o teto, nem o uso legítimo salva a sessão.
+        $this->travel(31)->minutes();
+        $this->assertErroPdv($this->consultarSessao($credencial), 401, OperatorSessionFailed::CODE_SESSION_INVALID);
+        $this->assertSame(PdvOperatorSession::STATUS_EXPIRED, PdvOperatorSession::withoutGlobalScopes()->sole()->status);
     }
 
     public function test_logout_encerra_a_sessao_e_e_idempotente(): void
@@ -174,9 +208,9 @@ class PdvOperatorSessionTest extends PdvOperatorTestCase
     {
         $this->abrirSessao();
 
-        $outro = $this->operadorAutorizado();
+        $this->operadorAutorizado(username: 'outro.caixa');
 
-        $resposta = $this->login(payload: ['email' => $outro->email, 'password' => self::SENHA]);
+        $resposta = $this->login(payload: ['username' => 'outro.caixa', 'password' => self::SENHA]);
 
         $this->assertErroPdv($resposta, 409, OperatorSessionFailed::CODE_CONFLICT);
         $this->assertSame(1, PdvOperatorSession::withoutGlobalScopes()->count());
@@ -185,7 +219,7 @@ class PdvOperatorSessionTest extends PdvOperatorTestCase
 
     /**
      * Resposta perdida depois de criar a sessão: o Java repete o login com a
-     * mesma senha. Não há segunda sessão, o prazo absoluto não muda, e a
+     * mesma senha. Não há segunda sessão, a jornada não é reiniciada, e a
      * credencial é NOVA — a antiga, que pode ter vazado no caminho, morre.
      */
     public function test_mesmo_operador_recupera_a_propria_sessao_com_credencial_rotacionada(): void
@@ -203,7 +237,9 @@ class PdvOperatorSessionTest extends PdvOperatorTestCase
         $this->assertSame(1, PdvOperatorSession::withoutGlobalScopes()->count());
 
         $atualizada = PdvOperatorSession::withoutGlobalScopes()->sole();
-        $this->assertTrue($atualizada->expires_at->equalTo($sessao->expires_at));
+        // Mesma sessão e mesmo início de jornada; só o prazo técnico desliza.
+        $this->assertTrue($atualizada->authenticated_at->equalTo($sessao->authenticated_at));
+        $this->assertNull($atualizada->absolute_expires_at);
 
         // A credencial antiga deixa de valer; a nova vale.
         $this->assertErroPdv($this->consultarSessao($primeira), 401, OperatorSessionFailed::CODE_SESSION_INVALID);
@@ -224,7 +260,7 @@ class PdvOperatorSessionTest extends PdvOperatorTestCase
         $credencial = $this->abrirSessao();
         $hash = PdvOperatorSession::withoutGlobalScopes()->sole()->credential_hash;
 
-        $resposta = $this->login(payload: ['email' => $this->operador->email, 'password' => 'errada-mas-longa']);
+        $resposta = $this->login(payload: ['username' => $this->username, 'password' => 'errada-mas-longa']);
 
         $this->assertErroPdv($resposta, 401, OperatorSessionFailed::CODE_AUTHENTICATION);
         $this->assertSame($hash, PdvOperatorSession::withoutGlobalScopes()->sole()->credential_hash);
@@ -301,19 +337,76 @@ class PdvOperatorSessionTest extends PdvOperatorTestCase
     }
 
     /**
-     * Rotacionar a credencial de máquina derruba a sessão: ela é amarrada ao
-     * PAT que a abriu, e a confirmação apaga esse PAT.
+     * Rotação de rotina da credencial de máquina PRESERVA o turno.
+     *
+     * É a inversão deliberada da regra anterior. A sessão continua amarrada a um
+     * PAT específico, mas a confirmação da rotação religa esse vínculo na mesma
+     * transação que promove a candidata — então o operador não é interrompido por
+     * uma renovação técnica que ele nem vê acontecer.
      */
-    public function test_rotacao_da_credencial_de_maquina_derruba_a_sessao(): void
+    public function test_rotacao_de_rotina_da_maquina_preserva_a_sessao(): void
     {
         $credencial = $this->abrirSessao();
+        $antes = PdvOperatorSession::withoutGlobalScopes()->sole();
+
         $nova = $this->rotacionarMaquina();
 
-        $this->assertErroPdv($this->consultarSessao($credencial, $nova), 401, OperatorSessionFailed::CODE_SESSION_INVALID);
+        $this->consultarSessao($credencial, $nova)->assertOk()
+            ->assertJsonPath('data.session.id', $antes->id)
+            ->assertJsonPath('data.session.status', PdvOperatorSession::STATUS_ACTIVE)
+            ->assertJsonPath('data.session.machine_rotations', 1);
 
-        // E o caixa aceita um login novo sob a credencial nova.
-        $this->maquina = $nova;
-        $this->login()->assertCreated();
+        $depois = PdvOperatorSession::withoutGlobalScopes()->sole();
+
+        $this->assertNotSame((int) $antes->machine_token_id, (int) $depois->machine_token_id);
+        $this->assertSame((int) $this->terminal->fresh()->tokens()->sole()->id, (int) $depois->machine_token_id);
+        // A jornada não é reiniciada por uma renovação técnica.
+        $this->assertTrue($depois->authenticated_at->equalTo($antes->authenticated_at));
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => OperatorSessionAudit::SESSION_MACHINE_ROTATED,
+            'user_id' => $this->operador->id,
+        ]);
+    }
+
+    /**
+     * A credencial de máquina ANTERIOR deixa de valer depois da rotação, e a
+     * sessão não pode ser usada com ela.
+     */
+    public function test_credencial_de_maquina_anterior_nao_opera_a_sessao_depois_da_rotacao(): void
+    {
+        $credencial = $this->abrirSessao();
+        $antiga = $this->maquina;
+
+        $this->rotacionarMaquina();
+
+        $this->assertErroPdv($this->consultarSessao($credencial, $antiga), 401, 'unauthenticated');
+    }
+
+    /**
+     * Recuperação administrativa NÃO herda a sessão.
+     *
+     * Ela nasce de perda, suspeita de comprometimento ou substituição física de
+     * equipamento. Nesses casos a credencial antiga é revogada, a amarração se
+     * rompe e o operador precisa se autenticar de novo — é uma decisão de
+     * segurança, não um efeito colateral.
+     */
+    public function test_recuperacao_administrativa_exige_novo_login_do_operador(): void
+    {
+        $credencial = $this->abrirSessao();
+
+        $nova = $this->recuperarMaquinaPorAdministracao();
+
+        $this->assertErroPdv(
+            $this->consultarSessao($credencial, $nova),
+            401,
+            OperatorSessionFailed::CODE_SESSION_INVALID,
+        );
+
+        $this->assertNotSame(
+            PdvOperatorSession::STATUS_ACTIVE,
+            PdvOperatorSession::withoutGlobalScopes()->sole()->status,
+        );
     }
 
     /**
@@ -432,24 +525,41 @@ class PdvOperatorSessionTest extends PdvOperatorTestCase
     }
 
     /**
-     * Promove uma credencial de máquina nova pelo fluxo real de rotação.
+     * Recuperação administrativa completa, pelos endpoints reais.
+     *
+     * Devolve a credencial de máquina promovida. A diferença em relação à
+     * rotação de rotina está no caminho, não no resultado aparente: a
+     * autorização do código já revoga os PATs do terminal, e a confirmação
+     * desta operação é RECOVERY — então o listener não religa sessão nenhuma.
      */
-    private function rotacionarMaquina(): string
+    private function recuperarMaquinaPorAdministracao(): string
     {
-        $operacao = (string) Str::uuid();
-        $segredo = bin2hex(random_bytes(32));
+        $admin = User::factory()->create();
+        app(ProvisionarEstabelecimento::class)->atribuirAdministrador($this->tenant, $admin);
+        $tokenHumano = $admin->fresh()->createToken('auth_token', ['business:read', 'business:write'])->plainTextToken;
 
         $this->novaRequisicao();
-        $candidata = $this->withToken($this->maquina)
-            ->postJson('/api/v1/pdv/terminal/credential/rotations', [
-                'operation_id' => $operacao,
-                'delivery_secret' => $segredo,
-            ])->assertOk()->json('data.credential.access_token');
+        $codigo = $this->withHeaders(['X-Tenant-ID' => $this->tenant->id])
+            ->withToken($tokenHumano)
+            ->postJson("/api/v1/pdv/admin/terminals/{$this->terminal->id}/credential-recovery-codes", ['reason' => 'lost'])
+            ->assertOk()
+            ->json('data.recovery_code');
+
+        $this->novaRequisicao();
+        $candidata = $this->postJson('/api/v1/pdv/terminal/credential/recover', [
+            'recovery_code' => $codigo,
+            'installation_id' => $this->terminal->fresh()->installation_id,
+            'delivery_secret' => bin2hex(random_bytes(32)),
+        ])->assertOk()->json('data.credential.access_token');
 
         $this->novaRequisicao();
         $this->withToken($candidata)
-            ->postJson('/api/v1/pdv/terminal/credential/confirm', ['operation_id' => $operacao])
-            ->assertOk();
+            ->postJson('/api/v1/pdv/terminal/credential/confirm', [
+                'operation_id' => TerminalCredentialOperation::withoutGlobalScopes()
+                    ->where('terminal_id', $this->terminal->id)
+                    ->where('kind', 'RECOVERY')
+                    ->value('id'),
+            ])->assertOk();
 
         return $candidata;
     }

@@ -2,15 +2,12 @@
 
 namespace App\Modules\Pdv\Application;
 
-use App\Modules\Authorization\Application\TenantAuthority;
-use App\Modules\Authorization\Domain\Models\Permission;
 use App\Modules\Branches\Domain\Models\Branch;
 use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Identity\Domain\Models\TenantUser;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Pdv\Domain\Exceptions\OperatorSessionFailed;
 use App\Modules\Pdv\Domain\Models\PdvOperatorBranchAssignment;
-use App\Modules\Pdv\Domain\OperatorPermission;
 use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Terminals\Domain\TerminalStructure;
 use Illuminate\Database\Eloquent\Collection;
@@ -25,10 +22,11 @@ use Illuminate\Support\Facades\Gate;
  *   - sobre a FILIAL, a mesma do TerminalPolicy: `BranchPolicy::update`, que
  *     pede `manage-branches` no estabelecimento resolvido e recusa filial de
  *     outro. É o que impede administrar um caixa de uma loja que não é sua;
- *   - sobre a PESSOA, a contenção do SEC-04 · E2: administrar alguém exige
- *     dominar a autoridade dos papéis dele. É o que impede um gerente de
- *     conceder acesso de caixa a um administrador e, por essa via, mexer no
- *     acesso de quem está acima dele.
+ *   - sobre a PESSOA, a contenção do SEC-04 · E2, definida em
+ *     OperatorDelegation e compartilhada com a administração pela interface
+ *     web: administrar alguém exige dominar a autoridade dos papéis dele. É o
+ *     que impede um gerente de conceder acesso de caixa a um administrador e,
+ *     por essa via, mexer no acesso de quem está acima dele.
  *
  * Nenhum papel dá passe livre: Platform Admin, nome de papel e permissão de
  * estabelecimento isolada não dispensam as duas verificações acima.
@@ -39,7 +37,7 @@ use Illuminate\Support\Facades\Gate;
 class OperatorBranchAccess
 {
     public function __construct(
-        private TenantAuthority $autoridade,
+        private OperatorDelegation $delegacao,
         private OperatorSessionLifecycle $sessoes,
         private OperatorSessionAudit $auditoria,
     ) {}
@@ -179,52 +177,8 @@ class OperatorBranchAccess
             throw OperatorSessionFailed::proibido();
         }
 
-        $this->exigirDominioSobreAPessoa($ator, $operador, $filial->tenant_id);
-    }
-
-    /**
-     * Contenção da delegação (SEC-04 · E2), com uma exceção justificada.
-     *
-     * A regra é a do UserAdministrationGuard: a autoridade dos papéis do alvo
-     * precisa estar contida na do ator. O guard em si não pode ser chamado aqui
-     * por um detalhe que o deixaria inutilizável — `access-pdv` é órfã de todos
-     * os papéis padrão, inclusive do admin, de propósito. Com ela contando como
-     * autoridade do alvo, ninguém administraria um operador: o administrador do
-     * estabelecimento não tem `access-pdv` e seria recusado ao tentar revogar o
-     * acesso que ele mesmo concedeu.
-     *
-     * A exceção é exatamente a permissão que ESTE endpoint administra, e só
-     * ela. Exigir que o administrador também possa operar um caixa para poder
-     * conceder caixa inverteria a relação: quem administra não precisa exercer.
-     * Qualquer outra permissão do alvo continua tendo de estar contida — um
-     * gerente segue sem conseguir mexer no acesso de um administrador.
-     *
-     * @throws OperatorSessionFailed
-     */
-    private function exigirDominioSobreAPessoa(User $ator, User $alvo, string $tenantId): void
-    {
-        $autoridadeDoAtor = $this->autoridade->autoridadeDoAtor($ator, $tenantId);
-
-        $autoridadeDoAlvo = $this->autoridade->autoridadeDosPapeis(
-            // Papéis do alvo em QUALQUER status de vínculo: um vínculo suspenso
-            // pode ser reativado, e a autoridade latente dele volta a valer.
-            $this->autoridade->papeisDoUsuario($alvo, $tenantId),
-            $tenantId,
-        );
-
-        $administrada = Permission::withoutGlobalScopes()
-            ->where('tenant_id', $tenantId)
-            ->where('name', OperatorPermission::ACESSO)
-            ->value('id');
-
-        $excedente = array_diff(
-            $autoridadeDoAlvo,
-            $autoridadeDoAtor,
-            $administrada === null ? [] : [(string) $administrada],
-        );
-
-        if ($excedente !== []) {
-            throw OperatorSessionFailed::proibido();
-        }
+        // Autoridade sobre a pessoa (SEC-04 · E2), na definição compartilhada
+        // com a administração pela interface web.
+        $this->delegacao->exigirDominioSobreAPessoa($ator, $operador, $filial->tenant_id);
     }
 }

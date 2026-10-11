@@ -7,6 +7,7 @@ use App\Modules\Branches\Domain\Models\Branch;
 use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Tenancy\Domain\Models\Tenant;
+use App\Modules\Terminals\Domain\Events\TerminalCredentialRotated;
 use App\Modules\Terminals\Domain\Exceptions\CredentialLifecycleFailed;
 use App\Modules\Terminals\Domain\MachineTokenAbility;
 use App\Modules\Terminals\Domain\Models\Terminal;
@@ -113,6 +114,17 @@ final class TerminalCredentialLifecycle
             $terminal->tokens()->whereKeyNot($candidate->id)->delete();
             $operation->update(['status' => 'CONFIRMED', 'confirmed_at' => now()]);
             $this->audit($terminal, $operation, 'credential.rotation.confirmed');
+            // Dispatched INSIDE the transaction so interested modules commit
+            // with the promotion. Carries facts only; no secret, no authority.
+            // Terminals knows nothing about operators — the Pdv module listens.
+            TerminalCredentialRotated::dispatch(
+                $terminal,
+                (string) $terminal->installation_id,
+                (int) $operation->previous_token_id,
+                (int) $candidate->id,
+                (string) $operation->kind,
+                (string) $operation->id,
+            );
 
             return new CredentialOperationResult($operation, null, $this->expiration->effective($candidate)->toIso8601String());
         }, 3);

@@ -40,20 +40,36 @@ return [
     ],
 
     /*
-     * Sessão operacional do operador (Fase 5).
+     * Sessão operacional do operador.
      *
      * Política explícita, versionada e configurável — não um número escondido
-     * no serviço. Os três prazos são tetos, nunca pisos: a validade real de
-     * uma sessão é o MENOR entre o prazo daqui, o prazo absoluto da própria
-     * sessão e a expiração efetiva da credencial de máquina que a autenticou.
-     * Uma sessão não pode sobreviver à máquina que a abriu.
+     * no serviço. Separa duas coisas que a primeira versão tinha juntas:
+     *
+     *   JORNADA OPERACIONAL — quanto tempo a pessoa fica no caixa. SEM teto
+     *                         fixo. Um comerciante abre às sete e fecha às
+     *                         vinte e duas; exigir login novo às quinze por
+     *                         causa de um relógio não protege ninguém e
+     *                         interrompe venda.
+     *
+     *   VALIDADE TÉCNICA    — por quanto tempo a credencial da sessão vale sem
+     *                         ser reconfirmada. Finita e DESLIZANTE: avança a
+     *                         cada uso autenticado legítimo. Nunca eterna.
      */
     'operator_sessions' => [
-        // Oito horas: um turno de caixa. Prazo ABSOLUTO — não há renovação
-        // deslizante, e revalidar não o estende. Terminar o turno exige novo
-        // login, com senha, e é isso que mantém a sessão ligada a uma pessoa
-        // presente em vez de a um computador ligado.
-        'ttl_minutes' => 480,
+        // Janela deslizante da credencial. Quatro horas é folgado para o uso
+        // normal e curto o bastante para que um caixa esquecido ligado e sem
+        // uso pare de valer sozinho até o dia seguinte.
+        'sliding_minutes' => 240,
+
+        // Só grava o novo prazo quando ele avançaria mais que isto. Sem este
+        // freio, cada requisição do caixa viraria um UPDATE — e um caixa
+        // movimentado faz muitas requisições por minuto.
+        'slide_threshold_minutes' => 5,
+
+        // Teto ABSOLUTO da jornada, em minutos. Zero significa SEM TETO, que é
+        // a política do piloto. Com valor maior que zero, nenhum deslizamento
+        // passa dele e o fim da jornada exige novo login com senha.
+        'max_minutes' => 0,
     ],
 
     /*

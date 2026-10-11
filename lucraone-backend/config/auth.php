@@ -62,8 +62,17 @@ return [
     */
 
     'providers' => [
+        /*
+        | Driver próprio, registrado no AppServiceProvider.
+        |
+        | É o `eloquent` com uma única diferença: credencial de identificação
+        | nula ou vazia nunca casa com ninguém. O padrão traduz
+        | `where('email', null)` para `email IS NULL`, e desde que o e-mail
+        | passou a ser opcional isso casaria com todos os operadores de caixa.
+        | Ver IdentityUserProvider.
+        */
         'users' => [
-            'driver' => 'eloquent',
+            'driver' => 'identity',
             'model' => env('AUTH_MODEL', User::class),
         ],
 

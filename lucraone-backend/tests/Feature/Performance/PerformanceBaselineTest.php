@@ -330,11 +330,28 @@ class PerformanceBaselineTest extends TestCase
 
         echo "âœ… Memory used: {$memoryUsed}MB, Peak: {$peakMB}MB\n";
 
-        // Peak memory should be reasonable (< 100MB for tests)
+        // O custo da OPERAÇÃO é o que este teste promete medir, e é aqui que
+        // uma regressão de verdade apareceria: dez usuários criados e
+        // consultados não devem alocar vários megabytes.
         $this->assertLessThan(
-            100,
+            8,
+            $memoryUsed,
+            "Operation memory should be < 8MB, was {$memoryUsed}MB"
+        );
+
+        // O pico é do PROCESSO, não da aplicação: `memory_get_peak_usage()`
+        // acumula tudo o que a suíte alocou antes deste teste, então o número
+        // cresce a cada teste novo e muda com a ordem de execução. Isolado ele
+        // fica em ~62MB; na suíte completa passou de 100MB apenas porque a
+        // suíte cresceu — e o teto de 100 vinha falhando de forma intermitente
+        // antes de qualquer mudança desta branch.
+        //
+        // O teto fica alto de propósito, como guarda contra vazamento grosseiro
+        // do runner, e a asserção que vigia a aplicação é a de cima.
+        $this->assertLessThan(
+            256,
             $peakMB,
-            "Peak memory should be < 100MB, was {$peakMB}MB"
+            "Process peak memory should be < 256MB, was {$peakMB}MB"
         );
     }
 
@@ -555,4 +572,3 @@ class PerformanceBaselineTest extends TestCase
         return $response->json('token');
     }
 }
-

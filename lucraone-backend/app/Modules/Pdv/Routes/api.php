@@ -2,6 +2,7 @@
 
 use App\Modules\Pdv\Http\Controllers\CredentialLifecycleController;
 use App\Modules\Pdv\Http\Controllers\CurrentTerminalController;
+use App\Modules\Pdv\Http\Controllers\EligibleOperatorsController;
 use App\Modules\Pdv\Http\Controllers\OperatorBranchAssignmentController;
 use App\Modules\Pdv\Http\Controllers\OperatorSessionController;
 use App\Modules\Pdv\Http\Controllers\PairTerminalController;
@@ -98,6 +99,15 @@ Route::prefix('v1/pdv')->group(function () {
         'terminal.context',
         'machine.ability:'.MachineTokenAbility::OPERATOR_SESSION,
     ])->group(function () {
+        // Lista de seleção do caixa. Mesma ability do login porque é parte do
+        // MESMO fluxo: um terminal que pode autenticar operador pode mostrar
+        // quem são os operadores dele. Uma ability nova obrigaria a mais uma
+        // rotação em campo sem fechar nenhuma porta — e esta rota não autentica
+        // ninguém nem devolve segredo.
+        Route::get('operators', EligibleOperatorsController::class)
+            ->middleware('throttle:pdv-operator-session')
+            ->name('pdv.operators.eligible');
+
         Route::post('operator-sessions', [OperatorSessionController::class, 'store'])
             ->middleware('throttle:pdv-operator-login')
             ->name('pdv.operator.sessions.store');

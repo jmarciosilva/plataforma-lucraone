@@ -18,10 +18,12 @@ use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Companies\Http\Policies\CompanyPolicy;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Identity\Http\Policies\UserPolicy;
+use App\Modules\Identity\Infrastructure\Auth\IdentityUserProvider;
 use App\Modules\Inventory\Domain\Models\Inventory;
 use App\Modules\Inventory\Domain\Models\StockLevel;
 use App\Modules\Inventory\Http\Policies\InventoryPolicy;
 use App\Modules\Inventory\Http\Policies\StockLevelPolicy;
+use App\Modules\Pdv\Domain\OperatorUsername;
 use App\Modules\Pdv\Http\Responses\PdvErrorResponse;
 use App\Modules\Pdv\PdvServiceProvider;
 use App\Modules\Products\Domain\Models\Category;
@@ -42,6 +44,7 @@ use App\Modules\Terminals\Http\Policies\TerminalPolicy;
 use App\Modules\Terminals\TerminalsServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -95,6 +98,14 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(AutomationTriggered::class, ProcessAutomationTrigger::class);
 
         $this->configurarAutenticacaoDaApi();
+
+        // Driver de identidade: o `eloquent` recusando credencial de
+        // identificação nula ou vazia. Registrado aqui porque é `boot()` que o
+        // AuthManager consulta ao resolver o provider configurado.
+        Auth::provider(
+            'identity',
+            fn ($app, array $config) => new IdentityUserProvider($app['hash'], $config['model'])
+        );
     }
 
     /**
@@ -200,9 +211,15 @@ class AppServiceProvider extends ServiceProvider
         // acesso já concedido.
         RateLimiter::for('pdv-operator-login', function (Request $request) {
             $terminal = (string) ($request->user()?->getAuthIdentifier() ?? 'anon');
-            $email = $request->input('email');
-            $identificador = is_string($email)
-                ? hash('sha256', mb_strtolower(trim($email)))
+            $username = $request->input('username');
+
+            // A chave é o resumo da forma CANÔNICA do username, não o valor
+            // cru. Canônica porque é por ela que o login resolve — senão
+            // `jose.silva` e `josesilva` teriam contadores separados e o freio
+            // por conta valeria o dobro. Resumo porque chave de cache não é
+            // lugar de identificador legível.
+            $identificador = is_string($username)
+                ? hash('sha256', OperatorUsername::canonical($username))
                 : null;
 
             $limites = [

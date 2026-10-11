@@ -2,9 +2,14 @@
 
 namespace App\Modules\Pdv;
 
+use App\Modules\Pdv\Application\Listeners\EndOperatorSessionsOnCredentialRevocation;
+use App\Modules\Pdv\Application\Listeners\KeepOperatorSessionThroughRotation;
 use App\Modules\Pdv\Application\OperatorSessionContext;
 use App\Modules\Pdv\Application\OperatorSessionLifecycle;
+use App\Modules\Terminals\Domain\Events\TerminalCredentialRotated;
+use App\Modules\Terminals\Domain\Events\TerminalMachineCredentialsRevoked;
 use App\Modules\Terminals\Domain\Models\Terminal;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class PdvServiceProvider extends ServiceProvider
@@ -18,6 +23,15 @@ class PdvServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Rotação legítima da credencial de máquina religa o turno em vez de
+        // derrubá-lo. Registrado à mão, como os outros listeners do projeto, e
+        // SÍNCRONO: ele participa da transação que confirma a rotação.
+        Event::listen(TerminalCredentialRotated::class, KeepOperatorSessionThroughRotation::class);
+
+        // E o contrário: credencial APAGADA encerra o turno. Recuperação
+        // administrativa, bloqueio e revogação não herdam sessão humana.
+        Event::listen(TerminalMachineCredentialsRevoked::class, EndOperatorSessionsOnCredentialRevocation::class);
+
         // Sair de ACTIVE encerra o turno em andamento no Terminal.
         //
         // Defesa em profundidade, não a garantia. A garantia é dupla e já

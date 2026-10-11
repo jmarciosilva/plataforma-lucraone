@@ -19,9 +19,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * e de nenhum deles se volta. Reativar uma conta não ressuscita a sessão: o
  * caminho é novo login.
  *
- * O prazo é ABSOLUTO. `expires_at` é definido no login e nunca cresce —
- * revalidar confirma que as condições continuam valendo e move
- * `last_revalidated_at`, que é o marco da graça offline, não o da sessão.
+ * Três marcos de tempo, e cada um responde uma pergunta diferente:
+ *
+ *   - `expires_at` é a validade TÉCNICA da credencial, DESLIZANTE: avança a
+ *     cada uso autenticado legítimo. É o que impede uma credencial eterna sem
+ *     impedir uma jornada longa;
+ *   - `absolute_expires_at` é o teto da JORNADA, opcional. NULL significa sem
+ *     teto, que é a política do piloto: o comerciante fica no caixa o dia
+ *     inteiro. Nenhum deslizamento passa dele quando existe;
+ *   - `last_revalidated_at` é o marco da graça OFFLINE, movido somente por
+ *     revalidação online explícita — nunca por uso comum.
  */
 class PdvOperatorSession extends Model
 {
@@ -54,11 +61,13 @@ class PdvOperatorSession extends Model
         'installation_id',
         'user_id',
         'machine_token_id',
+        'machine_rotations',
         'credential_hash',
         'status',
         'authenticated_at',
         'last_revalidated_at',
         'expires_at',
+        'absolute_expires_at',
         'ended_at',
         'revoked_at',
     ];
@@ -70,9 +79,11 @@ class PdvOperatorSession extends Model
     protected $hidden = ['credential_hash'];
 
     protected $casts = [
+        'machine_rotations' => 'integer',
         'authenticated_at' => 'datetime',
         'last_revalidated_at' => 'datetime',
         'expires_at' => 'datetime',
+        'absolute_expires_at' => 'datetime',
         'ended_at' => 'datetime',
         'revoked_at' => 'datetime',
         'created_at' => 'datetime',
@@ -100,7 +111,7 @@ class PdvOperatorSession extends Model
     }
 
     /**
-     * Está ativa E dentro do prazo?
+     * Está ativa E dentro dos dois prazos?
      *
      * Duas perguntas separadas de propósito: uma sessão vencida cujo status
      * ainda diz ACTIVE existe entre o vencimento e a próxima requisição que a
@@ -108,7 +119,20 @@ class PdvOperatorSession extends Model
      */
     public function vigente(): bool
     {
-        return $this->isActive() && $this->expires_at->isFuture();
+        return $this->isActive()
+            && $this->expires_at->isFuture()
+            && ! $this->jornadaEncerrada();
+    }
+
+    /**
+     * A jornada estourou o teto absoluto?
+     *
+     * Sem teto configurado (`absolute_expires_at` nulo) a resposta é sempre
+     * não: é essa a política que permite o turno de doze ou quinze horas.
+     */
+    public function jornadaEncerrada(): bool
+    {
+        return $this->absolute_expires_at !== null && $this->absolute_expires_at->isPast();
     }
 
     /**

@@ -11,6 +11,7 @@ use App\Http\Controllers\Web\InventoryWebController;
 use App\Http\Controllers\Web\NotificationWebController;
 use App\Http\Controllers\Web\OnboardingController;
 use App\Http\Controllers\Web\OrderWebController;
+use App\Http\Controllers\Web\PdvOperatorController;
 use App\Http\Controllers\Web\PermissionController;
 use App\Http\Controllers\Web\ProductWebController;
 use App\Http\Controllers\Web\ReportWebController;
@@ -69,6 +70,27 @@ Route::middleware('auth.web')->group(function () {
     Route::post('/tenants/{tenant}/restore', [TenantController::class, 'restore'])
         ->name('tenants.restore');
     Route::resource('tenants', TenantController::class);
+
+    /*
+    | Operadores de PDV.
+    |
+    | Rotas específicas antes do resource: senão `/pdv-operators/settings`
+    | cairia no `{operator}` do `show`. Mesma precaução que as automações já
+    | usam para `/automations/logs`.
+    |
+    | Sem `destroy`: operador se desativa, não se apaga. Apagar o perfil
+    | descartaria o username e o histórico de quem passou pelo caixa, e a
+    | desativação já encerra o acesso e o turno em andamento.
+    */
+    Route::post('/pdv-operators/settings', [PdvOperatorController::class, 'updateSettings'])
+        ->name('pdv-operators.settings');
+    Route::post('/pdv-operators/{operator}/toggle', [PdvOperatorController::class, 'toggle'])
+        ->name('pdv-operators.toggle');
+    Route::post('/pdv-operators/{operator}/reset-password', [PdvOperatorController::class, 'resetPassword'])
+        ->name('pdv-operators.reset-password');
+    Route::resource('pdv-operators', PdvOperatorController::class)
+        ->parameters(['pdv-operators' => 'operator'])
+        ->except(['destroy']);
 
     Route::post('/users/{user}/restore', [UserController::class, 'restore'])
         ->name('users.restore');

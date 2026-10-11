@@ -33,8 +33,11 @@ class PdvOperatorTenancyTest extends PdvOperatorTestCase
         $forasteiro->joinTenant($outraLoja['tenant']->id, TenantUser::STATUS_ACTIVE);
         $this->concederPermissaoDePdv($forasteiro, $outraLoja['tenant']);
         $this->atribuirFilial($forasteiro, $outraLoja['branch']);
+        // Perfil de caixa na OUTRA loja, com o mesmo username que o teste tenta
+        // no caixa desta: o login tem de não encontrá-lo aqui.
+        $this->perfilDeOperador($forasteiro, $outraLoja['tenant'], 'forasteiro');
 
-        $resposta = $this->login(payload: ['email' => $forasteiro->email, 'password' => self::SENHA]);
+        $resposta = $this->login(payload: ['username' => 'forasteiro', 'password' => self::SENHA]);
 
         $this->assertErroPdv($resposta, 401, OperatorSessionFailed::CODE_AUTHENTICATION);
         $this->assertSame(0, PdvOperatorSession::withoutGlobalScopes()->count());
@@ -109,8 +112,11 @@ class PdvOperatorTenancyTest extends PdvOperatorTestCase
     {
         $admin = User::factory()->create(['password' => self::SENHA]);
         app(ProvisionarEstabelecimento::class)->atribuirAdministrador($this->tenant, $admin);
+        // Perfil existe, mas sem `access-pdv` e sem atribuição: o papel
+        // administrativo não substitui nenhuma das duas.
+        $this->perfilDeOperador($admin, $this->tenant, 'admin.loja');
 
-        $resposta = $this->login(payload: ['email' => $admin->email, 'password' => self::SENHA]);
+        $resposta = $this->login(payload: ['username' => 'admin.loja', 'password' => self::SENHA]);
 
         $this->assertErroPdv($resposta, 401, OperatorSessionFailed::CODE_AUTHENTICATION);
     }
@@ -125,8 +131,10 @@ class PdvOperatorTenancyTest extends PdvOperatorTestCase
             'password' => self::SENHA,
             'is_platform_admin' => true,
         ]);
+        $plataforma->joinTenant($this->tenant->id, TenantUser::STATUS_ACTIVE);
+        $this->perfilDeOperador($plataforma, $this->tenant, 'plataforma');
 
-        $resposta = $this->login(payload: ['email' => $plataforma->email, 'password' => self::SENHA]);
+        $resposta = $this->login(payload: ['username' => 'plataforma', 'password' => self::SENHA]);
 
         $this->assertErroPdv($resposta, 401, OperatorSessionFailed::CODE_AUTHENTICATION);
     }
@@ -136,7 +144,7 @@ class PdvOperatorTenancyTest extends PdvOperatorTestCase
         $outraLoja = $this->outraLoja();
 
         $resposta = $this->login(payload: [
-            'email' => $this->operador->email,
+            'username' => $this->username,
             'password' => self::SENHA,
             'tenant_id' => $outraLoja['tenant']->id,
         ]);
@@ -147,7 +155,7 @@ class PdvOperatorTenancyTest extends PdvOperatorTestCase
     public function test_branch_id_no_corpo_e_recusado_como_campo_desconhecido(): void
     {
         $resposta = $this->login(payload: [
-            'email' => $this->operador->email,
+            'username' => $this->username,
             'password' => self::SENHA,
             'branch_id' => $this->branch->id,
         ]);

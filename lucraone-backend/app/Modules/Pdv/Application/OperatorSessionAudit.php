@@ -5,6 +5,7 @@ namespace App\Modules\Pdv\Application;
 use App\Modules\Audit\Domain\Models\AuditLog;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Pdv\Domain\Models\PdvOperatorBranchAssignment;
+use App\Modules\Pdv\Domain\Models\PdvOperatorProfile;
 use App\Modules\Pdv\Domain\Models\PdvOperatorSession;
 use App\Modules\Terminals\Domain\Models\Terminal;
 use Illuminate\Support\Str;
@@ -41,11 +42,35 @@ class OperatorSessionAudit
 
     public const SESSION_REVOKED = 'pdv.operator.session_revoked';
 
+    /**
+     * A sessão sobreviveu a uma rotação legítima da credencial de máquina.
+     *
+     * Evento de RASTRO, não de autorização: ele registra que o vínculo técnico
+     * foi religado, sem que nada de autorização tenha mudado.
+     */
+    public const SESSION_MACHINE_ROTATED = 'pdv.operator.session_machine_rotated';
+
     public const LOGOUT = 'pdv.operator.logout';
 
     public const BRANCH_ACCESS_GRANTED = 'pdv.operator.branch_access_granted';
 
     public const BRANCH_ACCESS_REVOKED = 'pdv.operator.branch_access_revoked';
+
+    public const OPERATOR_CREATED = 'pdv.operator.created';
+
+    public const OPERATOR_LINKED = 'pdv.operator.linked';
+
+    public const OPERATOR_UPDATED = 'pdv.operator.updated';
+
+    public const OPERATOR_USERNAME_CHANGED = 'pdv.operator.username_changed';
+
+    public const OPERATOR_ACTIVATED = 'pdv.operator.activated';
+
+    public const OPERATOR_DEACTIVATED = 'pdv.operator.deactivated';
+
+    public const OPERATOR_PASSWORD_RESET = 'pdv.operator.password_reset';
+
+    public const SETTINGS_UPDATED = 'pdv.operator.settings_updated';
 
     /**
      * @param  array<string, mixed>  $extra
@@ -63,17 +88,26 @@ class OperatorSessionAudit
     /**
      * Tentativa de login recusada.
      *
-     * O e-mail tentado não é gravado. Para investigar insistência contra uma
-     * conta específica sem guardar o identificador em claro, grava-se um
-     * resumo truncado dele — suficiente para agrupar tentativas, inútil para
-     * listar quem tem conta. IP, request_id e Terminal vêm do contexto.
+     * Agora que o identificador do caixa é um USERNAME, ele é gravado em claro.
+     * Na versão anterior o identificador era o e-mail e ficava apenas como
+     * resumo truncado, porque e-mail é dado pessoal e um log de tentativas
+     * viraria uma lista de quem tem conta no LucraOne. Um username de caixa não
+     * tem esse problema: ele é operacional, aparece na tela do administrador e é
+     * exatamente o que o lojista precisa ler para entender "alguém tentou entrar
+     * como marcio onze vezes".
+     *
+     * O valor é a forma canônica e truncada. Canônica porque é por ela que o
+     * login resolve, e truncada porque o campo vem do cliente e não deveria
+     * conseguir inflar o registro.
+     *
+     * IP, request_id, Terminal e filial vêm do contexto. Senha, nunca.
      */
     public function loginRecusado(Terminal $terminal, ?User $operador, string $identificador, string $motivo): void
     {
         $this->registrar(self::LOGIN_FAILED, $terminal->tenant_id, 'Terminal', $terminal->id, $operador, [
             'terminal_id' => $terminal->id,
             'branch_id' => $terminal->branch_id,
-            'identifier_fingerprint' => substr(hash('sha256', $identificador), 0, 16),
+            'attempted_username' => substr($identificador, 0, 32),
             'reason' => $motivo,
         ]);
     }
@@ -85,6 +119,38 @@ class OperatorSessionAudit
             'branch_id' => $atribuicao->branch_id,
             'status' => $atribuicao->status,
         ]);
+    }
+
+    /**
+     * Administração do perfil de caixa.
+     *
+     * O ator é quem administra; `operator_id` é quem foi administrado. São
+     * pessoas diferentes, e a auditoria precisa das duas — a coluna `user_id`
+     * do AuditLog guarda o ATOR, como em todo o resto do projeto.
+     *
+     * `username` entra porque é identificador operacional, não segredo: é o que
+     * o administrador vê na tela e o que o operador digita no caixa. Senha,
+     * senha temporária e hash nunca entram.
+     *
+     * @param  array<string, mixed>  $extra
+     */
+    public function perfil(string $acao, PdvOperatorProfile $perfil, User $ator, array $extra = []): void
+    {
+        $this->registrar($acao, $perfil->tenant_id, 'PdvOperatorProfile', $perfil->id, $ator, [
+            'operator_id' => $perfil->user_id,
+            'username' => $perfil->username,
+            'status' => $perfil->status,
+        ] + $extra);
+    }
+
+    /**
+     * Mudança de política operacional do estabelecimento.
+     *
+     * @param  array<string, mixed>  $mudancas
+     */
+    public function politica(string $tenantId, User $ator, array $mudancas): void
+    {
+        $this->registrar(self::SETTINGS_UPDATED, $tenantId, 'PdvTenantSetting', $tenantId, $ator, $mudancas);
     }
 
     /**

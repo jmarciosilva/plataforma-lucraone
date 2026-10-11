@@ -8,9 +8,11 @@ use App\Modules\Branches\Domain\Models\Branch;
 use App\Modules\Identity\Domain\Models\TenantUser;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Pdv\Application\OperatorBranchAccess;
+use App\Modules\Pdv\Application\OperatorRegistry;
 use App\Modules\Pdv\Application\OperatorSessionLifecycle;
 use App\Modules\Pdv\Domain\Exceptions\OperatorSessionFailed;
 use App\Modules\Pdv\Domain\Models\PdvOperatorBranchAssignment;
+use App\Modules\Pdv\Domain\Models\PdvOperatorProfile;
 use App\Modules\Pdv\Domain\Models\PdvOperatorSession;
 use App\Modules\Pdv\Domain\OperatorPermission;
 use App\Modules\Pdv\Domain\OperatorSessionCredential;
@@ -70,7 +72,7 @@ class OperatorSessionConcurrencyTest extends ConcurrencyTestCase
         app(IssueTerminalMachineCredential::class)->issue($this->terminal);
         $this->maquina = $this->terminal->tokens()->sole();
 
-        $this->operador = $this->operadorAutorizado();
+        $this->operador = $this->operadorAutorizado('primeiro');
 
         // O contexto da requisição não existe num teste de serviço; deixá-lo
         // resolvido fixaria o TenantScope e esconderia o filtro explícito que
@@ -83,11 +85,11 @@ class OperatorSessionConcurrencyTest extends ConcurrencyTestCase
      */
     public function test_dois_operadores_simultaneos_produzem_uma_unica_sessao(): void
     {
-        $outro = $this->operadorAutorizado();
+        $this->operadorAutorizado('segundo');
 
         $resultados = $this->race([
-            fn () => $this->iniciar($this->operador->email),
-            fn () => $this->iniciar($outro->email),
+            fn () => $this->iniciar('primeiro'),
+            fn () => $this->iniciar('segundo'),
         ]);
 
         $sucessos = array_values(array_filter($resultados, fn ($r) => $r['ok']));
@@ -112,8 +114,8 @@ class OperatorSessionConcurrencyTest extends ConcurrencyTestCase
     public function test_recuperacao_concorrente_do_mesmo_operador_nao_duplica_sessao(): void
     {
         $resultados = $this->race([
-            fn () => $this->iniciar($this->operador->email),
-            fn () => $this->iniciar($this->operador->email),
+            fn () => $this->iniciar('primeiro'),
+            fn () => $this->iniciar('primeiro'),
         ]);
 
         foreach ($resultados as $resultado) {
@@ -142,7 +144,7 @@ class OperatorSessionConcurrencyTest extends ConcurrencyTestCase
         $admin = $this->administrador();
 
         $this->race([
-            fn () => $this->iniciar($this->operador->email),
+            fn () => $this->iniciar('primeiro'),
             fn () => $this->revogar($admin),
         ]);
 
@@ -200,20 +202,25 @@ class OperatorSessionConcurrencyTest extends ConcurrencyTestCase
 
         $this->assertSame(PdvOperatorSession::STATUS_ENDED, $sessao->status);
         // O prazo absoluto não se move, nem com revalidação no meio.
-        $this->assertTrue($sessao->expires_at->lessThanOrEqualTo($sessao->authenticated_at->copy()->addMinutes(480)));
+        $this->assertFalse($sessao->isActive());
     }
 
     /**
-     * Rotação da credencial de máquina concorrente com a revalidação.
+     * Rotação da credencial de máquina concorrente com o uso da sessão.
      *
-     * Qualquer ordem é aceitável; o que não é aceitável é a sessão continuar
-     * autenticável depois que o PAT que a abriu deixou de existir. A promoção
-     * apaga os outros PATs do terminal, então a amarração por
-     * `machine_token_id` é o que faz a sessão cair sem depender de evento.
+     * A inversão deliberada da regra anterior: a rotação de rotina PRESERVA o
+     * turno. Em MySQL real, com processos independentes, o que importa é que a
+     * troca seja atômica — não pode existir instante em que a credencial nova já
+     * vale e a sessão ainda aponta para a antiga, nem o contrário.
+     *
+     * Qualquer ordem é aceitável; o estado final, não. No fim tem de haver UMA
+     * sessão, ativa, apontando para o PAT vigente, com uma rotação contada e com
+     * a jornada preservada.
      */
-    public function test_rotacao_da_maquina_durante_a_autenticacao_invalida_a_sessao(): void
+    public function test_rotacao_da_maquina_durante_o_uso_preserva_a_sessao(): void
     {
         $credencial = $this->abrirSessao();
+        $antes = PdvOperatorSession::withoutGlobalScopes()->sole();
         $operacao = (string) Str::uuid();
         $segredo = bin2hex(random_bytes(32));
 
@@ -226,21 +233,92 @@ class OperatorSessionConcurrencyTest extends ConcurrencyTestCase
         $sessao = PdvOperatorSession::withoutGlobalScopes()->sole();
 
         $this->assertSame(1, PdvOperatorSession::withoutGlobalScopes()->count());
-        $this->assertTrue($sessao->expires_at->lessThanOrEqualTo($sessao->authenticated_at->copy()->addMinutes(480)));
+        $this->assertSame(PdvOperatorSession::STATUS_ACTIVE, $sessao->status);
+        $this->assertSame((int) $promovido->id, (int) $sessao->machine_token_id);
+        $this->assertSame(1, $sessao->machine_rotations);
+        // A jornada não é reiniciada por uma renovação técnica.
+        $this->assertTrue($sessao->authenticated_at->equalTo($antes->authenticated_at));
 
-        $rotacionou = (int) $sessao->machine_token_id !== (int) $promovido->id;
+        // E a sessão continua autenticável sob a credencial promovida.
+        $this->assertSame(
+            PdvOperatorSession::STATUS_ACTIVE,
+            app(OperatorSessionLifecycle::class)
+                ->authenticate($this->terminal->fresh(), $promovido, $credencial)
+                ->status,
+        );
+    }
 
-        $autenticou = true;
+    /**
+     * Duas rotações concorrentes com um turno aberto.
+     *
+     * Uma vence e a outra encontra a pendência resolvida. O turno não pode ser
+     * contado duas vezes nem ficar apontando para um PAT que já não existe.
+     */
+    public function test_rotacoes_concorrentes_nao_duplicam_a_contagem_do_turno(): void
+    {
+        $this->abrirSessao();
+        $segredo = bin2hex(random_bytes(32));
 
-        try {
-            app(OperatorSessionLifecycle::class)->authenticate($this->terminal->fresh(), $promovido, $credencial);
-        } catch (OperatorSessionFailed) {
-            $autenticou = false;
-        }
+        $this->race([
+            fn () => $this->rotacionar((string) Str::uuid(), $segredo),
+            fn () => $this->rotacionar((string) Str::uuid(), $segredo),
+        ]);
 
-        // A sessão autentica sob o PAT vigente exatamente quando ele é o PAT
-        // com que ela nasceu. Depois da promoção, não autentica mais.
-        $this->assertSame(! $rotacionou, $autenticou);
+        $sessao = PdvOperatorSession::withoutGlobalScopes()->sole();
+        $vigente = $this->terminal->tokens()->first();
+
+        $this->assertNotNull($vigente);
+        $this->assertLessThanOrEqual(1, $sessao->machine_rotations);
+        $this->assertSame((int) $vigente->id, (int) $sessao->machine_token_id);
+    }
+
+    /**
+     * Desativar o operador enquanto a sessão dele está em uso.
+     *
+     * Em qualquer ordem, o estado final não pode ser "perfil inativo com sessão
+     * ativa" — a combinação que deixaria um funcionário afastado operando.
+     */
+    public function test_desativacao_concorrente_com_uso_nao_deixa_sessao_ativa(): void
+    {
+        $credencial = $this->abrirSessao();
+        $admin = $this->administrador();
+
+        $this->race([
+            fn () => $this->revalidarSessao($credencial),
+            fn () => $this->desativar($admin),
+        ]);
+
+        $perfil = PdvOperatorProfile::withoutGlobalScopes()
+            ->where('user_id', $this->operador->id)
+            ->sole();
+        $sessao = PdvOperatorSession::withoutGlobalScopes()->sole();
+
+        $this->assertSame(PdvOperatorProfile::STATUS_INACTIVE, $perfil->status);
+        $this->assertFalse($sessao->isActive(), 'perfil inativo não pode conviver com sessão ativa.');
+    }
+
+    /**
+     * Dois cadastros concorrentes com usernames equivalentes.
+     *
+     * `jose.silva` e `josesilva` têm a MESMA forma canônica, então o índice
+     * único por estabelecimento tem de recusar o segundo — e é o MySQL real que
+     * prova isso, porque o SQLite da suíte padrão não exercita a corrida.
+     */
+    public function test_usernames_equivalentes_concorrentes_criam_um_unico_perfil(): void
+    {
+        $admin = $this->administrador();
+
+        $resultados = $this->race([
+            fn () => $this->cadastrar($admin, 'jose.silva'),
+            fn () => $this->cadastrar($admin, 'josesilva'),
+        ]);
+
+        $sucessos = array_filter($resultados, fn ($r) => $r['ok']);
+
+        $this->assertCount(1, $sucessos);
+        $this->assertSame(1, PdvOperatorProfile::withoutGlobalScopes()
+            ->where('username_canonical', 'josesilva')
+            ->count());
     }
 
     // ----------------------------------------------------------------
@@ -250,12 +328,12 @@ class OperatorSessionConcurrencyTest extends ConcurrencyTestCase
     /**
      * @return array{session_id: string, credential_hash: string}
      */
-    private function iniciar(string $email): array
+    private function iniciar(string $username): array
     {
         $resultado = app(OperatorSessionLifecycle::class)->start(
             $this->terminal->fresh(),
             $this->maquina,
-            $email,
+            $username,
             self::SENHA,
         );
 
@@ -278,6 +356,37 @@ class OperatorSessionConcurrencyTest extends ConcurrencyTestCase
         return app(OperatorSessionLifecycle::class)
             ->revalidate($this->terminal->fresh(), $this->maquina, $credencial)
             ->status;
+    }
+
+    private function desativar(User $admin): string
+    {
+        app(TenantContext::class)->set($this->terminal->tenant_id);
+
+        $perfil = PdvOperatorProfile::withoutGlobalScopes()
+            ->where('user_id', $this->operador->id)
+            ->sole();
+
+        return app(OperatorRegistry::class)
+            ->atualizarPerfil($admin->fresh(), $perfil, $perfil->username, PdvOperatorProfile::STATUS_INACTIVE)
+            ->status;
+    }
+
+    private function cadastrar(User $admin, string $username): string
+    {
+        app(TenantContext::class)->set($this->terminal->tenant_id);
+
+        // Com e-mail de propósito: o `down()` da migration que tornou
+        // `users.email` opcional recusa reverter enquanto houver identidade sem
+        // e-mail, e o DatabaseMigrations desta suíte faz rollback no teardown.
+        // Este teste é sobre unicidade de username, não sobre e-mail ausente —
+        // esse caso é coberto na suíte administrativa.
+        return app(OperatorRegistry::class)->criar($admin->fresh(), $this->terminal->tenant_id, [
+            'name' => 'Operador '.$username,
+            'username' => $username,
+            'password' => self::SENHA,
+            'email' => $username.'@concorrencia.test',
+            'branch_ids' => [$this->terminal->branch_id],
+        ])->username;
     }
 
     private function revogar(User $admin): string
@@ -319,18 +428,28 @@ class OperatorSessionConcurrencyTest extends ConcurrencyTestCase
             'status' => PdvOperatorSession::STATUS_ACTIVE,
             'authenticated_at' => now(),
             'last_revalidated_at' => now(),
-            'expires_at' => now()->addMinutes(480),
+            'expires_at' => now()->addMinutes((int) config('pdv.operator_sessions.sliding_minutes')),
+            'absolute_expires_at' => null,
         ]);
 
         return $credencial;
     }
 
-    private function operadorAutorizado(): User
+    private function operadorAutorizado(string $username): User
     {
         $tenant = $this->terminal->tenant;
 
         $operador = User::factory()->create(['password' => self::SENHA]);
         $operador->joinTenant($tenant->id, TenantUser::STATUS_ACTIVE);
+
+        $perfil = new PdvOperatorProfile([
+            'tenant_id' => $tenant->id,
+            'user_id' => $operador->id,
+            'status' => PdvOperatorProfile::STATUS_ACTIVE,
+        ]);
+        $perfil->id = (string) Str::ulid();
+        $perfil->definirUsername($username);
+        $perfil->save();
 
         $papel = Role::withoutGlobalScopes()->firstOrCreate(
             ['tenant_id' => $tenant->id, 'name' => 'pdv-operator'],

@@ -2,6 +2,7 @@
 
 namespace App\Modules\Terminals\Application;
 
+use App\Modules\Terminals\Domain\Events\TerminalMachineCredentialsRevoked;
 use App\Modules\Terminals\Domain\Models\Terminal;
 use App\Modules\Terminals\Domain\Models\TerminalCredentialOperation;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +32,14 @@ class RevokeTerminalMachineCredentials
             TerminalCredentialOperation::where('terminal_id', $terminal->id)
                 ->whereIn('status', ['ISSUED', 'PENDING'])->update(['status' => 'INVALIDATED', 'updated_at' => now()]);
 
-            return $terminal->tokens()->delete();
+            $removidas = $terminal->tokens()->delete();
+
+            // Dentro da transação: quem depende destas credenciais precisa
+            // perder validade no MESMO commit. Terminals não sabe o que é um
+            // operador; quem liga as duas coisas é o listener do módulo Pdv.
+            TerminalMachineCredentialsRevoked::dispatch($terminal, (int) $removidas);
+
+            return $removidas;
         }, 3);
     }
 }
