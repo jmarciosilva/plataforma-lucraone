@@ -11,6 +11,7 @@ use App\Modules\Pdv\Http\Middleware\AuthenticateOperatorSession;
 use App\Modules\Pdv\Http\Middleware\HumanAdministrationContext;
 use App\Modules\Pdv\Http\Middleware\RecoveryAdministrationContext;
 use App\Modules\Terminals\Domain\MachineTokenAbility;
+use App\Modules\Terminals\Http\Controllers\HeartbeatController;
 use App\Modules\Terminals\Http\Middleware\EnsureCredentialAbility;
 use Illuminate\Support\Facades\Route;
 
@@ -71,6 +72,9 @@ Route::prefix('v1/pdv')->group(function () {
         'machine.ability:'.MachineTokenAbility::TERMINAL_READ,
     ])->group(function () {
         Route::get('terminal', CurrentTerminalController::class)->name('pdv.terminal');
+        Route::post('terminal/heartbeat', HeartbeatController::class)
+            ->middleware('throttle:pdv-credential')
+            ->name('pdv.terminal.heartbeat');
     });
 
     // ----------------------------------------------------------------

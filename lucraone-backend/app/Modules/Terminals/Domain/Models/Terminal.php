@@ -46,11 +46,11 @@ class Terminal extends Model implements AuthenticatableContract
 
     public const STATUSES = [self::STATUS_PENDING, self::STATUS_ACTIVE, self::STATUS_BLOCKED, self::STATUS_REVOKED];
 
-    protected $fillable = ['tenant_id', 'company_id', 'branch_id', 'installation_id', 'name', 'status'];
+    protected $fillable = ['tenant_id', 'company_id', 'branch_id', 'installation_id', 'name', 'status', 'last_seen_at'];
 
     protected $attributes = ['status' => self::STATUS_PENDING];
 
-    protected $casts = ['id' => 'string', 'created_at' => 'datetime', 'updated_at' => 'datetime'];
+    protected $casts = ['id' => 'string', 'created_at' => 'datetime', 'updated_at' => 'datetime', 'last_seen_at' => 'datetime'];
 
     protected static function booted(): void
     {

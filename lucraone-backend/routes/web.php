@@ -13,6 +13,7 @@ use App\Http\Controllers\Web\OnboardingController;
 use App\Http\Controllers\Web\OrderWebController;
 use App\Http\Controllers\Web\BranchController;
 use App\Http\Controllers\Web\PdvOperatorController;
+use App\Http\Controllers\Web\TerminalController;
 use App\Http\Controllers\Web\PermissionController;
 use App\Http\Controllers\Web\ProductWebController;
 use App\Http\Controllers\Web\ReportWebController;
@@ -94,6 +95,23 @@ Route::middleware('auth.web')->group(function () {
     | descartaria o username e o histórico de quem passou pelo caixa, e a
     | desativação já encerra o acesso e o turno em andamento.
     */
+    /*
+    | Terminais PDV.
+    |
+    | Rotas de ação antes do resource para não conflitar com bindings.
+    | Sem destroy: terminal revogado permanece no histórico.
+    */
+    Route::post('/terminals/{terminal}/block', [TerminalController::class, 'block'])
+        ->name('terminals.block');
+    Route::post('/terminals/{terminal}/unblock', [TerminalController::class, 'unblock'])
+        ->name('terminals.unblock');
+    Route::post('/terminals/{terminal}/revoke', [TerminalController::class, 'revoke'])
+        ->name('terminals.revoke');
+    Route::post('/terminals/{terminal}/pairing-code', [TerminalController::class, 'issuePairingCode'])
+        ->name('terminals.pairing-code');
+    Route::resource('terminals', TerminalController::class)
+        ->except(['destroy']);
+
     Route::post('/pdv-operators/settings', [PdvOperatorController::class, 'updateSettings'])
         ->name('pdv-operators.settings');
     Route::post('/pdv-operators/{operator}/toggle', [PdvOperatorController::class, 'toggle'])

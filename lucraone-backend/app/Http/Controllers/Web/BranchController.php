@@ -10,6 +10,7 @@ use App\Modules\Branches\Application\BranchService;
 use App\Modules\Branches\Domain\Models\Branch;
 use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Tenancy\Application\TenantContext;
+use App\Modules\Terminals\Domain\Models\Terminal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -104,6 +105,10 @@ class BranchController extends Controller
 
         return view('branches.show', [
             'filial' => $filial,
+            'terminais' => Terminal::withoutGlobalScopes()
+                ->where('branch_id', $filial->id)
+                ->orderBy('name')
+                ->get(),
             'historico' => AuditLog::withoutGlobalScopes()
                 ->where('tenant_id', $tenantId)
                 ->where('entity_type', 'branch')

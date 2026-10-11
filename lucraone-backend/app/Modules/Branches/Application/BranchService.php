@@ -32,6 +32,7 @@ class BranchService
                 'timezone' => $dados['timezone'] ?? 'America/Sao_Paulo',
                 'status' => 'ACTIVE',
                 'is_headquarters' => $isHq,
+                'max_pdv_terminals' => isset($dados['max_pdv_terminals']) ? (int) $dados['max_pdv_terminals'] : 5,
             ]);
 
             if (! empty($dados['address'])) {
@@ -76,7 +77,7 @@ class BranchService
                 'is_headquarters' => $isHqAntes,
             ];
 
-            $branch->update([
+            $updateData = [
                 'name' => $dados['name'],
                 'code' => $dados['code'] ?? null,
                 'document_override' => $dados['document_override'] ?? null,
@@ -84,7 +85,13 @@ class BranchService
                 'phone' => $dados['phone'] ?? null,
                 'timezone' => $dados['timezone'] ?? 'America/Sao_Paulo',
                 'is_headquarters' => $isHqDepois,
-            ]);
+            ];
+
+            if (isset($dados['max_pdv_terminals'])) {
+                $updateData['max_pdv_terminals'] = (int) $dados['max_pdv_terminals'];
+            }
+
+            $branch->update($updateData);
 
             if (! empty($dados['address'])) {
                 $endereco = $branch->primaryAddress;

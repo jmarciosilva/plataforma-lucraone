@@ -30,10 +30,12 @@ class Branch extends Model
         'timezone',
         'status',
         'is_headquarters',
+        'max_pdv_terminals',
     ];
 
     protected $casts = [
         'is_headquarters' => 'boolean',
+        'max_pdv_terminals' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
