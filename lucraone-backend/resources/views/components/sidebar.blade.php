@@ -112,6 +112,18 @@
             </x-nav-item>
         @endif
 
+        @if ($contexto->resolved() && auth()->user()->hasAnyPermission(['view-branches', 'view-all-branches', 'manage-branches'], $contexto->id()))
+            <x-nav-item rota="terminals.index" rotulo="terminais pdv">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                    <path d="M8 21h8" />
+                    <path d="M12 17v4" />
+                    <path d="M7 8h4" />
+                    <path d="M7 11h6" />
+                </svg>
+            </x-nav-item>
+        @endif
+
         <x-nav-item rota="companies.index" rotulo="empresas">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
                 <rect x="3" y="7" width="18" height="14" rx="2" />

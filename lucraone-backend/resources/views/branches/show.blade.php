@@ -113,6 +113,65 @@
         </div>
     @endif
 
+    <x-section-label class="mt-8">terminais pdv</x-section-label>
+
+    <x-card>
+        @if ($terminais->isEmpty())
+            <p class="text-sm text-aco">
+                Nenhum terminal cadastrado nesta unidade.
+                @if ($podeAdministrar)
+                    <a href="{{ route('terminals.create') }}?branch_id={{ $filial->id }}" class="font-semibold text-sol hover:opacity-70">cadastrar o primeiro</a>
+                @endif
+            </p>
+        @else
+            <div class="space-y-2">
+                @php
+                    $coresTerminal = [
+                        'PENDING' => 'bg-sol/10 text-sol',
+                        'ACTIVE' => 'bg-ok/10 text-ok',
+                        'BLOCKED' => 'bg-brasa/10 text-brasa',
+                        'REVOKED' => 'bg-aco/10 text-aco',
+                    ];
+                    $labelTerminal = [
+                        'PENDING' => 'aguardando',
+                        'ACTIVE' => 'ativo',
+                        'BLOCKED' => 'bloqueado',
+                        'REVOKED' => 'revogado',
+                    ];
+                @endphp
+                @foreach ($terminais as $t)
+                    <div class="flex items-center justify-between gap-4 rounded-lg border border-linha px-3 py-2">
+                        <div>
+                            <p class="text-sm font-semibold lowercase text-grafite">{{ $t->name }}</p>
+                            <p class="mt-0.5 font-comanda text-[0.65rem] uppercase tracking-wider text-aco">
+                                {{ $t->last_seen_at ? 'visto em '.$t->last_seen_at->format('d/m H:i') : 'nunca conectado' }}
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold lowercase {{ $coresTerminal[$t->status] ?? 'bg-aco/10 text-aco' }}">
+                                {{ $labelTerminal[$t->status] ?? strtolower($t->status) }}
+                            </span>
+                            <a href="{{ route('terminals.show', $t) }}"
+                               class="text-sm font-semibold text-sol transition-opacity hover:opacity-70 lowercase">
+                                ver
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            @if ($podeAdministrar)
+                <div class="mt-4">
+                    <a href="{{ route('terminals.create') }}?branch_id={{ $filial->id }}"
+                       class="text-sm font-semibold text-sol hover:opacity-70 lowercase">
+                        + adicionar terminal
+                    </a>
+                    <span class="mx-2 text-aco">·</span>
+                    <span class="text-xs text-aco">limite: {{ $filial->max_pdv_terminals }} terminal(is)</span>
+                </div>
+            @endif
+        @endif
+    </x-card>
+
     @if ($historico->isNotEmpty())
         <x-section-label class="mt-8">histórico</x-section-label>
 

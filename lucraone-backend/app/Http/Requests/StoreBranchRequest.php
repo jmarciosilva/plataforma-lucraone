@@ -22,6 +22,7 @@ class StoreBranchRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:255'],
             'timezone' => ['nullable', 'string', 'timezone'],
             'is_headquarters' => ['nullable', 'boolean'],
+            'max_pdv_terminals' => ['nullable', 'integer', 'min:1', 'max:100'],
             'address.street' => ['nullable', 'string', 'max:255'],
             'address.number' => ['nullable', 'string', 'max:50'],
             'address.complement' => ['nullable', 'string', 'max:255'],

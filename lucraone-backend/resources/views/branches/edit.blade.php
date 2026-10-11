@@ -35,6 +35,10 @@
                 <x-form-group nome="phone" rotulo="telefone">
                     <x-input nome="phone" :valor="old('phone', $filial->phone)" />
                 </x-form-group>
+
+                <x-form-group nome="max_pdv_terminals" rotulo="limite de terminais pdv" ajuda="máximo de caixas simultâneos (1–100). Padrão: 5.">
+                    <x-input tipo="number" nome="max_pdv_terminals" :valor="old('max_pdv_terminals', $filial->max_pdv_terminals)" min="1" max="100" />
+                </x-form-group>
             </div>
 
             <div>
