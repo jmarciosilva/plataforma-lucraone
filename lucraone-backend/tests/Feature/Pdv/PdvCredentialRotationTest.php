@@ -189,6 +189,16 @@ class PdvCredentialRotationTest extends PdvTestCase
         }
     }
 
+    /**
+     * O isolamento entre terminais não depende da ability.
+     *
+     * Antes da Fase 5 a credencial emitida no pairing tinha apenas
+     * `pdv:terminal:read`, então o outro terminal parava no middleware de
+     * ability e recebia 403. Agora a emissão inicial já traz
+     * `pdv:credential:confirm`, e a tentativa chega ao serviço — que recusa com
+     * 409 porque a operação não é dele. A barreira que importa é a mesma de
+     * sempre: `operation.terminal_id` tem de bater com o terminal autenticado.
+     */
     public function test_wrong_terminal_cannot_confirm_another_rotation(): void
     {
         $old = $this->credencialDeMaquina();
@@ -197,7 +207,9 @@ class PdvCredentialRotationTest extends PdvTestCase
         $other = Terminal::factory()->create();
         $other->tenant->update(['status' => 'ACTIVE', 'active' => true]);
         $otherToken = $this->credencialDeMaquina($other);
-        $this->lifecyclePost('terminal/credential/confirm', $otherToken, ['operation_id' => $payload['operation_id']])->assertForbidden();
+        $resposta = $this->lifecyclePost('terminal/credential/confirm', $otherToken, ['operation_id' => $payload['operation_id']]);
+        $this->assertErroPdv($resposta, 409, 'credential_conflict');
+        $this->assertDatabaseHas('terminal_credential_operations', ['id' => $payload['operation_id'], 'status' => 'PENDING']);
     }
 
     public function test_confirmation_failure_rolls_back_promotion_and_old_revocation(): void

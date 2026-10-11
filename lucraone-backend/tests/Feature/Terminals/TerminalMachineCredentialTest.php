@@ -34,12 +34,28 @@ class TerminalMachineCredentialTest extends MachineTestCase
         $this->assertSame('pdv-machine', $this->tokenPersistido()->name);
     }
 
-    public function test_ability_e_exatamente_a_de_leitura_do_proprio_terminal(): void
+    /**
+     * A emissão usa exatamente o conjunto operacional declarado, e nada além.
+     *
+     * Desde a Fase 5 esse conjunto inclui renovação, confirmação e sessão de
+     * operador: a emissão inicial e a promoção por rotação passaram a ter uma
+     * única definição, em vez de a emissão nascer menor e a rotação ampliar.
+     * Nenhuma ability de negócio entra aqui — não existe nenhuma, e quando
+     * existir não será por este caminho.
+     */
+    public function test_abilities_sao_exatamente_o_conjunto_operacional_declarado(): void
     {
         $this->emitir();
 
-        $this->assertSame(['pdv:terminal:read'], $this->tokenPersistido()->abilities);
-        $this->assertSame(['pdv:terminal:read'], MachineTokenAbility::paraCredencialDeMaquina());
+        $esperadas = [
+            'pdv:terminal:read',
+            'pdv:credential:renew',
+            'pdv:credential:confirm',
+            'pdv:operator-session',
+        ];
+
+        $this->assertSame($esperadas, $this->tokenPersistido()->abilities);
+        $this->assertSame($esperadas, MachineTokenAbility::paraCredencialDeMaquina());
     }
 
     public function test_credencial_nao_recebe_coringa(): void

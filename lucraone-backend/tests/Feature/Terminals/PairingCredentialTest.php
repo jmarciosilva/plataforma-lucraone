@@ -70,14 +70,32 @@ class PairingCredentialTest extends PairingTestCase
             ->assertJson(['ok' => true]);
     }
 
-    public function test_credencial_do_pairing_tem_a_ability_de_maquina(): void
+    /**
+     * Abilities da credencial entregue pelo pairing.
+     *
+     * O conjunto é o conjunto operacional completo desde a Fase 5, e não mais
+     * só a leitura: um terminal recém-pareado tem de poder rotacionar a própria
+     * credencial e abrir sessão de operador sem passar antes pela exceção de
+     * transição, que existe para credenciais que JÁ estão em campo.
+     *
+     * O que continua garantido é a ausência do coringa: a lista é explícita, e
+     * uma ability criada depois não vale automaticamente para credenciais já
+     * distribuídas.
+     */
+    public function test_credencial_do_pairing_tem_as_abilities_operacionais_de_maquina(): void
     {
         $issued = $this->issue();
         $this->consumir($issued->code);
 
         $token = PersonalAccessToken::where('tokenable_type', Terminal::class)->sole();
 
-        $this->assertSame(['pdv:terminal:read'], $token->abilities);
+        $this->assertSame([
+            'pdv:terminal:read',
+            'pdv:credential:renew',
+            'pdv:credential:confirm',
+            'pdv:operator-session',
+        ], $token->abilities);
+        $this->assertNotContains('*', $token->abilities);
         $this->assertSame('pdv-machine', $token->name);
         $this->assertNotNull($token->expires_at);
     }

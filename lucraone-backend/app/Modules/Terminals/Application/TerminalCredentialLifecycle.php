@@ -101,7 +101,11 @@ final class TerminalCredentialLifecycle
             }
             $candidate->forceFill([
                 'name' => config('pdv.machine_credentials.token_name'),
-                'abilities' => [MachineTokenAbility::TERMINAL_READ, MachineTokenAbility::CREDENTIAL_RENEW, MachineTokenAbility::CREDENTIAL_CONFIRM],
+                // Mesmo conjunto da emissão inicial: a candidata promovida vira
+                // uma credencial operacional comum, inclusive com a ability de
+                // sessão de operador. É assim que um terminal legado adquire a
+                // nova ability — pela rotação segura, não por update em massa.
+                'abilities' => MachineTokenAbility::paraCredencialDeMaquina(),
                 'created_at' => now(),
                 'expires_at' => $this->expiration->deadline((int) config('pdv.machine_credentials.ttl_minutes')),
             ])->save();
