@@ -31,9 +31,16 @@
                 </span>
             </label>
         @empty
-            <p class="text-sm text-aco">
-                nenhuma filial ativa neste estabelecimento. cadastre uma filial antes de liberar operadores.
-            </p>
+            <div class="sm:col-span-2 lg:col-span-3">
+                <p class="text-sm text-aco">
+                    nenhuma filial ativa neste estabelecimento.
+                    @if (auth()->check() && auth()->user()->hasPermission('manage-branches', app(\App\Modules\Tenancy\Application\TenantContext::class)->id()))
+                        <a href="{{ route('branches.create') }}" class="font-semibold text-sol transition-opacity hover:opacity-70">Cadastrar a primeira unidade.</a>
+                    @else
+                        peça ao administrador para cadastrar uma unidade antes de liberar operadores.
+                    @endif
+                </p>
+            </div>
         @endforelse
     </div>
 </div>

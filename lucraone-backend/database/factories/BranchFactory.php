@@ -26,6 +26,7 @@ class BranchFactory extends Factory
             'phone' => $this->faker->phoneNumber(),
             'timezone' => 'America/Sao_Paulo',
             'status' => 'ACTIVE',
+            'is_headquarters' => false,
         ];
     }
 
@@ -48,6 +49,13 @@ class BranchFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'INACTIVE',
+        ]);
+    }
+
+    public function headquarters(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_headquarters' => true,
         ]);
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Controllers\Web\InventoryWebController;
 use App\Http\Controllers\Web\NotificationWebController;
 use App\Http\Controllers\Web\OnboardingController;
 use App\Http\Controllers\Web\OrderWebController;
+use App\Http\Controllers\Web\BranchController;
 use App\Http\Controllers\Web\PdvOperatorController;
 use App\Http\Controllers\Web\PermissionController;
 use App\Http\Controllers\Web\ProductWebController;
@@ -70,6 +71,17 @@ Route::middleware('auth.web')->group(function () {
     Route::post('/tenants/{tenant}/restore', [TenantController::class, 'restore'])
         ->name('tenants.restore');
     Route::resource('tenants', TenantController::class);
+
+    /*
+    | Unidades / Filiais.
+    |
+    | toggle antes do resource: senão /branches/{branch}/toggle cairia no show.
+    | Sem destroy: filial se desativa, não se apaga.
+    */
+    Route::post('/branches/{branch}/toggle', [BranchController::class, 'toggle'])
+        ->name('branches.toggle');
+    Route::resource('branches', BranchController::class)
+        ->except(['destroy']);
 
     /*
     | Operadores de PDV.

@@ -137,4 +137,41 @@
             @endforelse
         </div>
     </div>
+
+    @if (auth()->user()->hasAnyPermission(['view-branches', 'view-all-branches', 'manage-branches'], app(\App\Modules\Tenancy\Application\TenantContext::class)->id()))
+        <x-section-label class="mt-8">unidades operacionais</x-section-label>
+
+        @php $filiais = $company->branches()->orderByDesc('is_headquarters')->orderBy('name')->get(); @endphp
+
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            @forelse ($filiais as $filial)
+                <x-card>
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <p class="text-sm font-semibold lowercase text-grafite">{{ $filial->name }}</p>
+                            <p class="mt-0.5 font-comanda text-[0.65rem] uppercase tracking-wider text-aco">{{ $filial->code ?? '—' }}</p>
+                        </div>
+                        <div class="flex shrink-0 gap-1">
+                            @if ($filial->is_headquarters)
+                                <x-badge tipo="destaque">matriz</x-badge>
+                            @endif
+                            @if ($filial->status !== 'ACTIVE')
+                                <x-badge tipo="inativo">{{ strtolower($filial->status) }}</x-badge>
+                            @endif
+                        </div>
+                    </div>
+                    <a href="{{ route('branches.show', $filial) }}" class="mt-3 inline-block text-sm font-semibold lowercase text-sol transition-opacity hover:opacity-70">ver unidade</a>
+                </x-card>
+            @empty
+                <x-card class="lg:col-span-3">
+                    <p class="text-sm text-aco">
+                        nenhuma unidade cadastrada para esta empresa.
+                        @if (auth()->user()->hasPermission('manage-branches', app(\App\Modules\Tenancy\Application\TenantContext::class)->id()))
+                            <a href="{{ route('branches.create') }}" class="font-semibold text-sol transition-opacity hover:opacity-70">Cadastrar agora.</a>
+                        @endif
+                    </p>
+                </x-card>
+            @endforelse
+        </div>
+    @endif
 </x-layouts.app>

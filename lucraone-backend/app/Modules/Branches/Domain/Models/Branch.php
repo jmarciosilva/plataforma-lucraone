@@ -29,9 +29,11 @@ class Branch extends Model
         'phone',
         'timezone',
         'status',
+        'is_headquarters',
     ];
 
     protected $casts = [
+        'is_headquarters' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -70,12 +72,24 @@ class Branch extends Model
         )->where('is_primary', true);
     }
 
-    /**
-     * Verifica se a filial está ativa.
-     */
     public function isActive(): bool
     {
         return $this->status === 'ACTIVE';
+    }
+
+    public function isHeadquarters(): bool
+    {
+        return (bool) $this->is_headquarters;
+    }
+
+    public function scopeHeadquarters($query)
+    {
+        return $query->where('is_headquarters', true);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'ACTIVE');
     }
 
     /**

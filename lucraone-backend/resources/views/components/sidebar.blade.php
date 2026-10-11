@@ -86,11 +86,20 @@
         </x-nav-item>
 
         {{--
-            Operadores de PDV. Só aparece para quem administra ou consulta
-            filiais — é a mesma autoridade que o controller exige no servidor,
-            então esconder aqui não cria nem fecha nenhuma porta: evita oferecer
-            uma tela que responderia 403.
+            Unidades / Filiais e Operadores de PDV. Só aparecem para quem
+            administra ou consulta filiais — mesma autoridade dos controllers.
         --}}
+        @if ($contexto->resolved() && auth()->user()->hasAnyPermission(['view-branches', 'view-all-branches', 'manage-branches'], $contexto->id()))
+            <x-nav-item rota="branches.index" rotulo="unidades / filiais">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                    <path d="M3 21h18" />
+                    <path d="M5 21V7l7-4 7 4v14" />
+                    <path d="M9 21v-4h6v4" />
+                    <path d="M12 7v4" />
+                </svg>
+            </x-nav-item>
+        @endif
+
         @if ($contexto->resolved() && auth()->user()->hasAnyPermission(['view-branches', 'view-all-branches', 'manage-branches'], $contexto->id()))
             <x-nav-item rota="pdv-operators.index" rotulo="operadores de pdv">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
