@@ -59,7 +59,9 @@ class OnboardingGuiadoTest extends TestCase
         $this->assertDatabaseCount('companies', 0);
         $roles = Role::withoutGlobalScopes()->where('tenant_id', $tenant->id)->get();
         $this->assertCount(4, $roles);
-        $this->assertSame(28, Permission::withoutGlobalScopes()->where('tenant_id', $tenant->id)->count());
+        // 29 desde a Fase 5 do PDV: `access-pdv` entrou no catálogo e continua
+        // sem papel. O admin segue com exatamente 26, verificado abaixo.
+        $this->assertSame(29, Permission::withoutGlobalScopes()->where('tenant_id', $tenant->id)->count());
         foreach (StandardRoleMatrix::papeis() as $nome => $definicao) {
             $esperadas = $definicao['permissoes'];
             sort($esperadas);

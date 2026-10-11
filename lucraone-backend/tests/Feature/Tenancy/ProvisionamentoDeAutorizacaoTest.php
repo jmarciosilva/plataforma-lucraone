@@ -30,10 +30,12 @@ use Tests\TestCase;
  * a mesma constante que a implementação usa, provaria apenas que a classe é
  * igual a si mesma.
  *
- * As duas permissões órfãs (`manage-assigned-branches` e
- * `view-assigned-branches`) continuam no catálogo e continuam sem papel, por
- * decisão do SEC-04. Fechar os 28 atribuindo-as seria uma regressão de
- * segurança disfarçada de arredondamento.
+ * As permissões órfãs continuam no catálogo e continuam sem papel. Duas por
+ * decisão do SEC-04 (`manage-assigned-branches` e `view-assigned-branches`) e
+ * uma pela Fase 5 do PDV (`access-pdv`, que só autoriza somada a uma atribuição
+ * de operador a filial). Fechar a conta atribuindo qualquer uma delas a um
+ * papel padrão seria uma regressão de segurança disfarçada de arredondamento —
+ * no caso do `access-pdv`, daria caixa a todo mundo que hoje só lê relatório.
  */
 #[Group('onb-01a')]
 class ProvisionamentoDeAutorizacaoTest extends TestCase
@@ -56,6 +58,7 @@ class ProvisionamentoDeAutorizacaoTest extends TestCase
         'manage-users', 'view-users',
         'manage-branches', 'view-branches', 'view-all-branches',
         'manage-assigned-branches', 'view-assigned-branches',
+        'access-pdv',
     ];
 
     private const MANAGER = [
@@ -92,7 +95,7 @@ class ProvisionamentoDeAutorizacaoTest extends TestCase
         'view-branches',
     ];
 
-    private const ORFAS = ['manage-assigned-branches', 'view-assigned-branches'];
+    private const ORFAS = ['manage-assigned-branches', 'view-assigned-branches', 'access-pdv'];
 
     private Tenant $tenantBase;
 
@@ -206,7 +209,7 @@ class ProvisionamentoDeAutorizacaoTest extends TestCase
             ->pluck('name')
             ->all();
 
-        $this->assertCount(28, $permissoes);
+        $this->assertCount(29, $permissoes);
         $this->assertSame($this->ordenado(self::CATALOGO), $this->ordenado($permissoes));
     }
 
@@ -309,7 +312,7 @@ class ProvisionamentoDeAutorizacaoTest extends TestCase
         $antes = $contagem();
 
         $this->assertSame(4, $antes['roles']);
-        $this->assertSame(28, $antes['permissions']);
+        $this->assertSame(29, $antes['permissions']);
         $this->assertSame(57, $antes['role_permission']);
 
         app(ProvisionarEstabelecimento::class)->provisionarMatriz($tenant);

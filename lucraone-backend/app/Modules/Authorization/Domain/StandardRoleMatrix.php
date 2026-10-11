@@ -14,6 +14,14 @@ namespace App\Modules\Authorization\Domain;
  * O admin não é redeclarado aqui: ele continua vindo de AdminPermissionMatrix,
  * que já é a definição do SEC-04 e é verificada pelos testes de segurança.
  *
+ * `access-pdv` entra no catálogo e em NENHUM papel, pela mesma razão que as duas
+ * permissões de filial atribuída: ela autoriza o aplicativo de caixa e só tem
+ * efeito somada a uma atribuição ativa de operador à filial
+ * (`pdv_operator_branch_assignments`). Colocá-la em `user` ou `viewer` daria
+ * caixa a todo mundo que hoje só olha relatório, e colocá-la em `admin`
+ * quebraria a matriz explícita de 26 permissões do SEC-04. Quem concede é o
+ * administrador do estabelecimento, pessoa por pessoa.
+ *
  * `manage-assigned-branches` e `view-assigned-branches` estão no catálogo e em
  * nenhum papel, de propósito: a migration
  * `2026_09_11_000000_remove_obsolete_assigned_branch_permissions_from_standard_roles`
@@ -59,6 +67,7 @@ final class StandardRoleMatrix
         'view-all-branches',
         'manage-assigned-branches',
         'view-assigned-branches',
+        'access-pdv',
     ];
 
     /**
