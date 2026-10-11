@@ -2,6 +2,7 @@
 
 namespace App\Modules\Identity\Http\Controllers;
 
+use App\Modules\Identity\Application\PasswordVerification;
 use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Identity\Domain\TokenAbility;
 use App\Modules\Identity\Http\Requests\LoginRequest;
@@ -9,27 +10,12 @@ use App\Modules\Identity\Http\Requests\LogoutRequest;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController
 {
-    /**
-     * Hash descartável usado quando o e-mail não existe.
-     *
-     * Sem isto o `Hash::check` só rodava quando a conta existia, e a resposta
-     * do e-mail inexistente voltava mais rápido — diferença suficiente para
-     * mapear quais e-mails têm conta, mesmo com status e mensagem idênticos.
-     * Comparar contra este hash iguala os dois caminhos.
-     *
-     * É bcrypt de uma string aleatória descartada na geração: não é a senha de
-     * ninguém e não corresponde a conta nenhuma. Fica constante de propósito —
-     * gerar um hash por requisição custaria o mesmo que o ataque que se quer
-     * evitar.
-     */
-    private const HASH_INEXISTENTE = '$2y$12$8X.RJxrqQRCDcbW8d6blS.nf7gji5zMmS1dSHANCxEe8TNmzKpna6';
-
     public function __construct(
-        protected TenantContext $tenantContext
+        protected TenantContext $tenantContext,
+        protected PasswordVerification $senha,
     ) {}
 
     public function login(LoginRequest $request): JsonResponse
@@ -41,12 +27,9 @@ class AuthController
 
         $user = User::where('email', $email)->first();
 
-        // Os dois caminhos passam por uma verificação de hash.
-        $senhaConfere = $user
-            ? Hash::check($password, $user->password)
-            : Hash::check($password, self::HASH_INEXISTENTE);
-
-        if (! $user || ! $senhaConfere) {
+        // Os dois caminhos passam por uma verificação de hash. A regra vive no
+        // PasswordVerification, compartilhado com o login do operador de PDV.
+        if (! $this->senha->confere($user, $password)) {
             $request->registrarTentativaFalha();
 
             return response()->json([

@@ -7,7 +7,12 @@ use App\Modules\Automation\Infrastructure\Console\PruneAutomationLogsCommand;
 use App\Modules\Identity\Http\Middleware\ApiAuthenticationMiddleware;
 use App\Modules\Identity\Http\Middleware\EnsureTokenAbility;
 use App\Modules\Identity\Infrastructure\Console\PromoverPlatformAdminCommand;
+use App\Modules\Pdv\Domain\Exceptions\OperatorSessionFailed;
+use App\Modules\Pdv\Http\Middleware\AuthenticateOperatorSession;
 use App\Modules\Pdv\Http\Responses\PdvErrorResponse;
+use App\Modules\Pdv\Infrastructure\Console\ExpireOperatorSessions;
+use App\Modules\Pdv\Infrastructure\Console\GenerateOfflineLeaseKey;
+use App\Modules\Pdv\PdvServiceProvider;
 use App\Modules\Reporting\Infrastructure\Console\SendSalesSummaryCommand;
 use App\Modules\Tenancy\Http\Middleware\ResolveTenantMiddleware;
 use App\Modules\Tenancy\TenancyServiceProvider;
@@ -33,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         TenancyServiceProvider::class,
         TerminalsServiceProvider::class,
+        PdvServiceProvider::class,
     ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -44,6 +50,8 @@ return Application::configure(basePath: dirname(__DIR__))
     // dentro dos módulos, então precisam ser registrados à mão.
     ->withCommands([
         ExpireCredentialOperations::class,
+        ExpireOperatorSessions::class,
+        GenerateOfflineLeaseKey::class,
         PromoverPlatformAdminCommand::class,
         PruneAutomationLogsCommand::class,
         SendSalesSummaryCommand::class,
@@ -107,6 +115,14 @@ return Application::configure(basePath: dirname(__DIR__))
             // Ability da credencial de máquina, declarada na rota. Roda depois
             // de 'terminal.context': alcance do token não prova tipo de sujeito.
             'machine.ability' => EnsureMachineTokenAbility::class,
+
+            // Segunda identidade do PDV: o operador. Roda DEPOIS de
+            // 'terminal.context' e da ability de máquina — máquina autenticada
+            // não é pessoa autenticada, e as duas são exigidas juntas.
+            // Uso correto, nesta ordem:
+            // ['auth:sanctum', 'terminal.context',
+            //  'machine.ability:pdv:operator-session', 'pdv.operator.session'].
+            'pdv.operator.session' => AuthenticateOperatorSession::class,
         ]);
 
         // SEC-04 E7: o contexto do estabelecimento precisa estar resolvido antes
@@ -117,13 +133,20 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->dontReport([CredentialLifecycleFailed::class]);
+        $exceptions->dontReport([CredentialLifecycleFailed::class, OperatorSessionFailed::class]);
         $exceptions->dontFlash(['password', 'password_confirmation', 'current_password', 'delivery_secret', 'recovery_code']);
         // Exception traces and SQL messages can contain secret request arguments.
         // Keep lifecycle diagnostics useful without reporting the original object.
         $exceptions->report(function (Throwable $e) {
+            // O corpo do login do operador contém a senha, e mensagem de
+            // exceção, bindings de SQL e stack trace podem carregá-la para o
+            // log. As rotas de operador entram aqui pelo mesmo motivo que as de
+            // credencial: registra-se tipo e correlação, nunca o objeto.
             if (request()->is('api/v1/pdv/terminal/credential/*')
-                || request()->is('api/v1/pdv/admin/terminals/*/credential-recovery-codes')) {
+                || request()->is('api/v1/pdv/admin/terminals/*/credential-recovery-codes')
+                || request()->is('api/v1/pdv/operator-session*')
+                || request()->is('api/v1/pdv/admin/branches/*/operators')
+                || request()->is('api/v1/pdv/admin/branches/*/operators/*')) {
                 $reported = request()->attributes->get('pdv_credential_reported', []);
                 if (in_array(spl_object_id($e), $reported, true)) {
                     return false;
@@ -166,6 +189,30 @@ return Application::configure(basePath: dirname(__DIR__))
         // Estrutura da requisição. É o único erro que detalha campo, porque o
         // cliente precisa saber o que corrigir — e as mensagens são nossas,
         // sem eco do valor enviado (o código de pareamento é segredo).
+        // Recusa prevista dos fluxos de operador. As mensagens são por CÓDIGO,
+        // não por motivo: todo o leque de causas de autenticação — senha
+        // errada, conta inexistente, conta inativa, vínculo suspenso, permissão
+        // ausente, filial não atribuída, filial de outro estabelecimento — sai
+        // com a mesma resposta, porque qualquer distinção aqui diria a um
+        // atacante quem tem conta e quem trabalha onde.
+        $exceptions->render(function (OperatorSessionFailed $e, Request $request) use ($noPdv) {
+            if (! $noPdv($request)) {
+                return null;
+            }
+
+            $mensagem = match ($e->errorCode) {
+                OperatorSessionFailed::CODE_AUTHENTICATION => 'Não foi possível autenticar o operador.',
+                OperatorSessionFailed::CODE_CONFLICT => 'Outro operador já tem sessão ativa neste terminal.',
+                OperatorSessionFailed::CODE_SESSION_INVALID => 'Sessão operacional ausente ou inválida.',
+                default => 'Operação não autorizada.',
+            };
+
+            return PdvErrorResponse::make($request, $e->errorCode, $mensagem, $e->httpStatus, headers: [
+                'Cache-Control' => 'no-store, private',
+                'Pragma' => 'no-cache',
+            ]);
+        });
+
         $exceptions->render(function (ValidationException $e, Request $request) use ($noPdv) {
             if (! $noPdv($request)) {
                 return null;

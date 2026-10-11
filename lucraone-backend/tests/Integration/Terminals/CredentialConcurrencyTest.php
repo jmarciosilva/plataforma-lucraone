@@ -14,9 +14,9 @@ use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
-use Tests\TestCase;
+use Tests\Integration\ConcurrencyTestCase;
 
-class CredentialConcurrencyTest extends TestCase
+class CredentialConcurrencyTest extends ConcurrencyTestCase
 {
     use DatabaseMigrations;
 
@@ -33,51 +33,6 @@ class CredentialConcurrencyTest extends TestCase
         $this->terminal->tenant->update(['status' => 'ACTIVE', 'active' => true]);
         app(IssueTerminalMachineCredential::class)->issue($this->terminal);
         $this->old = $this->terminal->tokens()->sole();
-    }
-
-    /** Independent connections/processes, released by a common socket barrier. */
-    private function race(array $jobs): array
-    {
-        DB::disconnect();
-        $children = [];
-        foreach ($jobs as $job) {
-            $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
-            $pid = pcntl_fork();
-            if ($pid === 0) {
-                foreach ($children as $child) {
-                    fclose($child[1]);
-                }
-                fclose($pair[0]);
-                fread($pair[1], 1);
-                DB::purge();
-                try {
-                    $result = ['ok' => true, 'result' => $job()];
-                } catch (\Throwable $error) {
-                    // Never serialize exception messages, SQL bindings or tokens.
-                    $result = ['ok' => false, 'type' => get_class($error)];
-                }
-                fwrite($pair[1], json_encode($result));
-                fclose($pair[1]);
-                exit(0);
-            }
-            $this->assertGreaterThan(0, $pid);
-            fclose($pair[1]);
-            $children[] = [$pid, $pair[0]];
-        }
-        foreach ($children as $child) {
-            fwrite($child[1], 'x');
-            stream_set_timeout($child[1], 30);
-        }
-        $results = [];
-        foreach ($children as [$pid, $socket]) {
-            $results[] = json_decode(stream_get_contents($socket), true);
-            fclose($socket);
-            pcntl_waitpid($pid, $status);
-            $this->assertSame(0, pcntl_wexitstatus($status));
-        }
-        DB::purge();
-
-        return $results;
     }
 
     private function prepare(string $id, string $secret): string

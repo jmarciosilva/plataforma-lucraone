@@ -38,4 +38,53 @@ return [
         // revogação por tokenable nunca precise filtrar por nome.
         'token_name' => 'pdv-machine',
     ],
+
+    /*
+     * Sessão operacional do operador (Fase 5).
+     *
+     * Política explícita, versionada e configurável — não um número escondido
+     * no serviço. Os três prazos são tetos, nunca pisos: a validade real de
+     * uma sessão é o MENOR entre o prazo daqui, o prazo absoluto da própria
+     * sessão e a expiração efetiva da credencial de máquina que a autenticou.
+     * Uma sessão não pode sobreviver à máquina que a abriu.
+     */
+    'operator_sessions' => [
+        // Oito horas: um turno de caixa. Prazo ABSOLUTO — não há renovação
+        // deslizante, e revalidar não o estende. Terminar o turno exige novo
+        // login, com senha, e é isso que mantém a sessão ligada a uma pessoa
+        // presente em vez de a um computador ligado.
+        'ttl_minutes' => 480,
+    ],
+
+    /*
+     * Autorização offline.
+     *
+     * Desligada por padrão, e assim permanece até que a configuração
+     * criptográfica exista. Sem par de chaves válido o recurso continua
+     * desligado: não há fallback, nem assinatura simétrica, nem lease sem
+     * assinatura. APP_KEY não é usada aqui — ela é segredo compartilhado do
+     * servidor, e o Java precisa de uma chave PÚBLICA para verificar.
+     */
+    'offline' => [
+        'enabled' => (bool) env('PDV_OFFLINE_LEASE_ENABLED', false),
+
+        // Versão do formato do lease. Entra no texto assinado: trocar o
+        // formato não pode fazer um lease antigo passar por novo.
+        'format_version' => 1,
+
+        // Identificador público da chave, para o Java escolher a chave certa
+        // durante uma rotação. Não é segredo.
+        'key_id' => env('PDV_OFFLINE_LEASE_KEY_ID'),
+
+        // Chave privada Ed25519 (64 bytes, base64). SOMENTE no backend.
+        'private_key' => env('PDV_OFFLINE_LEASE_PRIVATE_KEY'),
+
+        // Chave pública Ed25519 (32 bytes, base64). Distribuída ao Java.
+        'public_key' => env('PDV_OFFLINE_LEASE_PUBLIC_KEY'),
+
+        // Duas horas desde a última revalidação online bem-sucedida. É o
+        // prazo em que o caixa pode continuar operando sem alcançar o
+        // servidor, nunca além da sessão nem da credencial de máquina.
+        'grace_minutes' => 120,
+    ],
 ];

@@ -2,25 +2,14 @@
 
 namespace App\Modules\Pdv\Http\Middleware;
 
-use App\Modules\Identity\Domain\Models\User;
-use App\Modules\Identity\Domain\TokenAbility;
-use App\Modules\Pdv\Http\Responses\PdvErrorResponse;
-use App\Modules\Tenancy\Application\TenantResolver;
-use Closure;
-use Illuminate\Http\Request;
-use Laravel\Sanctum\PersonalAccessToken;
-
-final class RecoveryAdministrationContext
-{
-    public function handle(Request $request, Closure $next)
-    {
-        $user = $request->user();
-        $token = $user instanceof User ? $user->currentAccessToken() : null;
-        if (! $user instanceof User || ! $token instanceof PersonalAccessToken
-            || ! $token->can(TokenAbility::ESCRITA) || ! app(TenantResolver::class)->resolve($request)) {
-            return PdvErrorResponse::make($request, 'forbidden', 'Operação administrativa não autorizada.', 403);
-        }
-
-        return $next($request);
-    }
-}
+/**
+ * Porta humana da recuperação administrativa de credencial de máquina.
+ *
+ * A regra é a mesma de toda administração do PDV e vive no
+ * HumanAdministrationContext, compartilhado com a administração das atribuições
+ * de operador. A classe permanece com nome próprio porque é ela que está
+ * declarada na rota de recuperação e documentada no contrato — duplicar a
+ * verificação para manter o nome criaria duas versões de uma checagem de
+ * segurança, que divergiriam no primeiro ajuste.
+ */
+final class RecoveryAdministrationContext extends HumanAdministrationContext {}

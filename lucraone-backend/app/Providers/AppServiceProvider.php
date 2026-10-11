@@ -23,6 +23,7 @@ use App\Modules\Inventory\Domain\Models\StockLevel;
 use App\Modules\Inventory\Http\Policies\InventoryPolicy;
 use App\Modules\Inventory\Http\Policies\StockLevelPolicy;
 use App\Modules\Pdv\Http\Responses\PdvErrorResponse;
+use App\Modules\Pdv\PdvServiceProvider;
 use App\Modules\Products\Domain\Models\Category;
 use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Products\Http\Policies\CategoryPolicy;
@@ -58,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
         // Registrar módulos
         $this->app->register(TenancyServiceProvider::class);
         $this->app->register(TerminalsServiceProvider::class);
+        $this->app->register(PdvServiceProvider::class);
     }
 
     /**
@@ -174,6 +176,63 @@ class AppServiceProvider extends ServiceProvider
 
             return $limits;
         });
+
+        // ----------------------------------------------------------------
+        // Freios do operador de PDV (Fase 5).
+        //
+        // Quatro dimensões no login, e nenhuma substitui as outras:
+        //
+        // - por TERMINAL, porque um caixa comprometido é o atacante mais
+        //   provável e já chega autenticado como máquina;
+        // - por IP, para o volume de uma origem;
+        // - por IDENTIFICADOR + terminal, que é o freio clássico de ataque a
+        //   uma conta específica num caixa específico;
+        // - por IDENTIFICADOR agregado, que é o único que enxerga a tentativa
+        //   DISTRIBUÍDA: cem caixas tentando a mesma conta uma vez cada passam
+        //   por todos os outros três.
+        //
+        // O e-mail nunca entra em chave de cache em claro — só o resumo dele.
+        // Os limites são por janela de 10 minutos onde a intenção é frear
+        // insistência, e por minuto onde a intenção é frear rajada.
+        //
+        // Este freio é HTTP e complementa o do LoginRequest humano; nenhum dos
+        // dois substitui a revalidação por requisição, que é o que derruba
+        // acesso já concedido.
+        RateLimiter::for('pdv-operator-login', function (Request $request) {
+            $terminal = (string) ($request->user()?->getAuthIdentifier() ?? 'anon');
+            $email = $request->input('email');
+            $identificador = is_string($email)
+                ? hash('sha256', mb_strtolower(trim($email)))
+                : null;
+
+            $limites = [
+                Limit::perMinute(10)->by('pdv-op-login:terminal:'.$terminal)->response($this->recusaPorVolume()),
+                Limit::perMinutes(10, 30)->by('pdv-op-login:ip:'.$request->ip())->response($this->recusaPorVolume()),
+            ];
+
+            if ($identificador !== null) {
+                $limites[] = Limit::perMinute(5)
+                    ->by('pdv-op-login:id-terminal:'.$identificador.':'.$terminal)
+                    ->response($this->recusaPorVolume());
+                $limites[] = Limit::perMinutes(10, 10)
+                    ->by('pdv-op-login:id:'.$identificador)
+                    ->response($this->recusaPorVolume());
+            }
+
+            return $limites;
+        });
+
+        // Revalidação é barata e esperada com frequência — o caixa a usa para
+        // renovar a graça offline. O teto existe para que ela não vire canal de
+        // sondagem de credenciais de sessão.
+        RateLimiter::for('pdv-operator-session', fn (Request $request) => Limit::perMinute(30)
+            ->by('pdv-op-session:'.($request->user()?->getAuthIdentifier() ?? $request->ip()))
+            ->response($this->recusaPorVolume()));
+
+        // Administração humana: volume de tela, não de integração.
+        RateLimiter::for('pdv-operator-admin', fn (Request $request) => Limit::perMinutes(10, 60)
+            ->by('pdv-op-admin:'.($request->user()?->getAuthIdentifier() ?? $request->ip()))
+            ->response($this->recusaPorVolume()));
 
         // Revogação central: um token já emitido para de valer no instante em
         // que a conta é desativada. Antes disto, desativar alguém não
