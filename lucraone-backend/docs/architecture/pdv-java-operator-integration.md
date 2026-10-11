@@ -66,11 +66,14 @@ erro. **Não é chave de idempotência.**
 Cabeçalhos: `Authorization` (máquina). **Sem** `X-PDV-Operator-Session`.
 
 ```json
-{"email": "operador@loja.test", "password": "<SENHA_DO_OPERADOR>"}
+{"username": "operadorteste", "password": "<SENHA_DO_OPERADOR>"}
 ```
 
-Exatamente dois campos. `email` até 255 caracteres, normalizado pelo servidor
-(minúsculas, sem espaços nas pontas). `password` de 6 a 255 caracteres.
+Exatamente dois campos. `username` é o identificador operacional por
+estabelecimento (até 64 caracteres); o servidor normaliza para minúsculas sem
+acentos. `password` de 6 a 255 caracteres. **`email` não é aceito nesta rota**
+— login por e-mail existe em `POST /api/v1/auth/login` (painel web/API humana),
+não aqui; uma requisição com `email` em vez de `username` recebe 422.
 
 **201** — sessão nova. **200** — recuperação da própria sessão do mesmo operador
 (resposta perdida). O corpo é o mesmo nos dois; a credencial é nova nos dois.
@@ -120,13 +123,17 @@ Todas as respostas sensíveis trazem `Cache-Control: no-store, private` e
 
 ### Prazos
 
-`session.expires_at` é ABSOLUTO: o menor entre 8 horas e a expiração efetiva da
-credencial de máquina. Revalidar NÃO o estende. Continuar depois dele exige novo
-login com senha.
+`session.expires_at` é DESLIZANTE: avança em 240 minutos (configurável em
+`pdv.operator_sessions.sliding_minutes`) a cada uso autenticado legítimo
+(revalidação bem-sucedida). **Revalidar estende o prazo.** Sem uso autenticado
+por 240 minutos consecutivos, a sessão expira naturalmente.
 
-Se a credencial de máquina vence em 20 minutos, o turno vence em 20 minutos.
-Rotacione a máquina antes de abrir turno longo — e, de preferência, com o caixa
-sem operador autenticado, porque a rotação derruba o turno (seção 8).
+Teto absoluto de jornada: desligado no piloto (`max_minutes = 0`). Quando
+configurado, nenhum deslizamento passa dele e o fim da jornada exige novo login.
+
+Se a credencial de máquina vence em 20 minutos, o turno vence em 20 minutos,
+independentemente da janela deslizante. Renove a credencial antes que ela vença —
+a renovação preserva a sessão (seção 8).
 
 ### `capabilities`
 
@@ -222,16 +229,21 @@ Verificado a CADA requisição, sem depender de evento:
 - atribuição à filial revogada;
 - `access-pdv` removida;
 - terminal bloqueado ou revogado;
-- credencial de máquina vinculada revogada **ou rotacionada**;
-- sessão expirada;
+- credencial de máquina revogada por **recuperação administrativa**;
+- sessão expirada (janela deslizante esgotada ou teto de jornada atingido);
 - logout;
 - revogação administrativa.
 
-**Rotação da credencial de máquina derruba o turno.** A sessão é amarrada ao id
-do PAT que a abriu, e a confirmação da rotação remove esse PAT. Planeje a rotação
-para um momento sem operador autenticado; se ela acontecer com turno aberto, o
-próximo acesso recebe `operator_session_invalid` e o operador precisa entrar de
-novo. O logout antigo ainda funciona, então feche o turno local primeiro.
+**Renovação normal da credencial de máquina NÃO derruba o turno.** Na mesma
+transação que confirma a rotação, o `machine_token_id` da sessão é atualizado
+para o novo PAT — o operador continua logado de forma transparente, e o contador
+`machine_rotations` avança. A sessão pode sobreviver a várias rotações.
+
+**Recuperação administrativa encerra o turno.** Recuperação pressupõe perda,
+suspeita de comprometimento ou troca física do equipamento; herdar a sessão
+anterior seria uma falha de segurança. Após a recuperação, `machine_token_id` da
+sessão aponta para um PAT revogado e o próximo acesso recebe
+`operator_session_invalid` — o operador precisa entrar de novo.
 
 Reativar uma conta **não** ressuscita a sessão: de `REVOKED`, `ENDED` e `EXPIRED`
 não se volta.
@@ -240,7 +252,7 @@ não se volta.
 
 | Momento da perda | O que fazer |
 |---|---|
-| Resposta do login perdida | repetir o MESMO login (e-mail + senha). Devolve 200 com a MESMA sessão e uma credencial NOVA; o prazo absoluto não muda. A credencial anterior deixa de valer |
+| Resposta do login perdida | repetir o MESMO login (username + senha). Devolve 200 com a MESMA sessão e uma credencial NOVA; o prazo deslizante reinicia. A credencial anterior deixa de valer |
 | Timeout/rede/5xx no login | backoff com jitter e repetir o login. Nunca mais de uma sessão será criada |
 | 409 no login | há outro operador. Não gere tentativas em loop |
 | Resposta da revalidação perdida | repetir a revalidação. É idempotente em efeito |

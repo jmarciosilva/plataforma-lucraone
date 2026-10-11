@@ -110,13 +110,15 @@ Política, em `config/pdv.php`:
 
 ```text
 Uma sessão ativa por terminal.
-Duração máxima: 8 horas (480 min), ABSOLUTA.
-Nenhuma renovação automática além do prazo absoluto.
+Validade técnica: janela DESLIZANTE de 240 min, avança a cada uso autenticado legítimo.
+Teto absoluto de jornada: desligado no piloto (max_minutes = 0) — sem limite de turno.
 Logout encerra a sessão humana; NÃO despareia o terminal; NÃO fecha caixa financeiro.
 ```
 
-A validade efetiva é o MENOR entre o teto de política e a expiração efetiva da
+A validade efetiva da janela deslizante é limitada pela expiração efetiva da
 credencial de máquina que abriu a sessão. Uma sessão nunca sobrevive à máquina.
+Com `max_minutes = 0` (piloto), a jornada segue enquanto a janela deslizante for
+renovada e a credencial de máquina não vencer.
 
 Quatro estados, e a transição é sempre terminal: de `ACTIVE` sai-se para `ENDED`
 (logout), `EXPIRED` (prazo) ou `REVOKED` (administração ou perda de autorização),
@@ -125,8 +127,10 @@ e de nenhum deles se volta. Reativar uma conta não ressuscita a sessão.
 A sessão é amarrada a seis campos, conferidos juntos a cada requisição:
 terminal, estabelecimento, empresa, filial, instalação e id do PAT de máquina.
 Cada um fecha um reuso diferente — outro terminal, outra instalação, outra
-credencial de máquina (rotação), e terminal cujos vínculos mudaram depois do
-login.
+credencial de máquina (recuperação administrativa), e terminal cujos vínculos
+mudaram depois do login. Renovação normal da credencial de máquina NÃO encerra
+a sessão: o `machine_token_id` é atualizado atomicamente na mesma transação que
+confirma a rotação (`KeepOperatorSessionThroughRotation`).
 
 ## Revalidação por requisição
 
@@ -332,11 +336,10 @@ produção, não agendado automaticamente.
 - credencial de sessão roubada representa o operador naquele terminal até o
   prazo, o logout ou a revogação. Não há prova de hardware, mTLS nem detecção de
   clonagem — mesma limitação já registrada para a credencial de máquina;
-- rotacionar a credencial de máquina derruba o turno em andamento. É o requisito
-  de revogação, e é por isso que a recomendação ao Java é rotacionar com o caixa
-  sem operador autenticado;
+- recuperação administrativa da credencial de máquina encerra o turno em
+  andamento (o `machine_token_id` da sessão aponta para uma credencial revogada).
+  Renovação normal (rotação) preserva a sessão atomicamente;
 - não há PIN nem segundo fator nesta entrega, por decisão de escopo;
-- não há interface gráfica para administrar atribuições;
 - revogação por SQL direto não dispara os ganchos de antecipação; a negação por
   requisição continua valendo;
 - a graça offline pressupõe relógio do servidor no momento da emissão; um cliente
