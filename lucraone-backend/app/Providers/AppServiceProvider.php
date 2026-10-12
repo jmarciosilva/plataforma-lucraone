@@ -246,6 +246,12 @@ class AppServiceProvider extends ServiceProvider
             ->by('pdv-op-session:'.($request->user()?->getAuthIdentifier() ?? $request->ip()))
             ->response($this->recusaPorVolume()));
 
+        RateLimiter::for('pdv-catalog', fn (Request $request) => Limit::perMinute(120)
+            // O middleware de throttle roda antes de auth:sanctum. Usar o hash
+            // do bearer permite um bucket por credencial sem guardar/logar o token.
+            ->by('pdv-catalog:'.(is_string($request->bearerToken()) ? hash('sha256', $request->bearerToken()) : 'ip:'.$request->ip()))
+            ->response($this->recusaPorVolume()));
+
         // Administração humana: volume de tela, não de integração.
         RateLimiter::for('pdv-operator-admin', fn (Request $request) => Limit::perMinutes(10, 60)
             ->by('pdv-op-admin:'.($request->user()?->getAuthIdentifier() ?? $request->ip()))

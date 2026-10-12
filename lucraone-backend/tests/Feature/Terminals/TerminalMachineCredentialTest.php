@@ -52,6 +52,7 @@ class TerminalMachineCredentialTest extends MachineTestCase
             'pdv:credential:renew',
             'pdv:credential:confirm',
             'pdv:operator-session',
+            'pdv:catalog:read',
         ];
 
         $this->assertSame($esperadas, $this->tokenPersistido()->abilities);

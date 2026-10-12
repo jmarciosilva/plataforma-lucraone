@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Pdv\Http\Controllers\CatalogController;
 use App\Modules\Pdv\Http\Controllers\CredentialLifecycleController;
 use App\Modules\Pdv\Http\Controllers\CurrentTerminalController;
 use App\Modules\Pdv\Http\Controllers\EligibleOperatorsController;
@@ -75,6 +76,19 @@ Route::prefix('v1/pdv')->group(function () {
         Route::post('terminal/heartbeat', HeartbeatController::class)
             ->middleware('throttle:pdv-credential')
             ->name('pdv.terminal.heartbeat');
+    });
+
+    // Catálogo somente leitura. Exige máquina e operador: o primeiro vínculo
+    // limita tenant/empresa/filial, o segundo prova uma sessão operacional válida.
+    Route::middleware([
+        'auth:sanctum',
+        'terminal.context',
+        'machine.ability:'.MachineTokenAbility::CATALOG_READ,
+        'throttle:pdv-catalog',
+        AuthenticateOperatorSession::class,
+    ])->prefix('catalog')->group(function () {
+        Route::get('products', [CatalogController::class, 'index'])->name('pdv.catalog.products');
+        Route::get('resolve-barcode/{barcode}', [CatalogController::class, 'resolveBarcode'])->name('pdv.catalog.resolve-barcode');
     });
 
     // ----------------------------------------------------------------

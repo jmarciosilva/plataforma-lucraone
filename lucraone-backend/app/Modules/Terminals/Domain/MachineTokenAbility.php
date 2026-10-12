@@ -38,6 +38,9 @@ final class MachineTokenAbility
      */
     public const OPERATOR_SESSION = 'pdv:operator-session';
 
+    /** Consultar somente o catálogo vinculado à empresa do Terminal. */
+    public const CATALOG_READ = 'pdv:catalog:read';
+
     /**
      * Abilities de uma credencial de máquina operacional.
      *
@@ -56,6 +59,6 @@ final class MachineTokenAbility
      */
     public static function paraCredencialDeMaquina(): array
     {
-        return [self::TERMINAL_READ, self::CREDENTIAL_RENEW, self::CREDENTIAL_CONFIRM, self::OPERATOR_SESSION];
+        return [self::TERMINAL_READ, self::CREDENTIAL_RENEW, self::CREDENTIAL_CONFIRM, self::OPERATOR_SESSION, self::CATALOG_READ];
     }
 }

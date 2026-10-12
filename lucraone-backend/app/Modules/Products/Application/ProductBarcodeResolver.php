@@ -29,13 +29,14 @@ class ProductBarcodeResolver
      * @throws BarcodeConflictException quando o código está num produto e numa
      *                                  embalagem do mesmo estabelecimento
      */
-    public function resolve(string $tenantId, string $barcode): ?ResolvedProductBarcode
+    public function resolve(string $tenantId, string $barcode, ?string $companyId = null): ?ResolvedProductBarcode
     {
         // Tenant explícito, sem depender do contexto da requisição. O soft
         // delete continua valendo: produto arquivado não é encontrado.
         $product = Product::query()
             ->withoutGlobalScope(TenantScope::class)
             ->where('tenant_id', $tenantId)
+            ->when($companyId !== null, fn ($query) => $query->where('company_id', $companyId))
             ->where('barcode', $barcode)
             ->first();
 
@@ -43,6 +44,7 @@ class ProductBarcodeResolver
             ->withoutGlobalScope(TenantScope::class)
             ->where('tenant_id', $tenantId)
             ->where('barcode', $barcode)
+            ->when($companyId !== null, fn ($query) => $query->whereHas('product', fn ($products) => $products->where('company_id', $companyId)))
             ->first();
 
         if ($product && $package) {
