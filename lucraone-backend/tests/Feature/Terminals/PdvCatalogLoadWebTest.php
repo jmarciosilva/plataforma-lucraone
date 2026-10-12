@@ -15,6 +15,7 @@ use App\Modules\Tenancy\Domain\Models\Tenant;
 use App\Modules\Terminals\Domain\Models\Terminal;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -35,7 +36,7 @@ class PdvCatalogLoadWebTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        config(['pdv_catalog.enabled' => true]);
+        config(['pdv_catalog.enabled' => true, 'pdv_catalog.ui_preview_enabled' => false]);
         $this->tenant = Tenant::factory()->active()->create();
         app(ProvisionarEstabelecimento::class)->provisionarMatriz($this->tenant);
         $this->company = Company::factory()->forCurrentTenant($this->tenant->id)->active()->create();
@@ -59,7 +60,7 @@ class PdvCatalogLoadWebTest extends TestCase
     {
         $this->terminal->update(['last_seen_at' => now()->subSeconds(45)]);
         $this->painel()->get(route('pdv.catalog-loads.index', ['company_id' => $this->company->id]))
-            ->assertOk()->assertSee('central de cargas pdv')->assertSee('online')->assertSee('enviar carga de produtos e preços');
+            ->assertOk()->assertSee('Central de Cargas PDV')->assertSee('online')->assertSee('enviar carga de produtos e preços');
 
         $this->terminal->update(['last_seen_at' => now()->subSeconds(180)]);
         $this->painel()->get(route('pdv.catalog-loads.index', ['company_id' => $this->company->id]))
@@ -72,9 +73,67 @@ class PdvCatalogLoadWebTest extends TestCase
 
     public function test_tela_fica_fechada_ate_ativacao_explicita_do_ambiente(): void
     {
-        config(['pdv_catalog.enabled' => false]);
+        config(['pdv_catalog.enabled' => false, 'pdv_catalog.ui_preview_enabled' => false]);
 
         $this->painel()->get(route('pdv.catalog-loads.index'))->assertNotFound();
+    }
+
+    public function test_pre_visualizacao_exibe_central_com_publicacao_desabilitada(): void
+    {
+        config(['pdv_catalog.enabled' => false, 'pdv_catalog.ui_preview_enabled' => true]);
+
+        $response = $this->painel()->get(route('pdv.catalog-loads.index', ['company_id' => $this->company->id]));
+
+        $response->assertOk()
+            ->assertSee('Modo de pré-visualização: a publicação de cargas está temporariamente desabilitada.')
+            ->assertSee('publicação indisponível na pré-visualização')
+            ->assertSee('central de cargas pdv')
+            ->assertSee('caixas online');
+        $this->assertStringContainsString('disabled', $response->getContent());
+    }
+
+    public function test_post_de_publicacao_e_bloqueado_no_servidor_em_pre_visualizacao(): void
+    {
+        config(['pdv_catalog.enabled' => false, 'pdv_catalog.ui_preview_enabled' => true]);
+        Queue::fake();
+
+        $this->painel()->post(route('pdv.catalog-loads.store'), [
+            'company_id' => $this->company->id,
+            'terminal_ids' => [$this->terminal->id],
+        ])->assertForbidden();
+
+        $this->assertDatabaseCount('pdv_catalog_publications', 0);
+        $this->assertDatabaseCount('products', 0);
+        $this->assertDatabaseCount('prices', 0);
+        $this->assertDatabaseCount('inventories', 0);
+        $this->assertDatabaseCount('orders', 0);
+        Queue::assertNothingPushed();
+    }
+
+    public function test_pre_visualizacao_nao_consulta_historico_quando_as_tabelas_nao_existirem(): void
+    {
+        config(['pdv_catalog.enabled' => false, 'pdv_catalog.ui_preview_enabled' => true]);
+        foreach ([
+            'pdv_terminal_catalog_states',
+            'pdv_catalog_snapshot_items',
+            'pdv_catalog_deliveries',
+            'pdv_catalog_publications',
+        ] as $table) {
+            Schema::dropIfExists($table);
+        }
+
+        $this->painel()->get(route('pdv.catalog-loads.index', ['company_id' => $this->company->id]))
+            ->assertOk()
+            ->assertSee('Os indicadores e o histórico de distribuição serão habilitados futuramente.')
+            ->assertSee('Histórico de cargas indisponível neste ambiente.')
+            ->assertSee($this->terminal->name);
+    }
+
+    public function test_pre_visualizacao_continua_autenticada(): void
+    {
+        config(['pdv_catalog.enabled' => false, 'pdv_catalog.ui_preview_enabled' => true]);
+
+        $this->get(route('pdv.catalog-loads.index'))->assertRedirect(route('login'));
     }
 
     public function test_terminal_pdvs_expoe_atalho_para_mesma_central_filtrada_com_autorizacao(): void

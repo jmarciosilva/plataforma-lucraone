@@ -11,6 +11,30 @@
         <x-alert tipo="erro" class="mb-6">{{ $errors->first() }}</x-alert>
     @endif
 
+    <header class="mb-6">
+        <h1 class="text-xl font-bold text-grafite sm:text-2xl">Central de Cargas PDV</h1>
+        <p class="mt-1 max-w-3xl text-sm text-aco">Acompanhe a conectividade dos caixas e as versões de catálogo destinadas a cada terminal.</p>
+    </header>
+
+    @if ($previewMode)
+        <div role="status" class="mb-6 rounded-xl border border-sol bg-sol p-4 text-sm text-grafite">
+            Modo de pré-visualização: a publicação de cargas está temporariamente desabilitada.
+        </div>
+    @endif
+
+    @if (! $catalogHistoryAvailable)
+        <div role="status" class="mb-6 rounded-xl border border-linha bg-nevoa p-4 text-sm text-aco">
+            Os indicadores e o histórico de distribuição serão habilitados futuramente. Os dados cadastrais e a conectividade dos terminais continuam disponíveis.
+        </div>
+    @endif
+
+    <section aria-label="resumo dos terminais" class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <x-card><p class="text-xs text-aco">caixas online</p><p class="mt-1 text-2xl font-bold text-grafite">{{ $connectivityCounts->get('online', 0) }}</p></x-card>
+        <x-card><p class="text-xs text-aco">comunicação atrasada</p><p class="mt-1 text-2xl font-bold text-grafite">{{ $connectivityCounts->get('delayed', 0) }}</p></x-card>
+        <x-card><p class="text-xs text-aco">caixas offline</p><p class="mt-1 text-2xl font-bold text-grafite">{{ $connectivityCounts->get('offline', 0) }}</p></x-card>
+        <x-card><p class="text-xs text-aco">cargas pendentes</p><p class="mt-1 text-2xl font-bold text-grafite">{{ $catalogHistoryAvailable ? $pendingDeliveryCount : '—' }}</p></x-card>
+    </section>
+
     <x-section-label>estabelecimento e empresa</x-section-label>
     <x-card class="mb-6">
         <form method="GET" action="{{ route('pdv.catalog-loads.index') }}" class="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -44,7 +68,14 @@
             @if ($selectedTerminalId)
                 <input type="hidden" name="return_terminal_id" value="{{ $selectedTerminalId }}">
             @endif
-            @if ($canPublish)
+            @if ($previewMode)
+                <div class="mb-4 flex flex-col gap-2 rounded-xl bg-nevoa p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p class="text-sm text-aco">A seleção está disponível para avaliação. Nenhuma carga será criada ou enviada durante a pré-visualização.</p>
+                    <button type="submit" disabled class="min-h-11 cursor-not-allowed rounded-xl bg-nevoa px-5 text-sm font-semibold lowercase text-aco opacity-70">
+                        publicação indisponível na pré-visualização
+                    </button>
+                </div>
+            @elseif ($canPublish)
                 <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <label class="flex items-start gap-2 text-sm text-aco">
                         <input type="checkbox" name="schedule_offline" value="1" class="mt-1 rounded border-linha text-sol focus:ring-sol">
@@ -65,7 +96,7 @@
                         $delivery = $terminal->last_delivery;
                     @endphp
                     <label class="grid grid-cols-1 gap-3 py-4 sm:grid-cols-[auto_1fr_1fr_1fr] sm:items-center {{ $eligible ? 'cursor-pointer' : 'opacity-60' }}">
-                        <input type="checkbox" name="terminal_ids[]" value="{{ $terminal->id }}" @checked($selectedTerminalId === $terminal->id) @disabled(!$canPublish || !$eligible) class="rounded border-linha text-sol focus:ring-sol">
+                        <input type="checkbox" name="terminal_ids[]" value="{{ $terminal->id }}" @checked($selectedTerminalId === $terminal->id) @disabled($previewMode || !$canPublish || !$eligible) class="rounded border-linha text-sol focus:ring-sol">
                         <span>
                             <span class="block text-sm font-semibold text-grafite">{{ $terminal->name }}</span>
                             <span class="mt-0.5 block font-comanda text-[0.65rem] uppercase text-aco">{{ $terminal->branch?->name ?? 'sem filial' }} · cadastro {{ strtolower($terminal->status) }}</span>
@@ -90,6 +121,9 @@
 
     <x-section-label>histórico de cargas</x-section-label>
     <x-card class="overflow-hidden p-0">
+        @if (! $catalogHistoryAvailable)
+            <p class="p-8 text-center text-sm text-aco">Histórico de cargas indisponível neste ambiente.</p>
+        @else
         <div class="divide-y divide-linha">
             @forelse ($publications as $publication)
                 <details class="group p-4 sm:p-5">
@@ -98,6 +132,7 @@
                             <strong class="text-sm text-grafite">Versão {{ $publication->version }}</strong>
                             <span class="ml-2 rounded-full bg-nevoa px-2 py-1 text-xs text-aco">{{ strtolower($publication->status) }}</span>
                             <span class="mt-1 block text-xs text-aco">{{ $publication->created_at->format('d/m/Y H:i') }} · {{ $publication->product_count }} produtos</span>
+                            <span class="mt-1 block break-all font-mono text-[0.65rem] text-aco">ID {{ $publication->id }}</span>
                         </span>
                         <span class="text-right text-xs text-aco">{{ $publication->deliveries_count }} caixas · {{ $publication->checksum ? substr($publication->checksum, 0, 16).'…' : 'checksum pendente' }}</span>
                     </summary>
@@ -122,5 +157,6 @@
             @endforelse
         </div>
         <div class="p-4">{{ $publications->links() }}</div>
+        @endif
     </x-card>
 </x-layouts.app>

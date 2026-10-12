@@ -1,5 +1,11 @@
 # Central de cargas PDV — Fase 6.2A
 
+## Pré-visualização segura
+
+`PDV_CATALOG_UI_PREVIEW_ENABLED=true` permite que administradores autorizados abram a Central para avaliar a interface, os terminais e o heartbeat. `PDV_CATALOG_DISTRIBUTION_ENABLED` permanece independente e deve continuar `false` durante essa avaliação. Com distribuição desligada, o servidor responde 403 a qualquer POST de publicação antes de validar dados, criar publicação ou enfileirar job; o botão e as caixas de seleção também ficam desabilitados na página.
+
+Se as tabelas de publicação, entrega, snapshot ou estado ativo estiverem ausentes, a tela continua exibindo apenas dados autorizados de empresas, filiais e terminais, e mostra o histórico como indisponível. Nenhum dado fictício é criado. O menu lateral usa as mesmas permissões de leitura da página. Desabilite `PDV_CATALOG_UI_PREVIEW_ENABLED` para ocultar a tela novamente. A feature de distribuição operacional exige autorização e preparação separadas.
+
 ## Operação administrativa
 
 A tela `GET /pdv/catalog-loads` exige usuário web autenticado, membership ativa no tenant selecionado, leitura de empresas e filiais/terminais autorizada pelas policies existentes, além de `manage-products` para publicar. A publicação valida novamente tenant, empresa, filial, status do terminal, instalação e `TerminalPolicy::update` no POST. IDs enviados pelo navegador não definem o tenant.

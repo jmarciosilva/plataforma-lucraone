@@ -124,8 +124,8 @@
             </x-nav-item>
         @endif
 
-        @if (config('pdv_catalog.enabled', false) && $contexto->resolved() && auth()->user()->canAccessTenant($contexto->id())
-            && auth()->user()->hasPermission('manage-products', $contexto->id())
+        @if ((config('pdv_catalog.enabled', false) || config('pdv_catalog.ui_preview_enabled', false)) && $contexto->resolved() && auth()->user()->canAccessTenant($contexto->id())
+            && auth()->user()->hasAnyPermission(['view-products', 'manage-products'], $contexto->id())
             && auth()->user()->hasAnyPermission(['view-companies', 'manage-companies'], $contexto->id())
             && auth()->user()->hasAnyPermission(['view-branches', 'view-all-branches', 'manage-branches'], $contexto->id()))
             <x-nav-item rota="pdv.catalog-loads.index" rotulo="central de cargas pdv">
