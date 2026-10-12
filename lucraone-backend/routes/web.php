@@ -109,6 +109,9 @@ Route::middleware('auth.web')->group(function () {
         ->name('terminals.revoke');
     Route::post('/terminals/{terminal}/pairing-code', [TerminalController::class, 'issuePairingCode'])
         ->name('terminals.pairing-code');
+    Route::post('/terminals/{terminal}/credential-recovery', [TerminalController::class, 'authorizeRecovery'])
+        ->middleware('throttle:pdv-recovery-admin')
+        ->name('terminals.credential-recovery');
     Route::resource('terminals', TerminalController::class)
         ->except(['destroy']);
 
