@@ -124,6 +124,17 @@
             </x-nav-item>
         @endif
 
+        @if (config('pdv_catalog.enabled', false) && $contexto->resolved() && auth()->user()->canAccessTenant($contexto->id())
+            && auth()->user()->hasPermission('manage-products', $contexto->id())
+            && auth()->user()->hasAnyPermission(['view-companies', 'manage-companies'], $contexto->id())
+            && auth()->user()->hasAnyPermission(['view-branches', 'view-all-branches', 'manage-branches'], $contexto->id()))
+            <x-nav-item rota="pdv.catalog-loads.index" rotulo="central de cargas pdv">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                    <path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M4 19h16" />
+                </svg>
+            </x-nav-item>
+        @endif
+
         <x-nav-item rota="companies.index" rotulo="empresas">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
                 <rect x="3" y="7" width="18" height="14" rx="2" />

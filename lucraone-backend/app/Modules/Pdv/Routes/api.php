@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Pdv\Http\Controllers\CatalogController;
+use App\Modules\Pdv\Http\Controllers\CatalogDeliveryController;
 use App\Modules\Pdv\Http\Controllers\CredentialLifecycleController;
 use App\Modules\Pdv\Http\Controllers\CurrentTerminalController;
 use App\Modules\Pdv\Http\Controllers\EligibleOperatorsController;
@@ -9,6 +10,7 @@ use App\Modules\Pdv\Http\Controllers\OperatorSessionController;
 use App\Modules\Pdv\Http\Controllers\PairTerminalController;
 use App\Modules\Pdv\Http\Controllers\PdvHealthController;
 use App\Modules\Pdv\Http\Middleware\AuthenticateOperatorSession;
+use App\Modules\Pdv\Http\Middleware\EnsureCatalogDistributionEnabled;
 use App\Modules\Pdv\Http\Middleware\HumanAdministrationContext;
 use App\Modules\Pdv\Http\Middleware\RecoveryAdministrationContext;
 use App\Modules\Terminals\Domain\MachineTokenAbility;
@@ -76,6 +78,24 @@ Route::prefix('v1/pdv')->group(function () {
         Route::post('terminal/heartbeat', HeartbeatController::class)
             ->middleware('throttle:pdv-credential')
             ->name('pdv.terminal.heartbeat');
+    });
+
+    // Distribuição somente de cargas publicadas destinadas ao Terminal autenticado.
+    // Não exige sessão de operador, pois o download ocorre antes da operação de caixa.
+    Route::middleware([
+        'auth:sanctum',
+        'terminal.context',
+        'machine.ability:'.MachineTokenAbility::CATALOG_DISTRIBUTION,
+        EnsureCatalogDistributionEnabled::class,
+        'throttle:pdv-catalog',
+    ])->prefix('catalog/deliveries')->group(function () {
+        Route::get('pending', [CatalogDeliveryController::class, 'pending'])->name('pdv.catalog-deliveries.pending');
+        Route::get('{delivery}/manifest', [CatalogDeliveryController::class, 'manifest'])->name('pdv.catalog-deliveries.manifest');
+        Route::get('{delivery}/parts/{part}', [CatalogDeliveryController::class, 'part'])->whereNumber('part')->name('pdv.catalog-deliveries.part');
+        Route::post('{delivery}/progress', [CatalogDeliveryController::class, 'progress'])->name('pdv.catalog-deliveries.progress');
+        Route::post('{delivery}/received', [CatalogDeliveryController::class, 'received'])->name('pdv.catalog-deliveries.received');
+        Route::post('{delivery}/applied', [CatalogDeliveryController::class, 'applied'])->name('pdv.catalog-deliveries.applied');
+        Route::post('{delivery}/failed', [CatalogDeliveryController::class, 'failed'])->name('pdv.catalog-deliveries.failed');
     });
 
     // Catálogo somente leitura. Exige máquina e operador: o primeiro vínculo

@@ -12,12 +12,12 @@ namespace App\Modules\Terminals\Domain;
  * descuido, o alcance de um token de pessoa — ou o contrário.
  *
  * Cada ability existe porque existe um contrato que a consome. Abilities de
- * venda, sincronização, estoque ou pagamento entram quando as APIs
- * correspondentes existirem, não antes: uma ability emitida sem endpoint é
- * alcance concedido sem revisão.
+ * venda, estoque ou pagamento entram quando as APIs correspondentes existirem,
+ * não antes: uma ability emitida sem endpoint é alcance concedido sem revisão.
  *
  * Nunca `['*']`: com o coringa, qualquer ability criada depois passaria a
- * valer automaticamente para credenciais já distribuídas em campo.
+ * valer automaticamente para credenciais já distribuídas em campo. Tokens
+ * existentes mantêm sua lista; a nova ability chega pela rotação normal.
  */
 final class MachineTokenAbility
 {
@@ -41,6 +41,9 @@ final class MachineTokenAbility
     /** Consultar somente o catálogo vinculado à empresa do Terminal. */
     public const CATALOG_READ = 'pdv:catalog:read';
 
+    /** Receber somente publicações de catálogo destinadas à própria máquina. */
+    public const CATALOG_DISTRIBUTION = 'pdv:catalog:distribution';
+
     /**
      * Abilities de uma credencial de máquina operacional.
      *
@@ -59,6 +62,6 @@ final class MachineTokenAbility
      */
     public static function paraCredencialDeMaquina(): array
     {
-        return [self::TERMINAL_READ, self::CREDENTIAL_RENEW, self::CREDENTIAL_CONFIRM, self::OPERATOR_SESSION, self::CATALOG_READ];
+        return [self::TERMINAL_READ, self::CREDENTIAL_RENEW, self::CREDENTIAL_CONFIRM, self::OPERATOR_SESSION, self::CATALOG_READ, self::CATALOG_DISTRIBUTION];
     }
 }

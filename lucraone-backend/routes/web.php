@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\AutomationWebController;
+use App\Http\Controllers\Web\BranchController;
 use App\Http\Controllers\Web\CategoryWebController;
 use App\Http\Controllers\Web\CompanyController;
 use App\Http\Controllers\Web\CustomerWebController;
@@ -11,14 +12,14 @@ use App\Http\Controllers\Web\InventoryWebController;
 use App\Http\Controllers\Web\NotificationWebController;
 use App\Http\Controllers\Web\OnboardingController;
 use App\Http\Controllers\Web\OrderWebController;
-use App\Http\Controllers\Web\BranchController;
+use App\Http\Controllers\Web\PdvCatalogLoadController;
 use App\Http\Controllers\Web\PdvOperatorController;
-use App\Http\Controllers\Web\TerminalController;
 use App\Http\Controllers\Web\PermissionController;
 use App\Http\Controllers\Web\ProductWebController;
 use App\Http\Controllers\Web\ReportWebController;
 use App\Http\Controllers\Web\RoleController;
 use App\Http\Controllers\Web\TenantController;
+use App\Http\Controllers\Web\TerminalController;
 use App\Http\Controllers\Web\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -58,6 +59,10 @@ Route::middleware('auth.web:sem-tenant')->group(function () {
 // Painel: exige estabelecimento em uso
 Route::middleware('auth.web')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+
+    Route::get('/pdv/catalog-loads', [PdvCatalogLoadController::class, 'index'])->name('pdv.catalog-loads.index');
+    Route::post('/pdv/catalog-loads', [PdvCatalogLoadController::class, 'store'])
+        ->middleware('throttle:pdv-catalog-publish')->name('pdv.catalog-loads.store');
 
     Route::get('/tenants/ajuda/cadastro', [TenantController::class, 'onboardingHelp'])
         ->name('tenants.onboarding.help');

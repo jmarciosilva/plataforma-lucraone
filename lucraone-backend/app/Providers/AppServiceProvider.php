@@ -252,6 +252,10 @@ class AppServiceProvider extends ServiceProvider
             ->by('pdv-catalog:'.(is_string($request->bearerToken()) ? hash('sha256', $request->bearerToken()) : 'ip:'.$request->ip()))
             ->response($this->recusaPorVolume()));
 
+        RateLimiter::for('pdv-catalog-publish', fn (Request $request) => Limit::perMinutes(10, 5)
+            ->by('pdv-catalog-publish:'.($request->user()?->getAuthIdentifier() ?? $request->ip()))
+            ->response($this->recusaPorVolume()));
+
         // Administração humana: volume de tela, não de integração.
         RateLimiter::for('pdv-operator-admin', fn (Request $request) => Limit::perMinutes(10, 60)
             ->by('pdv-op-admin:'.($request->user()?->getAuthIdentifier() ?? $request->ip()))
