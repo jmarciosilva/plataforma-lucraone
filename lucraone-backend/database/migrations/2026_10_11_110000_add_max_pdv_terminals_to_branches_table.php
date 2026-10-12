@@ -9,7 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('branches', function (Blueprint $table) {
-            $table->unsignedSmallInteger('max_pdv_terminals')->default(5)->after('is_headquarters');
+            // Keep this migration independent of the later is_headquarters column.
+            $table->unsignedSmallInteger('max_pdv_terminals')->default(5);
         });
     }
 

@@ -14,7 +14,6 @@
     <x-section-label>estabelecimento e empresa</x-section-label>
     <x-card class="mb-6">
         <form method="GET" action="{{ route('pdv.catalog-loads.index') }}" class="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <input type="hidden" name="company_id" value="{{ $company->id }}">
             <div class="min-w-0 flex-1">
                 <label class="mb-1 block text-xs lowercase text-aco">estabelecimento</label>
                 <div class="rounded-xl border border-linha bg-nevoa px-3 py-2.5 text-sm font-semibold text-grafite">{{ $tenantNome }}</div>
@@ -42,6 +41,9 @@
         <form method="POST" action="{{ route('pdv.catalog-loads.store') }}" class="p-4 sm:p-6">
             @csrf
             <input type="hidden" name="company_id" value="{{ $company->id }}">
+            @if ($selectedTerminalId)
+                <input type="hidden" name="return_terminal_id" value="{{ $selectedTerminalId }}">
+            @endif
             @if ($canPublish)
                 <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <label class="flex items-start gap-2 text-sm text-aco">
@@ -63,10 +65,10 @@
                         $delivery = $terminal->last_delivery;
                     @endphp
                     <label class="grid grid-cols-1 gap-3 py-4 sm:grid-cols-[auto_1fr_1fr_1fr] sm:items-center {{ $eligible ? 'cursor-pointer' : 'opacity-60' }}">
-                        <input type="checkbox" name="terminal_ids[]" value="{{ $terminal->id }}" @disabled(!$canPublish || !$eligible) class="rounded border-linha text-sol focus:ring-sol">
+                        <input type="checkbox" name="terminal_ids[]" value="{{ $terminal->id }}" @checked($selectedTerminalId === $terminal->id) @disabled(!$canPublish || !$eligible) class="rounded border-linha text-sol focus:ring-sol">
                         <span>
                             <span class="block text-sm font-semibold text-grafite">{{ $terminal->name }}</span>
-                            <span class="mt-0.5 block font-comanda text-[0.65rem] uppercase text-aco">{{ $terminal->branch?->name ?? 'sem filial' }} · {{ $terminal->status }}</span>
+                            <span class="mt-0.5 block font-comanda text-[0.65rem] uppercase text-aco">{{ $terminal->branch?->name ?? 'sem filial' }} · cadastro {{ strtolower($terminal->status) }}</span>
                         </span>
                         <span class="text-sm text-aco">
                             <span class="font-semibold text-grafite">{{ $terminal->connectivity_label }}</span><br>
@@ -76,7 +78,7 @@
                             ativa: {{ $state?->version ? 'v'.$state->version : 'nenhuma' }}
                             @if ($state?->applied_at)<br>atualizada: {{ \Illuminate\Support\Carbon::parse($state->applied_at)->format('d/m/Y H:i') }}@endif
                             @if ($state)<br>produtos ativos: {{ $state->product_count }}@endif
-                            <br>última entrega: {{ $delivery?->status ?? '—' }}
+                            <br>última entrega: {{ $delivery?->status ?? '—' }}@if ($delivery?->failure_code) · {{ $delivery->failure_code }}@endif
                         </span>
                     </label>
                 @empty
@@ -107,7 +109,11 @@
                     </div>
                     <div class="mt-3 flex flex-wrap gap-2">
                         @foreach ($publication->deliveries as $delivery)
-                            <span class="rounded-lg bg-nevoa px-2 py-1 text-xs text-aco">{{ $delivery->terminal_id }} · {{ strtolower($delivery->status) }}</span>
+                            <span class="rounded-lg bg-nevoa px-2 py-1 text-xs text-aco">
+                                {{ $delivery->terminal?->name ?? $delivery->terminal_id }} · {{ strtolower($delivery->status) }}
+                                @if ($delivery->failure_code) · {{ $delivery->failure_code }}@endif
+                                · {{ ($delivery->applied_at ?? $delivery->received_at ?? $delivery->updated_at)->format('d/m/Y H:i') }}
+                            </span>
                         @endforeach
                     </div>
                 </details>

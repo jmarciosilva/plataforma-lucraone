@@ -33,7 +33,11 @@ final class GeneratePdvCatalogPublication implements ShouldQueue
         }
 
         try {
-            if (DB::connection()->getDriverName() === 'mysql') {
+            // SET TRANSACTION controls the next top-level transaction; MySQL
+            // rejects it inside the outer transaction used by test harnesses.
+            // When a caller owns that transaction, keep its already-selected
+            // isolation level rather than changing transaction semantics.
+            if (DB::connection()->getDriverName() === 'mysql' && DB::transactionLevel() === 0) {
                 DB::statement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
             }
             DB::transaction(function () use ($publication): void {

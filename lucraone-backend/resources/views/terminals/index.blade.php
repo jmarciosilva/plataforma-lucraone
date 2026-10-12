@@ -5,6 +5,9 @@
     </x-slot:subtitulo>
 
     <x-slot:acoes>
+        @if (config('pdv_catalog.enabled', false) && auth()->user()->hasPermission('manage-products', app(\App\Modules\Tenancy\Application\TenantContext::class)->id()))
+            <x-button variante="secundario" href="{{ route('pdv.catalog-loads.index') }}">central de cargas</x-button>
+        @endif
         @if ($podeAdministrar)
             <x-button href="{{ route('terminals.create') }}">novo terminal</x-button>
         @endif

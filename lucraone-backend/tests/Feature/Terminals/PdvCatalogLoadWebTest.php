@@ -77,18 +77,47 @@ class PdvCatalogLoadWebTest extends TestCase
         $this->painel()->get(route('pdv.catalog-loads.index'))->assertNotFound();
     }
 
+    public function test_terminal_pdvs_expoe_atalho_para_mesma_central_filtrada_com_autorizacao(): void
+    {
+        $this->painel()->get(route('terminals.show', $this->terminal))
+            ->assertOk()
+            ->assertSee('cargas deste terminal')
+            ->assertSee('company_id='.$this->company->id)
+            ->assertSee('terminal_id='.$this->terminal->id);
+
+        $this->painel()->get(route('pdv.catalog-loads.index', [
+            'company_id' => $this->company->id, 'terminal_id' => $this->terminal->id,
+        ]))->assertOk()->assertSee($this->terminal->name);
+
+        $foreignTenant = Tenant::factory()->active()->create();
+        $foreignCompany = Company::factory()->forCurrentTenant($foreignTenant->id)->active()->create();
+        $foreignBranch = Branch::factory()->forCompany($foreignCompany)->active()->create();
+        $otherTerminal = Terminal::factory()->forBranch($foreignBranch)->create([
+            'status' => Terminal::STATUS_ACTIVE, 'installation_id' => (string) Str::uuid(),
+        ]);
+        $this->painel()->get(route('pdv.catalog-loads.index', [
+            'company_id' => $this->company->id, 'terminal_id' => $otherTerminal->id,
+        ]))->assertNotFound();
+    }
+
     public function test_publicacao_exige_agendamento_explicito_quando_terminal_esta_offline(): void
     {
         Queue::fake();
         $this->terminal->update(['last_seen_at' => now()->subMinutes(10)]);
-        $payload = ['company_id' => $this->company->id, 'terminal_ids' => [$this->terminal->id]];
+        $payload = [
+            'company_id' => $this->company->id,
+            'terminal_ids' => [$this->terminal->id],
+            'return_terminal_id' => $this->terminal->id,
+        ];
 
         $this->painel()->post(route('pdv.catalog-loads.store'), $payload)->assertSessionHasErrors('schedule_offline');
         $this->assertDatabaseCount('pdv_catalog_publications', 0);
 
         $identity = $this->terminal->only(['id', 'tenant_id', 'company_id', 'branch_id', 'installation_id']);
         $this->painel()->post(route('pdv.catalog-loads.store'), $payload + ['schedule_offline' => '1'])
-            ->assertRedirect(route('pdv.catalog-loads.index', ['company_id' => $this->company->id]));
+            ->assertRedirect(route('pdv.catalog-loads.index', [
+                'company_id' => $this->company->id, 'terminal_id' => $this->terminal->id,
+            ]));
         $this->assertDatabaseHas('pdv_catalog_publications', ['company_id' => $this->company->id, 'version' => 1, 'status' => PdvCatalogPublication::GENERATING]);
         $this->assertDatabaseHas('pdv_catalog_deliveries', ['terminal_id' => $this->terminal->id, 'status' => 'PENDING']);
         $this->assertSame($identity, $this->terminal->fresh()->only(array_keys($identity)));

@@ -133,6 +133,17 @@ class PdvCatalogDeliveryTest extends PdvTestCase
         $this->assertNotContains(MachineTokenAbility::CATALOG_DISTRIBUTION, PersonalAccessToken::findToken($legacy)->abilities);
     }
 
+    public function test_entrega_com_empresa_divergente_nao_fica_visivel_ao_terminal(): void
+    {
+        $otherCompany = Company::factory()->forCurrentTenant($this->terminal->tenant_id)->create();
+        $publication = $this->publicacaoPronta(['company_id' => $otherCompany->id]);
+        $delivery = $this->entrega($publication, $this->terminal->id);
+
+        $this->getComMaquina('/api/v1/pdv/catalog/deliveries/pending')->assertOk()->assertJsonCount(0, 'data');
+        $this->getComMaquina('/api/v1/pdv/catalog/deliveries/'.$delivery->id.'/manifest')->assertNotFound();
+        $this->postComMaquina('/api/v1/pdv/catalog/deliveries/'.$delivery->id.'/received')->assertNotFound();
+    }
+
     public function test_checkpoint_nao_pula_partes_e_terminal_bloqueado_nao_recebe_cargas(): void
     {
         $publication = $this->publicacaoPronta(['product_count' => 201]);
@@ -140,6 +151,61 @@ class PdvCatalogDeliveryTest extends PdvTestCase
         $this->postComMaquina('/api/v1/pdv/catalog/deliveries/'.$delivery->id.'/progress', ['last_part' => 1])->assertStatus(409);
         $this->terminal->update(['status' => 'BLOCKED']);
         $this->getComMaquina('/api/v1/pdv/catalog/deliveries/pending')->assertUnauthorized();
+    }
+
+    public function test_recebimento_exige_checkpoint_final_e_aplicacao_exige_recebimento(): void
+    {
+        $publication = $this->publicacaoPronta(['product_count' => 401]);
+        $delivery = $this->entrega($publication, $this->terminal->id);
+        $base = '/api/v1/pdv/catalog/deliveries/'.$delivery->id;
+
+        $this->postComMaquina($base.'/received')->assertStatus(409);
+        $this->postComMaquina($base.'/applied')->assertStatus(409);
+        $this->getComMaquina($base.'/manifest')->assertOk();
+        $this->postComMaquina($base.'/progress', ['last_part' => 0])->assertOk();
+        $this->postComMaquina($base.'/progress', ['last_part' => 0])->assertOk();
+        $this->postComMaquina($base.'/received')->assertStatus(409);
+        $this->postComMaquina($base.'/progress', ['last_part' => 2])->assertStatus(409);
+        $this->assertSame(0, (int) $delivery->fresh()->last_part);
+
+        $this->postComMaquina($base.'/progress', ['last_part' => 1])->assertOk();
+        $this->postComMaquina($base.'/received')->assertStatus(409);
+        $this->postComMaquina($base.'/progress', ['last_part' => 2])->assertOk();
+        $this->postComMaquina($base.'/received')->assertOk()->assertJsonPath('data.status', PdvCatalogDelivery::RECEIVED);
+        $this->postComMaquina($base.'/received')->assertOk()->assertJsonPath('data.status', PdvCatalogDelivery::RECEIVED);
+        $this->postComMaquina($base.'/applied')->assertOk()->assertJsonPath('data.status', PdvCatalogDelivery::APPLIED);
+        $this->postComMaquina($base.'/failed', ['code' => 'APPLY_FAILED'])->assertStatus(409);
+        $this->assertSame(PdvCatalogDelivery::APPLIED, $delivery->fresh()->status);
+    }
+
+    public function test_recebimento_de_carga_vazia_usa_manifesto_de_zero_partes(): void
+    {
+        $publication = $this->publicacaoPronta();
+        $delivery = $this->entrega($publication, $this->terminal->id);
+        $base = '/api/v1/pdv/catalog/deliveries/'.$delivery->id;
+
+        $this->getComMaquina($base.'/parts/0')->assertStatus(422);
+        $this->postComMaquina($base.'/received')->assertStatus(409);
+        $this->getComMaquina('/api/v1/pdv/catalog/deliveries/pending')->assertOk();
+        $this->getComMaquina($base.'/manifest')->assertOk()->assertJsonPath('data.part_count', 0);
+        $this->postComMaquina($base.'/received')->assertOk()->assertJsonPath('data.status', PdvCatalogDelivery::RECEIVED);
+        $this->postComMaquina($base.'/received')->assertOk()->assertJsonPath('data.status', PdvCatalogDelivery::RECEIVED);
+        $this->postComMaquina($base.'/applied')->assertOk()->assertJsonPath('data.version', 1);
+    }
+
+    public function test_estado_received_antigo_sem_checkpoint_valido_nao_pode_ser_aplicado(): void
+    {
+        $publication = $this->publicacaoPronta(['product_count' => 1]);
+        $delivery = $this->entrega($publication, $this->terminal->id);
+        $delivery->update(['status' => PdvCatalogDelivery::RECEIVED, 'received_at' => now()]);
+        $base = '/api/v1/pdv/catalog/deliveries/'.$delivery->id;
+
+        $this->postComMaquina($base.'/applied')->assertStatus(409);
+        $this->getComMaquina($base.'/manifest')->assertOk();
+        $this->postComMaquina($base.'/received')->assertStatus(409);
+        $this->postComMaquina($base.'/applied')->assertStatus(409);
+        $this->assertSame(PdvCatalogDelivery::RECEIVED, $delivery->fresh()->status);
+        $this->assertNull($delivery->fresh()->transfer_verified_at);
     }
 
     private function publication(): PdvCatalogPublication

@@ -41,14 +41,21 @@ final class PdvCatalogLoadController extends Controller
         $terminals = Terminal::withoutGlobalScopes()->where('tenant_id', $tenantId)->where('company_id', $company->id)
             ->with(['branch.company', 'company'])->orderBy('name')->get()
             ->filter(fn (Terminal $terminal) => Gate::forUser($request->user())->allows('view', $terminal));
+        $selectedTerminalId = $request->query('terminal_id');
+        if ($selectedTerminalId !== null) {
+            abort_unless(is_string($selectedTerminalId) && $terminals->contains('id', $selectedTerminalId), 404);
+            $terminals = $terminals->where('id', $selectedTerminalId)->values();
+        }
         $terminalIds = $terminals->modelKeys();
         $states = DB::table('pdv_terminal_catalog_states as state')
             ->join('pdv_catalog_publications as publication', 'publication.id', '=', 'state.publication_id')
+            ->where('publication.tenant_id', $tenantId)->where('publication.company_id', $company->id)
             ->whereIn('state.terminal_id', $terminalIds)
             ->get(['state.terminal_id', 'state.version', 'state.applied_at', 'publication.product_count', 'publication.price_count', 'publication.package_count'])
             ->keyBy('terminal_id');
         $latestDeliveries = PdvCatalogDelivery::query()->whereIn('terminal_id', $terminalIds)
-            ->whereRaw('pdv_catalog_deliveries.id = (select latest.id from pdv_catalog_deliveries as latest where latest.terminal_id = pdv_catalog_deliveries.terminal_id order by latest.created_at desc, latest.id desc limit 1)')
+            ->whereHas('publication', fn ($query) => $query->where('tenant_id', $tenantId)->where('company_id', $company->id))
+            ->whereRaw('pdv_catalog_deliveries.id = (select latest.id from pdv_catalog_deliveries as latest where latest.terminal_id = pdv_catalog_deliveries.terminal_id and latest.publication_id in (select eligible.id from pdv_catalog_publications as eligible where eligible.tenant_id = ? and eligible.company_id = ?) order by latest.created_at desc, latest.id desc limit 1)', [$tenantId, $company->id])
             ->with('publication')->get()->keyBy('terminal_id');
         $terminals = $terminals->map(function (Terminal $terminal) use ($states, $latestDeliveries): Terminal {
             $seconds = $terminal->last_seen_at === null || $terminal->last_seen_at->isFuture()
@@ -66,7 +73,10 @@ final class PdvCatalogLoadController extends Controller
         });
 
         $publications = PdvCatalogPublication::query()->where('tenant_id', $tenantId)->where('company_id', $company->id)
-            ->with('deliveries')->withCount('deliveries')->latest()->paginate(15)->withQueryString();
+            ->with(['deliveries' => fn ($query) => $query->whereIn('terminal_id', $terminalIds)->with('terminal:id,name')])
+            ->withCount(['deliveries' => fn ($query) => $query->whereIn('terminal_id', $terminalIds)])
+            ->whereHas('deliveries', fn ($query) => $query->whereIn('terminal_id', $terminalIds))
+            ->latest()->paginate(15)->withQueryString();
 
         return view('pdv.catalog-loads.index', [
             'tenantNome' => $context->tenant()->name,
@@ -78,6 +88,7 @@ final class PdvCatalogLoadController extends Controller
             'publications' => $publications,
             'canPublish' => $request->user()->hasPermission('manage-products', $tenantId),
             'onlineSeconds' => self::ONLINE_SECONDS,
+            'selectedTerminalId' => $selectedTerminalId,
         ]);
     }
 
@@ -93,6 +104,7 @@ final class PdvCatalogLoadController extends Controller
             'terminal_ids' => ['required', 'array', 'min:1', 'max:50'],
             'terminal_ids.*' => ['required', 'string', 'distinct', 'exists:terminals,id'],
             'schedule_offline' => ['sometimes', 'accepted'],
+            'return_terminal_id' => ['sometimes', 'nullable', 'string'],
         ]);
         $company = Company::withoutGlobalScopes()->where('tenant_id', $tenantId)->where('status', 'ACTIVE')->find($validated['company_id']);
         abort_unless($company, 404);
@@ -102,6 +114,11 @@ final class PdvCatalogLoadController extends Controller
             ->whereIn('id', $validated['terminal_ids'])->with('branch')->get();
         if ($terminals->count() !== count($validated['terminal_ids'])) {
             abort(404);
+        }
+        $returnTerminalId = $validated['return_terminal_id'] ?? null;
+        if ($returnTerminalId !== null) {
+            abort_unless($terminals->contains('id', $returnTerminalId)
+                && in_array($returnTerminalId, $validated['terminal_ids'], true), 404);
         }
         foreach ($terminals as $terminal) {
             Gate::authorize('update', $terminal);
@@ -149,7 +166,10 @@ final class PdvCatalogLoadController extends Controller
             throw ValidationException::withMessages(['publication' => 'Não foi possível iniciar a geração da carga. Nenhuma carga foi disponibilizada.']);
         }
 
-        return redirect()->route('pdv.catalog-loads.index', ['company_id' => $company->id])
+        return redirect()->route('pdv.catalog-loads.index', [
+            'company_id' => $company->id,
+            'terminal_id' => $returnTerminalId,
+        ])
             ->with('sucesso', 'Geração da carga iniciada. A página mostrará o resultado quando estiver pronta.');
     }
 

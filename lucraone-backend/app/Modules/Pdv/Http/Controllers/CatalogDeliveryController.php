@@ -2,6 +2,7 @@
 
 namespace App\Modules\Pdv\Http\Controllers;
 
+use App\Modules\Pdv\Application\CatalogDeliveryLifecycle;
 use App\Modules\Pdv\Domain\Models\PdvCatalogDelivery;
 use App\Modules\Pdv\Domain\Models\PdvCatalogPublication;
 use App\Modules\Pdv\Http\Responses\PdvErrorResponse;
@@ -17,18 +18,25 @@ final class CatalogDeliveryController
 {
     private const PART_SIZE = 200;
 
-    public function __construct(private readonly TerminalContext $terminal) {}
+    public function __construct(
+        private readonly TerminalContext $terminal,
+        private readonly CatalogDeliveryLifecycle $lifecycle,
+    ) {}
 
     public function pending(): JsonResponse
     {
+        $tenantId = $this->terminal->tenantId();
+        $companyId = $this->terminal->companyId();
         PdvCatalogDelivery::query()->where('terminal_id', $this->terminal->terminalId())
             ->where('status', PdvCatalogDelivery::PENDING)
-            ->whereHas('publication', fn ($query) => $query->where('status', PdvCatalogPublication::PUBLISHED))
+            ->whereHas('publication', fn ($query) => $query->where('tenant_id', $tenantId)
+                ->where('company_id', $companyId)->where('status', PdvCatalogPublication::PUBLISHED))
             ->update(['status' => PdvCatalogDelivery::AVAILABLE, 'updated_at' => now()]);
 
         $deliveries = PdvCatalogDelivery::query()->where('terminal_id', $this->terminal->terminalId())
             ->whereIn('status', [PdvCatalogDelivery::PENDING, PdvCatalogDelivery::AVAILABLE, PdvCatalogDelivery::TRANSFERRING])
-            ->whereHas('publication', fn ($query) => $query->where('status', PdvCatalogPublication::PUBLISHED))
+            ->whereHas('publication', fn ($query) => $query->where('tenant_id', $tenantId)
+                ->where('company_id', $companyId)->where('status', PdvCatalogPublication::PUBLISHED))
             ->with('publication:id,version,schema_version,checksum,product_count,price_count,package_count,created_at')
             ->orderBy('created_at')->limit(20)->get();
 
@@ -51,7 +59,20 @@ final class CatalogDeliveryController
             return $this->error($request, 'catalog_delivery_unavailable', 'Esta entrega não está mais disponível.', 409);
         }
         if ($delivery->status === PdvCatalogDelivery::AVAILABLE) {
-            $delivery->update(['status' => PdvCatalogDelivery::TRANSFERRING]);
+            PdvCatalogDelivery::query()->whereKey($delivery->id)->where('status', PdvCatalogDelivery::AVAILABLE)
+                ->update(['status' => PdvCatalogDelivery::TRANSFERRING, 'updated_at' => now()]);
+            $delivery->refresh();
+        }
+        if (in_array($delivery->status, [PdvCatalogDelivery::TRANSFERRING, PdvCatalogDelivery::RECEIVED], true)
+            && $delivery->manifest_seen_at === null) {
+            PdvCatalogDelivery::query()->whereKey($delivery->id)
+                ->whereIn('status', [PdvCatalogDelivery::TRANSFERRING, PdvCatalogDelivery::RECEIVED])
+                ->whereNull('manifest_seen_at')
+                ->update(['manifest_seen_at' => now(), 'updated_at' => now()]);
+            $delivery->refresh();
+        }
+        if (in_array($delivery->status, [PdvCatalogDelivery::FAILED, PdvCatalogDelivery::CANCELLED], true)) {
+            return $this->error($request, 'catalog_delivery_unavailable', 'Esta entrega não está mais disponível.', 409);
         }
         $publication = $delivery->publication;
 
@@ -82,7 +103,7 @@ final class CatalogDeliveryController
         }
         $count = (int) $delivery->publication->product_count;
         $partCount = (int) ceil($count / self::PART_SIZE);
-        if ($part < 0 || $part >= max(1, $partCount)) {
+        if ($partCount === 0 || $part < 0 || $part >= $partCount) {
             return $this->error($request, PdvErrorResponse::CODE_VALIDATION, 'Parte de catálogo inválida.', 422);
         }
         $items = DB::table('pdv_catalog_snapshot_items')->where('publication_id', $delivery->publication_id)
@@ -106,87 +127,32 @@ final class CatalogDeliveryController
             return $this->error($request, PdvErrorResponse::CODE_VALIDATION, 'Progresso de transferência inválido.', 422, $validator->errors()->messages());
         }
         $validated = $validator->validated();
-        $delivery = $this->delivery($deliveryId);
-        if (! $delivery) {
-            return $this->error($request, 'catalog_delivery_not_found', 'Carga não encontrada para este terminal.', 404);
-        }
-        if (in_array($delivery->status, [PdvCatalogDelivery::FAILED, PdvCatalogDelivery::CANCELLED], true)) {
-            return $this->error($request, 'catalog_delivery_unavailable', 'Esta entrega não está mais disponível.', 409);
-        }
-        $lastPart = (int) $validated['last_part'];
-        $lastAvailablePart = (int) ceil($delivery->publication->product_count / self::PART_SIZE) - 1;
-        if ($lastPart > $lastAvailablePart) {
-            return $this->error($request, PdvErrorResponse::CODE_VALIDATION, 'Parte fora do manifesto desta carga.', 422);
-        }
-        $expectedNext = $delivery->last_part === null ? 0 : (int) $delivery->last_part + 1;
-        if ($lastPart > (int) $delivery->last_part && $lastPart !== $expectedNext) {
-            return $this->error($request, 'catalog_progress_conflict', 'A transferência precisa continuar pela próxima parte esperada.', 409);
-        }
-        if (! in_array($delivery->status, [PdvCatalogDelivery::RECEIVED, PdvCatalogDelivery::APPLIED], true)) {
-            $delivery->update(['last_part' => max((int) $delivery->last_part, $lastPart), 'status' => PdvCatalogDelivery::TRANSFERRING]);
+        $result = $this->lifecycle->progress($this->terminal->terminalId(), $deliveryId, (int) $validated['last_part']);
+        if (! $result->successful()) {
+            return $this->error($request, $result->errorCode ?? 'catalog_delivery_error', $result->message, $result->httpStatus);
         }
 
-        return response()->json(['data' => ['status' => $delivery->status, 'last_part' => $delivery->last_part]]);
+        return response()->json(['data' => ['status' => $result->delivery->status, 'last_part' => $result->delivery->last_part]]);
     }
 
     public function received(Request $request, string $deliveryId): JsonResponse
     {
-        $delivery = $this->delivery($deliveryId);
-        if (! $delivery || $delivery->publication?->status !== PdvCatalogPublication::PUBLISHED) {
-            return $this->error($request, 'catalog_delivery_not_found', 'Carga não encontrada para este terminal.', 404);
-        }
-        if (in_array($delivery->status, [PdvCatalogDelivery::FAILED, PdvCatalogDelivery::CANCELLED], true)) {
-            return $this->error($request, 'catalog_delivery_unavailable', 'Esta entrega não está mais disponível.', 409);
-        }
-        $lastPart = (int) ceil($delivery->publication->product_count / self::PART_SIZE) - 1;
-        if ($lastPart >= 0 && (int) $delivery->last_part < $lastPart) {
-            return $this->error($request, 'catalog_transfer_incomplete', 'Ainda há partes da carga que não foram transferidas.', 409);
-        }
-        if ($delivery->status !== PdvCatalogDelivery::APPLIED) {
-            $delivery->update(['status' => PdvCatalogDelivery::RECEIVED, 'received_at' => $delivery->received_at ?? now()]);
+        $result = $this->lifecycle->received($this->terminal->terminalId(), $deliveryId);
+        if (! $result->successful()) {
+            return $this->error($request, $result->errorCode ?? 'catalog_delivery_error', $result->message, $result->httpStatus);
         }
 
-        return response()->json(['data' => ['status' => $delivery->status]]);
+        return response()->json(['data' => ['status' => $result->delivery->status]]);
     }
 
     public function applied(Request $request, string $deliveryId): JsonResponse
     {
-        $terminalId = $this->terminal->terminalId();
-        $result = DB::transaction(function () use ($deliveryId, $terminalId): ?PdvCatalogDelivery {
-            /** @var PdvCatalogDelivery|null $delivery */
-            $delivery = PdvCatalogDelivery::query()->whereKey($deliveryId)->where('terminal_id', $terminalId)->lockForUpdate()->first();
-            if (! $delivery || ! in_array($delivery->status, [PdvCatalogDelivery::RECEIVED, PdvCatalogDelivery::APPLIED], true)) {
-                return null;
-            }
-            /** @var PdvCatalogPublication|null $publication */
-            $publication = PdvCatalogPublication::query()->whereKey($delivery->publication_id)->where('status', PdvCatalogPublication::PUBLISHED)->first();
-            if (! $publication) {
-                return null;
-            }
-            $active = DB::table('pdv_terminal_catalog_states')->where('terminal_id', $terminalId)->lockForUpdate()->first();
-            if ($active && (int) $active->version > (int) $publication->version) {
-                return null;
-            }
-            $now = now();
-            $delivery->update(['status' => PdvCatalogDelivery::APPLIED, 'applied_at' => $delivery->applied_at ?? $now, 'applied_version' => $publication->version]);
-            DB::table('pdv_terminal_catalog_states')->updateOrInsert(['terminal_id' => $terminalId], [
-                'publication_id' => $publication->id,
-                'version' => $publication->version,
-                'applied_at' => $delivery->applied_at ?? $now,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-
-            /** @var PdvCatalogDelivery $refreshed */
-            $refreshed = $delivery->fresh();
-
-            return $refreshed;
-        });
-        if (! $result) {
-            return $this->error($request, 'catalog_apply_conflict', 'A carga não pode ser marcada como aplicada neste estado ou substituir versão mais recente.', 409);
+        $result = $this->lifecycle->applied($this->terminal->terminalId(), $deliveryId);
+        if (! $result->successful()) {
+            return $this->error($request, $result->errorCode ?? 'catalog_delivery_error', $result->message, $result->httpStatus);
         }
 
-        return response()->json(['data' => ['status' => $result->status, 'version' => $result->applied_version]]);
+        return response()->json(['data' => ['status' => $result->delivery->status, 'version' => $result->delivery->applied_version]]);
     }
 
     public function failed(Request $request, string $deliveryId): JsonResponse
@@ -196,19 +162,12 @@ final class CatalogDeliveryController
             return $this->error($request, PdvErrorResponse::CODE_VALIDATION, 'Código de falha inválido.', 422, $validator->errors()->messages());
         }
         $validated = $validator->validated();
-        $delivery = $this->delivery($deliveryId);
-        if (! $delivery) {
-            return $this->error($request, 'catalog_delivery_not_found', 'Carga não encontrada para este terminal.', 404);
-        }
-        if ($delivery->publication?->status !== PdvCatalogPublication::PUBLISHED
-            || in_array($delivery->status, [PdvCatalogDelivery::CANCELLED, PdvCatalogDelivery::APPLIED], true)) {
-            return $this->error($request, 'catalog_delivery_unavailable', 'Esta entrega não pode receber uma falha neste estado.', 409);
-        }
-        if ($delivery->status !== PdvCatalogDelivery::APPLIED) {
-            $delivery->update(['status' => PdvCatalogDelivery::FAILED, 'failure_code' => $validated['code']]);
+        $result = $this->lifecycle->failed($this->terminal->terminalId(), $deliveryId, $validated['code']);
+        if (! $result->successful()) {
+            return $this->error($request, $result->errorCode ?? 'catalog_delivery_error', $result->message, $result->httpStatus);
         }
 
-        return response()->json(['data' => ['status' => $delivery->status]]);
+        return response()->json(['data' => ['status' => $result->delivery->status]]);
     }
 
     private function delivery(string $id): ?PdvCatalogDelivery
@@ -218,7 +177,9 @@ final class CatalogDeliveryController
         }
 
         return PdvCatalogDelivery::query()->with('publication')->whereKey($id)
-            ->where('terminal_id', $this->terminal->terminalId())->first();
+            ->where('terminal_id', $this->terminal->terminalId())
+            ->whereHas('publication', fn ($query) => $query->where('tenant_id', $this->terminal->tenantId())
+                ->where('company_id', $this->terminal->companyId()))->first();
     }
 
     /** @param array<string, list<string>> $errors */

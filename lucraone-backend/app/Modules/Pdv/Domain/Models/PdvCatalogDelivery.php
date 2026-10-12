@@ -2,6 +2,7 @@
 
 namespace App\Modules\Pdv\Domain\Models;
 
+use App\Modules\Terminals\Domain\Models\Terminal;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -29,10 +30,20 @@ final class PdvCatalogDelivery extends Model
 
     protected $guarded = [];
 
-    protected $casts = ['received_at' => 'datetime', 'applied_at' => 'datetime'];
+    protected $casts = [
+        'manifest_seen_at' => 'datetime',
+        'transfer_verified_at' => 'datetime',
+        'received_at' => 'datetime',
+        'applied_at' => 'datetime',
+    ];
 
     public function publication(): BelongsTo
     {
         return $this->belongsTo(PdvCatalogPublication::class, 'publication_id');
+    }
+
+    public function terminal(): BelongsTo
+    {
+        return $this->belongsTo(Terminal::class, 'terminal_id');
     }
 }

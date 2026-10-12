@@ -14,6 +14,9 @@
 
     <x-slot:acoes>
         <x-button variante="secundario" href="{{ route('terminals.index') }}">voltar</x-button>
+        @if (config('pdv_catalog.enabled', false) && $terminal->company_id && auth()->user()->hasPermission('manage-products', $terminal->tenant_id))
+            <x-button variante="secundario" href="{{ route('pdv.catalog-loads.index', ['company_id' => $terminal->company_id, 'terminal_id' => $terminal->id]) }}">cargas deste terminal</x-button>
+        @endif
         @if ($podeAdministrar && $terminal->status !== 'REVOKED')
             <x-button href="{{ route('terminals.edit', $terminal) }}">editar</x-button>
         @endif
