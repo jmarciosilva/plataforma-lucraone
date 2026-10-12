@@ -6,6 +6,7 @@ use App\Modules\Identity\Domain\Models\User;
 use App\Modules\Tenancy\Application\TenantContext;
 use App\Modules\Terminals\Application\TerminalContext;
 use App\Modules\Terminals\Application\TerminalCredentialLifecycle;
+use App\Modules\Terminals\Domain\MachineTokenAbility;
 use App\Modules\Terminals\Domain\Models\Terminal;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
@@ -13,6 +14,7 @@ use Illuminate\Encryption\Encrypter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\PersonalAccessToken;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
@@ -143,6 +145,22 @@ class PdvCredentialRotationTest extends PdvTestCase
         $legacy = $this->terminal->fresh()->createToken('pdv-machine', ['pdv:terminal:read'], now()->addHour());
         $this->lifecyclePost('terminal/credential/rotations', $legacy->plainTextToken, $this->payload())->assertOk();
         $this->assertSame(['pdv:terminal:read'], $legacy->accessToken->fresh()->abilities);
+    }
+
+    public function test_rotacao_segura_promove_credencial_legada_com_ability_de_catalogo(): void
+    {
+        $this->credencialDeMaquina();
+        $legacy = $this->terminal->fresh()->createToken('pdv-machine', [MachineTokenAbility::TERMINAL_READ], now()->addHour());
+        $payload = $this->payload();
+        $candidate = $this->lifecyclePost('terminal/credential/rotations', $legacy->plainTextToken, $payload)
+            ->assertOk()->json('data.credential.access_token');
+
+        // Preparar a rotação não amplia o PAT já distribuído.
+        $this->assertSame([MachineTokenAbility::TERMINAL_READ], $legacy->accessToken->fresh()->abilities);
+
+        $this->lifecyclePost('terminal/credential/confirm', $candidate, ['operation_id' => $payload['operation_id']])->assertOk();
+
+        $this->assertSame(MachineTokenAbility::paraCredencialDeMaquina(), PersonalAccessToken::findToken($candidate)->abilities);
     }
 
     public function test_context_and_unknown_fields_are_refused(): void
