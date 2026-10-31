@@ -24,6 +24,24 @@ class StoreWebProductRequest extends FormRequest
             : false;
     }
 
+    /**
+     * Aceita os preços no formato do painel ("12,90") antes de validar, igual ao
+     * StoreWebPriceRequest, e garante uma moeda padrão para o cadastro.
+     */
+    protected function prepareForValidation(): void
+    {
+        foreach (['cost_price', 'sale_price'] as $campo) {
+            $valor = $this->input($campo);
+            if (is_string($valor) && preg_match('/^\d+(?:[.,]\d{1,2})?$/D', $valor)) {
+                $this->merge([$campo => str_replace(',', '.', $valor)]);
+            }
+        }
+
+        if (is_string($this->input('currency'))) {
+            $this->merge(['currency' => strtoupper(trim($this->input('currency')))]);
+        }
+    }
+
     public function rules(TenantContext $context): array
     {
         return [
@@ -56,6 +74,9 @@ class StoreWebProductRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             ...$this->fiscalClassificationRules(),
             'status' => ['required', Rule::in(['active', 'inactive', 'discontinued'])],
+            'currency' => ['required', 'string', 'size:3'],
+            'cost_price' => ['bail', 'required', 'regex:/^\d{1,10}(?:\.\d{1,2})?$/D', 'numeric', 'gt:0'],
+            'sale_price' => ['bail', 'required', 'regex:/^\d{1,10}(?:\.\d{1,2})?$/D', 'numeric', 'gt:0'],
             'category_ids' => ['nullable', 'array'],
             'category_ids.*' => [
                 'string',
@@ -66,6 +87,16 @@ class StoreWebProductRequest extends FormRequest
 
     public function messages(): array
     {
-        return $this->fiscalClassificationMessages();
+        return [
+            ...$this->fiscalClassificationMessages(),
+            'currency.required' => 'Informe a moeda dos preços.',
+            'currency.size' => 'Informe uma moeda com três letras, como BRL.',
+            'cost_price.required' => 'Informe o preço de custo.',
+            'cost_price.regex' => 'Informe o preço de custo com até duas casas de centavos. Exemplo: 8,50.',
+            'cost_price.gt' => 'O preço de custo deve ser maior que zero.',
+            'sale_price.required' => 'Informe o preço de venda.',
+            'sale_price.regex' => 'Informe o preço de venda com até duas casas de centavos. Exemplo: 12,90.',
+            'sale_price.gt' => 'O preço de venda deve ser maior que zero.',
+        ];
     }
 }

@@ -38,7 +38,7 @@ class ProductFiscalWebTest extends TestCase
 
     private function data(array $data = []): array
     {
-        return ['company_id' => $this->company->id, 'sku' => 'PM05-'.Str::random(8), 'name' => 'Produto', 'status' => 'active', 'unit' => 'UN', ...$data];
+        return ['company_id' => $this->company->id, 'sku' => 'PM05-'.Str::random(8), 'name' => 'Produto', 'status' => 'active', 'unit' => 'UN', 'currency' => 'BRL', 'cost_price' => '8,50', 'sale_price' => '12,90', ...$data];
     }
 
     private function product(array $data = []): Product

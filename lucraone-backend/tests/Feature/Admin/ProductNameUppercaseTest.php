@@ -43,7 +43,9 @@ class ProductNameUppercaseTest extends TestCase
             $resposta = $editar ? $this->putJson('/api/v1/products/'.$produto->id, $dados) : $this->postJson('/api/v1/products', $dados);
             $resposta->assertSuccessful()->assertJsonPath('data.name', $esperado);
         } else {
-            $resposta = $editar ? $this->put(route('catalog.products.update', $produto), $dados) : $this->post(route('catalog.products.store'), $dados);
+            $resposta = $editar
+                ? $this->put(route('catalog.products.update', $produto), $dados)
+                : $this->post(route('catalog.products.store'), [...$dados, 'currency' => 'BRL', 'cost_price' => '8,50', 'sale_price' => '12,90']);
             $resposta->assertSessionHasNoErrors()->assertRedirect();
         }
         $this->assertDatabaseHas('products', ['tenant_id' => $tenant->id, 'name' => $esperado, 'sku' => 'MANUAL-01', 'description' => 'Descrição preservada']);

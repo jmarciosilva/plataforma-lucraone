@@ -137,6 +137,6 @@ class SkuAssistidoTest extends TestCase
 
     private function dados(array $mais = []): array
     {
-        return ['company_id' => $this->company->id, 'name' => 'Leite', 'status' => 'active', 'unit' => 'UN', ...$mais];
+        return ['company_id' => $this->company->id, 'name' => 'Leite', 'status' => 'active', 'unit' => 'UN', 'currency' => 'BRL', 'cost_price' => '8,50', 'sale_price' => '12,90', ...$mais];
     }
 }

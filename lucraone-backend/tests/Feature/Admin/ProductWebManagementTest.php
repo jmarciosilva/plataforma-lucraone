@@ -92,6 +92,9 @@ class ProductWebManagementTest extends TestCase
             'description' => 'Pacote de café torrado.',
             'status' => 'active',
             'unit' => 'UN',
+            'currency' => 'BRL',
+            'cost_price' => '8,50',
+            'sale_price' => '12,90',
             'category_ids' => [(string) $category->id],
         ]);
 
@@ -111,6 +114,52 @@ class ProductWebManagementTest extends TestCase
             'product_id' => $product->id,
             'category_id' => $category->id,
         ]);
+
+        // A regra de negócio exige que o produto nasça com custo e venda.
+        $this->assertDatabaseHas('prices', [
+            'product_id' => $product->id,
+            'type' => Price::TYPE_COST,
+            'currency' => 'BRL',
+            'amount' => '8.50',
+        ]);
+        $this->assertDatabaseHas('prices', [
+            'product_id' => $product->id,
+            'type' => Price::TYPE_SALE,
+            'currency' => 'BRL',
+            'amount' => '12.90',
+        ]);
+    }
+
+    public function test_criar_produto_sem_precos_e_recusado(): void
+    {
+        $this->actingAs($this->admin)
+            ->from(route('catalog.products.create'))
+            ->post(route('catalog.products.store'), [
+                'company_id' => (string) $this->company->id,
+                'sku' => 'SEM-PRECO',
+                'name' => 'Produto Sem Preço',
+                'status' => 'active',
+                'unit' => 'UN',
+            ])
+            ->assertRedirect(route('catalog.products.create'))
+            ->assertSessionHasErrors(['cost_price', 'sale_price']);
+
+        $this->assertDatabaseMissing('products', ['sku' => 'SEM-PRECO']);
+    }
+
+    public function test_criar_produto_com_preco_zerado_e_recusado(): void
+    {
+        $this->actingAs($this->admin)
+            ->from(route('catalog.products.create'))
+            ->post(route('catalog.products.store'), $this->dadosProduto([
+                'sku' => 'PRECO-ZERO',
+                'cost_price' => '0',
+                'sale_price' => '0,00',
+            ]))
+            ->assertRedirect(route('catalog.products.create'))
+            ->assertSessionHasErrors(['cost_price', 'sale_price']);
+
+        $this->assertDatabaseMissing('products', ['sku' => 'PRECO-ZERO']);
     }
 
     public function test_sku_duplicado_no_mesmo_tenant_retorna_erro(): void
@@ -502,6 +551,9 @@ class ProductWebManagementTest extends TestCase
             'name' => 'Produto',
             'status' => 'active',
             'unit' => 'UN',
+            'currency' => 'BRL',
+            'cost_price' => '8,50',
+            'sale_price' => '12,90',
             ...$dados,
         ];
     }

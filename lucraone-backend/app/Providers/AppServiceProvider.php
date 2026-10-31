@@ -252,6 +252,13 @@ class AppServiceProvider extends ServiceProvider
             ->by('pdv-catalog:'.(is_string($request->bearerToken()) ? hash('sha256', $request->bearerToken()) : 'ip:'.$request->ip()))
             ->response($this->recusaPorVolume()));
 
+        // Ingestão de vendas: o PDV envia em lote a cada 30s e pode reenviar.
+        // Bucket por credencial (hash do bearer, antes do auth:sanctum), folgado
+        // para não barrar reenvio idempotente de um caixa movimentado.
+        RateLimiter::for('pdv-sales', fn (Request $request) => Limit::perMinute(120)
+            ->by('pdv-sales:'.(is_string($request->bearerToken()) ? hash('sha256', $request->bearerToken()) : 'ip:'.$request->ip()))
+            ->response($this->recusaPorVolume()));
+
         RateLimiter::for('pdv-catalog-publish', fn (Request $request) => Limit::perMinutes(10, 5)
             ->by('pdv-catalog-publish:'.($request->user()?->getAuthIdentifier() ?? $request->ip()))
             ->response($this->recusaPorVolume()));

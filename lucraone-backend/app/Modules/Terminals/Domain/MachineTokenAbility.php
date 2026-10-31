@@ -45,6 +45,17 @@ final class MachineTokenAbility
     public const CATALOG_DISTRIBUTION = 'pdv:catalog:distribution';
 
     /**
+     * Enviar à retaguarda os eventos de venda confirmados/cancelados no caixa.
+     *
+     * Alcance de MÁQUINA: diz que este Terminal pode reportar suas próprias
+     * vendas. Não concede leitura de venda alheia nem administração — a venda
+     * nasce amarrada ao tenant/empresa/filial do próprio Terminal, nunca a um
+     * identificador vindo no corpo. Entra agora porque o endpoint
+     * `POST /pdv/sales` passou a existir; antes seria alcance sem contrato.
+     */
+    public const SALES_WRITE = 'pdv:sales:write';
+
+    /**
      * Abilities de uma credencial de máquina operacional.
      *
      * Um único conjunto para a emissão inicial (pairing, administração) e para a
@@ -62,6 +73,6 @@ final class MachineTokenAbility
      */
     public static function paraCredencialDeMaquina(): array
     {
-        return [self::TERMINAL_READ, self::CREDENTIAL_RENEW, self::CREDENTIAL_CONFIRM, self::OPERATOR_SESSION, self::CATALOG_READ, self::CATALOG_DISTRIBUTION];
+        return [self::TERMINAL_READ, self::CREDENTIAL_RENEW, self::CREDENTIAL_CONFIRM, self::OPERATOR_SESSION, self::CATALOG_READ, self::CATALOG_DISTRIBUTION, self::SALES_WRITE];
     }
 }

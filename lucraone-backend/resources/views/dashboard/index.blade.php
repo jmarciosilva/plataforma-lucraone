@@ -68,7 +68,40 @@
         </div>
     @endif
 
-    <x-section-label class="{{ $comercial ? 'mt-8' : '' }}">o painel até agora</x-section-label>
+    @isset($vendasPdv)
+        @php
+            $moeda = fn ($v) => 'R$ ' . number_format((float) $v, 2, ',', '.');
+            $lucroPdv = (float) $vendasPdv['lucro'];
+            $corLucroPdv = $lucroPdv < 0 ? 'text-brasa' : 'text-ok';
+        @endphp
+
+        <x-section-label class="{{ $comercial ? 'mt-8' : '' }}">vendas de pdv hoje</x-section-label>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <x-kpi rotulo="total do dia" :valor="$moeda($vendasPdv['total'])" nota="{{ $vendasPdv['quantidade'] }} venda(s) confirmada(s)" />
+            <x-kpi rotulo="ticket médio" :valor="$moeda($vendasPdv['ticket_medio'])" nota="faturamento por venda" />
+            <x-card class="p-5">
+                <p class="text-xs lowercase text-aco">lucratividade</p>
+                <p class="mt-1.5 font-comanda text-2xl font-medium {{ $corLucroPdv }} lg:text-3xl">{{ $moeda($lucroPdv) }}</p>
+                <p class="mt-2 text-xs text-aco">
+                    @if ($vendasPdv['margem'] === null)
+                        cadastre o custo dos produtos para ver a margem
+                    @else
+                        margem de {{ number_format((float) $vendasPdv['margem'], 1, ',', '.') }}%
+                    @endif
+                </p>
+            </x-card>
+            <x-kpi rotulo="cancelado" :valor="$moeda($vendasPdv['total_cancelado'])" nota="fora do faturamento" />
+        </div>
+
+        <div class="mt-3">
+            <a href="{{ route('pdv.sales.index') }}" class="text-sm font-semibold lowercase text-sol transition-opacity hover:opacity-70">
+                abrir vendas do pdv →
+            </a>
+        </div>
+    @endisset
+
+    <x-section-label class="mt-8">o painel até agora</x-section-label>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <x-kpi rotulo="estabelecimentos" :valor="$metricas['tenants']" nota="disponíveis para o seu acesso" />

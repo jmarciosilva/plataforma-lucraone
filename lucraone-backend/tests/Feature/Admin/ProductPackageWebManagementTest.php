@@ -334,6 +334,9 @@ class ProductPackageWebManagementTest extends TestCase
             'name' => 'Produto',
             'status' => 'active',
             'unit' => 'UN',
+            'currency' => 'BRL',
+            'cost_price' => '8,50',
+            'sale_price' => '12,90',
             ...$dados,
         ];
     }

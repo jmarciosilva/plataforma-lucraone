@@ -96,6 +96,7 @@ class PairingCredentialTest extends PairingTestCase
             'pdv:operator-session',
             'pdv:catalog:read',
             'pdv:catalog:distribution',
+            'pdv:sales:write',
         ], $token->abilities);
         $this->assertNotContains('*', $token->abilities);
         $this->assertSame('pdv-machine', $token->name);

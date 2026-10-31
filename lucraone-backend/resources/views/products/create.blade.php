@@ -17,6 +17,7 @@
         <form method="POST" action="{{ route('catalog.products.store') }}">
             @csrf
             @include('products._form')
+            @include('products._create-prices')
 
             <div class="mt-6 flex justify-end gap-2">
                 <x-button variante="fantasma" href="{{ route('catalog.products.index') }}">cancelar</x-button>

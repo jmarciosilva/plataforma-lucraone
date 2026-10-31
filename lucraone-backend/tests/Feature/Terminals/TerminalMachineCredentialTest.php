@@ -54,6 +54,7 @@ class TerminalMachineCredentialTest extends MachineTestCase
             'pdv:operator-session',
             'pdv:catalog:read',
             'pdv:catalog:distribution',
+            'pdv:sales:write',
         ];
 
         $this->assertSame($esperadas, $this->tokenPersistido()->abilities);

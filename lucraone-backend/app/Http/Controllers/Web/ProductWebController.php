@@ -17,6 +17,7 @@ use App\Modules\Products\Domain\Models\Product;
 use App\Modules\Products\Domain\Models\ProductPackage;
 use App\Modules\Tenancy\Application\TenantContext;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class ProductWebController extends Controller
@@ -86,14 +87,27 @@ class ProductWebController extends Controller
         ]);
     }
 
-    public function store(StoreWebProductRequest $request, TenantContext $context, CriarProdutoComSku $gerador)
+    public function store(StoreWebProductRequest $request, TenantContext $context, CriarProdutoComSku $gerador, RegistrarPreco $prices)
     {
-        $dados = $request->safe()->except(['category_ids', 'sku_automatico']);
-        $product = blank($dados['sku'] ?? null)
-            ? $gerador->criar($dados, $context)
-            : Product::create([...$dados, 'tenant_id' => $context->id()]);
+        $dados = $request->safe()->except(['category_ids', 'sku_automatico', 'currency', 'cost_price', 'sale_price']);
+        $currency = $request->validated('currency');
+        $userId = $request->user()?->id;
 
-        $product->categories()->sync($request->input('category_ids', []));
+        // Produto nasce com custo e venda no mesmo ato: a regra de negócio não
+        // admite item sem os dois preços. Custo primeiro para a venda já registrar
+        // a margem efetiva. Tudo em uma transação para não deixar produto sem preço.
+        $product = DB::transaction(function () use ($dados, $context, $gerador, $prices, $request, $currency, $userId) {
+            $product = blank($dados['sku'] ?? null)
+                ? $gerador->criar($dados, $context)
+                : Product::create([...$dados, 'tenant_id' => $context->id()]);
+
+            $product->categories()->sync($request->input('category_ids', []));
+
+            $prices->salvar($product, ['currency' => $currency, 'amount' => $request->validated('cost_price'), 'type' => Price::TYPE_COST], $userId, 'cadastro do produto');
+            $prices->salvar($product, ['currency' => $currency, 'amount' => $request->validated('sale_price'), 'type' => Price::TYPE_SALE], $userId, 'cadastro do produto');
+
+            return $product;
+        });
 
         return redirect()
             ->route('catalog.products.show', $product)
@@ -237,10 +251,21 @@ class ProductWebController extends Controller
             'unitOptions' => $this->unitOptions(),
             'defaultOriginOptions' => Product::DEFAULT_ORIGINS,
             'companies' => $this->companies(),
+            'currencyOptions' => $this->currencyOptions(),
             'categories' => Category::query()
                 ->with('parent')
                 ->orderBy('name')
                 ->get(),
+        ];
+    }
+
+    private function currencyOptions(): array
+    {
+        return [
+            'BRL' => 'Real brasileiro (BRL)',
+            'USD' => 'Dólar americano (USD)',
+            'EUR' => 'Euro (EUR)',
+            'ARS' => 'Peso argentino (ARS)',
         ];
     }
 

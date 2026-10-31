@@ -13,6 +13,7 @@ use App\Http\Controllers\Web\NotificationWebController;
 use App\Http\Controllers\Web\OnboardingController;
 use App\Http\Controllers\Web\OrderWebController;
 use App\Http\Controllers\Web\PdvCatalogLoadController;
+use App\Http\Controllers\Web\PdvSalesDashboardController;
 use App\Http\Controllers\Web\PdvOperatorController;
 use App\Http\Controllers\Web\PermissionController;
 use App\Http\Controllers\Web\ProductWebController;
@@ -63,6 +64,10 @@ Route::middleware('auth.web')->group(function () {
     Route::get('/pdv/catalog-loads', [PdvCatalogLoadController::class, 'index'])->name('pdv.catalog-loads.index');
     Route::post('/pdv/catalog-loads', [PdvCatalogLoadController::class, 'store'])
         ->middleware('throttle:pdv-catalog-publish')->name('pdv.catalog-loads.store');
+
+    Route::get('/pdv/sales', [PdvSalesDashboardController::class, 'index'])->name('pdv.sales.index');
+    Route::get('/pdv/sales/ping', [PdvSalesDashboardController::class, 'ping'])->name('pdv.sales.ping');
+    Route::get('/pdv/sales/simular', [PdvSalesDashboardController::class, 'simular'])->name('pdv.sales.simular');
 
     Route::get('/tenants/ajuda/cadastro', [TenantController::class, 'onboardingHelp'])
         ->name('tenants.onboarding.help');

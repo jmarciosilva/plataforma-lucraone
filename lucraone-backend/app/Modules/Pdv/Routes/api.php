@@ -9,6 +9,7 @@ use App\Modules\Pdv\Http\Controllers\OperatorBranchAssignmentController;
 use App\Modules\Pdv\Http\Controllers\OperatorSessionController;
 use App\Modules\Pdv\Http\Controllers\PairTerminalController;
 use App\Modules\Pdv\Http\Controllers\PdvHealthController;
+use App\Modules\Pdv\Http\Controllers\SaleIngestionController;
 use App\Modules\Pdv\Http\Controllers\TerminalProvisioningController;
 use App\Modules\Pdv\Http\Middleware\AuthenticateOperatorSession;
 use App\Modules\Pdv\Http\Middleware\EnsureCatalogDistributionEnabled;
@@ -87,6 +88,20 @@ Route::prefix('v1/pdv')->group(function () {
         Route::post('terminal/heartbeat', HeartbeatController::class)
             ->middleware('throttle:pdv-credential')
             ->name('pdv.terminal.heartbeat');
+    });
+
+    // Ingestão de vendas confirmadas/canceladas no caixa. Máquina autenticada,
+    // contexto resolvido e ability de venda — a mesma ordem das demais rotas de
+    // máquina: autenticar, estabelecer o sujeito-máquina, só então conferir o
+    // alcance do token. Não exige sessão de operador: o operador vem no corpo e
+    // o evento já foi fechado no PDV; o que autoriza o POST é a máquina.
+    Route::middleware([
+        'auth:sanctum',
+        'terminal.context',
+        'machine.ability:'.MachineTokenAbility::SALES_WRITE,
+        'throttle:pdv-sales',
+    ])->group(function () {
+        Route::post('sales', [SaleIngestionController::class, 'store'])->name('pdv.sales.store');
     });
 
     // Distribuição somente de cargas publicadas destinadas ao Terminal autenticado.
