@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AuthorizeTerminalRecoveryRequest;
+use App\Http\Requests\ProvisionTerminalRequest;
 use App\Http\Requests\StoreTerminalRequest;
 use App\Http\Requests\UpdateTerminalRequest;
 use App\Modules\Audit\Domain\Models\AuditLog;
@@ -13,6 +14,7 @@ use App\Modules\Terminals\Application\IssueTerminalPairingCode;
 use App\Modules\Terminals\Application\TerminalAuthenticationEligibility;
 use App\Modules\Terminals\Application\TerminalCredentialLifecycle;
 use App\Modules\Terminals\Application\TerminalManagementService;
+use App\Modules\Terminals\Application\TerminalProvisioningService;
 use App\Modules\Terminals\Domain\Exceptions\CredentialLifecycleFailed;
 use App\Modules\Terminals\Domain\Exceptions\PairingFailed;
 use App\Modules\Terminals\Domain\Models\Terminal;
@@ -38,6 +40,7 @@ class TerminalController extends Controller
         private TerminalManagementService $servico,
         private IssueTerminalPairingCode $emissaoCodigo,
         private TerminalCredentialLifecycle $cicloCredenciais,
+        private TerminalProvisioningService $provisionamento,
     ) {}
 
     public function index(Request $request, TenantContext $context)
@@ -109,6 +112,58 @@ class TerminalController extends Controller
         return redirect()
             ->route('terminals.show', $terminal)
             ->with('sucesso', 'Terminal cadastrado.');
+    }
+
+    /**
+     * Formulário do provisionamento DIRETO (modelo Linx/TOTVS/Stone): o admin
+     * informa o installation_id que o PDV gerou e o terminal nasce ativo, sem
+     * pareamento interativo.
+     */
+    public function provision(Request $request, TenantContext $context)
+    {
+        $tenantId = $context->id();
+        $this->exigirAdministracao($request);
+
+        return view('terminals.provision', [
+            'filiais' => Branch::withoutGlobalScopes()
+                ->where('tenant_id', $tenantId)
+                ->where('status', 'ACTIVE')
+                ->with('company')
+                ->orderBy('name')
+                ->get(),
+            'tenantNome' => $context->tenant()->name,
+            'breadcrumbs' => [...$this->breadcrumbs(), ['label' => 'provisionar']],
+        ]);
+    }
+
+    public function storeProvision(ProvisionTerminalRequest $request, TenantContext $context)
+    {
+        $tenantId = $context->id();
+        $this->exigirAdministracao($request);
+
+        try {
+            $resultado = $this->provisionamento->provision(
+                $request->user(),
+                $tenantId,
+                $request->validated('installation_id'),
+                $request->validated('name'),
+                $request->validated('branch_id'),
+            );
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
+
+        // A credencial em texto puro existe só nesta travessia. O painel a expõe
+        // uma única vez, via flash de sessão, exatamente como o código de
+        // pareamento: depois do próximo request ela some e não há como relê-la.
+        // Sessão com driver cookie serializa em JSON, então o Carbon vira string
+        // formatada aqui.
+        return redirect()
+            ->route('terminals.show', $resultado->terminalId)
+            ->with('sucesso', 'Terminal provisionado.')
+            ->with('credencialProvisionada', $resultado->credential)
+            ->with('credencialTipo', 'Bearer')
+            ->with('credencialExpira', $resultado->credentialExpiresAt->format('H:i \d\e d/m/Y'));
     }
 
     public function show(Request $request, string $terminal, TenantContext $context)

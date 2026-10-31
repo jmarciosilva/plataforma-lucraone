@@ -36,6 +36,15 @@
         ])
     @endif
 
+    @if (session('credencialProvisionada'))
+        @include('terminals._provisioned_credential', [
+            'token' => session('credencialProvisionada'),
+            'tipo' => session('credencialTipo', 'Bearer'),
+            'expira' => session('credencialExpira'),
+            'terminal' => $terminal,
+        ])
+    @endif
+
     <x-section-label>resumo</x-section-label>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

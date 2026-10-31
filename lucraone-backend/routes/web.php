@@ -106,6 +106,12 @@ Route::middleware('auth.web')->group(function () {
     | Rotas de ação antes do resource para não conflitar com bindings.
     | Sem destroy: terminal revogado permanece no histórico.
     */
+    // Provisionamento direto (modelo Linx/TOTVS/Stone). Antes do resource para
+    // que /terminals/provision não caia em /terminals/{terminal} (show).
+    Route::get('/terminals/provision', [TerminalController::class, 'provision'])
+        ->name('terminals.provision');
+    Route::post('/terminals/provision', [TerminalController::class, 'storeProvision'])
+        ->name('terminals.provision.store');
     Route::post('/terminals/{terminal}/block', [TerminalController::class, 'block'])
         ->name('terminals.block');
     Route::post('/terminals/{terminal}/unblock', [TerminalController::class, 'unblock'])

@@ -9,7 +9,8 @@
             <x-button variante="secundario" href="{{ route('pdv.catalog-loads.index') }}">central de cargas</x-button>
         @endif
         @if ($podeAdministrar)
-            <x-button href="{{ route('terminals.create') }}">novo terminal</x-button>
+            <x-button variante="secundario" href="{{ route('terminals.create') }}">novo terminal (pareamento)</x-button>
+            <x-button href="{{ route('terminals.provision') }}">cadastrar terminal pdv</x-button>
         @endif
     </x-slot:acoes>
 
