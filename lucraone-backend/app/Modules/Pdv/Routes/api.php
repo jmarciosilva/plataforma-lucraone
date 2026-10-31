@@ -9,6 +9,7 @@ use App\Modules\Pdv\Http\Controllers\OperatorBranchAssignmentController;
 use App\Modules\Pdv\Http\Controllers\OperatorSessionController;
 use App\Modules\Pdv\Http\Controllers\PairTerminalController;
 use App\Modules\Pdv\Http\Controllers\PdvHealthController;
+use App\Modules\Pdv\Http\Controllers\TerminalProvisioningController;
 use App\Modules\Pdv\Http\Middleware\AuthenticateOperatorSession;
 use App\Modules\Pdv\Http\Middleware\EnsureCatalogDistributionEnabled;
 use App\Modules\Pdv\Http\Middleware\HumanAdministrationContext;
@@ -47,6 +48,14 @@ Route::prefix('v1/pdv')->group(function () {
     // ficam fora do grupo `terminal.context` — que recusaria sujeito humano.
     // ----------------------------------------------------------------
     Route::middleware(['auth:sanctum', HumanAdministrationContext::class, 'throttle:pdv-operator-admin'])->group(function () {
+        // Provisionamento DIRETO de Terminal (modelo Linx/TOTVS/Stone): o admin
+        // informa o installation_id que o PDV gerou e cria o terminal já ligado
+        // a uma filial, recebendo a credencial de máquina de volta. Substitui a
+        // necessidade do `terminals/pair` interativo, que segue existindo por
+        // compatibilidade.
+        Route::post('admin/terminals', [TerminalProvisioningController::class, 'store'])
+            ->name('pdv.terminals.provision');
+
         Route::get('admin/branches/{branch}/operators', [OperatorBranchAssignmentController::class, 'index'])
             ->name('pdv.operators.index');
         Route::post('admin/branches/{branch}/operators', [OperatorBranchAssignmentController::class, 'store'])

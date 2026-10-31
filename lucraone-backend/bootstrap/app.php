@@ -143,6 +143,7 @@ return Application::configure(basePath: dirname(__DIR__))
             // log. As rotas de operador entram aqui pelo mesmo motivo que as de
             // credencial: registra-se tipo e correlação, nunca o objeto.
             if (request()->is('api/v1/pdv/terminal/credential/*')
+                || request()->is('api/v1/pdv/admin/terminals')
                 || request()->is('api/v1/pdv/admin/terminals/*/credential-recovery-codes')
                 || request()->is('api/v1/pdv/operator-session*')
                 || request()->is('api/v1/pdv/admin/branches/*/operators')
