@@ -1,7 +1,7 @@
 # Status do Projeto — LUCRAONE Multissegmento
 
-**Atualizado em:** 2026-11-01 (revisão 5 — REST-02 EM IMPLEMENTAÇÃO)  
-**Fase atual:** REST-02 — Cardápio e Modificadores (EM DESENVOLVIMENTO)
+**Atualizado em:** 2026-11-01 (revisão 5 — REST-02 concluído)  
+**Fase atual:** REST-02 concluído — próxima elegível: REST-03 (mesas e comandas)
 
 ---
 
@@ -110,10 +110,10 @@
 
 | Campo | Valor |
 |---|---|
-| Status | EM DESENVOLVIMENTO |
-| Bloqueio | nenhum — MS-02 e MS-03 concluídos, decisões R2-A a R2-D aprovadas |
-| Estimativa | 5–7 dias |
-| Iniciado em | 2026-11-01 |
+| Status | CONCLUÍDO |
+| Commit | `40acd4b` |
+| Concluído em | 2026-11-01 |
+| Testes | 1974 PASS, 0 FAIL (+35 novos vs baseline 1939) |
 
 **Decisões aprovadas:** R2-A (modificadores: template global + override por filial), R2-B (preços: price_override nullable com effectivePrice()), R2-C (disponibilidade: boolean manual persistente por filial), R2-D (imagens: fora do escopo V2).
 
@@ -130,7 +130,7 @@
 - Nav: link de cardápio ativado em _nav-restaurant.blade.php
 - Testes: MenuSectionTest, MenuSectionItemTest, ModifierGroupTest, ModifierTest, MenuPriceResolutionTest, MenuAvailabilityTest, MenuTenantIsolationTest
 
-**Pendente:** executar suíte completa de testes → commit → relatório de entrega.
+**Evidências de conclusão:** 1974 PASS, 0 FAIL. Commit `40acd4b`.
 
 ---
 
@@ -202,7 +202,7 @@
 | 2026-11-01 | MS-01 | Revisão 2: três ressalvas analisadas. Documentos atualizados. Commit `7c7935b`. |
 | 2026-11-01 | MS-02 | Implementação concluída. BranchSegment, BranchContext, BranchResolver, FilialController, migration, views, 17 testes. Commit `f781b35`. |
 | 2026-11-01 | MS-03 | Implementação concluída. Despacho por segmento, nav por segmento, dashboard/restaurante, visão consolidada, 12 testes. Commit `fc6aaa0`. |
-| 2026-11-01 | REST-02 | Implementação iniciada. Decisões R2-A a R2-D aprovadas. Models, migrations, service, policies, requests, factories, controllers, views, rotas, nav e testes criados. Suíte pendente de execução. |
+| 2026-11-01 | REST-02 | Implementação concluída. 50 arquivos, 35 novos testes. Suíte completa 1974 PASS, 0 FAIL. Commit `40acd4b`. |
 
 ---
 
