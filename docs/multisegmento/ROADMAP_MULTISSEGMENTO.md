@@ -1,426 +1,225 @@
 # Roadmap Multissegmento — LUCRAONE
 
 **Criado:** 2026-11-01  
-**Última atualização:** 2026-11-01  
+**Revisado:** 2026-11-01 (revisão 2 — três ressalvas; fases MS-02 e REST-05 expandidas)  
 **Escopo:** plataforma SaaS multissegmento, começando pelo segmento restaurantes  
-**Documento complementar:** [ARQUITETURA_MULTISSEGMENTO.md](ARQUITETURA_MULTISSEGMENTO.md)  
-**Roadmap de execução existente:** [ROADMAP.md](../../ROADMAP.md)
+**Documentos complementares:**
+- [ARQUITETURA_MULTISSEGMENTO.md](ARQUITETURA_MULTISSEGMENTO.md) — decisões arquiteturais e análises técnicas
+- [RESTAURANTES.md](RESTAURANTES.md) — catálogo oficial de funcionalidades com IDs únicos
 
-> **Atenção:** este roadmap governa o desenvolvimento do multissegmento. Ele
-> não substitui o ROADMAP.md existente — coexiste com ele. A F2.6 (Integration
-> APIs) permanece na trilha original e pode avançar em paralelo.
+> Este roadmap não substitui o ROADMAP.md principal — coexiste com ele.
+> A F2.6 (Integration APIs) permanece na trilha original.
 
 ---
 
 ## Visão executiva
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│  FASES MULTISSEGMENTO                    STATUS                │
-│                                                                 │
-│  MS-01  Diagnóstico e arquitetura        ✅ CONCLUÍDO           │
-│  MS-02  Segmento e perfil operacional    ○ NÃO INICIADO         │
-│  MS-03  Templates e navegação            ○ NÃO INICIADO         │
-│  REST-01 Dashboard de restaurante        ○ NÃO INICIADO         │
-│  REST-02 Cardápio                        ○ NÃO INICIADO         │
-│  REST-03 Mesas e comandas                ○ NÃO INICIADO         │
-│  REST-04 Pedidos e produção (KDS)        ○ NÃO INICIADO         │
-│  REST-05 Fichas técnicas e custo         ○ NÃO INICIADO         │
-│  REST-06 Integração PDV Java             ○ NÃO INICIADO         │
-│  REST-07 Testes integrados e homolog.    ○ NÃO INICIADO         │
-│                                                                 │
-│  Fases planejadas:    10                                        │
-│  Concluídas:           1  (MS-01 — diagnóstico)                 │
-│  Em andamento:         0                                        │
-│  Bloqueadas:           0                                        │
-│  Progresso:           10%  (1/10 planejadas)                    │
-│  Próxima fase:        MS-02 (aguarda aprovação da arquitetura)  │
-│  Última atualização:  2026-11-01                                │
-└────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│  FASES MULTISSEGMENTO                         STATUS               │
+│                                                                     │
+│  MS-01  Diagnóstico e arquitetura             ✅ CONCLUÍDO          │
+│  MS-02  Segmento, BranchContext e perfil      ○ NÃO INICIADO        │
+│  MS-03  Templates de dashboard e navegação    ○ NÃO INICIADO        │
+│  REST-02 Cardápio                             ○ NÃO INICIADO        │
+│  REST-03 Mesas e comandas                     ○ NÃO INICIADO        │
+│  REST-04 Pedidos e produção (KDS)             ○ NÃO INICIADO        │
+│  REST-05 Tipos de produto + fichas técnicas   ○ NÃO INICIADO        │
+│  REST-01 Dashboard de restaurante             ○ NÃO INICIADO        │
+│  REST-06 Integração PDV Java                  ○ NÃO INICIADO        │
+│  REST-07 Testes integrados e homologação      ○ NÃO INICIADO        │
+│                                                                     │
+│  Fases planejadas:    10                                            │
+│  Concluídas:           1  (MS-01)                                   │
+│  Em andamento:         0                                            │
+│  Bloqueadas:           0                                            │
+│  Progresso:           10%                                           │
+│  Próxima fase:        MS-02 (aguarda aprovação arquitetural)        │
+│  Última atualização:  2026-11-01                                    │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
-### Dependências críticas entre fases
+### Dependências entre fases
 
 ```
-MS-01 ──→ MS-02 ──→ MS-03 ──→ REST-01
-                               REST-02 ──→ REST-03 ──→ REST-04
-                                                    ──→ REST-05
+MS-01 ──→ MS-02 ──→ MS-03 ──→ REST-03 ──→ REST-04
+                └──→ REST-02 ──→ REST-03
+                               REST-04 ──→ REST-01 (parcial)
+                REST-02 ──→ REST-05 ──→ REST-01 (completo)
                                REST-03 ──→ REST-06
-                REST-01 + REST-02 + REST-03 + REST-04 + REST-05 ──→ REST-07
+                               REST-04 ──→ REST-06
+MS-01 a REST-06 ──→ REST-07
 ```
+
+**Mudança em relação à revisão 1:** REST-05 (fichas técnicas) passou a ser
+pré-requisito de REST-01 completo, e MS-02 foi expandido para incluir
+BranchContext além do campo de segmento.
 
 ---
 
 ## MS-01 — Diagnóstico e arquitetura multissegmento
 
 **Status:** CONCLUÍDO  
-**Início:** 2026-11-01  
-**Conclusão:** 2026-11-01  
-**Commits:** a registrar após versionamento destes documentos
+**Início:** 2026-11-01 · **Conclusão:** 2026-11-01 · **Commits:** `e83afab`
 
 ### Objetivo
 
-Levantar o estado real do código, identificar o que é reutilizável, definir a
-arquitetura de segmentação e produzir o roadmap oficial.
-
-### Escopo
-
-- Leitura de código: models, controllers, migrations, views, rotas, testes.
-- Leitura de documentação existente: ROADMAP.md, PROJECT_STATUS.md, ADRs.
-- Produção de: ARQUITETURA_MULTISSEGMENTO.md, ROADMAP_MULTISSEGMENTO.md,
-  PROJECT_STATUS_MULTISSEGMENTO.md, RESTAURANTES.md.
-
-### Funcionalidades existentes mapeadas
-
-| Área | Módulo | Tabelas |
-|---|---|---|
-| Multi-tenancy | Tenancy | tenants, tenant_user |
-| Empresas / filiais | Companies, Branches | companies, branches |
-| Produtos e categorias | Products | products, categories, product_categories, prices, product_packages |
-| Estoque | Inventory | inventories, inventory_movements, stock_levels |
-| Pedidos (retaguarda) | Sales | orders, order_items |
-| Clientes | Sales | customers |
-| Relatórios e KPIs | Reporting | (views sobre tabelas acima) |
-| Automações | Automation | automation_rules, automation_logs |
-| Notificações | Notifications | notifications |
-| RBAC | Authorization | roles, permissions, role_permission, user_role |
-| PDV — terminais | Terminals, Pdv | terminals, terminal_pairing_codes, terminal_credential_operations |
-| PDV — operadores | Pdv | pdv_operator_profiles, pdv_operator_sessions, pdv_operator_branch_assignments |
-| PDV — catálogo | Pdv | pdv_catalog_publications, pdv_catalog_deliveries |
-| PDV — vendas | Pdv | pdv_received_sales, pdv_received_sale_items, pdv_received_sale_payment_entries |
-| Auditoria | Audit | audit_logs |
-
-### Componentes novos necessários (resumo)
-
-- Campo `segment` + `operational_profile` em `branches`.
-- Serviço de resolução de segmento ativo (`SegmentContext`).
-- Templates de dashboard por segmento.
-- Navegação condicional por segmento.
-- Módulo Restaurant completo (mesas, comandas, cardápio, KDS, fichas técnicas).
-
-### Riscos identificados
-
-Ver [ARQUITETURA_MULTISSEGMENTO.md — seção 6](ARQUITETURA_MULTISSEGMENTO.md).
+Levantamento do estado real do código e produção dos documentos de planejamento.
 
 ### Critérios de aceite
 
-- [x] Inventário completo dos módulos existentes documentado.
-- [x] Decisão arquitetural de granularidade proposta e justificada.
-- [x] Roadmap de fases elaborado com dependências.
-- [x] Documentos de planejamento criados e versionados.
-- [ ] Aprovação da decisão arquitetural pelo responsável de produto.
+- [x] Inventário de módulos existentes documentado
+- [x] Decisão arquitetural proposta e justificada
+- [x] Roadmap elaborado com fases e dependências
+- [x] Documentos criados e versionados
+- [ ] Aprovação das decisões arquiteturais pelo responsável de produto ← **PENDENTE**
 
-### Entregáveis
+### Pendências
 
-- ARQUITETURA_MULTISSEGMENTO.md ✅
-- ROADMAP_MULTISSEGMENTO.md ✅
-- PROJECT_STATUS_MULTISSEGMENTO.md ✅
-- RESTAURANTES.md ✅
+- Aprovação das decisões A, B, C, D, E, F, G, H, I da ARQUITETURA_MULTISSEGMENTO.md.
 
 ---
 
-## MS-02 — Segmento e perfil operacional
+## MS-02 — Segmento, BranchContext e perfil operacional
 
 **Status:** NÃO INICIADO  
-**Bloqueio:** aguarda aprovação da decisão arquitetural de MS-01  
-**Estimativa:** 2–3 dias de desenvolvimento + testes
+**Bloqueio:** aprovação das decisões A e B (granularidade do segmento + BranchContext)  
+**Estimativa:** 4–6 dias
 
 ### Objetivo
 
-Adicionar ao modelo de dados o conceito de segmento e perfil operacional de
-filial, preservando retrocompatibilidade com todos os dados e contratos
-existentes.
+Adicionar ao modelo de dados o segmento da filial e implementar o mecanismo de
+contexto de filial no painel web, preservando retrocompatibilidade integral.
 
-### Justificativa
-
-Sem identificação de segmento na branch, o sistema não pode selecionar o
-template de dashboard correto nem habilitar funcionalidades específicas. É o
-alicerce de toda a plataforma multissegmento.
+> Esta fase foi expandida na revisão 2 para incluir o BranchContext, identificado
+> como pré-requisito arquitetural de toda a plataforma multissegmento.
 
 ### Escopo
 
-- Migration não-destrutiva em `branches`.
-- Atualização do model `Branch` e suas Policies.
-- Atualização do formulário de cadastro e edição de filial no painel.
-- Serviço `SegmentContext` para resolver segmento ativo na requisição.
-- Constantes de segmento versionadas.
-- Testes de unidade e integração.
+**Parte 1 — Banco de dados (não-destrutiva):**
+- Migration: `segment VARCHAR(30) NOT NULL DEFAULT 'SUPERMARKET'` em `branches`.
+- Migration: `operational_profile JSON NULL` em `branches`.
+- Todas as branches existentes recebem automaticamente `SUPERMARKET`.
 
-### Funcionalidades previstas
+**Parte 2 — BranchContext:**
+- `BranchContext` (service singleton, análogo a `TenantContext`).
+- `BranchResolver` (lê `'filial_ativa'` da sessão, valida pertencimento ao tenant).
+- Regras de resolução:
+  1. Sessão `'filial_ativa'` se válida.
+  2. Filial única do tenant — auto-selecionada sem interação.
+  3. Sem resolução — visão consolidada (comportamento atual preservado).
+- Limpeza do BranchContext se filial desativada ou acesso revogado.
 
-1. Campo `segment ENUM('SUPERMARKET','RESTAURANT','BAKERY','BAR','FAST_FOOD','RETAIL')`
-   em `branches`, `DEFAULT 'SUPERMARKET'` — branches existentes ficam como
-   supermercado automaticamente.
-2. Campo `operational_profile JSON NULL` em `branches` — armazena perfis
-   como `{ "modalidades": ["salao", "delivery"] }`.
-3. Select de segmento no formulário de criação e edição de filial.
-4. Classe `SegmentContext` injetável nos controllers para ler o segmento da
-   filial ativa.
+**Parte 3 — Seleção de filial:**
+- Rota e tela de seleção de filial (similar a `estabelecimentos.escolher`).
+- Ativada apenas quando tenant tem filiais de segmentos diferentes.
+
+**Parte 4 — Formulário de filial:**
+- Select de segmento no `BranchController` (create + edit).
+- Validação do valor do segmento.
 
 ### Módulos existentes reutilizados
 
-- `Branch` model — estendido com novos campos.
-- `BranchController` — estendido com validação dos novos campos.
-- `BranchPolicy` — sem alteração.
-- `TenantContext` — `SegmentContext` complementa, não substitui.
+- `TenantContext` / `TenantResolver` — modelo de implementação do `BranchContext`.
+- `AutenticarWeb` — estendido para resolver branch após tenant.
+- `BranchController` — estendido com novos campos.
 
 ### Componentes novos
 
-- `SegmentContext` (Application service).
-- Migration `add_segment_to_branches_table`.
-- Constante `BranchSegment` com valores e labels.
+- `BranchContext` (Application service).
+- `BranchResolver` (Application service).
+- `BranchSegment` (constante com valores e labels).
+- Migration `add_segment_and_profile_to_branches_table`.
+- Rota e view de seleção de filial (quando houver múltiplas de segmentos diferentes).
 
 ### Alterações no banco
 
 ```sql
+-- Não-destrutiva: DEFAULT garante retrocompatibilidade total
 ALTER TABLE branches
-  ADD COLUMN segment VARCHAR(30) NOT NULL DEFAULT 'SUPERMARKET'
-    COMMENT 'Segmento operacional: SUPERMARKET, RESTAURANT, BAKERY, BAR, FAST_FOOD, RETAIL',
-  ADD COLUMN operational_profile JSON NULL
-    COMMENT 'Configurações específicas do perfil operacional em JSON';
+  ADD COLUMN segment VARCHAR(30) NOT NULL DEFAULT 'SUPERMARKET',
+  ADD COLUMN operational_profile JSON NULL;
 ```
-
-Migration segura: `DEFAULT 'SUPERMARKET'` garante que todas as filiais
-existentes permaneçam funcionando como supermercado sem qualquer intervenção
-nos dados.
 
 ### Alterações em APIs
 
-- `GET /branches/{id}` → retorna `segment` e `operational_profile` no response.
+- `GET /branches/{id}` → retorna `segment` e `operational_profile`.
 - `POST/PUT /branches` → aceita `segment` e `operational_profile`.
-- Nenhuma rota existente é removida ou quebrada.
+- Nenhuma rota existente quebra.
 
 ### Impactos no PDV Java
 
-Nenhum impacto imediato. O PDV Java não consome dados de `segment` ainda.
-
-### Dependências
-
-- MS-01 aprovado.
-
-### Riscos
-
-- Migration em produção com dados: **baixo risco** pelo uso de `DEFAULT`.
-- Validação do JSON `operational_profile`: schema deve ser definido antes da
-  migration para evitar dados malformados.
-
-### Testes necessários
-
-- Teste de migration: filiais existentes recebem `SUPERMARKET` automaticamente.
-- Teste unitário: `Branch::segment()` retorna o enum correto.
-- Teste de integração: criação de filial com segmento `RESTAURANT`.
-- Teste de regressão: todos os testes de filial existentes continuam passando.
-- Teste de API: response de `GET /branches/{id}` inclui `segment`.
+Nenhum impacto imediato. O terminal já conhece sua branch.
 
 ### Critérios de aceite
 
-- [ ] Migration executada em staging sem erros.
-- [ ] Filiais existentes continuam funcionando com `segment = SUPERMARKET`.
-- [ ] Formulário de filial exibe e persiste o segmento.
-- [ ] `SegmentContext` resolve segmento correto para filial ativa.
-- [ ] Suite de testes existente passa sem regressões.
-- [ ] API de branches retorna `segment` e `operational_profile`.
+- [ ] Migration executada em staging sem erros
+- [ ] Todas as branches existentes com `segment = SUPERMARKET`
+- [ ] `BranchContext::resolved()` retorna false para tenant com filial única de supermercado (auto-resolve corretamente)
+- [ ] `BranchContext` limpo quando filial fica inativa durante sessão
+- [ ] Formulário de filial exibe e persiste o segmento
+- [ ] Sidebar exibe segmento correto para cada tipo de filial
+- [ ] Suite de testes existente passa sem regressões (baseline 1458 testes)
 
 ---
 
 ## MS-03 — Templates de dashboard e navegação por segmento
 
 **Status:** NÃO INICIADO  
-**Bloqueio:** MS-02 concluído
+**Bloqueio:** MS-02 concluído  
+**Estimativa:** 3–5 dias
 
 ### Objetivo
 
-Selecionar automaticamente o template de dashboard e os menus de navegação
-corretos com base no segmento da filial ativa, sem modificar o comportamento
-atual do segmento supermercado.
-
-### Justificativa
-
-Sem seleção automática de template, seria necessário manter dois sistemas
-separados — duplicação inaceitável. Com o segmento identificado (MS-02), esta
-fase entrega o mecanismo que permite expansão limpa para qualquer novo segmento.
+Seleção automática do template de dashboard e menus de navegação com base no
+segmento da filial ativa, sem alterar o comportamento do segmento supermercado.
 
 ### Escopo
 
-- Refatoração do `DashboardController` para despachar por segmento.
-- Extração da navegação atual do `sidebar.blade.php` para partial
-  `nav/supermarket.blade.php`.
-- Criação de stub `nav/restaurante.blade.php` (estrutura, sem funcionalidade).
-- Criação de stub `dashboard/restaurante.blade.php` (estrutura, KPIs zerados).
+- `DashboardController` despacha por segmento usando `BranchContext`.
+- Extração do nav atual para `nav/supermarket.blade.php` (sem mudança de comportamento).
+- Criação de `nav/restaurante.blade.php` (stub com estrutura, sem links funcionais ainda).
+- Criação de `dashboard/restaurante.blade.php` (stub com KPIs zerados).
+- `DashboardRestauranteService` (stub — sem queries; preenchido em REST-01).
 - Atualização do `sidebar.blade.php` para inclusão condicional.
-- Testes de navegação por segmento.
 
-### Funcionalidades previstas
+### Comportamento quando branch não está resolvida
 
-1. `DashboardController` despacha para `DashboardRestauranteService` quando
-   segmento for `RESTAURANT`.
-2. Sidebar exibe menus de restaurante para filiais com `segment = RESTAURANT`.
-3. Sidebar exibe menus atuais (supermercado) sem alteração para demais.
-4. Dashboard de restaurante entrega página funcional com KPIs zerados
-   (dados virão em REST-01).
-
-### Módulos existentes reutilizados
-
-- Todos os componentes Blade: `x-kpi`, `x-card`, `x-section-label`, `x-button`.
-- Design system Tailwind.
-- `TenantContext` + `SegmentContext`.
-
-### Componentes novos
-
-- `DashboardRestauranteService` (stub — sem queries ainda).
-- `resources/views/dashboard/restaurante.blade.php`.
-- `resources/views/components/nav/supermarket.blade.php` (extração).
-- `resources/views/components/nav/restaurante.blade.php` (stub).
-
-### Alterações no banco
-
-Nenhuma.
-
-### Alterações em APIs
-
-Nenhuma.
-
-### Impactos no PDV Java
-
-Nenhum.
-
-### Dependências
-
-- MS-02 concluído.
-
-### Riscos
-
-- Extração do nav atual pode quebrar testes de browser/Blade se existirem.
-  Verificar antes de extrair.
-
-### Testes necessários
-
-- Teste de feature: usuário com filial `RESTAURANT` vê dashboard de restaurante.
-- Teste de feature: usuário com filial `SUPERMARKET` vê dashboard atual
-  sem qualquer alteração.
-- Teste de regressão: suite completa passa após extração do nav.
+Se `BranchContext::resolved()` for false (tenant com uma filial, ou visão consolidada),
+o dashboard atual (`dashboard/index.blade.php`) é renderizado — comportamento atual
+preservado.
 
 ### Critérios de aceite
 
-- [ ] Filial supermercado: dashboard e menus idênticos ao estado anterior.
-- [ ] Filial restaurante: dashboard de restaurante é exibido (mesmo que com
-  KPIs zerados).
-- [ ] Sidebar correto por segmento.
-- [ ] Nenhuma regressão nos 1458+ testes existentes.
-
----
-
-## REST-01 — Dashboard de restaurante
-
-**Status:** NÃO INICIADO  
-**Bloqueio:** MS-03 concluído
-
-### Objetivo
-
-Dashboard operacional específico para restaurante, com KPIs relevantes ao ramo,
-alimentado por dados reais do sistema.
-
-### Justificativa
-
-O dashboard atual (supermercado) mostra KPIs de estoque e pedidos de retaguarda.
-Restaurante precisa de KPIs operacionais em tempo real: mesas, comandas, pedidos
-em preparo, ticket médio, faturamento do turno.
-
-### Escopo (MVP)
-
-KPIs prioritários para o painel inicial (dados disponíveis após REST-03 e REST-04):
-
-- Faturamento do dia / do turno.
-- Número de comandas abertas.
-- Número de mesas ocupadas vs. disponíveis.
-- Ticket médio do dia.
-- Pedidos em preparo (aguardando cozinha).
-- Tempo médio de atendimento (quando disponível).
-
-KPIs de lucratividade (dependem de REST-05):
-- CMV do dia.
-- Margem estimada.
-
-### Módulos existentes reutilizados
-
-- Componentes `x-kpi`, `x-card`, `x-section-label`.
-- `DashboardRestauranteService` criado em MS-03 — preenchido nesta fase.
-
-### Componentes novos
-
-- Queries de agregação de comandas, mesas e pedidos.
-- Atualização de `dashboard/restaurante.blade.php`.
-
-### Alterações no banco
-
-Nenhuma própria — depende das tabelas de REST-03 e REST-04.
-
-### Dependências
-
-- MS-03 concluído.
-- REST-03 concluído (dados de mesas e comandas).
-- REST-04 concluído (dados de pedidos em preparo) — *pode ser parcial*.
-
-### Critérios de aceite
-
-- [ ] Dashboard exibe KPIs corretos com dados reais.
-- [ ] Dashboard atualiza ao recarregar a página.
-- [ ] KPIs zerados são exibidos de forma clara, não como erros.
-- [ ] Testes de feature cobrem os principais KPIs.
+- [ ] Filial SUPERMARKET: dashboard e menus idênticos ao estado anterior
+- [ ] Filial RESTAURANT: dashboard de restaurante exibido (KPIs zerados é aceito)
+- [ ] Tenant sem filial selecionada: dashboard atual preservado
+- [ ] Nenhuma regressão nos 1458+ testes existentes
 
 ---
 
 ## REST-02 — Cardápio
 
 **Status:** NÃO INICIADO  
-**Bloqueio:** MS-02 concluído (segmento identificável)
+**Bloqueio:** MS-02 concluído  
+**Estimativa:** 5–7 dias
 
 ### Objetivo
 
-Gestão do cardápio do restaurante: categorias, pratos, bebidas, adicionais,
-modificadores e disponibilidade.
+Gestão do cardápio do restaurante: pratos, bebidas, modificadores e disponibilidade.
 
-### Justificativa
+### Funcionalidades do MVP
 
-O cardápio é o catálogo de produtos do restaurante. A estrutura de `products` e
-`categories` existente cobre o caso básico, mas restaurante exige modificadores
-("sem cebola", "ponto da carne"), grupos de adicionais e indicadores de
-disponibilidade ("item esgotado no dia").
-
-### Escopo (MVP)
-
-1. Reuso do módulo `Products` para pratos e bebidas.
-2. Extensão da tabela `products` com campos de restaurante:
-   - `preparation_time_minutes` (tempo estimado de preparo).
-   - `is_available` (disponível hoje, flag operacional).
-3. Tabela `menu_modifier_groups` (grupos de opções: "ponto", "adicional").
-4. Tabela `menu_modifiers` (opções dentro de cada grupo).
-5. Associação produto ↔ grupos de modificadores.
-6. Interface de gestão do cardápio no painel.
-7. Publicação do cardápio para o PDV Java (via API existente de catálogo, estendida).
-
-### Módulos existentes reutilizados
-
-- `products`, `categories`, `product_categories`, `prices` — base do cardápio.
-- `ProductWebController` — estendido com visão de restaurante.
-- Módulo Pdv / catálogo — publicação do cardápio para o PDV.
+Ver [RESTAURANTES.md — REST-02](RESTAURANTES.md): CAR-01 a CAR-07.
 
 ### Componentes novos
 
-- Migration: campos de restaurante em `products`.
-- Tabelas `menu_modifier_groups` e `menu_modifiers`.
-- Controller e views de gestão de cardápio (separadas de produtos genéricos).
-- Extensão da publicação de catálogo PDV para incluir modificadores.
-
-### Alterações no banco
-
 ```sql
--- Extensão de products (nullable — retrocompatível)
+-- Campos opcionais em products (retrocompatíveis)
 ALTER TABLE products
   ADD COLUMN preparation_time_minutes SMALLINT UNSIGNED NULL,
   ADD COLUMN is_available BOOLEAN NOT NULL DEFAULT TRUE;
 
--- Grupos de modificadores (ex.: "Ponto da Carne", "Adicionais")
 CREATE TABLE menu_modifier_groups (
   id CHAR(26) PRIMARY KEY,
   tenant_id CHAR(26) NOT NULL,
@@ -428,20 +227,22 @@ CREATE TABLE menu_modifier_groups (
   required BOOLEAN NOT NULL DEFAULT FALSE,
   min_choices TINYINT UNSIGNED NOT NULL DEFAULT 0,
   max_choices TINYINT UNSIGNED NOT NULL DEFAULT 1,
-  ...
+  sort_order TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  created_at TIMESTAMP, updated_at TIMESTAMP,
+  FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 );
 
--- Opções dentro de cada grupo
 CREATE TABLE menu_modifiers (
   id CHAR(26) PRIMARY KEY,
   group_id CHAR(26) NOT NULL,
+  tenant_id CHAR(26) NOT NULL,
   name VARCHAR(120) NOT NULL,
   price_adjustment DECIMAL(10,2) NOT NULL DEFAULT 0,
   is_available BOOLEAN NOT NULL DEFAULT TRUE,
-  ...
+  sort_order TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  FOREIGN KEY (group_id) REFERENCES menu_modifier_groups(id) ON DELETE CASCADE
 );
 
--- Associação produto ↔ grupos
 CREATE TABLE product_modifier_groups (
   product_id CHAR(26) NOT NULL,
   group_id CHAR(26) NOT NULL,
@@ -452,361 +253,350 @@ CREATE TABLE product_modifier_groups (
 
 ### Alterações em APIs
 
-- `GET /api/v1/pdv/catalog` → inclui `modifiers` por produto quando segmento
-  for `RESTAURANT`.
-- Novos endpoints de gestão de grupos e modificadores (autenticação humana).
-
-### Impactos no PDV Java
-
-O PDV Java precisará de atualização para consumir e renderizar modificadores.
-Escopo detalhado em REST-06.
-
-### Dependências
-
-- MS-02 concluído.
-- MS-03 concluído (para os menus do painel).
+- Catálogo PDV (`GET /api/v1/pdv/catalog`) estendido com modificadores quando
+  `branch.segment = RESTAURANT`. Retrocompatível (campo adicional no response).
 
 ### Critérios de aceite
 
-- [ ] Prato cadastrado com grupo de modificadores e opções.
-- [ ] Disponibilidade de item alterada via painel.
-- [ ] Catálogo publicado para o PDV inclui modificadores.
-- [ ] Produtos de supermercado não são afetados pelos novos campos.
-- [ ] Testes de regressão do módulo Products passam.
+- [ ] Prato cadastrado com grupo de modificadores e opções
+- [ ] Disponibilidade de item alterada via painel
+- [ ] Catálogo PDV inclui modificadores para branch RESTAURANT
+- [ ] Produtos de supermercado não afetados (campos novos são NULL/TRUE por default)
+- [ ] Testes de regressão do módulo Products passam
 
 ---
 
 ## REST-03 — Mesas e comandas
 
 **Status:** NÃO INICIADO  
-**Bloqueio:** MS-02 concluído
+**Bloqueio:** MS-02 concluído, REST-02 concluído  
+**Estimativa:** 10–15 dias
 
 ### Objetivo
 
-Gestão de mesas e comandas: cadastro, abertura, movimentação, transferência e
-encerramento.
+Gestão completa de mesas e comandas com ciclo de vida próprio, auditoria e
+múltiplas formas de pagamento.
 
-### Justificativa
+### Funcionalidades do MVP
 
-Mesas e comandas são o coração operacional de um restaurante de salão. Não
-existem no sistema atual.
+Ver [RESTAURANTES.md — REST-03](RESTAURANTES.md): MES-01 a MES-03, COM-01 a COM-06,
+COM-08, COM-11, COM-12, COM-14, COM-15.
 
-### Escopo (MVP)
+### Tabelas novas
 
-**Mesas:**
-- Cadastro de mesas por filial (número, capacidade, setor/salão).
-- Status: DISPONÍVEL, OCUPADA, RESERVADA, MANUTENÇÃO.
-- Associação de garçom responsável.
+```sql
+CREATE TABLE restaurant_tables (
+  id CHAR(26) PRIMARY KEY,
+  tenant_id CHAR(26) NOT NULL,
+  branch_id CHAR(26) NOT NULL,
+  number SMALLINT UNSIGNED NOT NULL,
+  sector VARCHAR(60) NULL,
+  capacity TINYINT UNSIGNED NOT NULL DEFAULT 4,
+  status ENUM('AVAILABLE','OCCUPIED','RESERVED','MAINTENANCE') DEFAULT 'AVAILABLE',
+  waiter_user_id CHAR(26) NULL,
+  created_at TIMESTAMP, updated_at TIMESTAMP
+);
 
-**Comandas:**
-- Abertura de comanda vinculada a mesa ou balcão.
-- Adição e remoção controlada de itens (com modificadores).
-- Status: ABERTA, FECHANDO, FECHADA, CANCELADA.
-- Divisão de conta (N partes iguais ou valores manuais).
-- Transferência de itens entre comandas.
-- Transferência de comanda para outra mesa.
-- Encerramento com forma de pagamento.
-- Histórico de alterações (auditoria).
+CREATE TABLE restaurant_tabs (
+  id CHAR(26) PRIMARY KEY,
+  tenant_id CHAR(26) NOT NULL,
+  branch_id CHAR(26) NOT NULL,
+  table_id CHAR(26) NULL,          -- NULL = balcão
+  status ENUM('OPEN','CLOSING','CLOSED','CANCELLED') DEFAULT 'OPEN',
+  opened_at TIMESTAMP NOT NULL,
+  closed_at TIMESTAMP NULL,
+  cancelled_at TIMESTAMP NULL,
+  split_parts TINYINT UNSIGNED NULL,
+  ingredients_applied_at TIMESTAMP NULL,  -- idempotência do consumo
+  total_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  notes TEXT NULL,
+  created_at TIMESTAMP, updated_at TIMESTAMP
+);
 
-### Módulos existentes reutilizados
+CREATE TABLE restaurant_tab_items (
+  id CHAR(26) PRIMARY KEY,
+  tab_id CHAR(26) NOT NULL,
+  product_id CHAR(26) NOT NULL,
+  product_name VARCHAR(200) NOT NULL,   -- snapshot do nome
+  quantity DECIMAL(10,3) NOT NULL DEFAULT 1,
+  unit_price DECIMAL(12,2) NOT NULL,
+  modifiers_snapshot JSON NULL,          -- snapshot dos modificadores no momento
+  status ENUM('ACTIVE','CANCELLED') DEFAULT 'ACTIVE',
+  cancelled_at TIMESTAMP NULL,
+  cancellation_reason TEXT NULL,
+  total_amount DECIMAL(12,2) NOT NULL
+);
 
-- `orders`/`order_items` como referência de design — comanda é entidade nova,
-  mas o padrão ULID, HasTenant, SoftDeletes e ciclo de transições é o mesmo.
-- RBAC existente — novas permissões: `manage-tables`, `manage-tabs`.
-- Componentes Blade de tabela, card, modal.
+CREATE TABLE restaurant_tab_payments (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  tab_id CHAR(26) NOT NULL,
+  seq TINYINT UNSIGNED NOT NULL,
+  method VARCHAR(20) NOT NULL,
+  amount DECIMAL(12,2) NOT NULL,
+  part_number TINYINT UNSIGNED NULL    -- para divisão em partes
+);
 
-### Componentes novos
-
+CREATE TABLE restaurant_tab_audit_log (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  tab_id CHAR(26) NOT NULL,
+  user_id CHAR(26) NULL,
+  action VARCHAR(60) NOT NULL,
+  payload JSON NULL,
+  occurred_at TIMESTAMP NOT NULL
+);
 ```
-Tabelas novas:
-  restaurant_tables         (mesas)
-  restaurant_tabs           (comandas)
-  restaurant_tab_items      (itens da comanda)
-  restaurant_tab_payments   (registros de pagamento da comanda)
-  restaurant_tab_audit_log  (log de alterações da comanda)
-
-Models: Table, Tab, TabItem, TabPayment
-Services: TabService (abre, adiciona item, remove item, fecha, divide)
-Controllers: TableController, TabController (web + API)
-Views: tables/index, tables/show, tabs/index, tabs/show
-```
-
-### Alterações no banco
-
-Ver tabelas acima. Todas são novas — sem risco para dados existentes.
-
-### Alterações em APIs
-
-Novos endpoints:
-- `GET|POST /api/v1/restaurant/tables`
-- `GET|PUT /api/v1/restaurant/tables/{id}`
-- `POST /api/v1/restaurant/tabs` (abrir comanda)
-- `POST /api/v1/restaurant/tabs/{id}/items` (adicionar item)
-- `DELETE /api/v1/restaurant/tabs/{id}/items/{itemId}`
-- `POST /api/v1/restaurant/tabs/{id}/close`
-- `POST /api/v1/restaurant/tabs/{id}/transfer`
-- `POST /api/v1/restaurant/tabs/{id}/split`
-
-### Impactos no PDV Java
-
-O PDV Java precisará consumir as APIs de comanda para operação no salão.
-Escopo em REST-06.
-
-### Dependências
-
-- MS-02 concluído (segment na branch).
-- REST-02 concluído (cardápio para adicionar itens).
 
 ### Critérios de aceite
 
-- [ ] Mesa cadastrada, status gerenciado via painel.
-- [ ] Comanda aberta vinculada a mesa.
-- [ ] Item adicionado à comanda com modificadores.
-- [ ] Item removido com registro de auditoria.
-- [ ] Comanda transferida para outra mesa.
-- [ ] Conta dividida em N partes.
-- [ ] Comanda fechada com forma de pagamento.
-- [ ] Histórico de alterações auditável.
-- [ ] Isolamento por tenant garantido em todos os endpoints.
+- [ ] Mesa cadastrada com status gerenciado via painel
+- [ ] Comanda aberta, item adicionado com modificadores
+- [ ] Item removido com auditoria
+- [ ] Transferência de comanda para outra mesa registrada
+- [ ] Conta dividida em N partes iguais
+- [ ] Múltiplas formas de pagamento numa comanda
+- [ ] Comanda fechada com confirmação de pagamento
+- [ ] Histórico de alterações auditável
+- [ ] Isolamento por tenant e por branch garantidos
+- [ ] `ingredients_applied_at` nulo ao fechar (REST-05 preenche depois)
 
 ---
 
 ## REST-04 — Pedidos e produção (KDS)
 
 **Status:** NÃO INICIADO  
-**Bloqueio:** REST-03 concluído
+**Bloqueio:** REST-03 concluído  
+**Estimativa:** 5–7 dias
 
 ### Objetivo
 
-Fluxo de encaminhamento de pedidos para a cozinha e painel KDS (Kitchen Display
-System) para gestão da fila de preparo.
+Fila de produção e painel KDS para a cozinha.
 
-### Justificativa
+### Funcionalidades do MVP
 
-Sem o KDS, o restaurante não tem visibilidade do que está sendo produzido.
-A cozinha precisa de uma tela com os pedidos na ordem certa e o status de
-preparo.
+Ver [RESTAURANTES.md — REST-04](RESTAURANTES.md): KDS-01 a KDS-07.
 
-### Escopo (MVP)
-
-1. Pedido enviado da comanda para a cozinha com status `AGUARDANDO`.
-2. Tela KDS (web, atualizável por polling ou SSE) exibindo:
-   - Pedidos aguardando preparo.
-   - Pedidos em preparo.
-   - Pedidos prontos para entrega.
-3. Ações da cozinha: marcar como "em preparo", "pronto".
-4. Notificação ao garçom quando pedido está pronto (sistema de notificações
-   existente pode ser reutilizado).
-5. Relatório simples de tempo médio de preparo.
-
-### Módulos existentes reutilizados
-
-- `notifications` — garçom é notificado quando pedido está pronto.
-- Componentes Blade para tela de cozinha.
-
-### Componentes novos
-
-- Tabela `kitchen_orders` (pedidos encaminhados à cozinha).
-- `KitchenOrderController` (web — KDS) e API.
-- View `kitchen/kds.blade.php` (tela de cozinha, full-screen, sem sidebar).
-- Polling ou SSE para atualização em tempo real do KDS.
-
-### Alterações no banco
+### Tabela nova
 
 ```sql
 CREATE TABLE kitchen_orders (
   id CHAR(26) PRIMARY KEY,
   tenant_id CHAR(26) NOT NULL,
   branch_id CHAR(26) NOT NULL,
-  tab_id CHAR(26) NOT NULL,            -- comanda origem
-  tab_item_id CHAR(26) NOT NULL,       -- item da comanda
-  status ENUM('WAITING','PREPARING','READY','DELIVERED'),
+  tab_id CHAR(26) NOT NULL,
+  tab_item_id CHAR(26) NOT NULL,
+  status ENUM('WAITING','PREPARING','READY','DELIVERED') DEFAULT 'WAITING',
   sent_at TIMESTAMP NOT NULL,
-  started_at TIMESTAMP NULL,
-  ready_at TIMESTAMP NULL,
-  delivered_at TIMESTAMP NULL,
-  notes TEXT NULL,
-  ...
+  started_at TIMESTAMP NULL,     -- início do preparo (KDS-03)
+  ready_at TIMESTAMP NULL,       -- pronto (KDS-04)
+  delivered_at TIMESTAMP NULL,   -- entregue (KDS-05)
+  notes TEXT NULL
 );
 ```
 
-### Dependências
-
-- REST-03 concluído (mesas e comandas).
-
 ### Critérios de aceite
 
-- [ ] Pedido encaminhado à cozinha aparece no KDS.
-- [ ] Status de preparo atualizado pela cozinha.
-- [ ] Garçom notificado quando pedido pronto.
-- [ ] KDS atualiza automaticamente (polling mínimo de 10s).
-- [ ] Tempo médio de preparo calculado corretamente.
+- [ ] Pedido enviado aparece no KDS
+- [ ] Status atualizado pela cozinha
+- [ ] Garçom notificado quando pronto (usa `notifications` existente)
+- [ ] KDS atualiza automaticamente (polling ≤ 10s)
+- [ ] Tela KDS funciona sem sidebar (tela dedicada)
 
 ---
 
-## REST-05 — Fichas técnicas e custo de produção
+## REST-05 — Tipos de produto e fichas técnicas
 
 **Status:** NÃO INICIADO  
-**Bloqueio:** REST-02 concluído (cardápio), Inventory existente
+**Bloqueio:** REST-02 concluído; decisões C e D aprovadas  
+**Estimativa:** 7–10 dias
+
+> Esta fase foi **renomeada e expandida** na revisão 2. Inclui agora a definição
+> de `stock_behavior` em products, que é pré-requisito para evitar dupla
+> movimentação de estoque.
 
 ### Objetivo
 
-Gestão de fichas técnicas (receitas), cálculo de CMV por prato e baixa de
-ingredientes do estoque.
+1. Adicionar tipagem de produto (`stock_behavior`) para diferenciar comportamentos
+   de movimentação de estoque.
+2. Implementar fichas técnicas (receitas).
+3. Ajustar `AplicarVendaNoEstoque` para pular produtos `PRODUCED`.
+4. Implementar baixa de ingredientes ao fechar comanda.
 
-### Justificativa
+### Funcionalidades do MVP
 
-Sem ficha técnica, o restaurante não conhece o custo real de cada prato e não
-pode calcular margem ou CMV. A baixa de ingredientes fecha o ciclo de estoque.
-
-### Escopo (MVP)
-
-1. Tabela de ingredientes (mapeados sobre `products` com `unit = KG|G|L|ML|UN`).
-2. Ficha técnica: produto (prato) → lista de ingredientes + quantidades.
-3. Custo calculado da receita com base no preço de custo dos ingredientes.
-4. Baixa de ingredientes ao fechar comanda (integrada ao `InventoryService`).
-5. Relatório de CMV por prato e por período.
-
-### Módulos existentes reutilizados
-
-- `Inventory` module completo — `InventoryMovement`, `StockLevel`.
-- `products` — ingredientes são produtos com flags de matéria-prima.
-- `prices` — custo dos ingredientes.
-
-### Componentes novos
-
-- Tabela `recipe_ingredients` (ficha técnica).
-- `RecipeService` (calcula custo, dispara baixa).
-- Views de gestão de fichas técnicas.
+Ver [RESTAURANTES.md — REST-05](RESTAURANTES.md): FTC-01 a FTC-11.
 
 ### Alterações no banco
 
 ```sql
+-- Retrocompatível: DEFAULT RESALE mantém comportamento atual de todos os produtos
+ALTER TABLE products
+  ADD COLUMN stock_behavior VARCHAR(20) NOT NULL DEFAULT 'RESALE';
+  -- RESALE: baixa direta (supermercado, revenda)
+  -- PRODUCED: consome ingredientes via ficha técnica
+  -- RAW_MATERIAL: ingrediente; sai via ficha ou ajuste manual
+  -- SERVICE: sem movimentação
+
 CREATE TABLE recipe_ingredients (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  recipe_product_id CHAR(26) NOT NULL,   -- prato
-  ingredient_product_id CHAR(26) NOT NULL, -- ingrediente
+  recipe_product_id CHAR(26) NOT NULL,      -- prato (PRODUCED)
+  ingredient_product_id CHAR(26) NOT NULL,  -- ingrediente (RAW_MATERIAL)
   quantity DECIMAL(14,4) NOT NULL,
   unit VARCHAR(10) NOT NULL,
-  waste_factor DECIMAL(5,4) NOT NULL DEFAULT 0,  -- fator de perda
-  ...
+  waste_factor DECIMAL(5,4) NOT NULL DEFAULT 0,
+  FOREIGN KEY (recipe_product_id) REFERENCES products(id),
+  FOREIGN KEY (ingredient_product_id) REFERENCES products(id)
+);
+
+CREATE TABLE restaurant_tab_ingredient_consumptions (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  tab_id CHAR(26) NOT NULL,
+  recipe_product_id CHAR(26) NOT NULL,
+  ingredient_product_id CHAR(26) NOT NULL,
+  quantity_consumed DECIMAL(14,4) NOT NULL,
+  unit VARCHAR(10) NOT NULL,
+  recipe_snapshot_hash CHAR(64) NULL,   -- hash da ficha técnica usada
+  applied_at TIMESTAMP NOT NULL
 );
 ```
 
-### Dependências
+### Alteração em AplicarVendaNoEstoque (código existente)
 
-- REST-02 concluído (cardápio).
-- `Inventory` module (já existe).
+```
+// ADIÇÃO: verificar stock_behavior antes de baixar
+if ($produto->stock_behavior === 'PRODUCED') {
+    Log::info('Item PRODUCED pulado na baixa PDV — ingredientes baixados pela comanda.');
+    continue;
+}
+if ($produto->stock_behavior === 'SERVICE') {
+    continue;
+}
+// Código existente continua para RESALE e RAW_MATERIAL
+$this->estoque->aplicar(...)
+```
+
+Esta é a única alteração no código existente desta fase. É mínima e retrocompatível
+(`DEFAULT 'RESALE'` garante que todos os produtos atuais passem direto).
 
 ### Critérios de aceite
 
-- [ ] Ficha técnica cadastrada para ao menos um prato.
-- [ ] Custo do prato calculado corretamente com base nos ingredientes.
-- [ ] Estoque de ingredientes baixado ao fechar comanda.
-- [ ] CMV do dia calculado e exibido no dashboard (REST-01).
-- [ ] Testes de integração cobrem o ciclo receita → baixa → estoque.
+- [ ] Produto tipo PRODUCED criado com ficha técnica
+- [ ] Produto tipo RESALE: comportamento de estoque inalterado (regressão)
+- [ ] Fechar comanda com item PRODUCED: ingredientes baixados do estoque
+- [ ] `ingredients_applied_at` preenchido após baixa
+- [ ] Reprocessamento idempotente: baixar duas vezes não duplica o movimento
+- [ ] Venda PDV de produto PRODUCED: `AplicarVendaNoEstoque` pula o item
+- [ ] CMV do dia calculado corretamente no dashboard
+- [ ] Suíte de testes de Inventory passa sem regressões
 
 ---
 
-## REST-06 — Integração com PDV Java
+## REST-01 — Dashboard de restaurante
 
 **Status:** NÃO INICIADO  
-**Bloqueio:** REST-03 e REST-04 estabilizados
+**Bloqueio:** MS-03 + REST-03 + REST-04 (parcial) para KPIs operacionais;
+REST-05 para CMV  
+**Estimativa:** 2–3 dias por iteração (duas iterações previstas)
 
 ### Objetivo
 
-Estender o PDV Java para operar como terminal de restaurante: abertura de
-comandas, adição de itens com modificadores, envio para cozinha e fechamento.
+Dashboard operacional com KPIs do restaurante, entregue em duas iterações:
 
-### Justificativa
-
-O PDV Java é o terminal físico do restaurante. Sem integração, toda a operação
-de comanda fica restrita ao painel web.
-
-### Escopo (MVP)
-
-**No backend (retaguarda):**
-- Novos endpoints de comanda acessíveis com credencial de terminal:
-  - `POST /api/v1/pdv/restaurant/tabs`
-  - `POST /api/v1/pdv/restaurant/tabs/{id}/items`
-  - `POST /api/v1/pdv/restaurant/tabs/{id}/close`
-- Catálogo PDV estendido com modificadores (já planejado em REST-02).
-
-**No PDV Java (lucraone-pdv-java):**
-- Telas de operação de restaurante.
-- Sincronização offline-first das comandas.
-- Exibição de modificadores na seleção de item.
-
-### Observação importante
-
-O escopo do PDV Java é definido no repositório `lucraone-pdv-java`. Este
-roadmap cobre apenas os contratos da API backend. A implementação no PDV Java
-deve ser planejada em documento próprio após REST-03 e REST-04 estarem
-estáveis.
-
-### Dependências
-
-- REST-03 concluído (mesas e comandas — API estável).
-- REST-04 concluído (pedidos e KDS — API estável).
-- REST-02 concluído (modificadores no catálogo).
+**Iteração 1 (após REST-03 + REST-04):** DSH-01 a DSH-05 (operacionais).  
+**Iteração 2 (após REST-05):** DSH-06, DSH-07 (CMV e margem).
 
 ### Critérios de aceite
 
-- [ ] Terminal PDV abre comanda via API.
-- [ ] Terminal PDV adiciona item com modificador.
-- [ ] Pedido enviado para cozinha aparece no KDS.
-- [ ] Comanda fechada via PDV registra pagamento na retaguarda.
-- [ ] Operação offline e sincronização testadas com falha de rede simulada.
+- [ ] KPIs corretos com dados reais (não zerados)
+- [ ] Dashboard atualiza ao recarregar
+- [ ] CMV exibido após REST-05 concluído
+
+---
+
+## REST-06 — Integração PDV Java
+
+**Status:** NÃO INICIADO  
+**Bloqueio:** REST-03 e REST-04 estabilizados, decisões de API aprovadas  
+**Estimativa:** 10–15 dias
+
+### Objetivo
+
+Extensão da API backend para operação de restaurante via terminal PDV,
+mantendo a trilha PDV-BE existente intacta.
+
+### Funcionalidades do MVP
+
+Ver [RESTAURANTES.md — REST-06](RESTAURANTES.md): PDV-R-01 a PDV-R-06.
+
+### Nota sobre o escopo PDV Java
+
+O escopo de desenvolvimento do PDV Java (JavaFX, SQLite, Flyway) deve ser
+planejado em documento separado no repositório `lucraone-pdv-java`. Esta fase
+cobre apenas os contratos de API backend.
+
+### Critérios de aceite
+
+- [ ] Terminal PDV abre comanda via API
+- [ ] Terminal adiciona item com modificador
+- [ ] Pedido aparece no KDS
+- [ ] Comanda fechada via PDV registra pagamento na retaguarda
+- [ ] Sincronização offline: comanda gravada localmente e enviada quando online
+- [ ] Idempotência verificada com reenvio simulado
 
 ---
 
 ## REST-07 — Testes integrados e homologação
 
 **Status:** NÃO INICIADO  
-**Bloqueio:** REST-01 a REST-06 concluídos
+**Bloqueio:** REST-01 a REST-06 concluídos  
+**Estimativa:** 5–7 dias
 
 ### Objetivo
 
-Validação funcional completa do segmento restaurante em ambiente equivalente à
-produção, com casos de uso reais.
-
-### Escopo
-
-- Cenário completo: abrir mesa → comanda → pedido → cozinha → entrega →
-  fechamento → baixa de estoque.
-- Testes de concorrência: múltiplas comandas simultâneas.
-- Testes de regressão: segmento supermercado intacto.
-- Testes de integração PDV Java ↔ retaguarda.
-- Validação de isolamento multi-tenant.
-- Validação de RBAC para papéis de restaurante.
+Validação funcional completa do segmento restaurante em staging, com ciclo
+completo de operação e regressão do segmento supermercado.
 
 ### Critérios de aceite
 
-- [ ] Ciclo completo executado sem erros em staging.
-- [ ] Testes de regressão supermercado passam sem alteração.
-- [ ] PDV Java opera comandas offline e sincroniza ao reconectar.
-- [ ] Isolamento entre tenants verificado.
-- [ ] Relatório de homologação documentado com evidências.
+- [ ] Ciclo completo: mesa → comanda → pedido → cozinha → entrega → fechamento → baixa de estoque
+- [ ] Testes de concorrência: múltiplas comandas simultâneas
+- [ ] Regressão do supermercado: todos os testes existentes passam
+- [ ] PDV Java: offline + sincronização testados
+- [ ] Relatório de homologação com evidências documentado
+- [ ] Isolamento entre tenants verificado
 
 ---
 
-## Apêndice — Fases não iniciadas: estimativas preliminares
+## Estimativas totais (MS-02 → REST-07)
 
-Estas estimativas são orientativas e devem ser revisadas antes de cada fase:
+| Fase | Estimativa |
+|---|---|
+| MS-02 | 4–6 dias |
+| MS-03 | 3–5 dias |
+| REST-02 | 5–7 dias |
+| REST-03 | 10–15 dias |
+| REST-04 | 5–7 dias |
+| REST-05 | 7–10 dias |
+| REST-01 | 4–6 dias (2 iterações) |
+| REST-06 | 10–15 dias |
+| REST-07 | 5–7 dias |
+| **Total** | **53–78 dias** |
 
-| Fase | Complexidade | Estimativa |
+Estimativas são de esforço de desenvolvimento efetivo. Não incluem: revisão,
+bugs de integração, ajustes de UX, coordenação com PDV Java, nem testes de
+aceitação do responsável de produto.
+
+---
+
+## Decisões bloqueadoras pendentes
+
+Nenhuma fase pode avançar até que as seguintes decisões sejam aprovadas:
+
+| Decisão | Bloqueia | Documento |
 |---|---|---|
-| MS-02 | Baixa | 2–3 dias |
-| MS-03 | Média | 3–5 dias |
-| REST-01 | Média | 2–3 dias (depende de REST-03/04) |
-| REST-02 | Média | 5–7 dias |
-| REST-03 | Alta | 10–15 dias |
-| REST-04 | Média | 5–7 dias |
-| REST-05 | Média | 5–7 dias |
-| REST-06 | Alta | 10–15 dias (coordenado com PDV Java) |
-| REST-07 | Média | 5–7 dias |
-
-**Total estimado (após MS-01):** 47–69 dias de desenvolvimento efetivo.
-
-Estas estimativas não incluem revisão, correções de bugs de integração,
-ajustes de UX, nem coordenação com o desenvolvimento do PDV Java.
+| A — Segmento na Branch | MS-02 | ARQUITETURA_MULTISSEGMENTO.md §3 |
+| B — BranchContext em sessão | MS-02 | ARQUITETURA_MULTISSEGMENTO.md §4 |
+| C — `stock_behavior` em products | REST-05 | ARQUITETURA_MULTISSEGMENTO.md §5 |
+| D — Consumo de ingredientes no fechamento | REST-05 | ARQUITETURA_MULTISSEGMENTO.md §5 |
+| E — Segmentos no MVP (SUPERMARKET + RESTAURANT) | MS-02 | ARQUITETURA_MULTISSEGMENTO.md §7 |
+| G — Divisão de conta: partes iguais = MVP | REST-03 | RESTAURANTES.md COM-08/09/10 |
+| I — Comanda é entidade nova (não extensão de orders) | REST-03 | ARQUITETURA_MULTISSEGMENTO.md §7 |

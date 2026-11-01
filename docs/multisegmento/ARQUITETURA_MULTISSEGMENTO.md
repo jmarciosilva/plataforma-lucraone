@@ -1,8 +1,18 @@
 # Arquitetura Multissegmento — LUCRAONE
 
 **Criado:** 2026-11-01  
-**Status:** PROPOSTA — aguardando aprovação antes de qualquer implementação  
-**Autores:** diagnóstico técnico elaborado com base no código real do repositório
+**Revisado:** 2026-11-01 (revisão 2 — três ressalvas do responsável de produto)  
+**Status:** PROPOSTA REVISADA — nenhuma decisão aprovada formalmente  
+**Base de análise:** código real do repositório (`main` @ `a5d2faa`)
+
+---
+
+## Histórico de revisões
+
+| Revisão | Data | Motivação |
+|---|---|---|
+| 1 | 2026-11-01 | Diagnóstico inicial — MS-01 |
+| 2 | 2026-11-01 | Três ressalvas: contexto de filial, consistência funcional, estoque |
 
 ---
 
@@ -17,202 +27,339 @@ Tenant (estabelecimento/cliente SaaS)
               └── Terminal (PDV físico)
 ```
 
-A hierarquia está completamente implementada e operacional. O tenant é o
-isolamento raiz. Cada request autenticado carrega um `tenant_id` resolvido
-pelo `TenantContext`.
+### 1.2 TenantContext — como funciona hoje
 
-### 1.2 Módulos existentes e reutilizáveis
+O `TenantContext` (`app/Modules/Tenancy/Application/TenantContext.php`) é um
+singleton de requisição que armazena apenas `tenant_id`. O `TenantResolver`
+resolve esse ID em três estratégias, em ordem:
 
-| Módulo | Status | Reutilizável em restaurante |
-|---|---|---|
-| Tenancy (tenant, company, branch) | ✅ produção | 100% |
-| Identity + RBAC (user, role, permission) | ✅ produção | 100% |
-| Products + Categories | ✅ produção | Base do cardápio |
-| Inventory (estoque + movimentos) | ✅ produção | Base de ingredientes |
-| Sales / Orders | ✅ produção | Base de pedidos |
-| Customers | ✅ produção | 100% |
-| Reporting (dashboard, KPIs) | ✅ produção | Parcialmente |
-| Automation (regras + logs) | ✅ produção | 100% |
-| Notifications | ✅ produção | 100% |
-| PDV (terminais, catálogo, vendas) | ✅ produção | Estendido para comandas |
-| Audit logs | ✅ produção | 100% |
+1. Header `X-Tenant-ID` (APIs, testes).
+2. Chave `'tenant_ativo'` na sessão PHP (painel web).
+3. Vínculo único — quando o usuário tem exatamente um estabelecimento.
 
-### 1.3 O que NÃO existe hoje
+A seleção do tenant é feita pelo `EstabelecimentoController`, que grava o ID na
+sessão. Rota `auth.web:sem-tenant` serve as telas de seleção; `auth.web` exige
+tenant resolvido e bloqueia com redirecionamento se não houver.
 
-Nenhum campo de **segmento, ramo de atividade ou perfil operacional** existe em
-qualquer tabela do banco. A plataforma não possui templates de dashboard
-alternados, menus condicionais por segmento nem funcionalidades exclusivas de
-restaurante.
+### 1.3 Contexto de filial — o que NÃO existe hoje
 
-### 1.4 Modelo Order atual
+**Não existe `BranchContext`, nem mecanismo de sessão para filial ativa.**
 
-O modelo `Order` representa um pedido de retaguarda com ciclo de vida:
-`draft → pending → confirmed → shipped → completed | cancelled`.
+O `branch_id` é sempre um **filtro de consulta**, nunca um contexto de sessão.
+Evidências no código:
 
-Esse ciclo não representa comanda de restaurante (abrir mesa, adicionar itens
-ao longo do tempo, dividir conta, fechar). A tabela `orders` pode ser
-reutilizada como estrutura base, mas o ciclo de vida de restaurante é distinto.
+- `PdvSalesDashboardController::resolver()` lê `?branch_id=` do query string e
+  valida contra as filiais do tenant. Sem o parâmetro, retorna `null` (visão
+  consolidada).
+- `BranchController` usa `TenantContext::id()` para filtrar filiais, mas nunca
+  "seleciona" uma delas.
+- `AutenticarWeb` só resolve tenant, não filial.
 
-### 1.5 Dashboard atual
+### 1.4 RBAC — granularidade efetiva
 
-O `DashboardController` monta um único template (`dashboard/index.blade.php`)
-com KPIs de varejo (faturamento, pedidos, ticket médio, estoque) e vendas do
-PDV do dia. Não há switch de template por segmento.
+O RBAC é **100% escopo de tenant**. Evidências:
+
+- `user_role` tem `tenant_id` mas **não tem `branch_id`**.
+- `TenantAuthority` filtra tudo por `tenant_id`.
+- `StandardRoleMatrix`: `manage-branches`, `view-branches`, `view-all-branches`
+  são permissões de tenant — permitem gerir TODAS as filiais do tenant.
+- `manage-assigned-branches` / `view-assigned-branches` existem no catálogo mas
+  não são atribuídas a nenhum papel padrão por design (remoção deliberada em
+  `2026_09_11`).
+- Único mecanismo por filial: `pdv_operator_branch_assignments`, restrito ao
+  aplicativo de caixa PDV, não ao painel web.
+
+**Conclusão:** não existe hoje autorização por filial específica no painel web.
+Um usuário com `view-branches` pode ver todas as filiais do tenant.
+
+### 1.5 Inventário — granularidade efetiva
+
+`Inventory` é escopo `(tenant_id, company_id, product_id)`. Não tem `branch_id`.
+`InventoryMovement` idem. O estoque é por empresa, não por filial.
+
+`AplicarVendaNoEstoque` recebe `venda.company_id` (herdado do terminal) e baixa
+o produto comercial vendido — sem distinção de tipo de produto, sem fichas técnicas.
+
+`MovimentacaoExternaDeEstoque` permite saldo negativo intencionalmente (best-effort:
+a venda aconteceu no caixa; esconder a divergência seria pior).
+
+### 1.6 Produtos — estrutura atual
+
+Tabela `products` (campos relevantes para restaurante):
+- `sku`, `name`, `description`, `status`
+- `unit` (UN, KG)
+- `barcode`
+- `ncm_code`, `cest_code`, `default_origin_code` (fiscal)
+- `reference_cost_amount` (em `prices`)
+
+**Não existe** campo de tipo de produto (`RESALE`, `PRODUCED`, `RAW_MATERIAL`).
+Não existe ficha técnica. `ProductPackage` representa embalagem comercial
+(fardo, caixa), não composição por receita.
 
 ---
 
 ## 2. Conceitos fundamentais
 
-É importante diferenciar quatro conceitos que se sobrepõem, mas são
-independentes:
-
 ### 2.1 Segmento
 
-O **ramo de negócio macro** da unidade operacional. Define quais funcionalidades
-fazem sentido e qual dashboard é apresentado.
-
-Exemplos: `SUPERMARKET`, `RESTAURANT`, `BAKERY`, `BAR`, `FAST_FOOD`, `RETAIL`.
+Ramo de negócio macro da unidade operacional. Define dashboard e funcionalidades.
+Valores propostos: `SUPERMARKET`, `RESTAURANT`.
 
 ### 2.2 Perfil operacional
 
-Configurações específicas do negócio dentro de um segmento. Um restaurante pode
-operar como "apenas salão", "delivery + salão", "dark kitchen", etc. Determina
-sub-funcionalidades habilitadas.
+Configurações dentro do segmento. Exemplos de restaurante: `salao`, `delivery`,
+`dark_kitchen`. Armazenado em JSON (flexível, sem proliferar colunas).
 
 ### 2.3 Funcionalidades habilitadas
 
-Recursos específicos ativados por plano de contratação ou configuração.
-Independente do segmento (ex.: um supermercado pode não ter PDV habilitado).
+Recursos ativados por plano ou configuração, independentes do segmento.
 
 ### 2.4 Permissões de usuários
 
-RBAC já existente — quem pode fazer o quê dentro da funcionalidade habilitada.
-Não confundir com habilitação de funcionalidade.
+RBAC existente — o que cada pessoa pode fazer dentro das funcionalidades
+habilitadas. Hoje escopo de tenant. Escopo de filial é uma necessidade futura,
+não do MVP multissegmento.
 
 ---
 
-## 3. Decisão arquitetural: onde fica o segmento?
+## 3. Decisão A — Granularidade do segmento
 
-### Opção A — Segmento no Tenant
+### Alternativas
 
-```sql
-ALTER TABLE tenants ADD COLUMN segment VARCHAR(30);
-```
-
-**Prós:** simples, um cliente = um segmento.  
-**Contras:** impede cliente com unidades mistas (padaria + café, loja + açougue).
-
-### Opção B — Segmento na Company
-
-```sql
-ALTER TABLE companies ADD COLUMN segment VARCHAR(30);
-```
-
-**Prós:** agrupa filiais por empresa do mesmo ramo.  
-**Contras:** uma empresa pode ter lojas de tipos diferentes.
-
-### Opção C — Segmento na Branch *(RECOMENDAÇÃO)*
-
-```sql
-ALTER TABLE branches ADD COLUMN segment VARCHAR(30) NOT NULL DEFAULT 'SUPERMARKET';
-ALTER TABLE branches ADD COLUMN operational_profile JSON NULL;
-```
-
-**Prós:**
-- Alinha com a granularidade do PDV (terminal já é por filial).
-- Permite um tenant com filial-supermercado e filial-restaurante.
-- `operational_profile` JSON acomoda perfis sem proliferar colunas.
-- Migration é não-destrutiva com `DEFAULT 'SUPERMARKET'` — dados existentes
-  continuam funcionando exatamente como hoje.
-- Coerente com `PdvTenantSetting` que já armazena configs por tenant;
-  o perfil de segmento fica na filial, que é a unidade operacional real.
-
-**Contras:** lógica de dashboard precisa consultar a filial ativa, não apenas
-o tenant — mas o `TenantContext` já resolve isso.
-
-> **Recomendação técnica: Opção C (Branch).**  
-> Decisão final cabe ao responsável de produto. Registrar aqui após aprovação.
-
-### Consequência da Opção C no fluxo
-
-1. Usuário faz login e seleciona estabelecimento (tenant).
-2. Se tenant tem mais de uma filial, sistema identifica filial ativa no contexto
-   (fluxo já existe parcialmente com o PDV).
-3. `$branch->segment` determina qual dashboard renderizar e quais menus exibir.
-4. Se branch é `null` (usuário sem filial definida), usa visão consolidada de tenant.
-
----
-
-## 4. Arquitetura de templates de dashboard
-
-### 4.1 Padrão proposto
-
-```
-DashboardController
-  ↓ lê branch ativa do contexto
-  ↓ switch($segment)
-    SUPERMARKET → DashboardSummaryService → dashboard/supermarket.blade.php
-    RESTAURANT  → DashboardRestauranteService → dashboard/restaurante.blade.php
-    (default)   → dashboard/index.blade.php (atual, para compatibilidade)
-```
-
-### 4.2 Componentes compartilhados
-
-Os componentes Blade existentes (`x-kpi`, `x-card`, `x-section-label`,
-`x-chart-barras`, etc.) são reutilizáveis sem alteração. O design system
-(Tailwind + Alpine.js) é comum a todos os segmentos.
-
-### 4.3 Menus condicionais
-
-O `sidebar.blade.php` atual é monolítico. A refatoração mínima é:
-
-```blade
-@if ($segment === 'RESTAURANT')
-    @include('components.nav.restaurante')
-@else
-    @include('components.nav.supermarket')  {{-- extração do atual --}}
-@endif
-```
-
-Sem reescrita do sistema de navegação — apenas inclusão condicional.
-
----
-
-## 5. Compatibilidade com PDV Java
-
-O PDV Java consome as APIs de:
-- Autenticação de terminal (`/api/v1/pdv/terminals/pair`)
-- Catálogo de produtos (`/api/v1/pdv/catalog/*`)
-- Ingestão de vendas (`/api/v1/pdv/sales`)
-- Sessão de operador (`/api/v1/pdv/operator-session/*`)
-
-Para restaurantes, o PDV Java precisará de endpoints adicionais:
-- Abertura e movimentação de comanda
-- Envio de pedidos para a cozinha
-- Consulta de cardápio com modificadores
-
-Esses endpoints são novos, não substituem os existentes. A trilha PDV-BE
-existente permanece intacta.
-
----
-
-## 6. Riscos identificados
-
-| Risco | Probabilidade | Impacto | Mitigação |
+| Opção | Tabela | Prós | Contras |
 |---|---|---|---|
-| Migration de `branches` afeta dados em produção | Baixa | Alto | `DEFAULT 'SUPERMARKET'`, `nullable` onde possível, testar em staging |
-| Sidebar condicional quebra testes de autorização existentes | Média | Médio | Extrair nav atual antes de condicionar |
-| Módulo de comanda conflita com `orders` existentes | Média | Médio | Tabelas separadas com FK opcional para `orders` |
-| PDV Java não preparado para comandas | Alta | Alto | REST-06 só começa depois de REST-03 e REST-04 estabilizados |
-| Dados de `branches` sem segment em produção | Certo | Baixo | `DEFAULT 'SUPERMARKET'` resolve automaticamente |
+| A | `tenants` | Mais simples | Impede misto (supermercado + restaurante no mesmo tenant) |
+| B | `companies` | Agrupa filiais de mesma empresa | Empresa pode ter filiais de tipos diferentes |
+| **C** | **`branches`** | **Máxima flexibilidade; alinha com PDV (terminal é por filial); DEFAULT retrocompatível** | **Requer BranchContext — ver Decisão B** |
+
+### Recomendação técnica: Opção C (Branch)
+
+Migration segura:
+
+```sql
+ALTER TABLE branches
+  ADD COLUMN segment VARCHAR(30) NOT NULL DEFAULT 'SUPERMARKET',
+  ADD COLUMN operational_profile JSON NULL;
+```
+
+Todas as branches existentes recebem `SUPERMARKET` automaticamente. Nenhum
+dado existente é alterado. Nenhuma rota existente quebra.
+
+**Status: PROPOSTA — aguarda aprovação.**
 
 ---
 
-## 7. Status desta decisão
+## 4. Decisão B — Contexto de filial (BranchContext)
 
-| Questão | Status |
+Esta é a decisão mais impactante da arquitetura multissegmento, levantada pela
+primeira ressalva. Ela precede a implementação de MS-02.
+
+### Problema concreto
+
+Se o segmento está na filial (Opção C), o sistema precisa saber qual filial
+está ativa para:
+- Selecionar o template de dashboard.
+- Condicionar os menus de navegação.
+- Filtrar dados operacionais (comandas, mesas, pedidos de cozinha).
+
+Hoje essa informação não existe como contexto de sessão.
+
+### Como o PDV resolve isso hoje
+
+O Terminal já conhece sua filial (campo `branch_id` no model `Terminal`). Não
+há seleção de filial no PDV — o terminal é fisicamente instalado em uma filial.
+Esse mecanismo não se aplica ao painel web.
+
+### Alternativas para o painel web
+
+**Alternativa B-1: branch_id como filtro de query string (estado atual)**
+
+Manter o padrão do `PdvSalesDashboardController`: o `branch_id` vem de
+`?branch_id=...` validado pelo controller. Sem contexto de sessão.
+
+- Prós: sem mudança de arquitetura; consistente com o padrão atual.
+- Contras: a URL com `branch_id` vira parâmetro obrigatório em toda rota de
+  restaurante; o dashboard principal não consegue alternar o template sem
+  receber o parâmetro; UX de troca de filial fragmentada.
+
+**Alternativa B-2: branch gravado na sessão (simétrica ao tenant)**
+
+Adicionar `SESSAO_FILIAL = 'filial_ativa'` na sessão, um `BranchContext` e
+um `BranchResolver` análogos ao `TenantContext`/`TenantResolver`.
+
+- Prós: o dashboard lê o segmento do `BranchContext` sem depender da URL;
+  arquitetura consistente com o mecanismo de tenant; se branch inválida na
+  sessão, redireciona para seleção (igual ao tenant).
+- Contras: acrescenta complexidade; requer tela de seleção de filial e
+  middleware adicional.
+- Mitigação: quando o tenant tem apenas uma filial (caso mais comum no MVP),
+  o `BranchResolver` auto-seleciona sem interação do usuário.
+
+**Alternativa B-3: contexto derivado da company (sem seleção explícita)**
+
+Selecionar a filial implicitamente pelo contexto da empresa ativa. A empresa
+poderia ser selecionada na sessão.
+
+- Prós: uma camada a menos que B-2.
+- Contras: um tenant pode ter várias filiais por empresa, tornando a
+  derivação ambígua. Menos segura.
+
+### Recomendação técnica: Alternativa B-2
+
+`BranchContext` em sessão, com resolução automática quando há filial única.
+
+**Regras de resolução propostas (análogas ao TenantResolver):**
+
+1. Filial na sessão (`'filial_ativa'`) — se pertence ao tenant atual e está ativa.
+2. Filial única do tenant — auto-seleciona sem interação.
+3. Sem resolução — dashboard renderiza visão consolidada de tenant (comportamento
+   atual do supermercado é preservado desta forma).
+
+**Visão consolidada (branch = null):** renderiza o dashboard atual, que agrega
+todos os dados do tenant. Qualquer tenant sem segmento explícito fica aqui.
+
+**Segurança:**
+- O `BranchContext` nunca confia no ID que vem da URL/body. Só na sessão
+  assinada do Laravel.
+- A troca de filial ativa valida o vínculo `branches.tenant_id = tenant_ativo`.
+- Filial desativada ou acesso revogado: `BranchContext` limpa, redireciona
+  para seleção (igual ao tratamento de tenant inválido na sessão).
+
+**Autorização por filial:**
+O RBAC atual é de tenant — não muda. A visibilidade de filiais já é controlada
+por `view-branches` / `manage-branches`. No MVP, essas permissões são suficientes:
+quem tem `view-branches` pode ver qualquer filial do tenant. Permissão granular
+por filial específica é necessidade futura, não do MVP.
+
+**Status: PROPOSTA — aguarda aprovação.**
+
+---
+
+## 5. Decisão C — Tipos de produto e movimentação de estoque
+
+Esta decisão é crítica para o módulo de restaurante e precede REST-05.
+
+### Estado atual do estoque
+
+`AplicarVendaNoEstoque` baixa o produto comercializado na proporção 1:1. Não há
+fichas técnicas. O mecanismo é best-effort: venda aceita → baixa tentada; falha
+na baixa não desfaz a venda.
+
+### O problema do restaurante
+
+Um hambúrguer é vendido como produto comercial (`product_id` no PDV). Mas seu
+estoque real é composto de ingredientes. Se o sistema baixar o "hambúrguer" do
+estoque (comportamento atual) E consumir os ingredientes pela ficha técnica,
+haverá **dupla movimentação**.
+
+### Proposta: campo `stock_behavior` em products
+
+```sql
+ALTER TABLE products
+  ADD COLUMN stock_behavior VARCHAR(20) NOT NULL DEFAULT 'RESALE';
+  -- RESALE:     baixa direta do produto (comportamento atual — supermercado)
+  -- PRODUCED:   sem baixa direta; consome ingredientes via ficha técnica
+  -- RAW_MATERIAL: ingrediente; só sai via consumo de receita ou ajuste manual
+  -- SERVICE:    sem movimentação de estoque
+```
+
+**Retrocompatibilidade:** `DEFAULT 'RESALE'` mantém todos os produtos existentes
+com comportamento atual.
+
+### Regras de movimentação por tipo
+
+| Tipo | Evento | Ação |
+|---|---|---|
+| RESALE | Venda PDV confirmada | Baixa direta via `AplicarVendaNoEstoque` (sem mudança) |
+| RESALE | Venda PDV cancelada | Estorno direto (sem mudança) |
+| PRODUCED | Comanda fechada | Consome ingredientes via ficha técnica |
+| PRODUCED | Venda PDV de PRODUCED | `AplicarVendaNoEstoque` pula o item (log) |
+| RAW_MATERIAL | Comanda fechada (como ingrediente) | Consumido pela ficha técnica |
+| RAW_MATERIAL | Venda direta | Baixa direta (ex.: açougue vende ingrediente cru) |
+| SERVICE | Qualquer venda | Nenhuma movimentação |
+
+### Evento que dispara consumo de ingredientes
+
+| Opção | Momento | Vantagem | Risco |
+|---|---|---|---|
+| Pedido enviado à cozinha | Quando a cozinha recebe | Reflete realidade de produção | Ingredientes consumidos antes de confirmar se prato será servido |
+| **Início do preparo (KDS: PREPARING)** | **Quando cozinheiro aceita** | **Mais preciso — produção começou** | **Requer integração KDS** |
+| Fechamento da comanda | Quando comanda é fechada e paga | Simples, sem integração extra | Estoque "virtual" enquanto prato está na cozinha |
+
+**Recomendação MVP: fechamento da comanda.** O estoque reflete o que foi vendido
+e pago. Itens cancelados antes do fechamento simplesmente não entram na conta.
+Itens cancelados depois que a cozinha começou a preparar geram uma anotação de
+descarte, não um estorno físico.
+
+### Idempotência do consumo de ingredientes
+
+O fechamento de comanda deve ser idempotente. Proposta: coluna
+`ingredients_applied_at TIMESTAMP NULL` na tabela de comandas. Se não for nulo,
+o consumo já foi registrado e o processo é encurtado.
+
+### Cancelamento e desperdício
+
+| Cenário | Ação proposta |
 |---|---|
-| Granularidade do segmento (tenant/company/branch) | PROPOSTA — aguarda aprovação |
-| Estrutura do `operational_profile` JSON | A definir em MS-02 |
-| Segmentos disponíveis no MVP | PROPOSTA: SUPERMARKET, RESTAURANT |
-| Compatibilidade retroativa das APIs do PDV | Garantida por design |
+| Item cancelado antes do preparo (KDS: WAITING) | Remove da comanda; sem movimentação de estoque |
+| Item cancelado durante preparo (KDS: PREPARING/READY) | Ingredientes já foram consumidos; registrar como `waste` no inventário com motivo |
+| Comanda cancelada inteira antes do preparo | Sem movimentação |
+| Comanda cancelada após preparo parcial | Consumo dos itens já preparados; restante sem movimentação |
+
+### Conciliação com vendas do PDV (para restaurantes com PDV)
+
+Quando um restaurante usa o PDV Java para fechar a comanda:
+
+1. O PDV envia `SALE_CONFIRMED` para `ReceivePdvSale`.
+2. `AplicarVendaNoEstoque` verifica `stock_behavior` do produto.
+3. Se `PRODUCED`: pula a baixa direta (os ingredientes já foram baixados
+   pelo fechamento da comanda no backend).
+4. Log registra a conciliação para auditoria.
+
+Se o PDV fechar a comanda sem que o backend já tenha fechado (ordem de eventos
+invertida), o módulo de comanda detecta `ingredients_applied_at` nulo e aplica
+na reconciliação.
+
+### Histórico da ficha técnica
+
+A ficha técnica pode mudar depois que um prato foi produzido. Para auditoria,
+o consumo deve registrar **snapshot** das quantidades no momento do uso:
+
+```
+restaurant_tab_ingredient_consumptions:
+  tab_id, recipe_product_id, ingredient_product_id,
+  quantity_consumed, unit, recipe_snapshot_hash,
+  applied_at
+```
+
+**Status: PROPOSTA — aguarda aprovação.**
+
+---
+
+## 6. Riscos atualizados
+
+| Risco | Prob. | Impacto | Mitigação |
+|---|---|---|---|
+| Migration de `branches` afeta dados em produção | Baixa | Alto | `DEFAULT 'SUPERMARKET'`, testar em staging |
+| `BranchContext` introduz regressão no TenantResolver | Média | Alto | Implementar como camada adicional, não substituta |
+| `stock_behavior` muda comportamento de produtos existentes | Nula | — | `DEFAULT 'RESALE'` — produtos existentes inalterados |
+| Dupla movimentação PRODUCED via PDV + comanda | Alta (sem mitigação) | Alto | Verificar `stock_behavior` em `AplicarVendaNoEstoque` |
+| Histórico de ficha técnica não preservado | Média | Médio | Snapshot no momento do consumo |
+| KDS e fechamento de comanda em ordem invertida | Média | Médio | `ingredients_applied_at` como idempotency flag |
+| Sidebar condicional quebra testes existentes | Média | Médio | Extrair nav atual antes de condicionar |
+
+---
+
+## 7. Decisões e status
+
+| # | Decisão | Recomendação técnica | Status |
+|---|---|---|---|
+| A | Granularidade do segmento | Branch — Opção C | AGUARDA APROVAÇÃO |
+| B | Mecanismo de BranchContext | Sessão PHP — Alternativa B-2 | AGUARDA APROVAÇÃO |
+| C | Tipos de produto e movimentação | Campo `stock_behavior` + consumo na comanda | AGUARDA APROVAÇÃO |
+| D | Momento do consumo de ingredientes | Fechamento de comanda (MVP) | AGUARDA APROVAÇÃO |
+| E | Segmentos no MVP | SUPERMARKET + RESTAURANT | AGUARDA APROVAÇÃO |
+| F | Perfil operacional: JSON vs. colunas | JSON com schema documentado | AGUARDA APROVAÇÃO |
+| G | Divisão de conta por tipo | Partes iguais = MVP; valores manuais = V2 | AGUARDA APROVAÇÃO |
+| H | KDS: polling vs. SSE | Polling 10s no MVP | AGUARDA APROVAÇÃO |
+| I | Comanda: entidade nova vs. extensão de orders | Entidade nova (ciclo de vida diferente) | AGUARDA APROVAÇÃO |
