@@ -13,6 +13,18 @@
     </x-slot:acoes>
 
     @include('dashboard._help')
+
+    @if ($modoConsolidado ?? false)
+        <div class="mb-6 rounded-xl border border-linha bg-nevoa px-4 py-3">
+            <p class="text-sm font-semibold lowercase text-grafite">visão consolidada · todas as filiais</p>
+            <p class="mt-1 text-sm text-aco">
+                Este painel agrega dados de todas as unidades.
+                <a href="{{ route('filiais.escolher') }}" class="font-semibold text-sol transition-opacity hover:opacity-70">Selecione uma filial</a>
+                para ver o painel específico de cada segmento.
+            </p>
+        </div>
+    @endif
+
     @if (auth()->user()->isPlatformAdmin())
         <section class="mb-6" aria-label="Administração do LucraOne">
             <x-section-label>Administração do LucraOne</x-section-label>
