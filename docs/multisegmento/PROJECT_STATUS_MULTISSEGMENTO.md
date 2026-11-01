@@ -10,12 +10,12 @@
 | Indicador | Valor |
 |---|---|
 | Fases planejadas | 10 |
-| Fases concluídas | 2 (MS-01, MS-02) |
+| Fases concluídas | 3 (MS-01, MS-02, MS-03) |
 | Em andamento | 0 |
 | Bloqueadas | 0 |
-| Progresso | 20% (2/10 fases com critérios verificados) |
-| Próxima fase elegível | MS-03, REST-02 (ambas dependem de MS-02) |
-| Baseline de testes | 1927 (1927 PASS) — main @ `f781b35` |
+| Progresso | 30% (3/10 fases com critérios verificados) |
+| Próxima fase elegível | REST-02 (depende de MS-02 ✅ e MS-03 ✅) |
+| Baseline de testes | 1939 (1939 PASS) — main @ `fc6aaa0` |
 | Última atualização | 2026-11-01 |
 
 ---
@@ -89,9 +89,20 @@
 
 | Campo | Valor |
 |---|---|
-| Status | NÃO INICIADO |
-| Bloqueio | MS-02 concluído |
-| Estimativa | 3–5 dias |
+| Status | CONCLUÍDO |
+| Início | 2026-11-01 |
+| Conclusão | 2026-11-01 |
+| Commit | `fc6aaa0` |
+
+**Critérios verificados:**
+- [x] DashboardController despacha por segmento (RESTAURANT → dashboard.restaurante, demais → dashboard.index)
+- [x] dashboard/restaurante.blade.php sem KPIs numéricos, sem zeros interpretáveis como dados reais
+- [x] Funcionalidades futuras exibidas como cards "em desenvolvimento" sem links desabilitados
+- [x] _nav-supermarket.blade.php: extração literal do nav original — comportamento preservado
+- [x] _nav-restaurant.blade.php: itens futuros como div estático (sem href, sem tabindex) — D4 cumprida
+- [x] sidebar.blade.php injeta BranchContext, adiciona "trocar/selecionar filial" quando 2+ filiais
+- [x] Visão consolidada identificada com banner informativo (modoConsolidado)
+- [x] 12 novos testes — DashboardSegmentTest (grupo ms03) — suíte completa 1939 PASS, 0 FAIL
 
 ---
 
@@ -172,6 +183,7 @@
 | 2026-11-01 | MS-01 | Diagnóstico inicial concluído. Documentos criados. Commit `e83afab`. |
 | 2026-11-01 | MS-01 | Revisão 2: três ressalvas analisadas. Documentos atualizados. Commit `7c7935b`. |
 | 2026-11-01 | MS-02 | Implementação concluída. BranchSegment, BranchContext, BranchResolver, FilialController, migration, views, 17 testes. Commit `f781b35`. |
+| 2026-11-01 | MS-03 | Implementação concluída. Despacho por segmento, nav por segmento, dashboard/restaurante, visão consolidada, 12 testes. Commit `fc6aaa0`. |
 
 ---
 
