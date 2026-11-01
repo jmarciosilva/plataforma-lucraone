@@ -2,7 +2,7 @@
 
 **Criado:** 2026-11-01  
 **Revisado:** 2026-11-01 (revisão 2 — três ressalvas do responsável de produto)  
-**Status:** PROPOSTA REVISADA — nenhuma decisão aprovada formalmente  
+**Status:** DECISÕES A, B, E APROVADAS — MS-02 implementado (`f781b35`)  
 **Base de análise:** código real do repositório (`main` @ `a5d2faa`)
 
 ---
@@ -13,6 +13,7 @@
 |---|---|---|
 | 1 | 2026-11-01 | Diagnóstico inicial — MS-01 |
 | 2 | 2026-11-01 | Três ressalvas: contexto de filial, consistência funcional, estoque |
+| 3 | 2026-11-01 | Decisões A, B, E aprovadas — MS-02 implementado |
 
 ---
 
@@ -354,11 +355,11 @@ restaurant_tab_ingredient_consumptions:
 
 | # | Decisão | Recomendação técnica | Status |
 |---|---|---|---|
-| A | Granularidade do segmento | Branch — Opção C | AGUARDA APROVAÇÃO |
-| B | Mecanismo de BranchContext | Sessão PHP — Alternativa B-2 | AGUARDA APROVAÇÃO |
+| A | Granularidade do segmento | Branch — Opção C | **APROVADA** — `f781b35` |
+| B | Mecanismo de BranchContext | Sessão PHP — Alternativa B-2 | **APROVADA** — `f781b35` |
 | C | Tipos de produto e movimentação | Campo `stock_behavior` + consumo na comanda | AGUARDA APROVAÇÃO |
 | D | Momento do consumo de ingredientes | Fechamento de comanda (MVP) | AGUARDA APROVAÇÃO |
-| E | Segmentos no MVP | SUPERMARKET + RESTAURANT | AGUARDA APROVAÇÃO |
+| E | Segmentos no MVP | SUPERMARKET + RESTAURANT | **APROVADA** — `f781b35` |
 | F | Perfil operacional: JSON vs. colunas | JSON com schema documentado | AGUARDA APROVAÇÃO |
 | G | Divisão de conta por tipo | Partes iguais = MVP; valores manuais = V2 | AGUARDA APROVAÇÃO |
 | H | KDS: polling vs. SSE | Polling 10s no MVP | AGUARDA APROVAÇÃO |

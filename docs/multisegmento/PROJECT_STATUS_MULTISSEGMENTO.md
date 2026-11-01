@@ -1,7 +1,7 @@
 # Status do Projeto — LUCRAONE Multissegmento
 
-**Atualizado em:** 2026-11-01 (revisão 2 — três ressalvas analisadas)  
-**Fase atual:** MS-01 concluído — aguardando aprovação das decisões arquiteturais antes de MS-02
+**Atualizado em:** 2026-11-01 (revisão 3 — MS-02 concluído)  
+**Fase atual:** MS-02 concluído — próxima elegível: MS-03 e REST-02
 
 ---
 
@@ -10,26 +10,31 @@
 | Indicador | Valor |
 |---|---|
 | Fases planejadas | 10 |
-| Fases concluídas | 1 (MS-01) |
+| Fases concluídas | 2 (MS-01, MS-02) |
 | Em andamento | 0 |
-| Bloqueadas | 0 (decisões pendentes, mas nenhuma fase bloqueada por impedimento técnico) |
-| Progresso | 10% (1/10 fases com critérios verificados) |
-| Próxima fase elegível | MS-02 (aguarda aprovação das decisões A, B, E) |
-| Baseline de testes | 1458 (1456 PASS) — main @ `a5d2faa` |
+| Bloqueadas | 0 |
+| Progresso | 20% (2/10 fases com critérios verificados) |
+| Próxima fase elegível | MS-03, REST-02 (ambas dependem de MS-02) |
+| Baseline de testes | 1927 (1927 PASS) — main @ `f781b35` |
 | Última atualização | 2026-11-01 |
 
 ---
+
+## Decisões aprovadas (MS-02)
+
+| ID | Decisão | Resolução |
+|---|---|---|
+| A | Granularidade do segmento | Branch — coluna `segment` na tabela `branches` |
+| B | BranchContext em sessão PHP | Alternativa B-2 — sessão 'filial_ativa' com auto-resolve |
+| E | Segmentos no MVP | SUPERMARKET + RESTAURANT |
 
 ## Decisões abertas — aguardam aprovação
 
 | ID | Decisão | Recomendação técnica | Bloqueia |
 |---|---|---|---|
-| A | Granularidade do segmento: Branch (Opção C) | Branch | MS-02 |
-| B | BranchContext em sessão PHP (Alternativa B-2) | Sessão com auto-resolve | MS-02 |
 | C | `stock_behavior` em products | Campo com DEFAULT RESALE | REST-05 |
 | D | Momento do consumo de ingredientes: fechamento da comanda | Fechamento (MVP) | REST-05 |
-| E | Segmentos no MVP: SUPERMARKET + RESTAURANT | SUPERMARKET + RESTAURANT | MS-02 |
-| F | Perfil operacional em JSON | JSON com schema documentado | MS-02 |
+| F | Perfil operacional em JSON | JSON com schema documentado | MS-02 (parcial — campo não adicionado ainda) |
 | G | Divisão de conta: partes iguais = MVP | MVP; valores manuais = V2 | REST-03 |
 | H | KDS: polling 10s no MVP | Polling 10s | REST-04 |
 | I | Comanda: entidade nova (não extensão de orders) | Entidade nova | REST-03 |
@@ -60,9 +65,23 @@
 
 | Campo | Valor |
 |---|---|
-| Status | NÃO INICIADO |
-| Bloqueio | Decisões A, B, E aprovadas |
-| Estimativa | 4–6 dias |
+| Status | CONCLUÍDO (parcial — `operational_profile` aguarda Decisão F) |
+| Início | 2026-11-01 |
+| Conclusão | 2026-11-01 |
+| Commit | `f781b35` |
+
+**Critérios verificados:**
+- [x] Migration retrocompatível — `DEFAULT 'SUPERMARKET'` em `branches.segment`
+- [x] `BranchSegment` com constantes SUPERMARKET e RESTAURANT
+- [x] `BranchContext` singleton de requisição — id(), branch(), segment()
+- [x] `BranchResolver` — três estratégias (sessão, filial única, consolidada)
+- [x] `AutenticarWeb` resolve branch após tenant (não-bloqueante)
+- [x] Troca de tenant invalida sessão de filial
+- [x] `FilialController` — escolher e definir filial no painel web
+- [x] Forms branches/create e branches/edit com seletor de segmento
+- [x] View `auth/escolher-filial` para seleção múltipla
+- [x] 17 novos testes — suíte completa 1927 PASS, 0 FAIL
+- [ ] `operational_profile` JSON — aguarda aprovação da Decisão F
 
 ---
 
@@ -151,7 +170,8 @@
 | Data | Fase | Evento |
 |---|---|---|
 | 2026-11-01 | MS-01 | Diagnóstico inicial concluído. Documentos criados. Commit `e83afab`. |
-| 2026-11-01 | MS-01 | Revisão 2: três ressalvas analisadas. BranchContext, consistência funcional, estoque. Documentos atualizados. Commit pendente. |
+| 2026-11-01 | MS-01 | Revisão 2: três ressalvas analisadas. Documentos atualizados. Commit `7c7935b`. |
+| 2026-11-01 | MS-02 | Implementação concluída. BranchSegment, BranchContext, BranchResolver, FilialController, migration, views, 17 testes. Commit `f781b35`. |
 
 ---
 
