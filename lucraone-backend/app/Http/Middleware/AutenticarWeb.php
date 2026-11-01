@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Modules\Tenancy\Application\BranchResolver;
 use App\Modules\Tenancy\Application\TenantResolver;
 use Closure;
 use Illuminate\Http\Request;
@@ -26,7 +27,8 @@ use Symfony\Component\HttpFoundation\Response;
 class AutenticarWeb
 {
     public function __construct(
-        private TenantResolver $resolver
+        private TenantResolver $resolver,
+        private BranchResolver $branchResolver,
     ) {}
 
     public function handle(Request $request, Closure $next, ?string $modo = null): Response
@@ -52,6 +54,9 @@ class AutenticarWeb
             // revogado enquanto ela navegava).
             return redirect()->route('estabelecimentos.escolher');
         }
+
+        // Resolução de filial: não-bloqueante. Falha = visão consolidada.
+        $this->branchResolver->resolve($request);
 
         return $next($request);
     }

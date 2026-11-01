@@ -29,6 +29,7 @@ class Branch extends Model
         'phone',
         'timezone',
         'status',
+        'segment',
         'is_headquarters',
         'max_pdv_terminals',
     ];
@@ -38,6 +39,10 @@ class Branch extends Model
         'max_pdv_terminals' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+    ];
+
+    protected $attributes = [
+        'segment' => 'SUPERMARKET',
     ];
 
     /**

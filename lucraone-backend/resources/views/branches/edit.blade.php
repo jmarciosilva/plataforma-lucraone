@@ -20,6 +20,14 @@
                     <x-input nome="name" :valor="old('name', $filial->name)" autocomplete="off" />
                 </x-form-group>
 
+                <x-form-group nome="segment" rotulo="segmento" obrigatorio ajuda="define o painel e as funcionalidades disponíveis para esta unidade.">
+                    <x-select
+                        nome="segment"
+                        :opcoes="$segmentos"
+                        :valor="old('segment', $filial->segment)"
+                    />
+                </x-form-group>
+
                 <x-form-group nome="code" rotulo="código" ajuda="identificador curto.">
                     <x-input nome="code" :valor="old('code', $filial->code)" autocomplete="off" />
                 </x-form-group>

@@ -3,6 +3,7 @@
 namespace App\Modules\Branches\Application;
 
 use App\Modules\Audit\Domain\Models\AuditLog;
+use App\Modules\Branches\Domain\BranchSegment;
 use App\Modules\Branches\Domain\Models\Branch;
 use App\Modules\Companies\Domain\Models\Address;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +32,7 @@ class BranchService
                 'phone' => $dados['phone'] ?? null,
                 'timezone' => $dados['timezone'] ?? 'America/Sao_Paulo',
                 'status' => 'ACTIVE',
+                'segment' => $dados['segment'] ?? BranchSegment::SUPERMARKET,
                 'is_headquarters' => $isHq,
                 'max_pdv_terminals' => isset($dados['max_pdv_terminals']) ? (int) $dados['max_pdv_terminals'] : 5,
             ]);
@@ -86,6 +88,10 @@ class BranchService
                 'timezone' => $dados['timezone'] ?? 'America/Sao_Paulo',
                 'is_headquarters' => $isHqDepois,
             ];
+
+            if (isset($dados['segment'])) {
+                $updateData['segment'] = $dados['segment'];
+            }
 
             if (isset($dados['max_pdv_terminals'])) {
                 $updateData['max_pdv_terminals'] = (int) $dados['max_pdv_terminals'];

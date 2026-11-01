@@ -28,6 +28,14 @@
                     <x-input nome="name" :valor="old('name')" placeholder="Loja Matriz, Filial Sul, Depósito Central…" autocomplete="off" />
                 </x-form-group>
 
+                <x-form-group nome="segment" rotulo="segmento" obrigatorio ajuda="define o painel e as funcionalidades disponíveis para esta unidade.">
+                    <x-select
+                        nome="segment"
+                        :opcoes="$segmentos"
+                        :valor="old('segment', 'SUPERMARKET')"
+                    />
+                </x-form-group>
+
                 <x-form-group nome="code" rotulo="código" ajuda="identificador curto. ex.: MAT, F01, DEP.">
                     <x-input nome="code" :valor="old('code')" placeholder="MAT" autocomplete="off" />
                 </x-form-group>

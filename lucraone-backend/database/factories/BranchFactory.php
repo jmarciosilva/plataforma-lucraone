@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Modules\Branches\Domain\BranchSegment;
 use App\Modules\Branches\Domain\Models\Branch;
 use App\Modules\Companies\Domain\Models\Company;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,6 +27,7 @@ class BranchFactory extends Factory
             'phone' => $this->faker->phoneNumber(),
             'timezone' => 'America/Sao_Paulo',
             'status' => 'ACTIVE',
+            'segment' => BranchSegment::SUPERMARKET,
             'is_headquarters' => false,
         ];
     }
@@ -36,6 +38,18 @@ class BranchFactory extends Factory
             'tenant_id' => $company->tenant_id,
             'company_id' => $company->id,
         ]);
+    }
+
+    public function forTenant(\App\Modules\Tenancy\Domain\Models\Tenant $tenant): static
+    {
+        return $this->state(function () use ($tenant) {
+            $company = Company::factory()->create(['tenant_id' => $tenant->id]);
+
+            return [
+                'tenant_id' => $tenant->id,
+                'company_id' => $company->id,
+            ];
+        });
     }
 
     public function active(): static
@@ -56,6 +70,13 @@ class BranchFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_headquarters' => true,
+        ]);
+    }
+
+    public function restaurant(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'segment' => BranchSegment::RESTAURANT,
         ]);
     }
 }

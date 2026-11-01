@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Modules\Branches\Domain\BranchSegment;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateBranchRequest extends FormRequest
 {
@@ -15,6 +17,7 @@ class UpdateBranchRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'segment' => ['nullable', Rule::in(BranchSegment::all())],
             'code' => ['nullable', 'string', 'max:255'],
             'document_override' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],

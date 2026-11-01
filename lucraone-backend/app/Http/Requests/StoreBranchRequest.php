@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Modules\Branches\Domain\BranchSegment;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreBranchRequest extends FormRequest
 {
@@ -16,6 +18,7 @@ class StoreBranchRequest extends FormRequest
         return [
             'company_id' => ['required', 'string', 'size:26'],
             'name' => ['required', 'string', 'max:255'],
+            'segment' => ['nullable', Rule::in(BranchSegment::all())],
             'code' => ['nullable', 'string', 'max:255'],
             'document_override' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],

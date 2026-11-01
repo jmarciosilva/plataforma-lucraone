@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Modules\Tenancy\Application\BranchResolver;
 use App\Modules\Tenancy\Application\TenantResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -53,6 +54,10 @@ class EstabelecimentoController
         }
 
         $request->session()->put(TenantResolver::SESSAO_TENANT, $dados['tenant_id']);
+
+        // Troca de tenant invalida a filial da sessão — o novo contexto pode
+        // ter filiais completamente diferentes.
+        $request->session()->forget(BranchResolver::SESSAO_FILIAL);
 
         return redirect()
             ->route($dados['destino'] ?? 'dashboard')

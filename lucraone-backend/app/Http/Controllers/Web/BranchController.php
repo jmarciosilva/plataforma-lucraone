@@ -7,6 +7,7 @@ use App\Http\Requests\StoreBranchRequest;
 use App\Http\Requests\UpdateBranchRequest;
 use App\Modules\Audit\Domain\Models\AuditLog;
 use App\Modules\Branches\Application\BranchService;
+use App\Modules\Branches\Domain\BranchSegment;
 use App\Modules\Branches\Domain\Models\Branch;
 use App\Modules\Companies\Domain\Models\Company;
 use App\Modules\Tenancy\Application\TenantContext;
@@ -65,6 +66,7 @@ class BranchController extends Controller
         return view('branches.create', [
             'empresas' => Company::where('tenant_id', $tenantId)->where('status', 'ACTIVE')->orderBy('legal_name')->get(),
             'temMatriz' => Branch::where('tenant_id', $tenantId)->where('is_headquarters', true)->exists(),
+            'segmentos' => BranchSegment::LABELS,
             'tenantNome' => $context->tenant()->name,
             'breadcrumbs' => [...$this->breadcrumbs(), ['label' => 'nova']],
         ]);
@@ -135,6 +137,7 @@ class BranchController extends Controller
                 ->where('is_headquarters', true)
                 ->where('id', '!=', $filial->id)
                 ->exists(),
+            'segmentos' => BranchSegment::LABELS,
             'tenantNome' => $context->tenant()->name,
             'breadcrumbs' => [...$this->breadcrumbs(), ['label' => $filial->name], ['label' => 'editar']],
         ]);

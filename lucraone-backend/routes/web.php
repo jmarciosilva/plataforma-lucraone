@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\CompanyController;
 use App\Http\Controllers\Web\CustomerWebController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\EstabelecimentoController;
+use App\Http\Controllers\Web\FilialController;
 use App\Http\Controllers\Web\InventoryWebController;
 use App\Http\Controllers\Web\NotificationWebController;
 use App\Http\Controllers\Web\OnboardingController;
@@ -59,6 +60,10 @@ Route::middleware('auth.web:sem-tenant')->group(function () {
 
 // Painel: exige estabelecimento em uso
 Route::middleware('auth.web')->group(function () {
+    // Seleção de filial — não bloqueia o acesso, mas permite escolher a filial ativa.
+    Route::get('/filiais/escolher', [FilialController::class, 'escolher'])->name('filiais.escolher');
+    Route::post('/filiais/escolher', [FilialController::class, 'definir'])->name('filiais.definir');
+
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('/pdv/catalog-loads', [PdvCatalogLoadController::class, 'index'])->name('pdv.catalog-loads.index');
