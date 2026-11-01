@@ -104,20 +104,13 @@
     <p class="px-2 py-1 font-comanda text-[0.6rem] uppercase tracking-widest text-aco/50">restaurante</p>
 </div>
 
-<div
-    class="flex min-h-11 cursor-default select-none items-center gap-3 rounded-xl px-3 text-sm font-semibold lowercase"
-    aria-hidden="true"
->
-    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-nevoa text-aco/40">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
-            <path d="M12 2v10" />
-            <path d="M18.4 6.6a9 9 0 1 1-12.77.04" />
-            <path d="M8 12h8" />
-        </svg>
-    </span>
-    <span class="text-aco/40">cardápio</span>
-    <span class="ml-auto font-comanda text-[0.6rem] uppercase tracking-widest text-aco/40">em breve</span>
-</div>
+<x-nav-item rota="cardapio.index" rotulo="cardápio">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+        <path d="M12 2v10" />
+        <path d="M18.4 6.6a9 9 0 1 1-12.77.04" />
+        <path d="M8 12h8" />
+    </svg>
+</x-nav-item>
 
 <div
     class="flex min-h-11 cursor-default select-none items-center gap-3 rounded-xl px-3 text-sm font-semibold lowercase"

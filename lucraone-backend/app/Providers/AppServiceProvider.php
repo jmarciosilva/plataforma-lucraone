@@ -7,6 +7,10 @@ use App\Modules\Authorization\Domain\Models\Role;
 use App\Modules\Authorization\Http\Policies\BranchPolicy;
 use App\Modules\Authorization\Http\Policies\PermissionPolicy;
 use App\Modules\Authorization\Http\Policies\RolePolicy;
+use App\Modules\Menu\Domain\Models\MenuSection;
+use App\Modules\Menu\Domain\Models\ModifierGroup;
+use App\Modules\Menu\Http\Policies\MenuSectionPolicy;
+use App\Modules\Menu\Http\Policies\ModifierGroupPolicy;
 use App\Modules\Automation\Application\Listeners\ProcessAutomationTrigger;
 use App\Modules\Automation\Domain\Events\AutomationTriggered;
 use App\Modules\Automation\Domain\Models\AutomationRule;
@@ -85,6 +89,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Customer::class, CustomerPolicy::class);
         Gate::policy(AutomationRule::class, AutomationRulePolicy::class);
         Gate::policy(Notification::class, NotificationPolicy::class);
+        Gate::policy(MenuSection::class, MenuSectionPolicy::class);
+        Gate::policy(ModifierGroup::class, ModifierGroupPolicy::class);
 
         // Relatórios são leitura agregada, sem modelo próprio — daí um Gate
         // nomeado em vez de uma Policy.

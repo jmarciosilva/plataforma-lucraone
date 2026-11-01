@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\AutomationWebController;
+use App\Http\Controllers\Web\Cardapio\CardapioWebController;
+use App\Http\Controllers\Web\Cardapio\CardapioItemWebController;
+use App\Http\Controllers\Web\Cardapio\ModificadorGrupoWebController;
+use App\Http\Controllers\Web\Cardapio\ModificadorWebController;
 use App\Http\Controllers\Web\BranchController;
 use App\Http\Controllers\Web\CategoryWebController;
 use App\Http\Controllers\Web\CompanyController;
@@ -229,4 +233,32 @@ Route::middleware('auth.web')->group(function () {
         ->name('notifications.read');
     Route::get('/notificacoes', [NotificationWebController::class, 'index'])
         ->name('notifications.index');
+
+    // Cardápio (segmento restaurante)
+    Route::post('/cardapio/{cardapio}/disponibilidade', [CardapioWebController::class, 'toggleAvailable'])
+        ->name('cardapio.toggle-available');
+    Route::post('/cardapio/{cardapio}/itens/{item}/disponibilidade', [CardapioItemWebController::class, 'toggleAvailable'])
+        ->name('cardapio.itens.toggle-available');
+    Route::delete('/cardapio/{cardapio}/itens/{item}', [CardapioItemWebController::class, 'destroy'])
+        ->name('cardapio.itens.destroy');
+    Route::put('/cardapio/{cardapio}/itens/{item}', [CardapioItemWebController::class, 'update'])
+        ->name('cardapio.itens.update');
+    Route::get('/cardapio/{cardapio}/itens/{item}/editar', [CardapioItemWebController::class, 'edit'])
+        ->name('cardapio.itens.edit');
+    Route::post('/cardapio/{cardapio}/itens', [CardapioItemWebController::class, 'store'])
+        ->name('cardapio.itens.store');
+    Route::get('/cardapio/{cardapio}/itens/criar', [CardapioItemWebController::class, 'create'])
+        ->name('cardapio.itens.create');
+    Route::resource('cardapio', CardapioWebController::class)
+        ->names('cardapio');
+
+    // Modificadores de produto
+    Route::post('/produtos/{produto}/modificadores/{modificador}/opcoes/{opcao}/disponibilidade', [ModificadorWebController::class, 'toggleAvailable'])
+        ->name('produtos.modificadores.opcoes.toggle-available');
+    Route::resource('produtos.modificadores.opcoes', ModificadorWebController::class)
+        ->parameters(['produto' => 'produto', 'modificadores' => 'modificador', 'opcoes' => 'opcao'])
+        ->names('produtos.modificadores.opcoes');
+    Route::resource('produtos.modificadores', ModificadorGrupoWebController::class)
+        ->parameters(['produto' => 'produto', 'modificadores' => 'modificador'])
+        ->names('produtos.modificadores');
 });

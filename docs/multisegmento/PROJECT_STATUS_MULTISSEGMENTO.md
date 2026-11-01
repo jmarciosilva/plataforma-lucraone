@@ -1,7 +1,7 @@
 # Status do Projeto — LUCRAONE Multissegmento
 
-**Atualizado em:** 2026-11-01 (revisão 4 — MS-03 concluído)  
-**Fase atual:** MS-03 concluído — próxima elegível: REST-02
+**Atualizado em:** 2026-11-01 (revisão 5 — REST-02 EM IMPLEMENTAÇÃO)  
+**Fase atual:** REST-02 — Cardápio e Modificadores (EM DESENVOLVIMENTO)
 
 ---
 
@@ -110,9 +110,27 @@
 
 | Campo | Valor |
 |---|---|
-| Status | NÃO INICIADO |
-| Bloqueio | MS-02 concluído |
+| Status | EM DESENVOLVIMENTO |
+| Bloqueio | nenhum — MS-02 e MS-03 concluídos, decisões R2-A a R2-D aprovadas |
 | Estimativa | 5–7 dias |
+| Iniciado em | 2026-11-01 |
+
+**Decisões aprovadas:** R2-A (modificadores: template global + override por filial), R2-B (preços: price_override nullable com effectivePrice()), R2-C (disponibilidade: boolean manual persistente por filial), R2-D (imagens: fora do escopo V2).
+
+**Implementado até agora:**
+- Migrations: menu_sections, menu_section_items, modifier_groups, modifiers
+- Models: MenuSection, MenuSectionItem, ModifierGroup, Modifier, enum ModifierGroupType
+- Application: MenuService (resolveModifierGroups, hasBranchOverride, choiceGroupsWithoutAvailableModifiers)
+- Policies: MenuSectionPolicy, ModifierGroupPolicy (registradas no AppServiceProvider)
+- Form Requests: Store/Update para MenuSection, MenuSectionItem, ModifierGroup, Modifier
+- Factories: MenuSectionFactory, MenuSectionItemFactory, ModifierGroupFactory, ModifierFactory
+- Controllers Web: CardapioWebController, CardapioItemWebController, ModificadorGrupoWebController, ModificadorWebController
+- Views Blade: cardapio/index, create, show, edit; cardapio/itens/create, edit; modificadores/index, create, edit; modificadores/opcoes/create, edit
+- Rotas: /cardapio e /produtos/{produto}/modificadores em web.php
+- Nav: link de cardápio ativado em _nav-restaurant.blade.php
+- Testes: MenuSectionTest, MenuSectionItemTest, ModifierGroupTest, ModifierTest, MenuPriceResolutionTest, MenuAvailabilityTest, MenuTenantIsolationTest
+
+**Pendente:** executar suíte completa de testes → commit → relatório de entrega.
 
 ---
 
@@ -184,6 +202,7 @@
 | 2026-11-01 | MS-01 | Revisão 2: três ressalvas analisadas. Documentos atualizados. Commit `7c7935b`. |
 | 2026-11-01 | MS-02 | Implementação concluída. BranchSegment, BranchContext, BranchResolver, FilialController, migration, views, 17 testes. Commit `f781b35`. |
 | 2026-11-01 | MS-03 | Implementação concluída. Despacho por segmento, nav por segmento, dashboard/restaurante, visão consolidada, 12 testes. Commit `fc6aaa0`. |
+| 2026-11-01 | REST-02 | Implementação iniciada. Decisões R2-A a R2-D aprovadas. Models, migrations, service, policies, requests, factories, controllers, views, rotas, nav e testes criados. Suíte pendente de execução. |
 
 ---
 
